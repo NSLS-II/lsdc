@@ -32,7 +32,17 @@ import thread
 import lsdcOlog
 import StringIO
 import logging
-logger = logging.getLogger(__name__)
+from logging import handlers
+logger = logging.getLogger()
+logging.getLogger().setLevel(logging.INFO)
+handler1 = handlers.RotatingFileHandler('lsdcGuiLog.txt', maxBytes=50000000)
+#TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
+#handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
+myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
+handler1.setFormatter(myformat)
+#handler2.setFormatter(myformat)
+logger.addHandler(handler1)
+#logger.addHandler(handler2)
 try:
   import ispybLib
 except:

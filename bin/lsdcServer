@@ -1,0 +1,1 @@
+script -a -c lsdcServerPI_Merge.cmd -f lsdcServerLog.txt

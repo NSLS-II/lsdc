@@ -27,7 +27,7 @@ core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
 mxacquisition = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXACQUISITION, conn)
 mxprocessing = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXPROCESSING, conn)
 mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREENING, conn)
-cnx = mysql.connector.connect(user='ispyb_api', password='***REMOVED***',host='ispyb-db-dev',database='ispyb')
+cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev',database='ispyb')
 cursor = cnx.cursor()
 beamline = os.environ["BEAMLINE_ID"]
 detSeqNumPVNAME = db_lib.getBeamlineConfigParam(beamline,"detSeqNumPVNAME") #careful - this pvname is stored in DB and in detControl.

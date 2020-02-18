@@ -6,11 +6,13 @@ import sys
 import db_lib
 import xmltodict
 import daq_utils
+import logging
+logger = logging.getLogger(__name__)
+
 try:
   import ispybLib
 except:
-  print("ISPYB import error")
-  
+  logger.info("ISPYB import error")
 
 #def generateSpotsFileFromXMLObsolete(fastdpXmlFilename="fast_dp.xml"): #no idea what this is - 6/16
 
@@ -55,22 +57,22 @@ comm_s = "ssh  -q " + node + " \"cd " + runningDir + fastdpComm + hdfFilepattern
 #comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap2;fast_dp -j 12 -J 12 -k 60 " + hdfFilepattern  + "\"" 
 
 #comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap;/usr/local/crys-local/fast_dp/bin/fast_dp -J 16 -j 16 -k 70  " + hdfFilepattern  + "\""
-print(comm_s)
+logger.info(comm_s)
 os.system(comm_s)
 fastDPResultFile = runningDir+"/fast_dp.xml"
 #fastDPResultFile = "/GPFS/CENTRAL/xf17id2/skinner/ispyb/fast_dp.xml"
 #fd = open("fast_dp.xml")
 fd = open(fastDPResultFile)
 resultObj = xmltodict.parse(fd.read())
-print("finished fast_dp")
-print(resultObj)
+logger.info("finished fast_dp")
+logger.info(resultObj)
 resultID = db_lib.addResultforRequest("fastDP",request_id,owner,resultObj,beamline=os.environ["BEAMLINE_ID"])
 newResult = db_lib.getResult(resultID)
 visitName = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
 except:
-  print("ispyb error")
+  logger.info("ispyb error")
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):
@@ -91,8 +93,8 @@ if (runDimple):
 #  comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap;fast_ep"
 #  comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";dimple " + runningDir + "/fast_dp.mtz /GPFS/CENTRAL/xf17id2/jjakoncic/model.pdb " + dimpleRunningDir + "\""
   comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";" + dimpleComm + " " + runningDir + "/fast_dp.mtz " + baseDirectory + "/" + modelPDBname + " " + dimpleRunningDir + "\""  
-  print(comm_s)
-  print("running dimple")
+  logger.info(comm_s)
+  logger.info("running dimple")
   os.system(comm_s)
 
 

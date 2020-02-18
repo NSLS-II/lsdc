@@ -9,7 +9,8 @@ import itertools as iter
 import scipy
 from functools import reduce
 from operator import mul
-
+import logging
+logger = logging.getLogger(__name__)
 
 ###  RIfoils testing script
 ###
@@ -19,8 +20,8 @@ from operator import mul
 # Amount of transmission the user wants: 1.0 = full beam; 0.01 = 1% of full beam.
 ##trans = .44
 ##outlist = RIfoils(etarget, trans)
-##print 'return from foils'
-##print 'Outlist:', outlist
+##logger.info 'return from foils'
+##logger.info 'Outlist:', outlist
 
 
 def RIfoils(etarget,trans):
@@ -53,34 +54,34 @@ def RIfoils(etarget,trans):
           5.886,5.740,5.600,5.465,5.334,5.208,5.085,4.966,4.852,4.742,4.634,4.532,4.431,4.334,4.240,4.149,4.060,3.975,3.892,3.812,3.735,
           3.658,3.586,3.514,3.445,3.378,3.313,3.250,3.189,3.129,3.070,3.014,2.960,2.906,2.854,2.804]
   if etarget < elist[0]: 
-    print("Energy is below 5 keV minimum")
+    logger.info("Energy is below 5 keV minimum")
     return
   elif etarget > elist[len(elist)-1]:
-    print('Energy is above 30 keV maximum')
+    logger.info('Energy is above 30 keV maximum')
     return
 #  
   outlist = []
-  print("Photon Energy:", etarget)
+  logger.info("Photon Energy:", etarget)
   mutarget = np.interp(etarget, elist, Almu, left=None, right=None, period=None)
-  print('mu-target: ', mutarget)
+  logger.info('mu-target: ', mutarget)
 #
-  print("Transmission:", trans)
+  logger.info("Transmission:", trans)
 # Thickness = ln (Transmission) / (-mu)
   thick = log(trans) / (-1.0*mutarget)
   fraction = thick / RItotal
-  print('Thickness, Fraction:', thick, fraction)
+  logger.info('Thickness, Fraction:', thick, fraction)
   if fraction > 1.0:
-    print('This attenuator is not thick enough')
+    logger.info('This attenuator is not thick enough')
     return []
 #john
   intBits = int(fraction * 4096.0)
-  print('Bit pattern: ', bin(intBits))
+  logger.info('Bit pattern: ', bin(intBits))
   for i in range (0,12):
     binstring = bin(intBits>>i)
     myBit = binstring[len(binstring)-1]
-#    print ('binstring, myBit', binstring, myBit)
+#    logger.info ('binstring, myBit', binstring, myBit)
     outlist.append(int(myBit))
-#  print 'Outlist:', outlist
+#  logger.info 'Outlist:', outlist
   return outlist
 
 

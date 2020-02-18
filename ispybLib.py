@@ -9,6 +9,8 @@ from epics import PV
 import db_lib
 import time
 import mysql.connector
+import logging
+logger = logging.getLogger(__name__)
 
 #12/19 - I'm leaving all commented lines alone on this. Karl Levik, DLS, is an immense help with this.
 
@@ -72,7 +74,7 @@ def createPerson(firstName,lastName,loginName):
 def createProposal(propNum,PI_login="boaty"):
   pid = personIdFromLogin(PI_login)
   if (pid == 0):
-#    print("no loginID " + PI_login)
+#    logger.info("no loginID " + PI_login)
 #    return 0
     createPerson("Not","Sure",PI_login)
     pid = personIdFromLogin(PI_login)
@@ -86,7 +88,7 @@ def createProposal(propNum,PI_login="boaty"):
   cnx.commit()  #not sure why I needed to do this. Maybe mistake in stored proc?
 
 def createVisitName(propNum): # this is for the GUI to know what a datapath would be in row_clicked
-  print("creating visit Name for propnum " + str(propNum))
+  logger.info("creating visit Name for propnum " + str(propNum))
   propID = proposalIdFromProposal(propNum)
   if (propID == 0): #proposal doesn't exist, just create and assign to boaty
     createProposal(propNum)
@@ -100,7 +102,7 @@ def createVisitName(propNum): # this is for the GUI to know what a datapath woul
 
 
 def createVisit(propNum):
-  print("creating visit for propnum " + str(propNum))
+  logger.info("creating visit for propnum " + str(propNum))
   propID = proposalIdFromProposal(propNum)
   if (propID == 0): #proposal doesn't exist, just create and assign to boaty
     createProposal(propNum)
@@ -216,7 +218,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException:
-   print("caught ISPyBNoResultException")
+   logger.info("caught ISPyBNoResultException")
    sessionid = createVisit(visitName)
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
@@ -242,7 +244,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
 #     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")          
      comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
-     print(comm_s)
+     logger.info(comm_s)
      os.system(comm_s)
 #     seqNum = int(det_lib.detector_get_seqnum())
      seqNum = int(detSeqNumPV.get())          
@@ -261,7 +263,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
 #     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + "0001.cbf;" + adxvComm + " -sa "  + CBF_conversion_pattern + "0001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"
 #     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1 " + CBF_conversion_pattern + "0001.cbf;" + adxvComm + " -sa "  + CBF_conversion_pattern + "0001.cbf " + JPEG_conversion_pattern + "0001.jpeg;cp " + JPEG_conversion_pattern + "0001.jpeg " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
-     print(comm_s)
+     logger.info(comm_s)
      os.system(comm_s)
      # Create a new data collection group entry:
      params = mxacquisition.get_data_collection_group_params()
@@ -276,7 +278,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
 #     params['starttime'] = datetime.fromtimestamp(request['time']).strftime('%Y-%m-%d %H:%M:%S')
 #     params['endtime'] = datetime.fromtimestamp(request['time']).strftime('%Y-%m-%d %H:%M:%S')
      dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
-     print("dcg_id: %i" % dcg_id)
+     logger.info("dcg_id: %i" % dcg_id)
      params = mxacquisition.get_data_collection_params()
      params['parentid'] = dcg_id
      params['visitid'] = sessionid
@@ -304,14 +306,14 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
        # params['flux'] = ?
      params['overlap'] = 0.0
      params['rotation_axis'] = 'Omega' # assume Omega unless we know otherwise
-     print("jpegimfilename = " + jpegImageFilename)
+     logger.info("jpegimfilename = " + jpegImageFilename)
      params['xtal_snapshot1'] = jpegImageFilename
 #     params['xtal_snapshot1'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_0.0.png'     
      params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
      params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
      params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
      dc_id = mxacquisition.insert_data_collection(list(params.values()))
-     print("dc_id: %i" % dc_id)
+     logger.info("dc_id: %i" % dc_id)
      return dc_id
 
 
@@ -407,7 +409,7 @@ def insertRasterResult(result,request,visitName):
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException:
-   print("caught ISPyBNoResultException, bye")
+   logger.info("caught ISPyBNoResultException, bye")
    return
 #   sessionid = createVisit(visitName)
  sample = request['sample'] # this needs to be created and linked to a DC group
@@ -424,7 +426,7 @@ def insertRasterResult(result,request,visitName):
  jpegImageFilename = jpegImagePrefix+".jpg"
  jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
  comm_s = "convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "&"     
- print(comm_s)
+ logger.info(comm_s)
  os.system(comm_s)
  # Create a new data collection group entry:
  params = mxacquisition.get_data_collection_group_params()
@@ -434,7 +436,7 @@ def insertRasterResult(result,request,visitName):
  params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
  params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
  dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
- print("dcg_id: %i" % dcg_id)
+ logger.info("dcg_id: %i" % dcg_id)
  params = mxacquisition.get_data_collection_params()
  params['parentid'] = dcg_id
  params['visitid'] = sessionid
@@ -459,11 +461,11 @@ def insertRasterResult(result,request,visitName):
  params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix']) # assume cbf ...
  params['overlap'] = 0.0
  params['rotation_axis'] = 'Omega' # assume Omega unless we know otherwise
- print("jpegimfilename from raster = " + jpegImageFilename)
+ logger.info("jpegimfilename from raster = " + jpegImageFilename)
  params['xtal_snapshot1'] = jpegImageFilename
  params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
  params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
  params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
  dc_id = mxacquisition.insert_data_collection(list(params.values()))
- print("dc_id: %i" % dc_id)
+ logger.info("dc_id: %i" % dc_id)
  return dc_id

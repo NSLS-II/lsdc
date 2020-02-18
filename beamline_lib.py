@@ -8,6 +8,8 @@ from element_info import *
 import beamline_support
 import daq_lib
 import db_lib
+import logging
+logger = logging.getLogger(__name__)
 
 global scan_detector_count,scan_list,scanfile_root
 global CNT
@@ -55,7 +57,7 @@ def get_epics_motor_pos(motcode): #gets an epics motor pos with error handling
     current_pos = beamline_support.get_motor_pos(motcode)
     return current_pos
   except KeyError:
-    print("No data available for EPICS channel %s\n" % (mcode))
+    logger.info("No data available for EPICS channel %s\n" % (mcode))
     return -9999.9
 
 def mvr(*args):
@@ -72,7 +74,7 @@ def mva(*args):
       bl_stop_motors()
       e_s = str(e)        
       daq_lib.gui_message("detector move error: " + e_s)              
-      print(e)
+      logger.info(e)
 
 def read_db():
   beamline_support.read_db()
@@ -84,9 +86,9 @@ def init_mots():
   return
 
 def bl_stop_motors():
-  print("stopping motors")  
+  logger.info("stopping motors")  
   stop_motors()
-  print("done stopping motors")
+  logger.info("done stopping motors")
 
 def stop_motors():
   beamline_support.stop_motors()
@@ -291,11 +293,11 @@ def guess_element_for_chooch(midpoint_wave_param):
       else:
         tokens = split(line)
         if (int(tokens[0]) == (numpoints+2)/2):
-          print(line)
+          logger.info(line)
           mono_cp_energy = float(tokens[1])
 #          specder.py_steps_to_energy(mono_cp_steps,mono_cp_energy_p)
           midpoint_wave = 12398.5/mono_cp_energy
-          print(midpoint_wave)
+          logger.info(midpoint_wave)
           min_difference = 99.0
           scan_element = "unknown"
           for keyname in list(element_info.keys()):
@@ -304,7 +306,7 @@ def guess_element_for_chooch(midpoint_wave_param):
               if (difference<min_difference):
                 min_difference = difference
                 scan_element = keyname
-          print("scan_element  = ",scan_element)
+          logger.info("scan_element  = ",scan_element)
           return scan_element
   except ValueError:
     return "Se"
@@ -330,10 +332,10 @@ def spectrum_analysis():
     comm_s = "chooch -e %s -o %s -p %s %s" % (scan_element,chooch_prefix+".efs",chooch_prefix+".ps",chooch_prefix+".raw")
   else:
     comm_s = "chooch -o %s -p %s %s" % (chooch_prefix+".efs",chooch_prefix+".ps",chooch_prefix+".raw")    
-  print(comm_s)
+  logger.info(comm_s)
   daq_lib.gui_message("Running Chooch...&")
   for outputline in os.popen(comm_s).readlines():
-    print(outputline)
+    logger.info(outputline)
     tokens = split(outputline)    
     if (len(tokens)>4):
       if (tokens[1] == "peak"):

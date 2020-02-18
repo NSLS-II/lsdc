@@ -1,5 +1,7 @@
 import numpy as np
 import epics
+import logging
+logger = logging.getLogger(__name__)
 
 #12/19 - skinner did not write this.
 def gen_commands(traj,exptime):
@@ -40,7 +42,7 @@ def gen_commands(traj,exptime):
     oeos.put('\n')
     
     for cmd in commands:
-#        print(len(cmd),cmd)
+#        logger.info(len(cmd),cmd)
         aout.put(cmd, wait=True)
 
     tmod.put('Write/Read')
@@ -51,7 +53,7 @@ def go_all():
 
     tmod.put('Write')
     for n in range(1, 4):
-        print("Arming waveform", n)
+        logger.info("Arming waveform", n)
         aout.put('WGO %d 0x102' % (n,), wait=True)
         
     tmod.put('Write/Read')

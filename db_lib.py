@@ -13,6 +13,8 @@ import amostra.client.commands as acc
 import conftrak.client.commands as ccc
 from analysisstore.client.commands import AnalysisClient
 import conftrak.exceptions
+import logging
+logger = logging.getLogger(__name__)
 
 #12/19 - Skinner inherited this from Hugo, who inherited it from Matt. Arman wrote the underlying DB and left BNL in 2018. 
 
@@ -48,7 +50,7 @@ def db_connect(params=services_config):
 
     configuration_ref = ccc.ConfigurationReference(**services_config['conftrak'])
     analysis_ref = AnalysisClient(services_config['analysisstore'])
-    print(analysis_ref)
+    logger.info(analysis_ref)
 
 # should be in config :(
 primaryDewarName = 'primaryDewarJohn'
@@ -221,8 +223,8 @@ def createResult(result_type, owner,request_id=None, sample_id=None, result_obj=
     header = analysis_ref.insert_analysis_header(result_type=result_type,owner=owner, uid=str(uuid.uuid4()),
                                                 sample=sample_id, request=request_id,
                                                  provenance={'lsdc':1}, result_obj=result_obj,proposalID=proposalID,time=time.time(),**kwargs)
-    print("return from insert")
-    print(header)
+    logger.info("return from insert")
+    logger.info(header)
 
     return header
 
@@ -414,7 +416,7 @@ def addRequesttoSample(sample_id, request_type, owner,request_obj=None, as_mongo
     s = time.time()
     r = createRequest(request_type, owner, request_obj=request_obj, as_mongo_obj=True, proposalID=proposalID,**kwargs)
     t = time.time()-s
-    print("add req = " + str(t))
+    logger.info("add req = " + str(t))
 
     return r
 
@@ -428,7 +430,7 @@ def insertIntoContainer(container_name, owner, position, itemID):
         updateContainer(c)
         return True
     else:
-        print("bad container name")
+        logger.info("bad container name")
         return False
 
 
@@ -442,7 +444,7 @@ def emptyContainer(uid):
         updateContainer(c)
         return True
     else:
-        print("container not found")
+        logger.info("container not found")
         return False
 
 
@@ -594,9 +596,9 @@ def getCoordsfromSampleID(beamline,sample_id):
     filters = {'$and': [{'uid': {'$in':pdil_set}}, {'content': {'$in':[sample_id]}}]}
 #    filters = {'$and': {'uid': {'$in':pdil_set}, 'content': {'$in':[sample_id]}}}        
     c = getContainers(filters=filters)
-#    print("\n")
-#    print(c)
-#    print("\n")
+#    logger.info("\n")
+#    logger.info(c)
+#    logger.info("\n")
 
     # get the index of the found container in the primary dewar
     i = primary_dewar_item_list.index(c[0]['uid'])
@@ -802,21 +804,21 @@ def getAllBeamlineConfigParams(beamline_id):
   g = configuration_ref.find(key='beamline_info', beamline_id=beamline_id)
   configList = list(g)
 #  for i in range (0,len(configList)):
-#    print(configList[i]['info_name'])
-#    print(configList[i]['info'])    
+#    logger.info(configList[i]['info_name'])
+#    logger.info(configList[i]['info'])    
   return configList
 
 def printAllBeamlineConfigParams(beamline_id):
   configList = getAllBeamlineConfigParams(beamline_id)
   for i in range (0,len(configList)):
     try:
-      print(configList[i]['info_name'] + " " + str(configList[i]['info']['val']))
+      logger.info(configList[i]['info_name'] + " " + str(configList[i]['info']['val']))
     except KeyError:
       pass
 
 def deleteCompletedRequestsforSample(sid):
   return #short circuit, not what they wanted
-  print("delete request " + sid)
+  logger.info("delete request " + sid)
   requestList=getRequestsBySampleID(sid)
   for i in range (0,len(requestList)):
     if (requestList[i]["priority"] == -1): #good to clean up completed requests after unmount

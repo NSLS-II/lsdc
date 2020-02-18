@@ -3,6 +3,8 @@ import os
 import time
 from string import *
 import epics_det
+import logging
+logger = logging.getLogger(__name__)
 
 #detector routines
 
@@ -22,11 +24,11 @@ def detector_set_fileperms(fileperms):
 
 
 def detector_set_period(period):
-  print("set detector period " + str(period))
+  logger.info("set detector period " + str(period))
   epics_det.det_set_image_period(period)
 
 def detector_set_exposure_time(exptime):
-  print("set detector exposure time " + str(exptime))
+  logger.info("set detector exposure time " + str(exptime))
   epics_det.det_set_exptime(exptime)
 
 def detector_get_seqnum():
@@ -39,15 +41,15 @@ def detector_setImagesPerFile(numimages):
   epics_det.det_setImagesPerFile(numimages)
 
 def detector_set_numimages(numimages):
-  print("set detector number of images " + str(numimages))
+  logger.info("set detector number of images " + str(numimages))
   epics_det.det_set_numimages(numimages)
 
 def detector_set_filepath(filepath):
-  print("set detector file path " + filepath)
+  logger.info("set detector file path " + filepath)
   epics_det.det_set_filepath(filepath)
 
 def detector_set_fileprefix(fileprefix):
-  print("set detector file prefix " + fileprefix)
+  logger.info("set detector file prefix " + fileprefix)
   epics_det.det_set_fileprefix(fileprefix)
 
 #def detector_set_fileNamePattern(fileNamePattern):
@@ -55,7 +57,7 @@ def detector_set_fileprefix(fileprefix):
 #  epics_det.det_set_fileprefix(fileprefix)
 
 def detector_set_filenumber(filenumber): #I think this does nothing with the eiger
-  print("set detector file number " + str(filenumber))
+  logger.info("set detector file number " + str(filenumber))
   epics_det.det_set_filenum(filenumber)
 
 def detector_wait():
@@ -66,16 +68,16 @@ def detector_waitArmed():
 #pixel array specific end
 
 def init_detector():
-  print("init detector")
+  logger.info("init detector")
   epics_det.det_channels_init()
   epics_det.det_set_numexposures(1)
 
 def detector_start():
-  print("start detector")  
+  logger.info("start detector")  
   epics_det.det_start()
 
 def detector_trigger():
-  print("trigger detector")  
+  logger.info("trigger detector")  
   epics_det.det_trigger()
 
 def get_trigger_mode():
@@ -97,7 +99,7 @@ def detector_is_manual_trigger():
   return epics_det.det_is_manual_trigger()
   
 def detector_stop():
-  print("stop detector")  
+  logger.info("stop detector")  
   epics_det.det_stop()  
   
 def detector_write(flag):
@@ -114,8 +116,8 @@ def detector_collect_darks(exptime):
   pass
 
 def detector_set_filename(filename):
-  print("detector filename")
-  print(filename)
+  logger.info("detector filename")
+  logger.info(filename)
   last_slash = rfind(filename,"/")
   last_underscore = rfind(filename,"_")
   last_dot = rfind(filename,".")
@@ -128,7 +130,7 @@ def detector_set_filename(filename):
 
 def detector_set_fileheader(phist,phiinc,dist,wave,theta,exptime,xbeam,ybeam,rot_ax,o,k,p):
 #bogus rot axis,
-  print("detector filehead")  
+  logger.info("detector filehead")  
   epics_det.det_setheader(float(phist),float(phiinc),float(dist),float(wave),
                  float(theta),float(exptime),float(xbeam),float(ybeam),
                  0,float(o),float(k),float(p))

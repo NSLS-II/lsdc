@@ -5,10 +5,13 @@ from math import *
 import requests
 import xmltodict
 import getpass
+import logging
+logger = logging.getLogger(__name__)
+
 try:
   import ispybLib
 except:
-  print("ISPYB import error")
+  logger.info("ISPYB import error")
 
 #import metadatastore.commands as mdsc
 
@@ -244,11 +247,11 @@ def readPVDesc():
   try:
     dbfilename = os.environ[envname]
   except KeyError:
-    print(envname + " not defined. Defaulting to epx.db.")
+    logger.info(envname + " not defined. Defaulting to epx.db.")
     dbfilename = "epx.db"
   if (os.path.exists(dbfilename) == 0):
     error_msg = "EPICS BEAMLINE INFO %s does not exist.\n Program exiting." % dbfilename
-    print(error_msg)
+    logger.info(error_msg)
     sys.exit()
   else:
     dbfile = open(dbfilename,'r')
@@ -308,7 +311,7 @@ def readPVDesc():
 
 def setProposalID(proposalID,createVisit=True):
   if (getProposalID() != proposalID): #proposalID changed - create a new visit.
-    print("you changed proposals! " + str(proposalID))
+    logger.info("you changed proposals! " + str(proposalID))
     try:
       if (createVisit):
         visitName = ispybLib.createVisit(proposalID)
@@ -317,7 +320,7 @@ def setProposalID(proposalID,createVisit=True):
         visitName = ispybLib.createVisitName(proposalID)
     except:
       visitName = "999999-1234"
-      print("ispyb error in set proposal")
+      logger.info("ispyb error in set proposal")
     setVisitName(visitName)
 #  db_lib.setBeamlineConfigParam(beamline,"proposal",proposalID)
 

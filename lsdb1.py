@@ -4,6 +4,8 @@ import time
 import db_lib
 from collections import Counter
 import dateutil.parser
+import logging
+logger = logging.getLogger(__name__)
 
 # for autoreload to work no blank line
 # %load_ext autoreload
@@ -23,7 +25,7 @@ def validate_date(d):
     except ValueError:
         new_d = dateutil.parser.parse(d)
         d = new_d.isoformat()
-        print('new formated date {}'.format(d))
+        logger.info('new formated date {}'.format(d))
     return d
 
 
@@ -47,8 +49,8 @@ def getResultsByTimeInterval(start_thuman, end_thuman = None):
     else:
         end_thuman = validate_date(end_thuman)
         end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
-        print(end_t)
-        print(start_t)
+        logger.info(end_t)
+        logger.info(start_t)
     headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t}))
 #bad    headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t},result_obj.protocol='standard'))    
     return headers
@@ -114,7 +116,7 @@ def getMountCount(start_thuman, end_thuman, beamline):
             mountCount+=1
             currentSampID = sampID
       except KeyError:
-        print(reqs[i])
+        logger.info(reqs[i])
     return mountCount
 
       
@@ -151,8 +153,8 @@ def printColRequestsByTimeInterval(start_thuman, end_thuman = None, fname = "swe
       time_s = time.ctime(systemTime)
       line = str(propID) + "\t" + directory + "\t" + prefix + "\t" + protocol + "\t" + str(numimages) + "\t" + str(exptime) + "\t" + str(imgWidth) + "\t" + str(sweep_start) + "\t" + str(translation) + "\t" + str(xvec) + "\t" + str(yvec) + "\t" + str(zvec) + "\t" + str(systemTime) + "\t" + time_s + "\n"
       outfile.write(line)
-      print(line)
-    print(str(len(reqs)) + " requests")
+      logger.info(line)
+    logger.info(str(len(reqs)) + " requests")
     outfile.close()
     
 
@@ -215,40 +217,40 @@ def getSampleReqRes(reqid):
 
     # reqid = db_lib.getRequestsBySampleID(value, active_only=False
 
-    print('**New sample**')
+    logger.info('**New sample**')
 
     if reqid != []:
-        print('{:12} {:15} {:10}'.format('ProposalID', 'Sample Name', 'Sample ID'))
+        logger.info('{:12} {:15} {:10}'.format('ProposalID', 'Sample Name', 'Sample ID'))
         for r in reqid:
             if r is not None:
-                print('{:_>50}'.format(''))
+                logger.info('{:_>50}'.format(''))
                 sample_name = db_lib.getSampleNamebyID(r['sample'])
-                print('{:12} {:15} {:10}'.format(r['proposalID'], sample_name, r['uid']))
+                logger.info('{:12} {:15} {:10}'.format(r['proposalID'], sample_name, r['uid']))
                 reqRes = db_lib.getRequestByID(str(r['uid']), active_only = False)
                 FASTDP = 'no'  # default
                 try:
                     FASTDP == reqRes['request_obj']['fastDP']
                 except KeyError as e:
-                    print(" no FASTDP key " + repr(e))
-                print('{:>20} {:6} {:12} {:12}{:6} {:>6}-{:6}'.format('requests', 'FastDP', 'wavelength A',
+                    logger.info(" no FASTDP key " + repr(e))
+                logger.info('{:>20} {:6} {:12} {:12}{:6} {:>6}-{:6}'.format('requests', 'FastDP', 'wavelength A',
                                                                       'DetDist mm','width (Deg)', 'Start','End' ))
-                print('{:>20} {:<6} {:10} {:10}{:6} {:>10}-{:6}'.format(r['request_type'], FASTDP,
+                logger.info('{:>20} {:<6} {:10} {:10}{:6} {:>10}-{:6}'.format(r['request_type'], FASTDP,
                                                                         reqRes['request_obj']['wavelength'],
                                                                         reqRes['request_obj']['detDist'],
                                                                         reqRes['request_obj']['img_width'],
                                                                         reqRes['request_obj']['sweep_start'],
                                                                         reqRes['request_obj']['sweep_end']))
-                print('{:*>20}'.format('Results'))
+                logger.info('{:*>20}'.format('Results'))
                 try:
                     reqres = db_lib.getResultsforRequest(r['uid'])
                     for rr in reqres:
-                        print('{:>20}'.format(rr['result_type']))
+                        logger.info('{:>20}'.format(rr['result_type']))
                         # eventually it might be important to show what kind of results was obtained from the raster
                         if rr['result_type'] == 'rasterResult':
-                            print('{:>38}'.format(rr['result_obj']['rasterCellResults']['type']))
+                            logger.info('{:>38}'.format(rr['result_obj']['rasterCellResults']['type']))
                 except Exception as e:
-                    print('in 2nd exception')
-                    print('{:20}'.format('none'))
+                    logger.info('in 2nd exception')
+                    logger.info('{:20}'.format('none'))
 
 
 def getSamplesByTimeInterval(start_thuman, end_thuman = None):
@@ -277,7 +279,7 @@ def getSamplesByTimeInterval(start_thuman, end_thuman = None):
 
         # get some stats
         num_samples = len(list(set(v)))
-        print('proposalid {} had {} samples'.format(k, num_samples))
+        logger.info('proposalid {} had {} samples'.format(k, num_samples))
     num_proposal = len(dict_ps.keys())
     proposals = dict_ps.keys()
     data = {"num_proposal": num_proposal, "proposals": proposals, "dict_samples": dict_ps}
@@ -294,7 +296,7 @@ def getVisitSummary(start_thuman, end_thuman = None):
     sampleid_dict = getSamplesByTimeInterval(start_thuman, end_thuman) #this probably eliminates test samples.
 
     for proposalid, sid in sampleid_dict.items(): 
-        print("proposal : %s" % proposalid)
+        logger.info("proposal : %s" % proposalid)
         for value in sid:
             # getting a list of all the requests for a sample
 
@@ -304,7 +306,7 @@ def getVisitSummary(start_thuman, end_thuman = None):
             try:
                 sampleInfo = getSampleReqRes(reqid)
             except Exception as e:
-                print('problem with sample info ' + repr(e))
+                logger.info('problem with sample info ' + repr(e))
 
 
 
@@ -322,7 +324,7 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
     visits = []  # will have the stats for a visit according to proposalid.
 
    #  headers for the print
-    print('{:25} {:10} {:10} {:^10}{:^10} {:^10} {:^10} {:10}'.format('Name', 'proposalid', 'standard', 'raster', 'snapshot', 'vector', 'escan', 'sample ID'))
+    logger.info('{:25} {:10} {:10} {:^10}{:^10} {:^10} {:^10} {:10}'.format('Name', 'proposalid', 'standard', 'raster', 'snapshot', 'vector', 'escan', 'sample ID'))
 
     for pid, sid in sampleid_dict.items():
         num_samples = (len(sid))
@@ -373,14 +375,14 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
 
 
                     list_type.append(req_type)
-#                    print(list_type)
+#                    logger.info(list_type)
                 p_stime2 = datetime.fromtimestamp(p_stime).strftime('%Y-%m-%dT%H:%M:%S')
                 p_etime2 = datetime.fromtimestamp(p_etime).strftime('%Y-%m-%dT%H:%M:%S')
 
                 visit = {'pid': pid, 'num_datacol': num_datacol, 'beamline': 'amx', 'num_samples': num_samples,'start': p_stime2, 'end': p_etime2}
 
             list_type = Counter(list_type)
-#            print(list_type)
+#            logger.info(list_type)
 
             standard = ''
             raster = ''
@@ -390,7 +392,7 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
 
             if 'standard' in list_type:
                     standard = list_type['standard']
-#                   print(standard)
+#                   logger.info(standard)
             if 'raster' in list_type:
                     raster = list_type['raster']
             if 'vector' in list_type:
@@ -400,9 +402,9 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
             if 'escan' in list_type:
                     escan = list_type['escan']
 
-            print('{:25} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}{:10}'.format(sample_name, pid,  standard, raster, snapshot, vector, escan, value))
+            logger.info('{:25} {:^10} {:^10} {:^10} {:^10} {:^10} {:^10}{:10}'.format(sample_name, pid,  standard, raster, snapshot, vector, escan, value))
         visits.append(visit)
-        print('----------{} samples, {} requests from {} to {} '.format(num_samples, num_datacol, p_stime2, p_etime2 ))
+        logger.info('----------{} samples, {} requests from {} to {} '.format(num_samples, num_datacol, p_stime2, p_etime2 ))
 
     return visits
 
@@ -435,8 +437,8 @@ def getSamplesbyProposalID(proposalID):
         list_sampleid = []
         for i in reqs:
             list_sampleid.append(i['sample'])
-        # print(i['sample'])
-        print('proposal {} has {} samples '.format(proposalID, len(list_sampleid)))
+        # logger.info(i['sample'])
+        logger.info('proposal {} has {} samples '.format(proposalID, len(list_sampleid)))
     data = { 'proposalID': proposalID, 'num_samples': len(list_sampleid), 'list_sampleid': list_sampleid}
     return list_sampleid
 

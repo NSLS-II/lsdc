@@ -31,10 +31,12 @@ import numpy as np
 import thread
 import lsdcOlog
 import StringIO
+import logging
+logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except:
-  print("ISPYB import error")
+  logger.info("ISPYB import error")
 import raddoseLib
 
 global sampleNameDict
@@ -321,7 +323,7 @@ class staffScreenDialog(QFrame):
           comm_s = comm_s+")"
         else:
           comm_s = comm_s+","
-      print(comm_s)
+      logger.info(comm_s)
       self.parent.send_to_server(comm_s)
 
     def lockGuiCB(self):
@@ -338,7 +340,7 @@ class staffScreenDialog(QFrame):
           comm_s = comm_s+")"
         else:
           comm_s = comm_s+","
-      print(comm_s)
+      logger.info(comm_s)
       self.parent.send_to_server(comm_s)      
 
         
@@ -933,7 +935,7 @@ class DewarDialog(QtGui.QDialog):
             self.data.append("private")
         else:
           self.data.append("Empty")
-      print(self.data)
+      logger.info(self.data)
 
 
     def initUI(self):
@@ -1136,7 +1138,7 @@ class DewarTree(QtGui.QTreeView):
         else:
           self.collapseAll()
         self.scrollTo(self.currentIndex(),QAbstractItemView.PositionAtCenter)
-        print("refresh time = " + str(time.time()-startTime))
+        logger.info("refresh time = " + str(time.time()-startTime))
 
 
     def refreshTreePriorityView(self): #"item" is a sample, "col_items" are requests which are children of samples.
@@ -1557,7 +1559,7 @@ class controlMain(QtGui.QMainWindow):
           proposalID=daq_utils.getProposalID()
           text, ok = QtGui.QInputDialog.getInteger(self, 'Input Dialog','Enter your 6-digit Proposal ID:',value=proposalID)
           if ok:
-#            print(str(text))
+#            logger.info(str(text))
             propID = int(text)
             if (propID != -999999): #assume they entered a real propID
               daq_utils.setProposalID(int(text))
@@ -2487,7 +2489,7 @@ class controlMain(QtGui.QMainWindow):
         ftime=float(self.annealTime_ledit.text())
         if (ftime >= 0.1 and ftime <= 5.0):
           comm_s = "anneal(" + str(ftime) + ")"
-          print(comm_s)
+          logger.info(comm_s)
           self.send_to_server(comm_s)
         else:
           self.popupServerMessage("Anneal time must be between 0.1 and 5.0 seconds.")        
@@ -2502,7 +2504,7 @@ class controlMain(QtGui.QMainWindow):
         self.refreshCollectionParams(self.selectedSampleRequest)          
 
     def stillModeUserPushCB(self,state):
-      print("still checkbox state " + str(state))
+      logger.info("still checkbox state " + str(state))
       if (self.controlEnabled()):
         if (state):
           self.stillMode_pv.put(1)
@@ -2707,7 +2709,7 @@ class controlMain(QtGui.QMainWindow):
             imagePath = os.getcwd()+"/snapshots/capture"+str(int(now))+".jpg"
       else:
         imagePath = rasterHeatJpeg
-      print("saving " + imagePath)
+      logger.info("saving " + imagePath)
       pix.save(imagePath, "JPG")
       if (useOlog):
         lsdcOlog.toOlogPicture(imagePath,str(comment))
@@ -2727,8 +2729,8 @@ class controlMain(QtGui.QMainWindow):
       
 
     def changeControlMasterCB(self, state, processID=os.getpid()): #when someone touches checkbox, either through interaction or code
-      print("change control master")
-      print(processID)
+      logger.info("change control master")
+      logger.info(processID)
       currentMaster = self.controlMaster_pv.get()
       if (currentMaster < 0):
         self.controlMaster_pv.put(currentMaster) #this makes sure if things are locked, and someone tries to get control, their checkbox will uncheck itself
@@ -2926,8 +2928,8 @@ class controlMain(QtGui.QMainWindow):
           if (self.rasterList[i] != None):
             self.scene.removeItem(self.rasterList[i]["graphicsItem"])
       else:
-        print("xrecrasterflag = ")
-        print(xrecRasterFlag)
+        logger.info("xrecrasterflag = ")
+        logger.info(xrecRasterFlag)
         rasterReq = db_lib.getRequestByID(xrecRasterFlag)
         rasterDef = rasterReq["request_obj"]["rasterDef"]
         if (rasterDef["status"] == 1):
@@ -3268,7 +3270,7 @@ class controlMain(QtGui.QMainWindow):
 
     def beamsizeComboActivatedCB(self, text):
       comm_s = "set_beamsize(\"" + str(text[0:2]) + "\",\"" + str(text[2:4]) + "\")"
-      print(comm_s)
+      logger.info(comm_s)
       self.send_to_server(comm_s)      
 
     def protoComboActivatedCB(self, text):
@@ -3293,12 +3295,12 @@ class controlMain(QtGui.QMainWindow):
         self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans")))
         self.protoOtherRadio.setChecked(True)        
       elif (protocol == "standard"):
-#        print("setting std defaults")
+#        logger.info("setting std defaults")
         self.protoStandardRadio.setChecked(True)
         screenWidth = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_width"))
         screenExptime = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_time"))
         self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"stdTrans")))
-#        print("setting width and time")
+#        logger.info("setting width and time")
         self.osc_range_ledit.setText(str(screenWidth))
         self.exp_time_ledit.setText(str(screenExptime))
         self.osc_start_ledit.setEnabled(True)
@@ -3347,9 +3349,9 @@ class controlMain(QtGui.QMainWindow):
       self.timerSample.start(0)            
       self.timerHutch.start(500)            
       if (fname != ""):
-        print(fname)
+        logger.info(fname)
         comm_s = "importSpreadsheet(\""+str(fname)+"\")"
-        print(comm_s)
+        logger.info(comm_s)
         self.send_to_server(comm_s)
         
     def setUserModeCB(self):
@@ -3431,7 +3433,7 @@ class controlMain(QtGui.QMainWindow):
 
     def moveOmegaCB(self):
       comm_s = "mvaDescriptor(\"omega\"," + str(self.sampleOmegaMoveLedit.getEntry().text()) + ")"
-      print(comm_s)
+      logger.info(comm_s)
       self.send_to_server(comm_s)
       
 
@@ -3442,7 +3444,7 @@ class controlMain(QtGui.QMainWindow):
         return
       else:        
         comm_s = "mvaDescriptor(\"energy\"," + str(self.energy_ledit.text()) + ")"
-        print(comm_s)        
+        logger.info(comm_s)        
         self.send_to_server(comm_s)
 
     def calcLifetimeCB(self):
@@ -3453,7 +3455,7 @@ class controlMain(QtGui.QMainWindow):
       
       energyReadback = self.energy_pv.get()/1000.0
       sampleFlux = self.sampleFluxPV.get()
-      print("sample flux = " + str(sampleFlux))      
+      logger.info("sample flux = " + str(sampleFlux))      
       try:
         vecLen_s = self.vecLenLabelOutput.text()
         if (vecLen_s != "---"):
@@ -3477,7 +3479,7 @@ class controlMain(QtGui.QMainWindow):
         self.popupServerMessage("Transmission must be 0.001-1.0")
         return
       comm_s = "setTrans(" + str(self.transmission_ledit.text()) + ")"
-      print(comm_s)
+      logger.info(comm_s)
       self.send_to_server(comm_s)
 
     def setDCStartCB(self):
@@ -3487,7 +3489,7 @@ class controlMain(QtGui.QMainWindow):
       
     def moveDetDistCB(self):
       comm_s = "mvaDescriptor(\"detectorDist\"," + str(self.detDistMotorEntry.getEntry().text()) + ")"
-      print(comm_s)
+      logger.info(comm_s)
       self.send_to_server(comm_s)
 
     def omegaTweakNegCB(self):
@@ -3547,7 +3549,7 @@ class controlMain(QtGui.QMainWindow):
       polyPoints = []      
       if (self.click_positions != []): #use the user clicks
         if (len(self.click_positions) == 2): #draws a single row or column
-          print("2-click raster")
+          logger.info("2-click raster")
           polyPoints.append(self.click_positions[0])
 #          if (abs(self.click_positions[0].x()-self.click_positions[1].x())<2): #straight line bug fix
           if (1): #straight line bug fix                        
@@ -3595,7 +3597,7 @@ class controlMain(QtGui.QMainWindow):
       length = self.measureLine.line().length()
       fov = self.getCurrentFOV()
       lineMicronsX = int(round(length * (fov["x"]/daq_utils.screenPixX)))
-      print("linelength = " + str(lineMicronsX))      
+      logger.info("linelength = " + str(lineMicronsX))      
       self.click_positions = []
 
       
@@ -3647,9 +3649,9 @@ class controlMain(QtGui.QMainWindow):
           try:
             cellResult = cellResults[spotLineCounter]
           except IndexError:
-            print("caught index error #1")
-            print("numlines = " + str(numLines))
-            print("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
+            logger.info("caught index error #1")
+            logger.info("numlines = " + str(numLines))
+            logger.info("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
             return #means a raster failure, and not enough data to cover raster, caused a gui crash
           try:
             spotcount = cellResult["spot_count_no_ice"]
@@ -3676,9 +3678,9 @@ class controlMain(QtGui.QMainWindow):
               else:
                 my_array[cellIndex] = float(cellResult["d_min"])
           except IndexError:
-            print("caught index error #2")
-            print("numlines = " + str(numLines))
-            print("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
+            logger.info("caught index error #2")
+            logger.info("numlines = " + str(numLines))
+            logger.info("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
             return #means a raster failure, and not enough data to cover raster, caused a gui crash
           cellResults_array[cellIndex] = cellResult #instead of just grabbing filename, get everything. Not sure why I'm building my own list of results. How is this different from cellResults?
 #I don't think cellResults_array is different from cellResults, could maybe test that below by subtituting one for the other. It may be a remnant of trying to store less than the whole result set.          
@@ -3740,7 +3742,7 @@ class controlMain(QtGui.QMainWindow):
         jpegImageFilename = jpegImagePrefix+".jpg"
         jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
 #        time.sleep(5.0) # in case network lag. want to make sure xtal is stable.
-        print("saving raster snapshot")
+        logger.info("saving raster snapshot")
         self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
         ispybLib.insertRasterResult(rasterResult,rasterReq,visitName)
 
@@ -4242,7 +4244,7 @@ class controlMain(QtGui.QMainWindow):
         if (propNum == None):
           propNum = 999999        
         if (propNum != daq_utils.getProposalID()):
-          print("setting proposal in add request")
+          logger.info("setting proposal in add request")
           daq_utils.setProposalID(propNum,createVisit=True)
 
       if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):
@@ -4285,7 +4287,7 @@ class controlMain(QtGui.QMainWindow):
           if (selectedSampleID == None): #this is a temp kludge to see if this is called from addAll
             self.treeChanged_pv.put(1)
         else:
-          print("choose an element and try again")
+          logger.info("choose an element and try again")
         return          
 
       if (self.periodicTable.isVisible()):
@@ -4329,7 +4331,7 @@ class controlMain(QtGui.QMainWindow):
           if (selectedSampleID == None): #this is a temp kludge to see if this is called from addAll
             self.treeChanged_pv.put(1)
         else:
-          print("choose an element and try again")
+          logger.info("choose an element and try again")
         return          
 
 # I don't like the code duplication, but one case is the mounted sample and selected centerings - so it's in a loop for multiple reqs, the other requires autocenter.
@@ -4434,7 +4436,7 @@ class controlMain(QtGui.QMainWindow):
         try:
           reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())
         except ValueError:
-          print("set dist to 500 in exception handler 1")
+          logger.info("set dist to 500 in exception handler 1")
           reqObj["detDist"] = 502.0
         if (reqObj["protocol"] == "multiCol" or reqObj["protocol"] == "multiColQ"):
           reqObj["gridStep"] = float(self.rasterStepEdit.text())
@@ -4838,7 +4840,7 @@ class controlMain(QtGui.QMainWindow):
               lastResult = resultList[-1]
               if (db_lib.getResult(lastResult['uid'])["result_type"] == "choochResult"):                  
                 resultID = lastResult['uid']
-                print("plotting chooch")
+                logger.info("plotting chooch")
                 self.processChoochResult(resultID)
         self.refreshCollectionParams(self.selectedSampleRequest)
 
@@ -5276,7 +5278,7 @@ if __name__ == '__main__':
             #sortby = 'cumulative'
             #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
             #ps.print_stats()  # dies here, expected unicode, got string, need unicode io stream?
-            #print(s.getvalue())
+            #logger.info(s.getvalue())
 
         elif '-py' in sys.argv:
             # stop profiler and print results

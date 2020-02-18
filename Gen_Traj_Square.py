@@ -1,3 +1,6 @@
+import logging
+logger = logging.getLogger(__name__)
+
 def gen_traj_square(x_start, x_end, y_start, y_end, z_start, z_end, col, row):
 #12/19 skinner did not write this
     #   x/y/z_start/end are the definitions (in micron) of the raster area
@@ -14,19 +17,19 @@ def gen_traj_square(x_start, x_end, y_start, y_end, z_start, z_end, col, row):
     x = x_end-x_start
     # If the X size of the raster area is larger than 180 micron, return an error message
     if np.abs(x) > 180:
-        print('x range error')
+        logger.info('x range error')
         return
 
     y = y_end-y_start
     z = z_end-z_start
     # If the Y size of the raster area is larger than 150 micron, return an error message
     if np.abs(y) > 150:
-        print('y range error')
+        logger.info('y range error')
         return
 
     # If the Z size of the raster area is larger than 150 micron, return an error message
     if np.abs(z) > 150:
-        print('z range error')
+        logger.info('z range error')
         return
 
     step = x / col

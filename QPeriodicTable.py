@@ -27,6 +27,8 @@
 import sys
 from PyMca.PyMcaQt import *
 from element_info import element_info #skinner, from nsls-I
+import logging
+logger = logging.getLogger(__name__)
 
 QTVERSION = qVersion()
 if QTVERSION < '4.0.0':
@@ -360,8 +362,8 @@ class QPeriodicTable(QWidget):
             self.emit(PYSIGNAL("elementClicked"), (symbol,))
         else:
             self.emit(SIGNAL("elementClicked"), symbol)
-        print(self.eltCurrent.symbol)
-        print(self.eltButton[symbol].isSelected())                        
+        logger.info(self.eltCurrent.symbol)
+        logger.info(self.eltButton[symbol].isSelected())                        
             
             
     def getSelection(self):
@@ -414,7 +416,7 @@ class QPeriodicComboTableItem(QComboTableItem):
         else:
             QComboBox.__init__(self)
             self.addItems(strlist)
-            print("still to continue")
+            logger.info("still to continue")
 
     def setSelection(self, symbol=None):
         if symbol is None:
@@ -527,7 +529,7 @@ class QPeriodicList(MyQListView):
             self.header().setStretchLastSection(False)
             self.setRootIsDecorated(0)
             self.connect(self, SIGNAL("itemSelectionChanged()"), self.__selectionChanged)
-            print("what to do? ")
+            logger.info("what to do? ")
             """
             self.header().setClickEnabled(0, -1)
             self.setAllColumnsShowFocus(1)
@@ -591,7 +593,7 @@ class QPeriodicList(MyQListView):
 
 def testwidget():
     def change(list):
-        print("New selection:", list)
+        logger.info("New selection:", list)
 
     a = QApplication(sys.argv)
     QObject.connect(a,SIGNAL("lastWindowClosed()"),a, SLOT("quit()"))

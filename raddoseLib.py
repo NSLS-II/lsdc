@@ -6,6 +6,8 @@ from shutil import copyfile
 import fileinput
 import sys
 import os.path
+import logging
+logger = logging.getLogger(__name__)
 
 #12/19 - See Martin about this code!
 
@@ -121,18 +123,18 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
     
     out = run_rd3d(inputFilePath)
     if verbose:
-        print(out)
+        logger.info(out)
     
     rd3d_out = np.genfromtxt(outputFilePath, delimiter=',', names=True)
-    print("\n=== rd3d_calc summary ===")
+    logger.info("\n=== rd3d_calc summary ===")
     # append_fields has issues with 1d arrays, use reshape() and [] to make len() work on size 1 array:
     # https://stackoverflow.com/questions/53137822/adding-a-field-to-a-structured-numpy-array-4
     rd3d_out = rd3d_out.reshape(1)
-    print("Diffraction weighted dose = " + "%.3f" % rd3d_out['DWD'] + " MGy")
-    print("Max dose = " + "%.3f" % rd3d_out['Max_Dose'] + " MGy")  
+    logger.info("Diffraction weighted dose = " + "%.3f" % rd3d_out['DWD'] + " MGy")
+    logger.info("Max dose = " + "%.3f" % rd3d_out['Max_Dose'] + " MGy")  
     t2gl = exposureTime * 30 / rd3d_out['DWD']  # Time to Garman limit based on diffraction weighted dose
     rd3d_out = rfn.append_fields(rd3d_out,'t2gl',[t2gl],usemask=False)
-    print("Time to Garman limit = " + "%.3f" % rd3d_out['t2gl'] + " s")
+    logger.info("Time to Garman limit = " + "%.3f" % rd3d_out['t2gl'] + " s")
     
     return rd3d_out
 
@@ -229,7 +231,7 @@ def fmx_expTime_to_10MGy(beamsizeV = 1.0, beamsizeH = 2.0,
     if flux == -1:
         # Current flux [ph/s]: From flux-at-sample PV
         fluxSample = epics.caget('XF:17IDA-OP:FMX{Mono:DCM-dflux-MA}')
-        print('Flux at sample = {:.4g} ph/s'.format(fluxSample))
+        logger.info('Flux at sample = {:.4g} ph/s'.format(fluxSample))
     else:
         fluxSample = flux            
     
@@ -264,11 +266,11 @@ def fmx_expTime_to_10MGy(beamsizeV = 1.0, beamsizeH = 2.0,
                          verbose=verbose
                         )
     
-    print("\n=== fmx_expTime_to_10MGy summary ===")
+    logger.info("\n=== fmx_expTime_to_10MGy summary ===")
     dose1s = rd3d_out['DWD'].item()  # .item() to convert 1d array to scalar
-    print('Average Diffraction Weighted Dose for 1s exposure = {:f} MGy'.format(dose1s))
+    logger.info('Average Diffraction Weighted Dose for 1s exposure = {:f} MGy'.format(dose1s))
     expTime10MGy = 10 / dose1s  # Experiment time to reach an average DWD of 10 MGy
-    print('Experiment time to reach an average diffraction weighted dose of 10 MGy = {:f} s'.format(expTime10MGy))
+    logger.info('Experiment time to reach an average diffraction weighted dose of 10 MGy = {:f} s'.format(expTime10MGy))
     
     return expTime10MGy
 

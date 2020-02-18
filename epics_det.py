@@ -6,6 +6,8 @@ from string import *
 #from EpicsCA import PV
 import beamline_support
 from beamline_support import *
+import logging
+logger = logging.getLogger(__name__)
 
 global det_pv_list
 global channel_list
@@ -23,11 +25,11 @@ def read_db():
   try:
     dbfilename = os.environ["DET_PV_LIST"]
   except KeyError:
-    print("det_pv_list not defined. Please set the environment variable det_pv_list to the name of the detector pv list file and try again.")
+    logger.info("det_pv_list not defined. Please set the environment variable det_pv_list to the name of the detector pv list file and try again.")
     sys.exit()
   if (os.path.exists(dbfilename) == 0):
     error_msg = "\ndet_pv_list: %s does not exist.\n Program exiting." % dbfilename
-    print(error_msg)
+    logger.info(error_msg)
     sys.exit()
   else:
     dbfile = open(dbfilename,'r')
@@ -102,7 +104,7 @@ def det_channels_init():
         set_det_pv('filenum_auto_inc_flag',0)
         det_set_file_template("img")        
   except KeyError:
-    print("No ENV VAR %s\n" % varname)
+    logger.info("No ENV VAR %s\n" % varname)
       
 
 def set_det_pv(pvcode,val):
@@ -197,7 +199,7 @@ def det_wait():
   if (det_type == "pixel_array"):
     time.sleep(0.5)      
     while (get_det_pv("det_state") != 0):
-#      print(get_det_pv("det_state"))
+#      logger.info(get_det_pv("det_state"))
 #    while (get_det_pv("det_state") == "Acquire"):      
       time.sleep(.5)
 
@@ -205,10 +207,10 @@ def det_waitArmed(): #not even sure what this means.
   if (offline):
     return  
   if (det_type == "pixel_array"):
-    print("armed = " + str(get_det_pv("armed_state")))
+    logger.info("armed = " + str(get_det_pv("armed_state")))
 ##    time.sleep(0.5)      
     while (get_det_pv("armed_state") == 0):
-#      print(get_det_pv("armed_state"))
+#      logger.info(get_det_pv("armed_state"))
       time.sleep(.01)
 
 def det_getSeqNum():

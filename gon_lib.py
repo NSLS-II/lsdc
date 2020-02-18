@@ -3,6 +3,8 @@ import os
 import time
 import beamline_lib
 import beamline_support
+import logging
+logger = logging.getLogger(__name__)
 
 
 def backlightBrighter():
@@ -52,7 +54,7 @@ def lib_home_dist():
 
 
 def gon_stop():
-  print("setting osc abort")
+  logger.info("setting osc abort")
   beamline_support.setPvValFromDescriptor("vectorAbort",1)
 #  beamline_support.setPvValFromDescriptor("oscAbort",0)  
 
@@ -72,7 +74,7 @@ def gon_osc(angle_start,width,exptime):
   beamline_support.setPvValFromDescriptor("oscGo",1)
   oscWait()
   end_osc = beamline_lib.motorPosFromDescriptor("omega")
-  print("end_osc in gon_osc = " + str(end_osc) + "\n")
+  logger.info("end_osc in gon_osc = " + str(end_osc) + "\n")
   return end_osc
 
 
@@ -88,8 +90,8 @@ def wait_for_goniohead(): #why can't I just call wait_motors????
     except KeyboardInterrupt:
       pass
     except CaChannelException as status:
-      print(ca.message(status))
-      print("\n\nHandled Epics Error in wait for motors-2\n\n")
+      logger.info(ca.message(status))
+      logger.info("\n\nHandled Epics Error in wait for motors-2\n\n")
       continue
   
   

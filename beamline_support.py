@@ -14,6 +14,8 @@ import time
 import epics
 import os
 #from CaChannel import *
+import logging
+logger = logging.getLogger(__name__)
 
 
 global beamline_designation,motor_dict,soft_motor_list,scan_list,counter_dict,motor_channel_dict,counter_channel_dict,number_of_counter_readouts,scanparms_channel_dict,beamline_scan_record,scan_active_pv,scan_reference_counter,scan_detector_count,datafile_name,pvChannelDict
@@ -43,7 +45,7 @@ def pvCreate(pvname,connCB=None,timeout=None):
   pv = None
   pv = epics.PV(pvname,connection_timeout=timeout)
   if not (pv.wait_for_connection()):
-    print("\n\nCould not create PV " + pvname + "\n\n")
+    logger.info("\n\nCould not create PV " + pvname + "\n\n")
   return pv
 
 
@@ -87,8 +89,8 @@ def get_any_epics_pv(pv_prefix,field_name,as_string=False): #this does not use b
     pv_val = None
   return pv_val
 #  except CaChannelException as status:
-#    print(ca.message(status))
-#    print("\n\nHandled Epics Error in get pv " + pvname + "\n\n")
+#    logger.info(ca.message(status))
+#    logger.info("\n\nHandled Epics Error in get pv " + pvname + "\n\n")
 
 #initializes epics motors and counter based on the file pointed to by $EPICS_BEAMLINE_INFO
 #Below this line is an example beamline info file, (remove one '#' off the front of each line)
@@ -127,7 +129,7 @@ def mvrOld(*args):
     for i in range(0,(len(args)/2)):
       motor_channel_dict[multimot_list[i]].wait()
   except epicsMotorException as status:
-    print("CAUGHT MOTOR EXCEPTION")
+    logger.info("CAUGHT MOTOR EXCEPTION")
     try:
       ii = 0
       status_string = ""
@@ -135,7 +137,7 @@ def mvrOld(*args):
         status_string = status_string + str(status[ii])
         ii = ii + 1
     except IndexError:
-      print(status_string)
+      logger.info(status_string)
       raise epicsMotorException(status_string)
 
 
@@ -210,13 +212,13 @@ def print_counts():
   count_result_list = []
   count_result_list = counter_channel_dict[counter_dict["main_counter"]].read()
   for i in range (0,number_of_counter_readouts):
-    print("channel %d: %d" % (i,count_result_list[i]))
+    logger.info("channel %d: %d" % (i,count_result_list[i]))
 
 
 
 #dumps motor parameters to a file. Used for creating scan file headers
 def dump_mots(dump_filename):
-  print(("dumping to " + dump_filename))
+  logger.info(("dumping to " + dump_filename))
   dump_file = open(dump_filename,'a+')
   dump_file.write("#%s\n" % time.ctime(time.time()))
   dump_file.write("#motor_code motor_name    pos speed bspd bcklsh acc bk_acc\n")
@@ -239,7 +241,7 @@ def sp(motcode,posn): #sets the position w/o moving
   if (not(is_soft_motor(motcode))):
     motor_channel_dict[beamline_designation+motcode].set_position(posn)
   else:
-    print("Cannot set Soft Motor " + motcode)
+    logger.info("Cannot set Soft Motor " + motcode)
 
 
 
@@ -273,11 +275,11 @@ def read_db():
   try:
     dbfilename = os.environ[envname]
   except KeyError:
-    print(envname + " not defined. Defaulting to epx.db.")
+    logger.info(envname + " not defined. Defaulting to epx.db.")
     dbfilename = "epx.db"
   if (os.path.exists(dbfilename) == 0):
     error_msg = "EPICS BEAMLINE INFO %s does not exist.\n Program exiting." % dbfilename
-    print(error_msg)
+    logger.info(error_msg)
     sys.exit()
   else:
     dbfile = open(dbfilename,'r')

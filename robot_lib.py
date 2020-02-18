@@ -13,7 +13,8 @@ import beamline_support
 import os
 import filecmp
 import _thread
-
+import logging
+logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
 pinsPerPuck = 16
@@ -34,7 +35,7 @@ def finish():
     except Exception as e:
       e_s = str(e)        
       daq_lib.gui_message("ROBOT Finish ERROR: " + e_s)        
-      print(e)
+      logger.info(e)
 #      daq_lib.gui_message(e)
       return 0
 
@@ -56,10 +57,10 @@ def wait90TopviewThread(prefix1,prefix90):
   while (1):
     omegaCP = beamline_lib.motorPosFromDescriptor("omega")
     if (omegaCP > 89.5 and omegaCP < 90.5):
-      print("leaving topview thread for 90")      
+      logger.info("leaving topview thread for 90")      
       break
     if (time.time()-startTime > threadTimeout):
-      print("leaving topview thread for " + str(threadTimeout))
+      logger.info("leaving topview thread for " + str(threadTimeout))
       beamline_support.setPvValFromDescriptor("topViewTrigMode",0)    
       beamline_support.setPvValFromDescriptor("topViewImMode",2)
       beamline_support.setPvValFromDescriptor("topViewDataType",1)
@@ -73,20 +74,20 @@ def wait90TopviewThread(prefix1,prefix90):
     snapshot2Name = prefix90+"_001.jpg"
     if (not filecmp.cmp(os.getcwd()+"/pinAlign/"+snapshot1Name,os.getcwd()+"/pinAlign/"+snapshot2Name)): #this would mean something is wrong if true because the pictures are identical
       comm_s = os.environ["LSDCHOME"] + "/runPinAlign.py " + snapshot1Name + " " + snapshot2Name
-      print(comm_s)
+      logger.info(comm_s)
       lines = os.popen(comm_s).readlines()
-      print("printing lines right after popen ")
-      print(lines)
-      print(" done")
+      logger.info("printing lines right after popen ")
+      logger.info(lines)
+      logger.info(" done")
       if (lines[0].find("CANNOT CENTER") == -1):
         offsetTokens = lines[0].split()
-        print(offsetTokens[0] + " " + offsetTokens[1] + " " + offsetTokens[2])
+        logger.info(offsetTokens[0] + " " + offsetTokens[1] + " " + offsetTokens[2])
         xlimLow = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountLowLim")
         xlimHi = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountHiLim")
         xpos = beamline_lib.motorPosFromDescriptor("sampleX")          
         target = xpos + float(offsetTokens[0])*1000.0
         if (target<xlimLow or target>xlimHi):
-          print("Pin X move beyond limit - Mount next sample.")
+          logger.info("Pin X move beyond limit - Mount next sample.")
 ##else it thinks it worked              return 0
         else:
           sampXadjust = 1000.0*float(offsetTokens[0])
@@ -102,14 +103,14 @@ def wait90TopviewThread(prefix1,prefix90):
           beamline_support.setPvValFromDescriptor("robotYWorkPos",sampYAbsolute)
           beamline_support.setPvValFromDescriptor("robotZWorkPos",sampZAbsolute)          
       else:
-        print("Cannot align pin - Mount next sample.")
+        logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
       for outputline in lines:
-        print(outputline)
+        logger.info(outputline)
   except Exception as e:
     e_s = str(e)        
     daq_lib.gui_message("TopView check ERROR, will continue: " + e_s)        
-    print(e_s)
+    logger.info(e_s)
     
   
   
@@ -196,11 +197,11 @@ def parkGripper():
   except Exception as e:
     e_s = str(e)        
     daq_lib.gui_message("Park gripper Failed!: " + e_s)        
-    print(e_s)
+    logger.info(e_s)
     
 
 def setWorkposThread(init,junk):
-  print("setting work pos in thread")
+  logger.info("setting work pos in thread")
   beamline_support.setPvValFromDescriptor("robotGovActive",1)
   beamline_support.setPvValFromDescriptor("robotXWorkPos",beamline_support.getPvValFromDescriptor("robotXMountPos"))
   beamline_support.setPvValFromDescriptor("robotYWorkPos",beamline_support.getPvValFromDescriptor("robotYMountPos"))
@@ -213,12 +214,12 @@ def setWorkposThread(init,junk):
 def testRobot():
   try:
     RobotControlLib.testRobot()
-    print("Test Robot passed!")
+    logger.info("Test Robot passed!")
     daq_lib.gui_message("Test Robot passed!")
   except Exception as e:
     e_s = str(e)        
     daq_lib.gui_message("Test Robot failed!: " + e_s)        
-    print(e_s)
+    logger.info(e_s)
 
   
 def openGripper():
@@ -242,7 +243,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       try:
         if (daq_utils.beamline == "fmx"):                  
           _thread.start_new_thread(setWorkposThread,(init,0))        
-#        print("setting work pos")
+#        logger.info("setting work pos")
 #        beamline_support.setPvValFromDescriptor("robotGovActive",1)
 #        beamline_support.setPvValFromDescriptor("robotXWorkPos",beamline_support.getPvValFromDescriptor("robotXMountPos"))
 #        beamline_support.setPvValFromDescriptor("robotYWorkPos",beamline_support.getPvValFromDescriptor("robotYMountPos"))
@@ -258,23 +259,23 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       except Exception as e:
         e_s = str(e)        
         daq_lib.gui_message("TopView check ERROR, will continue: " + e_s)        
-        print(e_s)
-    print("mounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
-    print("absPos = " + str(absPos))
+        logger.info(e_s)
+    logger.info("mounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
+    logger.info("absPos = " + str(absPos))
     platePos = int(puckPos/3)
     rotMotTarget = daq_utils.dewarPlateMap[platePos][0]
     rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
-    print("dewar target,CP")
-    print(rotMotTarget,rotCP)
+    logger.info("dewar target,CP")
+    logger.info(rotMotTarget,rotCP)
     if (abs(rotMotTarget-rotCP)>1):
-      print("rot dewar")
+      logger.info("rot dewar")
       try:
         if (init == 0):
           RobotControlLib.runCmd("park")
       except Exception as e:
         e_s = str(e)        
         daq_lib.gui_message("ROBOT Park ERROR: " + e_s)                  
-        print(e)
+        logger.info(e)
         return 0
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
@@ -295,9 +296,9 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
-          print("calling thread")                        
+          logger.info("calling thread")                        
           _thread.start_new_thread(wait90TopviewThread,(prefix1,prefix90))
-          print("called thread")
+          logger.info("called thread")
         beamline_support.setPvValFromDescriptor("boostSelect",0)                    
         if (beamline_support.getPvValFromDescriptor("gripTemp")>-170):
           try:
@@ -305,12 +306,12 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           except Exception as e:
             e_s = str(e)        
             daq_lib.gui_message("ROBOT mount ERROR: " + e_s)        
-            print(e)
+            logger.info(e)
             return 0
         else:
           time.sleep(0.5)
           if (beamline_support.getPvValFromDescriptor("sampleDetected") == 0):
-            print("full mount")
+            logger.info("full mount")
             RobotControlLib.mount(absPos)
           else:
             RobotControlLib.initialize()
@@ -321,9 +322,9 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
-          print("calling thread")            
+          logger.info("calling thread")            
           _thread.start_new_thread(wait90TopviewThread,(prefix1,prefix90))
-          print("called thread")
+          logger.info("called thread")
         if (warmup):
           RobotControlLib._mount(absPos,warmup=True)
         else:
@@ -332,18 +333,18 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         daq_lib.setGovRobotSA()  #make sure we're in SA before moving motors
         if (sampYadjust != 0):
           pass
-#          print("move samp x,y,z (nm) " + str(sampXadjust) + " " + str(sampYadjust) + " "+ str(sampZadjust))
+#          logger.info("move samp x,y,z (nm) " + str(sampXadjust) + " " + str(sampYadjust) + " "+ str(sampZadjust))
 #          beamline_lib.mvrDescriptor("sampleX",sampXadjust)
 #          beamline_lib.mvrDescriptor("sampleY",sampYadjust)
 #          beamline_lib.mvrDescriptor("sampleZ",sampZadjust)
         else:
-          print("Cannot align pin - Mount next sample.")
+          logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
       
       daq_lib.setGovRobotSA()
       return 1
     except Exception as e:
-      print(e)
+      logger.info(e)
       e_s = str(e)
 #      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):      
 #        beamline_lib.mvrDescriptor("omega", 90.0) #this will allow topview camera thread to terminate gracefully      
@@ -378,28 +379,28 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
 #  absPos = (pinsPerPuck*puckPos)+pinPos+1
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
   robotOnline = db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')
-  print("robot online = " + str(robotOnline))
+  logger.info("robot online = " + str(robotOnline))
   if (robotOnline):
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    
     if (detDist<200.0):
       beamline_support.setPvValFromDescriptor("govRobotDetDistOut",200.0)
       beamline_support.setPvValFromDescriptor("govHumanDetDistOut",200.0)          
     daq_lib.setRobotGovState("SE")    
-    print("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
-    print("absPos = " + str(absPos))
+    logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
+    logger.info("absPos = " + str(absPos))
     platePos = int(puckPos/3)
     rotMotTarget = daq_utils.dewarPlateMap[platePos][0]
     rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
-    print("dewar target,CP")
-    print(rotMotTarget,rotCP)
+    logger.info("dewar target,CP")
+    logger.info(rotMotTarget,rotCP)
     if (abs(rotMotTarget-rotCP)>1):
-      print("rot dewar")
+      logger.info("rot dewar")
       try:
         RobotControlLib.runCmd("park")
       except Exception as e:
         e_s = str(e)        
         daq_lib.gui_message("ROBOT park ERROR: " + e_s)        
-        print(e)
+        logger.info(e)
         return 0
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
@@ -411,13 +412,13 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
     except Exception as e:
       e_s = str(e)        
       daq_lib.gui_message("ROBOT unmount ERROR: " + e_s)        
-      print(e)
+      logger.info(e)
       return 0
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
     if (detDist<200.0):
       beamline_lib.mvaDescriptor("detectorDist",200.0)
     if (beamline_lib.motorPosFromDescriptor("detectorDist") < 199.0):
-      print("ERROR - Detector < 200.0!")
+      logger.info("ERROR - Detector < 200.0!")
       return 0
     try:
       RobotControlLib.unmount2(absPos)
@@ -429,11 +430,11 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
         daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
         return 0
       daq_lib.gui_message("ROBOT unmount2 ERROR: " + e_s)        
-      print(e)
+      logger.info(e)
       return 0
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.clearMountedSample()
-      print("could not go to SE")    
+      logger.info("could not go to SE")    
       return 0
   return 1
 
@@ -448,7 +449,7 @@ def testRobotComm(numTurns=0):
   if (numTurns>0):
     var_pv.execute("nCamDelay",numTurns)
   method_pv.execute("Test",50000)
-  print("executing robot task")
+  logger.info("executing robot task")
   staubliEpicsLib.waitReady()
-  print("done executing robot task")
+  logger.info("done executing robot task")
 

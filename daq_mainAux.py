@@ -20,6 +20,8 @@ import beamline_lib
 from beamline_lib import *
 #import stateModule
 import atexit
+import logging
+logger = logging.getLogger(__name__)
 
 sitefilename = ""
 global command_list,immediate_command_list,z
@@ -48,15 +50,15 @@ def pybass_init():
 #  if (daq_lib.has_beamline): # for now
 #    try:
     beamline_lib.read_db()
-    print("init mots")
+    logger.info("init mots")
 #      beamline_support.init_motors()
     init_mots()    #for now
-    print("init done mots")
+    logger.info("init done mots")
     init_diffractometer()
 #      init_counters() #for now
 #      newfile("scandata")
 ##    except CaChannelException as status:
-##      print(ca.message(status))
+##      logger.info(ca.message(status))
 ##      gui_message("EPICS motor Initialization Error. Exit and try again. If problem persists, EPICS may need to be restarted.")
   try:
     sitefilename = os.environ["LSDC_SITE_FILE"]
@@ -72,7 +74,7 @@ def pybass_init():
 
 def process_command_file(command_file_name):
   echo_s =  "reading %s\n" % command_file_name
-  print(echo_s)
+  logger.info(echo_s)
   command_file = open(command_file_name,"r")  
   while 1:
     command = command_file.readline()
@@ -87,16 +89,16 @@ def process_command_file(command_file_name):
           if (i != (len(input_tokens)-1)):
             command_string = command_string + ","
         command_string = command_string + ")"
-      print(command_string)
+      logger.info(command_string)
       try:
         exec(command_string);    
       except NameError:
         error_string = "Unknown command: " + command_string
-        print(error_string)
+        logger.info(error_string)
       except SyntaxError:
-        print("Syntax error")
+        logger.info("Syntax error")
       except KeyError:
-        print("Key error")
+        logger.info("Key error")
 #  refresh_screen(1,0)
   command_file.close()
   
@@ -170,18 +172,18 @@ def process_input(command_string):
     execute_command(command_string)
   except NameError:
     error_string = "Unknown command: " + command_string
-    print(error_string)
+    logger.info(error_string)
   except SyntaxError:
-    print("Syntax error")
+    logger.info("Syntax error")
   except KeyError:
-    print("Key error")
+    logger.info("Key error")
   except TypeError:
-    print("Type error")
+    logger.info("Type error")
   except AttributeError:
-    print("Attribute Error")
+    logger.info("Attribute Error")
   except KeyboardInterrupt:
     abort_data_collection()
-    print("Interrupt caught by daq server\n")
+    logger.info("Interrupt caught by daq server\n")
   if (command_string != "pause_data_collection()" and command_string != "continue_data_collection()" and command_string != "abort_data_collection()" and command_string != "unmount_after_abort()" and command_string != "no_unmount_after_abort()"):
     daq_lib.set_field("program_state","Program Ready")
 

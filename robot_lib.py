@@ -254,7 +254,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
     rotMotTarget = daq_utils.dewarPlateMap[platePos][0]
     rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
     logger.info("dewar target,CP")
-    logger.info(rotMotTarget,rotCP)
+    logger.info("%s %s" % (rotMotTarget,rotCP))
     if (abs(rotMotTarget-rotCP)>1):
       logger.info("rot dewar")
       try:
@@ -372,7 +372,7 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
     rotMotTarget = daq_utils.dewarPlateMap[platePos][0]
     rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
     logger.info("dewar target,CP")
-    logger.info(rotMotTarget,rotCP)
+    logger.info("%s %s" % (rotMotTarget,rotCP))
     if (abs(rotMotTarget-rotCP)>1):
       logger.info("rot dewar")
       try:

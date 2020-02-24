@@ -2,8 +2,6 @@ import os
 import sys
 import time
 from string import *
-#import EpicsCA
-#from EpicsCA import PV
 import beamline_support
 from beamline_support import *
 import logging
@@ -55,8 +53,6 @@ def det_init_pvs():
   for keyname in list(det_pv_list.keys()):
     channel_list[keyname] = pvCreate(det_pv_list[keyname])
 
-#  EpicsCA.connect_all()
-
 def det_set_autoinc_filenum(flag):
   set_det_pv('filenum_auto_increment',int(flag))
 
@@ -94,7 +90,6 @@ def det_channels_init():
       det_init_pvs()
       if (det_id == "PILATUS-6"):
         set_det_pv('det_trigger_mode',0)        #internal for devel
-#        set_det_pv('det_trigger_mode',2)        
         det_set_autoinc_filenum(1) 
         det_set_file_template("cbf")
       elif (det_id == "EIGER-16"):
@@ -108,15 +103,9 @@ def det_channels_init():
       
 
 def set_det_pv(pvcode,val):
-#####  print offline
   if (offline):
     return
   pvPut(channel_list[pvcode],val)
-
-
-#def set_det_pv_nowait(pvcode,val):
-#  channel_list[pvcode].put(val)
-#  EpicsCA.pend_event()    
 
 
 def get_det_pv(pvcode):
@@ -127,7 +116,6 @@ def get_det_pv(pvcode):
 def det_setheader(phist,phiinc,dist,wave,theta,exptime,xbeam,ybeam,rot_ax,omega,kappa,phi):
 
   #maybe phist not used, it picks it from axis
-#  return
   set_det_pv("x_beam",xbeam)
   set_det_pv("y_beam",ybeam)
   set_det_pv("img_width",phiinc)
@@ -150,7 +138,6 @@ def det_set_fileprefix(prefix):
 
 def det_set_filepath(filepath):
   set_det_pv("data_filepath_val",filepath)
-#  set_det_pv("data_filepath_val",filepath+"\0")    
   
 def det_set_filetemplate(filetemplate):
   set_det_pv("data_file_template_val",filetemplate)  
@@ -199,8 +186,6 @@ def det_wait():
   if (det_type == "pixel_array"):
     time.sleep(0.5)      
     while (get_det_pv("det_state") != 0):
-#      logger.info(get_det_pv("det_state"))
-#    while (get_det_pv("det_state") == "Acquire"):      
       time.sleep(.5)
 
 def det_waitArmed(): #not even sure what this means.
@@ -208,9 +193,7 @@ def det_waitArmed(): #not even sure what this means.
     return  
   if (det_type == "pixel_array"):
     logger.info("armed = " + str(get_det_pv("armed_state")))
-##    time.sleep(0.5)      
     while (get_det_pv("armed_state") == 0):
-#      logger.info(get_det_pv("armed_state"))
       time.sleep(.01)
 
 def det_getSeqNum():

@@ -120,7 +120,6 @@ def ri():
   local_count = []
 
   
-#  CNT = beamline_support.get_counts(beamline_support.get_count_time())
   local_count = beamline_support.get_counts(beamline_support.get_count_time())  #index0=timer,1=chan2,...
   for i in range(1,number_of_counter_readouts+1):
     CNT[i] = local_count[i-1]   
@@ -134,14 +133,12 @@ def ri():
     daq_lib.set_field("beamline_merit",int((CNT[2]/beamline_support.get_count_time())/current))
   else:
     daq_lib.set_field("beamline_merit",0)
-#  daq_utils.broadcast_output("beamline_done|0|~\n")      
 
 
 def read_intensity(time_to_count):
   global CNT
   local_count = []
   
-#  CNT = beamline_support.get_counts(time_to_count)
   local_count = beamline_support.get_counts(time_to_count)  #index0=timer,1=chan2,...
   for i in range(1,number_of_counter_readouts+1):
     CNT[i] = local_count[i-1]       
@@ -176,7 +173,6 @@ def set_mono_energy_scan_step(stepsize):
   mono_mot_code = beamline_support.get_motor_code(beamline_support.motor_code_from_descriptor("monochromator"))  
   try:
     mono_stepsize_steps = float(stepsize)
-#    daq_lib.set_field("mono_energy_scan_step",mono_stepsize_steps)
     numpoints = beamline_support.get_scan_points(mono_mot_code)
     scan_width = float(mono_stepsize_steps) * float(numpoints-1)
     half_scan_width = scan_width/2.0
@@ -191,7 +187,6 @@ def set_mono_scan_points(numpoints):
   step_inc = beamline_support.get_scanstepsize(mono_mot_code)
   scan_width = step_inc * (float(float(numpoints) - 1))
   half_scan_width = scan_width/2.0
-#  daq_lib.set_field("mono_scan_points",int(float(numpoints)))
   beamline_support.set_scanpoints(mono_mot_code,int(float(numpoints)))
   beamline_support.set_scanstart(mono_mot_code,0.0 - half_scan_width)
   beamline_support.set_scanend(mono_mot_code,half_scan_width)
@@ -208,10 +203,8 @@ def move_mono(energy):  # for now, not sure if this should go in macros
 
 def get_mono_energy():
   if (0):
-#  if (daq_utils.has_beamline == 0):    
     return 12398.5
   else:
-#    mono_mot_code = beamline_support.get_motor_code(beamline_support.motor_code_from_descriptor("monochromator"))
     return motorPosFromDescriptor("energy")
 
 
@@ -225,7 +218,6 @@ def monscn():   # for now, not sure if this should go in macros
   beamline_support.newfile("spectrum")
   current_filename = nowfile()
   daq_lib.open_shutter()
-#  align(mono_mot_code)
   beamline_support.dscan(mono_mot_code)
   daq_lib.close_shutter()    
   command_string = "ln -sf %s spectrum.dat" % current_filename
@@ -233,7 +225,6 @@ def monscn():   # for now, not sure if this should go in macros
   beamline_support.newfile("scandata")      
 
 def specgen(filename,element_edge,transmit_counter,incident_counter):
-#  return specder.specgen(filename,element_edge_info,transmit_counter,incident_counter)
 # skinner 12/10, I'm not using the transmit and incident counter vals, just using 2,3
   now = time.time()
   specdir = "%s/spectra" % os.environ["PWD"]
@@ -281,7 +272,6 @@ def specgen(filename,element_edge,transmit_counter,incident_counter):
 
     
 def guess_element_for_chooch(midpoint_wave_param):
-#  midpoint_wave = float(midpoint_wave_param)
   for line in open("spectrum.dat","r"):
     pass
   tokens = split(line)
@@ -295,7 +285,6 @@ def guess_element_for_chooch(midpoint_wave_param):
         if (int(tokens[0]) == (numpoints+2)/2):
           logger.info(line)
           mono_cp_energy = float(tokens[1])
-#          specder.py_steps_to_energy(mono_cp_steps,mono_cp_energy_p)
           midpoint_wave = 12398.5/mono_cp_energy
           logger.info(midpoint_wave)
           min_difference = 99.0

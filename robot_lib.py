@@ -36,7 +36,6 @@ def finish():
       e_s = str(e)        
       daq_lib.gui_message("ROBOT Finish ERROR: " + e_s)        
       logger.info(e)
-#      daq_lib.gui_message(e)
       return 0
 
 def warmupGripperRecoverThread(savedThreshold,junk):
@@ -119,10 +118,6 @@ def recoverRobot():
     rebootEMBL()
     time.sleep(8.0)    
     RobotControlLib.runCmd("recover")
-#    saveThreshold = beamline_support.getPvValFromDescriptor("warmupThresholdRBV")
-#    beamline_support.setPvValFromDescriptor("warmupThreshold",50)
-#    _thread.start_new_thread(warmupGripperRecoverThread,(saveThreshold,0))
-#    warmupGripper()
   except Exception as e:
     e_s = str(e)
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
@@ -234,7 +229,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   global retryMountCount
   global sampXadjust, sampYadjust, sampZadjust  
 
-#  absPos = (pinsPerPuck*puckPos)+pinPos+1
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
   if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')):
     if (not daq_lib.waitGovRobotSE()):
@@ -243,12 +237,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       try:
         if (daq_utils.beamline == "fmx"):                  
           _thread.start_new_thread(setWorkposThread,(init,0))        
-#        logger.info("setting work pos")
-#        beamline_support.setPvValFromDescriptor("robotGovActive",1)
-#        beamline_support.setPvValFromDescriptor("robotXWorkPos",beamline_support.getPvValFromDescriptor("robotXMountPos"))
-#        beamline_support.setPvValFromDescriptor("robotYWorkPos",beamline_support.getPvValFromDescriptor("robotYMountPos"))
-#        beamline_support.setPvValFromDescriptor("robotZWorkPos",beamline_support.getPvValFromDescriptor("robotZMountPos"))
-#        beamline_support.setPvValFromDescriptor("robotGovActive",0)      
 
         sample = db_lib.getSampleByID(sampID)
         sampName = sample['name']
@@ -284,7 +272,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         if (beamline_support.getPvValFromDescriptor("sampleDetected") == 0): #reverse logic, 0 = true
           beamline_support.setPvValFromDescriptor("boostSelect",1)
         else:
-#            if (beamline_support.getPvValFromDescriptor("gripTemp") > 20.0): #gripper warm
           robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
           if (robotStatus != "Ready"):
             if (daq_utils.beamline == "fmx"):
@@ -333,10 +320,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         daq_lib.setGovRobotSA()  #make sure we're in SA before moving motors
         if (sampYadjust != 0):
           pass
-#          logger.info("move samp x,y,z (nm) " + str(sampXadjust) + " " + str(sampYadjust) + " "+ str(sampZadjust))
-#          beamline_lib.mvrDescriptor("sampleX",sampXadjust)
-#          beamline_lib.mvrDescriptor("sampleY",sampYadjust)
-#          beamline_lib.mvrDescriptor("sampleZ",sampZadjust)
         else:
           logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
@@ -346,8 +329,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
     except Exception as e:
       logger.info(e)
       e_s = str(e)
-#      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):      
-#        beamline_lib.mvrDescriptor("omega", 90.0) #this will allow topview camera thread to terminate gracefully      
       if (e_s.find("Fatal") != -1):
         daq_macros.robotOff()
         daq_macros.disableMount()
@@ -376,7 +357,6 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
 
 def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came from
 
-#  absPos = (pinsPerPuck*puckPos)+pinPos+1
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
   robotOnline = db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')
   logger.info("robot online = " + str(robotOnline))
@@ -406,8 +386,6 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
     try:
       par_init=(beamline_support.get_any_epics_pv("SW:RobotState","VAL")!="Ready")
       par_cool=(beamline_support.getPvValFromDescriptor("gripTemp")>-170)
-#      if par_cool == False and daq_utils.beamline == "fmx": 
-#        time.sleep(3)
       RobotControlLib.unmount1(init=par_init,cooldown=par_cool)
     except Exception as e:
       e_s = str(e)        

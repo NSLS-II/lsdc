@@ -7,7 +7,6 @@ def gen_traj_square(x_start, x_end, y_start, y_end, z_start, z_end, col, row):
     #   x_end - x_start should be positive
     #   step defines the step size of the raster and should be positive
     import numpy as np
-    # import matplotlib.pyplot as plt
 
     # ==========================================================================
     # may need a few lines of code to center the (0,0,0) of the piezo stage to
@@ -36,10 +35,6 @@ def gen_traj_square(x_start, x_end, y_start, y_end, z_start, z_end, col, row):
     d = np.sqrt(y * y + z * z)
     delta_y = y/(row-1)
     delta_z = z/(row-1)
-    # cycles = np.round(d/step)                       # calculate the number of line scans for the raster
-    # cycles = np.int(np.floor(cycles))
-    # if np.remainder(cycles, 2) == 0:                # make sure the number of cycles is odd
-    #    cycles = cycles + 1
 
     x_traj_odd = np.arange(x_start, x_end, step)            # x positions of the odd line
     x_traj_even = np.arange(x_end, x_start, -step)          # x positions of the even line

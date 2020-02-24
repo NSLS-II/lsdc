@@ -1,5 +1,4 @@
 #!/opt/conda_envs/collection-2018-1.0/bin/python
-##!/usr/bin/python
 import time
 import os
 import sys
@@ -51,7 +50,6 @@ hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5
 CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"  
 comm_s = "eiger2cbf-linux " + hdfRowFilepattern
 for i in range (numstart,numimages,10):
-#  comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(i) + ":" + str(i) + " " + CBF_conversion_pattern + "\""
   comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(i) + ":" + str(i) + " " + CBF_conversion_pattern + ">>/dev/null 2>&1\""   
   os.system(comm_s)
 CBFpattern = CBF_conversion_pattern + "*.cbf"
@@ -59,14 +57,12 @@ CBFpattern = CBF_conversion_pattern + "*.cbf"
 time.sleep(1.0)
 comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
 lsOut = os.system(comm_s)
-#  comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + "|" + dialsComm + "\""
 comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + "|" + dialsCommWithParams + "\""
 print(comm_s)
 retry = 3
 localDialsResultDict = {}
 while(1):
   resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
-#  print(resultString)
   localDialsResultDict = xmltodict.parse(resultString)
   if (localDialsResultDict["data"] == None and retry>0):
     print("ERROR \n" + resultString + " retry = " + str(retry))
@@ -81,7 +77,6 @@ while(1):
     break
 logfile = open(cbfDir + "/spotLog.txt","a+")  
 for i in range (0,len(localDialsResultDict["data"]["response"])):
-#  print(localDialsResultDict["data"]["response"][i])
   spotTotal = localDialsResultDict["data"]["response"][i]['spot_count']
   goodBraggCandidates = localDialsResultDict["data"]["response"][i]['spot_count_no_ice']
   method2Res = localDialsResultDict["data"]["response"][i]['d_min_method_2']

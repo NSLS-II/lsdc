@@ -4,14 +4,10 @@ from pyOlog.OlogDataTypes import *
 import requests 
 import os
 
-#requests.packages.urllib3.disable_warnings() 
-
 global client
 client = None
 
 
-#url = "https://xf17id2-ca1.cs.nsls2.local:9191/Olog"
-#url = "https://logbook.nsls2.bnl.gov/17-ID-2/"
 logbook = "Operations"
 url = os.environ["OLOG_URL"]
 username = os.environ["OLOG_USER"]

@@ -24,8 +24,6 @@ prefix_long = directory+"/"+filePrefix
 for i in range (numstart,numstart+numimages):
   filename = daq_utils.create_filename(prefix_long,i)
   expectedFilenameList.append(filename)
-#for i in range (0,len(expectedFilenameList)):
-#  print expectedFilenameList[i]
 timeout_check = 0
 while(not os.path.exists(expectedFilenameList[len(expectedFilenameList)-1])): #this waits for images
   timeout_check = timeout_check + 1
@@ -35,14 +33,10 @@ while(not os.path.exists(expectedFilenameList[len(expectedFilenameList)-1])): #t
 comm_s = "xia2 " + directory
 print(comm_s)
 os.system(comm_s)
-#result = {}
-#result["timestamp"] = time.time()
-#result["type"] = "xia2"
 fd = open("xia2.json")
 resultObj = json.loads(fd.read())
 fd.close()
 print(resultObj)
-#result["resultObj"] = resultObj
 db_lib.addResultforRequest("xia2",request_id,resultObj)
 print("finished xia2")
 

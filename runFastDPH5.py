@@ -1,5 +1,4 @@
 #!/opt/conda_envs/collection-2018-1.0/bin/python
-##!/usr/bin/python
 import time
 import os
 import sys
@@ -13,16 +12,6 @@ try:
   import ispybLib
 except:
   logger.info("ISPYB import error")
-
-#def generateSpotsFileFromXMLObsolete(fastdpXmlFilename="fast_dp.xml"): #no idea what this is - 6/16
-
-#  tree = ET.parse(fastdpXmlFilename)
-#  root = tree.getroot()
-#  for i in range (0,len(root)):
-#    dataFileName = root[i].find("image").text
-#    spots = int(root[i].find("spot_count").text)
-#    grid_spots_file.write("%d %s\n" % (spots,dataFileName))
-#  grid_spots_file.close()  
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
@@ -49,19 +38,12 @@ timeoutLimit = 600 #for now
 prefix_long = directory+"/"+filePrefix+"_"+str(numstart)
 hdfFilepattern = prefix_long+"_master.h5"
 CBF_conversion_pattern = cbfDir + "/"+filePrefix + "_"
-#comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /home/jjakoncic/jean_fastdp_prep.sh;fast_dp -j 12 -J 12 -k 60 " + hdfFilepattern  + "\""
 fastdpComm = ";source " + os.environ["PROJDIR"] + "wrappers/fastDPWrap2;" + db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"fastdpComm")
-#fastdpComm = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"fastdpComm")
 dimpleComm = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"dimpleComm")  
 comm_s = "ssh  -q " + node + " \"cd " + runningDir + fastdpComm + hdfFilepattern  + "\""
-#comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap2;fast_dp -j 12 -J 12 -k 60 " + hdfFilepattern  + "\"" 
-
-#comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap;/usr/local/crys-local/fast_dp/bin/fast_dp -J 16 -j 16 -k 70  " + hdfFilepattern  + "\""
 logger.info(comm_s)
 os.system(comm_s)
 fastDPResultFile = runningDir+"/fast_dp.xml"
-#fastDPResultFile = "/GPFS/CENTRAL/xf17id2/skinner/ispyb/fast_dp.xml"
-#fd = open("fast_dp.xml")
 fd = open(fastDPResultFile)
 resultObj = xmltodict.parse(fd.read())
 logger.info("finished fast_dp")
@@ -90,8 +72,6 @@ if (runDimple):
   comm_s = "mkdir -p " + dimpleRunningDir
   os.system(comm_s)
   os.chdir(dimpleRunningDir)
-#  comm_s = "ssh  -q " + node + " \"cd " + runningDir +";source /nfs/skinner/wrappers/fastDPWrap;fast_ep"
-#  comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";dimple " + runningDir + "/fast_dp.mtz /GPFS/CENTRAL/xf17id2/jjakoncic/model.pdb " + dimpleRunningDir + "\""
   comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";" + dimpleComm + " " + runningDir + "/fast_dp.mtz " + baseDirectory + "/" + modelPDBname + " " + dimpleRunningDir + "\""  
   logger.info(comm_s)
   logger.info("running dimple")

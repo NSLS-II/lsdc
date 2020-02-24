@@ -1,19 +1,13 @@
 from string import *
 import sys
 
-###from epicsScanParms import *
-#from epicsMotor import *
-#from epicsScaler import *
 import ophyd
 ophyd.utils.startup.setup()
 from ophyd import EpicsMotor
 from ophyd import EpicsScaler
-###from epicsScan import *
-#from epicsPV import *
 import time
 import epics
 import os
-#from CaChannel import *
 import logging
 logger = logging.getLogger(__name__)
 
@@ -36,9 +30,6 @@ scan_detector_count = 4
 datafile_name = ""
 
 
-
-#def add_callbackOld(pv,callback_name,**user_args):
-#  pv.add_callback(callback_name,user_args)
 
 #I think even these next few can go away and I can use epics.PV directly
 def pvCreate(pvname,connCB=None,timeout=None):
@@ -80,7 +71,6 @@ def get_any_epics_pv(pv_prefix,field_name,as_string=False): #this does not use b
     pvname = pv_prefix
   else:
     pvname = "%s.%s" % (pv_prefix,field_name)  
-#  try:
   if (pvname not in pvChannelDict):
     pvChannelDict[pvname] = PVchannel = epics.PV(pvname)
   if (pvChannelDict[pvname] != None):
@@ -88,9 +78,6 @@ def get_any_epics_pv(pv_prefix,field_name,as_string=False): #this does not use b
   else:
     pv_val = None
   return pv_val
-#  except CaChannelException as status:
-#    logger.info(ca.message(status))
-#    logger.info("\n\nHandled Epics Error in get pv " + pvname + "\n\n")
 
 #initializes epics motors and counter based on the file pointed to by $EPICS_BEAMLINE_INFO
 #Below this line is an example beamline info file, (remove one '#' off the front of each line)
@@ -110,9 +97,6 @@ def get_any_epics_pv(pv_prefix,field_name,as_string=False): #this does not use b
 def init_beamline():
   read_db()
   init_motors()
-#  initControlPVs()
-#  init_counters()
-#  init_scanparms()
   
 
 #relative simultaneous move of multiple motors
@@ -188,7 +172,6 @@ def do_count(time_to_count=0):
   else:
     counter_channel_dict[counter_dict["main_counter"]].start(time_to_count)
   counter_channel_dict[counter_dict["main_counter"]].wait()
-#  print_counts()
 
 def ri(): #read intensity legacy call
   do_count()
@@ -202,7 +185,6 @@ def get_count_time():
 
 def get_counts(time_to_count=0):
   do_count(time_to_count)
-#  print counter_channel_dict[counter_dict["main_counter"]].read()[1:] #chop first channel
   return counter_channel_dict[counter_dict["main_counter"]].read()
 
 def get_latest_counts():
@@ -224,7 +206,6 @@ def dump_mots(dump_filename):
   dump_file.write("#motor_code motor_name    pos speed bspd bcklsh acc bk_acc\n")
   for key in list(motor_channel_dict.keys()):
     if (1):
-#    if (not(is_soft_motor(key))):
       dump_file.write("# " + key)
       dump_file.write(" " + motor_channel_dict[key].description)
       dump_file.write(" %.3f" % motor_channel_dict[key].get_position())
@@ -365,7 +346,6 @@ def get_short_motor_code(beamline_desginated_code): # return motor code minus be
   i = beamline_desginated_code.find(beamline_designation)
   if (i>-1):
     return beamline_desginated_code[len(beamline_designation):len(beamline_desginated_code)]
-#    return beamline_desginated_code[len(beamline_designation)+1:len(beamline_desginated_code)]
   else:
     return beamline_desginated_code
 

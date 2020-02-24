@@ -66,7 +66,6 @@ def RIfoils(etarget,trans):
   logger.info('mu-target: ', mutarget)
 #
   logger.info("Transmission:", trans)
-# Thickness = ln (Transmission) / (-mu)
   thick = log(trans) / (-1.0*mutarget)
   fraction = thick / RItotal
   logger.info('Thickness, Fraction:', thick, fraction)
@@ -79,9 +78,7 @@ def RIfoils(etarget,trans):
   for i in range (0,12):
     binstring = bin(intBits>>i)
     myBit = binstring[len(binstring)-1]
-#    logger.info ('binstring, myBit', binstring, myBit)
     outlist.append(int(myBit))
-#  logger.info 'Outlist:', outlist
   return outlist
 
 

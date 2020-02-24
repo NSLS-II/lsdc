@@ -1,7 +1,4 @@
 #!/opt/conda_envs/collection-2018-1.0/bin/ipython -i
-##!/opt/conda_envs/lsdc_dev3/bin/ipython -i
-###!/usr/bin/python -Wignore
-#from __future__ import (absolute_import, division, print_function,unicode_literals)
 import string
 import sys
 import os
@@ -18,7 +15,6 @@ import det_lib
 import beamline_support
 import beamline_lib
 from beamline_lib import *
-#import stateModule
 import atexit
 import logging
 logger = logging.getLogger(__name__)
@@ -31,35 +27,23 @@ z = 25
 
   
 def execute_command(command_s):
-###  from daq_macros import * #this is so macros can be reloaded on-the-fly
-#  refresh_screen(0,0)  
   exec(command_s)
 
 
 def pybass_init():
   global message_string_pv
 
-#  db_lib.db_connect()
   daq_utils.init_environment()
   init_var_channels()
-#  init_diffractometer()
   det_lib.init_detector()  
   daq_lib.message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "message_string")    
   daq_lib.gui_popup_message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "gui_popup_message_string")    
   if (1):
-#  if (daq_lib.has_beamline): # for now
-#    try:
     beamline_lib.read_db()
     logger.info("init mots")
-#      beamline_support.init_motors()
     init_mots()    #for now
     logger.info("init done mots")
     init_diffractometer()
-#      init_counters() #for now
-#      newfile("scandata")
-##    except CaChannelException as status:
-##      logger.info(ca.message(status))
-##      gui_message("EPICS motor Initialization Error. Exit and try again. If problem persists, EPICS may need to be restarted.")
   try:
     sitefilename = os.environ["LSDC_SITE_FILE"]
   except KeyError:
@@ -99,27 +83,20 @@ def process_command_file(command_file_name):
         logger.info("Syntax error")
       except KeyError:
         logger.info("Key error")
-#  refresh_screen(1,0)
   command_file.close()
   
 
 
 def process_immediate_commands(frequency):
-#  global immediate_command_list
   while (1):
     if (len(immediate_command_list) > 0):
       process_input(immediate_command_list.pop(0))
-#      daq_utils.broadcast_output("Command> ")            
-##      print "Command> "
     time.sleep(frequency)      
 
 def process_commands(frequency):
   while (1):
     if (len(command_list) > 0):
       process_input(command_list.pop(0))
-#      daq_utils.broadcast_output("Command> ")            
-##      print "Command> "
-######    time.sleep(frequency)
     plt.pause(frequency)    
 
     
@@ -163,7 +140,6 @@ def comm2_cb(value=None, char_value=None, **kw):
 def process_input(command_string):
   if (command_string == ""):
     return
-#    daq_utils.broadcast_output(time.ctime(time.time()))
   if (command_string == "q"):
     sys.exit()
   daq_lib.broadcast_output(time.ctime(time.time()) + "\n" + command_string)      
@@ -189,7 +165,6 @@ def process_input(command_string):
 
 
 def run_server():
-#  _thread.start_new_thread(process_commands,(.05,))  
   _thread.start_new_thread(process_immediate_commands,(.25,))  
   comm_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "command_s")
   beamline_support.pvPut(comm_pv,"\n")

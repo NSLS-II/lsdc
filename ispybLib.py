@@ -4,7 +4,6 @@ from datetime import datetime
 import sys
 from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
 import daq_utils
-#import det_lib
 from epics import PV
 import db_lib
 import time
@@ -14,11 +13,7 @@ logger = logging.getLogger(__name__)
 
 #12/19 - I'm leaving all commented lines alone on this. Karl Levik, DLS, is an immense help with this.
 
-#conf_file = '/nfs/skinner/projects/bnlpx_config/ispybConfig.cfg' #fix this hardcode
-
 conf_file = os.environ["CONFIGDIR"] + "ispybConfig.cfg"
-# visit = sys.argv[1]
-#visit = 'mx30816-1'
 visit = 'mx99999-1'
 # Get a list of request dicts
 #request_dicts = lsdb2.getColRequestsByTimeInterval('2018-02-14T00:00:00','2018-02-15T00:00:00')
@@ -74,8 +69,6 @@ def createPerson(firstName,lastName,loginName):
 def createProposal(propNum,PI_login="boaty"):
   pid = personIdFromLogin(PI_login)
   if (pid == 0):
-#    logger.info("no loginID " + PI_login)
-#    return 0
     createPerson("Not","Sure",PI_login)
     pid = personIdFromLogin(PI_login)
   params = core.get_proposal_params()
@@ -115,7 +108,6 @@ def createVisit(propNum):
   personID = personIdFromProposal(propNum)
   params = core.get_session_for_proposal_code_number_params()
   params['proposal_code'] = 'mx'
-#  params['proposal_number'] = daq_utils.getProposalID()
   params['proposal_number'] = propNum
   params['visit_number'] = newVisitNum
   params['beamline_name'] = daq_utils.beamline.upper()
@@ -123,16 +115,10 @@ def createVisit(propNum):
   params['enddate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
   
   params['comments'] = 'For software testing'
-#  params['external_pk_uuid'] = '88173030C90C4696BC3D4D0C24FD1516' #skinner - no clue
   sid = core.upsert_session_for_proposal_code_number(list(params.values()))
   cnx.commit() 
   assert sid is not None
   assert sid > 0
-#  params = core.get_session_for_proposal_code_number_params()
-#  params['id'] = sid
-#  params['beamline_name'] = "amx"
-#  sid2 = core.upsert_session_for_proposal_code_number(list(params.values()))
-#  assert sid2 is not None
         # Test upsert_person:
 #        params = core.get_person_params()
 #        params['given_name'] = 'Baldur'
@@ -235,48 +221,37 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      basePath = request_obj["basePath"]
      visitName = daq_utils.getVisitName()
      jpegDirectory = visitName + "/jpegs/" + directory[directory.find(visitName)+len(visitName):len(directory)]  
-#     jpegDirectory = "jpegs" + directory[directory.find(basePath)+len(basePath):len(directory)]
      fullJpegDirectory = basePath + "/" + jpegDirectory
      jpegImagePrefix = fullJpegDirectory+"/"+filePrefix     
      daq_utils.take_crystal_picture(filename=jpegImagePrefix)
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
-#     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")          
      comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
      logger.info(comm_s)
      os.system(comm_s)
-#     seqNum = int(det_lib.detector_get_seqnum())
      seqNum = int(detSeqNumPV.get())          
      hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
      hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
      
-#jpeg folder     cbfDir = os.getcwd()+"/jpegs/"+directory[len(os.getcwd()):len(directory)] #good luck with that working
-
 # keep in mind I could do the jpeg conversion here, but maybe best to allow synchWeb on demand.
      cbfDir = directory
      CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"
      JPEG_conversion_pattern = fullJpegDirectory + "/" + filePrefix+"_"
      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
-#     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")     
      adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
      comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
-#     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + "0001.cbf;" + adxvComm + " -sa "  + CBF_conversion_pattern + "0001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"
-#     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1 " + CBF_conversion_pattern + "0001.cbf;" + adxvComm + " -sa "  + CBF_conversion_pattern + "0001.cbf " + JPEG_conversion_pattern + "0001.jpeg;cp " + JPEG_conversion_pattern + "0001.jpeg " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
      logger.info(comm_s)
      os.system(comm_s)
      # Create a new data collection group entry:
      params = mxacquisition.get_data_collection_group_params()
      params['parentid'] = sessionid
-     # params['sampleid'] = ?
      if request_type == 'standard':
        params['experimenttype'] = 'OSC'
      elif request_type == 'vector':
        params['experimenttype'] = 'Helical'
      params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
      params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-#     params['starttime'] = datetime.fromtimestamp(request['time']).strftime('%Y-%m-%d %H:%M:%S')
-#     params['endtime'] = datetime.fromtimestamp(request['time']).strftime('%Y-%m-%d %H:%M:%S')
      dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
      logger.info("dcg_id: %i" % dcg_id)
      params = mxacquisition.get_data_collection_params()
@@ -287,7 +262,6 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      params['imgsuffix'] = 'cbf' # assume CBF ...?
      params['wavelength'] = request_obj['wavelength']
      params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-#     params['starttime'] = datetime.fromtimestamp(request['time']).strftime('%Y-%m-%d %H:%M:%S')     
      params['run_status'] = 'DataCollection Successful' # assume success / not aborted
      params['datacollection_number'] = request_obj['runNum']
      params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
@@ -302,13 +276,10 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      params['slitgap_vertical'] = request_obj['slit_height']
      params['transmission'] = request_obj['attenuation']
      params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix']) # assume cbf ...
-#     params['file_template'] = '%s_%s_####.cbf' % (request_obj['file_prefix'], request_obj['runNum']) # assume cbf ...     
-       # params['flux'] = ?
      params['overlap'] = 0.0
      params['rotation_axis'] = 'Omega' # assume Omega unless we know otherwise
      logger.info("jpegimfilename = " + jpegImageFilename)
      params['xtal_snapshot1'] = jpegImageFilename
-#     params['xtal_snapshot1'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_0.0.png'     
      params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
      params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
      params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
@@ -411,7 +382,6 @@ def insertRasterResult(result,request,visitName):
  except ISPyBNoResultException:
    logger.info("caught ISPyBNoResultException, bye")
    return
-#   sessionid = createVisit(visitName)
  sample = request['sample'] # this needs to be created and linked to a DC group
  result_obj = result['result_obj']
  request_obj = request['request_obj']
@@ -422,7 +392,6 @@ def insertRasterResult(result,request,visitName):
  jpegDirectory = visitName + "/jpegs/" + directory[directory.find(visitName)+len(visitName):len(directory)]  
  fullJpegDirectory = basePath + "/" + jpegDirectory
  jpegImagePrefix = fullJpegDirectory+"/"+filePrefix     
-# daq_utils.take_crystal_picture(filename=jpegImagePrefix)
  jpegImageFilename = jpegImagePrefix+".jpg"
  jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
  comm_s = "convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "&"     
@@ -431,7 +400,6 @@ def insertRasterResult(result,request,visitName):
  # Create a new data collection group entry:
  params = mxacquisition.get_data_collection_group_params()
  params['parentid'] = sessionid
-     # params['sampleid'] = ?
  params['experimenttype'] = 'OSC'
  params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
  params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')

@@ -1,5 +1,4 @@
 import time
-#import string
 import os
 from math import *
 import requests
@@ -13,19 +12,12 @@ try:
 except:
   logger.info("ISPYB import error")
 
-#import metadatastore.commands as mdsc
-
-#import beamline_support
 import db_lib
 
-#global det_radius
-#det_radius = 0
 global beamline
 beamline = os.environ["BEAMLINE_ID"]
-#beamline = "john"
 global beamlineComm #this is the comm_ioc
 beamlineComm = ""
-#beamlineComm = "XF:17IDC-ES:FMX{Comm}"
 global searchParams
 global motor_dict,counter_dict,scan_list,soft_motor_list,pvLookupDict
 global detector_id
@@ -43,7 +35,6 @@ def init_environment():
 
 
   owner = getpass.getuser()
-#  owner = db_lib.getBeamlineConfigParam(beamline,"user")
   primaryDewarName = db_lib.getBeamlineConfigParam(beamline,"primaryDewarName")
   db_lib.setPrimaryDewarName(primaryDewarName)
   dewarPlateMap = db_lib.getBeamlineConfigParam(beamline,"dewarPlateMap")
@@ -106,7 +97,6 @@ def calc_reso(det_radius,detDistance,wave,theta):
   else:
     distance = detDistance
   dg2rd = 3.14159265 / 180.0
-#  det_radius = float(diameter)/2
   theta_radians = float(theta) * dg2rd
   theta_t = (theta_radians + atan(det_radius/float(distance)))/2
   dmin_t = float(wave)/(2*(sin(theta_t)))
@@ -118,12 +108,10 @@ def distance_from_reso(det_radius,reso,wave,theta):
   try:
     dg2rd = 3.14159265 / 180.0
     theta_radians = float(theta) * dg2rd
-#  det_radius = float(diameter)/2
     dx = det_radius/(tan(2*(asin(float(wave)/(2*reso)))-theta_radians))
     return float("%.2f" % dx)
   except ValueError:  
     return 501.0 #a safe value for now
-#    return 500.0 #a safe value for now  
 
 
 def energy2wave(e):
@@ -182,7 +170,6 @@ def createDefaultRequest(sample_id,createVisit=True):
                "basePath": basePath,
                "file_prefix": sampleName,
                "directory": basePath+"/" + str(getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/" +db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/",
-#               "directory": basePath+"/" + str(getProposalID()) + "/"+sampleName+"/" + str(runNum) + "/" +db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/",  
                "file_number_start": 1,
                "energy":screenEnergy,
                "wavelength": energy2wave(screenEnergy),
@@ -223,7 +210,6 @@ def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):
 
 def create_filename(prefix,number):
   if (detector_id == "EIGER-16"):  
-#  if (0):
    tmp_filename = findH5Master(prefix)
   else:
     tmp_filename = "%s_%05d.cbf" % (prefix,int(number))
@@ -322,7 +308,6 @@ def setProposalID(proposalID,createVisit=True):
       visitName = "999999-1234"
       logger.info("ispyb error in set proposal")
     setVisitName(visitName)
-#  db_lib.setBeamlineConfigParam(beamline,"proposal",proposalID)
 
 def getProposalID():
   return db_lib.getBeamlineConfigParam(beamline,"proposal")

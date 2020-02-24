@@ -52,10 +52,6 @@ def detector_set_fileprefix(fileprefix):
   logger.info("set detector file prefix " + fileprefix)
   epics_det.det_set_fileprefix(fileprefix)
 
-#def detector_set_fileNamePattern(fileNamePattern):
-#  print "set detector file name pattern " + fileNamePattern
-#  epics_det.det_set_fileprefix(fileprefix)
-
 def detector_set_filenumber(filenumber): #I think this does nothing with the eiger
   logger.info("set detector file number " + str(filenumber))
   epics_det.det_set_filenum(filenumber)
@@ -103,7 +99,6 @@ def detector_stop():
   epics_det.det_stop()  
   
 def detector_write(flag):
-#  adsc_write(int(flag))
   pass
 
 def detector_bin():
@@ -138,11 +133,6 @@ def detector_set_fileheader(phist,phiinc,dist,wave,theta,exptime,xbeam,ybeam,rot
 
 def detector_set_filekind(flag):
   pass
-
-#  if (flag == 1):
-#    adsc_setfilekind(4)
-#  else:
-#    adsc_setfilekind(5)
 
 
 

@@ -6,6 +6,4 @@ startDate = sys.argv[1]
 endDate = sys.argv[2]
 fname = sys.argv[3]
 
-#lsdb1.printColRequestsByTimeInterval('2017-10-11T00:00:00','2017-10-13T00:00:00',"johnSweep.txt")
-
 lsdb1.printColRequestsByTimeInterval(startDate,endDate,fname)

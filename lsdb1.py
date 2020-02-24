@@ -7,10 +7,6 @@ import dateutil.parser
 import logging
 logger = logging.getLogger(__name__)
 
-# for autoreload to work no blank line
-# %load_ext autoreload
-# %autoreload 2
-
 #12/19 skinner didn't write this. Maybe Annie. Ask Matt.
 
 def validate_date(d):
@@ -52,7 +48,6 @@ def getResultsByTimeInterval(start_thuman, end_thuman = None):
         logger.info(end_t)
         logger.info(start_t)
     headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t}))
-#bad    headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t},result_obj.protocol='standard'))    
     return headers
 
 
@@ -215,8 +210,6 @@ def getSampleReqRes(reqid):
     :params reqid is a list of requestid per sample
     """
 
-    # reqid = db_lib.getRequestsBySampleID(value, active_only=False
-
     logger.info('**New sample**')
 
     if reqid != []:
@@ -375,14 +368,12 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
 
 
                     list_type.append(req_type)
-#                    logger.info(list_type)
                 p_stime2 = datetime.fromtimestamp(p_stime).strftime('%Y-%m-%dT%H:%M:%S')
                 p_etime2 = datetime.fromtimestamp(p_etime).strftime('%Y-%m-%dT%H:%M:%S')
 
                 visit = {'pid': pid, 'num_datacol': num_datacol, 'beamline': 'amx', 'num_samples': num_samples,'start': p_stime2, 'end': p_etime2}
 
             list_type = Counter(list_type)
-#            logger.info(list_type)
 
             standard = ''
             raster = ''
@@ -392,7 +383,6 @@ def getShortVisitSummary(start_thuman, end_thuman=None):
 
             if 'standard' in list_type:
                     standard = list_type['standard']
-#                   logger.info(standard)
             if 'raster' in list_type:
                     raster = list_type['raster']
             if 'vector' in list_type:
@@ -437,7 +427,6 @@ def getSamplesbyProposalID(proposalID):
         list_sampleid = []
         for i in reqs:
             list_sampleid.append(i['sample'])
-        # logger.info(i['sample'])
         logger.info('proposal {} has {} samples '.format(proposalID, len(list_sampleid)))
     data = { 'proposalID': proposalID, 'num_samples': len(list_sampleid), 'list_sampleid': list_sampleid}
     return list_sampleid

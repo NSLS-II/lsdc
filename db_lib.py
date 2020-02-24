@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 # TODO: get the beamline_id from parameter
 BEAMLINE_ID = '17ID1'
 
-#global sample_ref,container_ref,request_ref,configuration_ref,analysis_ref
 
 sample_ref = None
 container_ref = None
@@ -509,17 +508,12 @@ def getQueue(beamlineName):
     for item in DewarItems:
       if (item != ""):
         items.append(item)
-#    items = set(items)
-#    items.discard("")  # skip empty positions
 
     sample_list = []
     contents = [getContainerByID(uid)['content'] for uid in items]
     for samp in contents:
         if (samp != ""):
-#        sil = set(samp)
-#        sil.discard("")
-          sample_list += samp #not sure why line below did not work.
-#          sample_list.append(samp)
+          sample_list += samp
 
     for s in sample_list:
         reqs = getRequestsBySampleID(s, active_only=True)
@@ -594,11 +588,7 @@ def getCoordsfromSampleID(beamline,sample_id):
     # find container in the primary_dewar_item_list (pdil) which has the sample
 
     filters = {'$and': [{'uid': {'$in':pdil_set}}, {'content': {'$in':[sample_id]}}]}
-#    filters = {'$and': {'uid': {'$in':pdil_set}, 'content': {'$in':[sample_id]}}}        
     c = getContainers(filters=filters)
-#    logger.info("\n")
-#    logger.info(c)
-#    logger.info("\n")
 
     # get the index of the found container in the primary dewar
     i = primary_dewar_item_list.index(c[0]['uid'])
@@ -654,7 +644,6 @@ def updateRequest(request_dict):
         r = request_ref.update({'uid':r_uid},request_dict)
         request_dict["uid"] = r_uid
         request_dict["time"] = s_time
-#        addRequesttoSample(**request_dict) #skinner maybe not needed in new db because the requests arent stored in the sample
 
 
 def deleteRequest(r_id):
@@ -664,7 +653,6 @@ def deleteRequest(r_id):
 
     """
 
-#    r_id = req['uid']
 
     r = getRequestByID(r_id)
     r['state'] = "inactive"
@@ -771,7 +759,6 @@ def beamlineInfo(beamline_id, info_name, info_dict=None):
         configuration_ref.update({'uid': bli_uid},{'info':info_dict})
 
     # else it's a create
-#    except IndexError:
     except conftrak.exceptions.ConfTrakNotFoundException:
         # edge case for 1st create in fresh database
         # in which case this as actually a query
@@ -803,9 +790,6 @@ def getBeamlineConfigParam(beamline_id, paramName):
 def getAllBeamlineConfigParams(beamline_id):
   g = configuration_ref.find(key='beamline_info', beamline_id=beamline_id)
   configList = list(g)
-#  for i in range (0,len(configList)):
-#    logger.info(configList[i]['info_name'])
-#    logger.info(configList[i]['info'])    
   return configList
 
 def printAllBeamlineConfigParams(beamline_id):

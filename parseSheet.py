@@ -14,6 +14,8 @@ def parseSpreadsheet(infilename):
 
 def insertSpreadsheetDict(d,owner):
   currentPucks = []
+  first_container_name = str(d["puckName"][0]).replace(" ","")
+  print("Spreadsheet starting with puck %s being created..." % first_container_name)
   for i in range (0,len(d["puckName"])): #number of rows in sheet
     container_name = str(d["puckName"][i]).replace(" ","")
     position_s = str(d["position"][i]).replace(" ","")
@@ -36,6 +38,7 @@ def insertSpreadsheetDict(d,owner):
     containerUID = db_lib.getContainerIDbyName(container_name,owner)
     if (containerUID == ''):
       logger.info("create container " + str(container_name))
+      print("Creating container %s" % container_name)
       containerUID = db_lib.createContainer(container_name,16,owner,"16_pin_puck")
     sampleUID = db_lib.getSampleIDbyName(item_name,owner) #this line looks like not needed anymore
     logger.info("create sample " + str(item_name))
@@ -45,6 +48,7 @@ def insertSpreadsheetDict(d,owner):
       currentPucks.append(containerUID)
     logger.info("insertIntoContainer " + str(container_name) + "," + owner + "," + str(position) + "," + sampleUID)
     db_lib.insertIntoContainer(container_name, owner, position, sampleUID)
+  print("Spreadsheet starting with puck %s created with %s samples" % (first_container_name, len(d["puckName"])))
 
 
 def importSpreadsheet(infilename,owner):

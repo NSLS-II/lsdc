@@ -20,7 +20,7 @@ def display_file(ref_or_id):
         image = True
         
     elif not re.search('text', description):
-        print '\nunsupported file type: {0}\n'.format(description)
+        print('\nunsupported file type: {0}\n'.format(description))
         # should dump and leave a tmpfile in this case
         return
 

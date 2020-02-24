@@ -33,7 +33,7 @@ while(not os.path.exists(expectedFilenameList[len(expectedFilenameList)-1])): #t
   if (timeout_check > timeoutLimit):
     break
 comm_s = "xia2 " + directory
-print comm_s
+print(comm_s)
 os.system(comm_s)
 #result = {}
 #result["timestamp"] = time.time()
@@ -41,10 +41,10 @@ os.system(comm_s)
 fd = open("xia2.json")
 resultObj = json.loads(fd.read())
 fd.close()
-print resultObj
+print(resultObj)
 #result["resultObj"] = resultObj
 db_lib.addResultforRequest("xia2",request_id,resultObj)
-print "finished xia2"
+print("finished xia2")
 
 
 

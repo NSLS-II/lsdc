@@ -1079,7 +1079,7 @@ class DewarTree(QtGui.QTreeView):
                 if (puckContents[j] == self.parent.mountedPin_pv.get()):
                   mountedIndex = self.model.indexFromItem(item)
                 if (puckContents[j] == self.parent.selectedSampleID): #looking for the selected item
-                  print "found " + str(self.parent.SelectedItemData)
+                  print("found " + str(self.parent.SelectedItemData))
                   selectedSampleIndex = self.model.indexFromItem(item)
                 st = time.time()
                 sampleRequestList = db_lib.getRequestsBySampleID(puckContents[j])
@@ -1453,11 +1453,11 @@ class rasterGroup(QtGui.QGraphicsItemGroup):
 
     def mousePressEvent(self, e):
       super(rasterGroup, self).mousePressEvent(e)
-      print "mouse pressed on group"
+      print("mouse pressed on group")
       for i in xrange(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
           if (self.parent.rasterList[i]["graphicsItem"].isSelected()):
-            print "found selected raster"
+            print("found selected raster")
             self.parent.SelectedItemData = self.parent.rasterList[i]["uid"]
             self.parent.treeChanged_pv.put(1)
 
@@ -1470,7 +1470,7 @@ class rasterGroup(QtGui.QGraphicsItemGroup):
           pass
 
         super(rasterGroup, self).mouseMoveEvent(e)
-        print "pos " + str(self.pos())
+        print("pos " + str(self.pos()))
 
     def mouseReleaseEvent(self, e):
         super(rasterGroup, self).mouseReleaseEvent(e)
@@ -3009,7 +3009,7 @@ class controlMain(QtGui.QMainWindow):
         self.beamsizeComboBox.setEnabled(True)
         
     def processControlMaster(self,controlPID):
-      print "in callback controlPID = " + str(controlPID)
+      print("in callback controlPID = " + str(controlPID))
       if (abs(int(controlPID)) == self.processID):
         self.controlMasterCheckBox.setChecked(True)
       else:
@@ -3085,7 +3085,7 @@ class controlMain(QtGui.QMainWindow):
         
 
     def processControlMasterNew(self,controlPID):
-      print "in callback controlPID = " + str(controlPID)
+      print("in callback controlPID = " + str(controlPID))
       if (abs(int(controlPID)) != self.processID):
         self.controlMasterCheckBox.setChecked(False)      
 
@@ -3536,7 +3536,7 @@ class controlMain(QtGui.QMainWindow):
         self.popupServerMessage("You don't have control")
 
     def autoCenterLoopCB(self):
-      print "auto center loop"
+      print("auto center loop")
       self.send_to_server("loop_center_xrec()")
       
     def autoRasterLoopCB(self):
@@ -3612,7 +3612,7 @@ class controlMain(QtGui.QMainWindow):
 
       
     def center3LoopCB(self):
-      print "3-click center loop"
+      print("3-click center loop")
       self.threeClickCount = 1
       self.click3Button.setStyleSheet("background-color: yellow")
       self.send_to_server("mvaDescriptor(\"omega\",0)")
@@ -3620,7 +3620,7 @@ class controlMain(QtGui.QMainWindow):
 
     def fillPolyRaster(self,rasterReq,takeSnapshot=False): #at this point I should have a drawn polyRaster
       time.sleep(1)
-      print "filling poly for " + str(rasterReq["uid"])
+      print("filling poly for " + str(rasterReq["uid"]))
       resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
       rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])
       rasterResult = {}
@@ -3813,7 +3813,7 @@ class controlMain(QtGui.QMainWindow):
  
 
     def selectAllCenterCB(self):
-      print "select all center"
+      print("select all center")
       for i in xrange(len(self.centeringMarksList)):
         self.centeringMarksList[i]["graphicsItem"].setSelected(True)        
 
@@ -4513,7 +4513,7 @@ class controlMain(QtGui.QMainWindow):
       currentRequest = db_lib.popNextRequest(daq_utils.beamline)
       if (currentRequest == {}):
         self.addRequestsToAllSelectedCB()        
-      print "running queue"
+      print("running queue")
       self.send_to_server("runDCQueue()")
 
     def warmupGripperCB(self):
@@ -4649,11 +4649,11 @@ class controlMain(QtGui.QMainWindow):
 
 
     def stopRunCB(self):
-      print "stopping collection"
+      print("stopping collection")
       self.aux_send_to_server("stopDCQueue(1)")
 
     def stopQueueCB(self):
-      print "stopping queue"
+      print("stopping queue")
       if (self.pauseQueueButton.text() == "Continue"):
         self.aux_send_to_server("continue_data_collection()")        
       else:
@@ -4663,7 +4663,7 @@ class controlMain(QtGui.QMainWindow):
       if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"mountEnabled") == 0):
         self.popupServerMessage("Mounting disabled!! Call staff!")
         return
-      print "mount selected sample"
+      print("mount selected sample")
       self.eraseCB()      
       self.selectedSampleID = self.selectedSampleRequest["sample"]
       self.send_to_server("mountSample(\""+str(self.selectedSampleID)+"\")")
@@ -4673,7 +4673,7 @@ class controlMain(QtGui.QMainWindow):
       self.protoComboActivatedCB("standard")
 
     def unmountSampleCB(self):
-      print "unmount sample"
+      print("unmount sample")
       self.eraseCB()      
       self.send_to_server("unmountSample()")
 
@@ -4786,17 +4786,17 @@ class controlMain(QtGui.QMainWindow):
       itemDataType = str(item.data(33).toString())
       self.SelectedItemData = itemData # an attempt to know what is selected and preserve it when refreshing the tree
       if (itemData == ""):
-        print "nothing there"
+        print("nothing there")
         return
       elif (itemDataType == "container"):
-        print "I'm a puck"
+        print("I'm a puck")
         return
       elif (itemDataType == "sample"):
         self.selectedSampleID = itemData
         sample = db_lib.getSampleByID(self.selectedSampleID)
         owner = sample["owner"]
         sample_name = db_lib.getSampleNamebyID(self.selectedSampleID)
-        print "sample in pos " + str(itemData) 
+        print("sample in pos " + str(itemData))
         if (self.osc_start_ledit.text() == ""):
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           self.refreshCollectionParams(self.selectedSampleRequest)
@@ -5204,7 +5204,7 @@ class controlMain(QtGui.QMainWindow):
       if (self.textWindowMessageInit):
         self.textWindowMessageInit = 0
         return        
-      print message_s
+      print(message_s)
 
 
     def colorProgramState(self,programState_s):
@@ -5266,14 +5266,14 @@ def main():
 #skinner - I think Matt did a lot of what's below and I have no idea what it is. 
 if __name__ == '__main__':
     if '-pc' in sys.argv or '-p' in sys.argv:
-        print 'cProfile not working yet :('
+        print('cProfile not working yet :(')
         #print 'starting cProfile profiler...'
         #import cProfile, pstats, io
         #pr = cProfile.Profile()
         #pr.enable()
 
     elif '-py' in sys.argv:
-        print 'starting yappi profiler...'
+        print('starting yappi profiler...')
         import yappi
         yappi.start(True)
 
@@ -5295,4 +5295,4 @@ if __name__ == '__main__':
             yappi.stop()
             yappi.get_func_stats().print_all()
             yappi.get_thread_stats().print_all()
-            print 'memory usage: {0}'.format(yappi.get_mem_usage())
+            print('memory usage: {0}'.format(yappi.get_mem_usage()))

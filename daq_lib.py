@@ -145,8 +145,6 @@ def abort_data_collection(flag):
   if (flag==2): #stop queue after current collection
     abort_flag = 2
     return
-  if (0):   #for now, just try to stop zebra and detector
-    beamline_lib.bl_stop_motors() ##this already sets abort flag to 1
   gui_message("Aborting. This may take a minute or more.")  
   while not (beamline_support.getPvValFromDescriptor("VectorActive")): #only stop if actually collecting
     time.sleep(0.1)
@@ -501,14 +499,13 @@ def runDCQueue(): #maybe don't run rasters from here???
     currentRequest = db_lib.popNextRequest(daq_utils.beamline)
     if (currentRequest == {}):
       break
-    if (1):
-      logger.info("processing request " + str(time.time()))
-      reqObj = currentRequest["request_obj"]
-      beamline_support.setPvValFromDescriptor("govRobotDetDist",reqObj["detDist"])
-      beamline_support.setPvValFromDescriptor("govHumanDetDist",reqObj["detDist"])
-      if (reqObj["detDist"] >= 200.0 and db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 0):
-        beamline_support.setPvValFromDescriptor("govRobotDetDistOut",reqObj["detDist"])
-        beamline_support.setPvValFromDescriptor("govHumanDetDistOut",reqObj["detDist"])          
+    logger.info("processing request " + str(time.time()))
+    reqObj = currentRequest["request_obj"]
+    beamline_support.setPvValFromDescriptor("govRobotDetDist",reqObj["detDist"])
+    beamline_support.setPvValFromDescriptor("govHumanDetDist",reqObj["detDist"])
+    if (reqObj["detDist"] >= 200.0 and db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 0):
+      beamline_support.setPvValFromDescriptor("govRobotDetDistOut",reqObj["detDist"])
+      beamline_support.setPvValFromDescriptor("govHumanDetDistOut",reqObj["detDist"])          
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]
@@ -628,11 +625,7 @@ def collectData(currentRequest):
   elif (prot == "specRaster"):
     status = daq_macros.snakeStepRasterSpec(currentRequest["uid"])    
   elif (prot == "vector" or prot == "stepVector"):
-    if (0):
-      logMe = 0
-      daq_macros.autoVector(currentRequest)
-    else:
-      imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+    imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):
     daq_macros.snakeRaster(currentRequest["uid"])    
   elif (prot == "rasterScreen"):
@@ -675,13 +668,10 @@ def collectData(currentRequest):
         data_directory_name = str(reqObj["directory"]) # for now
         file_number_start = reqObj["file_number_start"]
         beamline_lib.mvaDescriptor("omega",sweep_start)
-        if (1):
-          if (i==0):
-            imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
-          else:
-            imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
+        if (i==0):
+          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
         else:
-          imagesAttempted = collect_detector_seq(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
         seqNum = int(detector_get_seqnum())         
         cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
         cbfDir = data_directory_name+"/cbf"
@@ -747,10 +737,7 @@ def collectData(currentRequest):
     else: #standard
       logger.info("moving omega to start " + str(time.time()))      
       beamline_lib.mvaDescriptor("omega",sweep_start)
-      if (1):
-        imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
-      else:
-        imagesAttempted = collect_detector_seq(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+      imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe):
       logMxRequestParams(currentRequest)
@@ -805,8 +792,6 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   logger.info("data directory = " + data_directory_name)
   reqObj = currentRequest["request_obj"]
   protocol = str(reqObj["protocol"])
-  if (0):
-    beamline_lib.mvaDescriptor("energy",reqObj["energy"])  
   sweep_start = sweep_start%360.0
   if (protocol == "vector" or protocol == "stepVector"):
     beamline_lib.mvaDescriptor("omega",sweep_start)
@@ -891,9 +876,8 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
     robotGovState = (beamline_support.getPvValFromDescriptor("robotSaActive") or beamline_support.getPvValFromDescriptor("humanSaActive"))
     if (not robotGovState):
       return
-    if (1):      
-      if not (checkC2C_X(x,fovx)):
-        return
+    if not (checkC2C_X(x,fovx)):
+      return
   if (source == "screen"):
     waitGovNoSleep()
     beamline_support.setPvValFromDescriptor("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui

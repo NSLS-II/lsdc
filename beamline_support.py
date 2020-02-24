@@ -205,15 +205,14 @@ def dump_mots(dump_filename):
   dump_file.write("#%s\n" % time.ctime(time.time()))
   dump_file.write("#motor_code motor_name    pos speed bspd bcklsh acc bk_acc\n")
   for key in list(motor_channel_dict.keys()):
-    if (1):
-      dump_file.write("# " + key)
-      dump_file.write(" " + motor_channel_dict[key].description)
-      dump_file.write(" %.3f" % motor_channel_dict[key].get_position())
-      dump_file.write(" %.3f" % motor_channel_dict[key].slew_speed)
-      dump_file.write(" %.3f" % motor_channel_dict[key].base_speed)
-      dump_file.write(" %.3f" % motor_channel_dict[key].backlash)
-      dump_file.write(" %.3f" % motor_channel_dict[key].acceleration)
-      dump_file.write("\n")
+    dump_file.write("# " + key)
+    dump_file.write(" " + motor_channel_dict[key].description)
+    dump_file.write(" %.3f" % motor_channel_dict[key].get_position())
+    dump_file.write(" %.3f" % motor_channel_dict[key].slew_speed)
+    dump_file.write(" %.3f" % motor_channel_dict[key].base_speed)
+    dump_file.write(" %.3f" % motor_channel_dict[key].backlash)
+    dump_file.write(" %.3f" % motor_channel_dict[key].acceleration)
+    dump_file.write("\n")
   dump_file.close()
 
 

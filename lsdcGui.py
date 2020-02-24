@@ -935,10 +935,7 @@ class DewarDialog(QtGui.QDialog):
       for i in xrange(len(puckLocs)):
         if (puckLocs[i] != ""):
           owner = db_lib.getContainerByID(puckLocs[i])["owner"]
-          if (1):
-            self.data.append(db_lib.getContainerNameByID(puckLocs[i]))
-          else:
-            self.data.append("private")
+          self.data.append(db_lib.getContainerNameByID(puckLocs[i]))
         else:
           self.data.append("Empty")
       logger.info(self.data)
@@ -1038,10 +1035,7 @@ class DewarTree(QtGui.QTreeView):
               containerDict[dewarContents[i]] = puck
             else:
               puck = containerDict[dewarContents[i]]
-            if (1):
-              puckName = puck["name"]
-            else:
-              puckName = "private"
+            puckName = puck["name"]
           index_s = "%d%s" % ((i)/self.pucksPerDewarSector+1,chr(((i)%self.pucksPerDewarSector)+ord('A')))
           item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QtCore.QString(index_s + " " + puckName))
           item.setData(puckName,32)
@@ -1164,10 +1158,7 @@ class DewarTree(QtGui.QTreeView):
           sample = db_lib.getSampleByID(requestedSampleList[i])
           owner = sample["owner"]
           parentItem = self.model.invisibleRootItem()
-          if (1):
-            nodeString = QtCore.QString(str(db_lib.getSampleNamebyID(requestedSampleList[i])))
-          else:
-            nodeString = QtCore.QString("private")
+          nodeString = QtCore.QString(str(db_lib.getSampleNamebyID(requestedSampleList[i])))
           item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), nodeString)
           item.setData(requestedSampleList[i],32)
           item.setData("sample",33)          
@@ -1186,10 +1177,7 @@ class DewarTree(QtGui.QTreeView):
           parentItem = item
           for k in xrange(len(self.orderedRequests)):
             if (self.orderedRequests[k]["sample"] == requestedSampleList[i]):
-              if (1):
-                col_item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QtCore.QString(self.orderedRequests[k]["request_obj"]["file_prefix"]+"_"+self.orderedRequests[k]["request_obj"]["protocol"]))
-              else:
-                col_item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QtCore.QString("private"))
+              col_item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QtCore.QString(self.orderedRequests[k]["request_obj"]["file_prefix"]+"_"+self.orderedRequests[k]["request_obj"]["protocol"]))
               col_item.setData(self.orderedRequests[k]["uid"],32)
               col_item.setData("request",33)                  
               col_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsEditable | Qt.ItemIsSelectable)
@@ -1420,18 +1408,15 @@ class rasterCell(QtGui.QGraphicsRectItem):
 
 
     def hoverEnterEvent(self, e):
-      if (1):
-        if (self.data(0) != None):
-          spotcount = self.data(0).toInt()[0]
-          d_min = self.data(2).toDouble()[0]
-          intensity = self.data(3).toInt()[0]
-          if not (self.topParent.rasterExploreDialog.isVisible()):
-            self.topParent.rasterExploreDialog.show()
-          self.topParent.rasterExploreDialog.setSpotCount(spotcount)
-          self.topParent.rasterExploreDialog.setTotalIntensity(intensity)
-          self.topParent.rasterExploreDialog.setResolution(d_min)
-      else:
-        super(rasterCell, self).hoverEnterEvent(e)
+      if (self.data(0) != None):
+        spotcount = self.data(0).toInt()[0]
+        d_min = self.data(2).toDouble()[0]
+        intensity = self.data(3).toInt()[0]
+        if not (self.topParent.rasterExploreDialog.isVisible()):
+          self.topParent.rasterExploreDialog.show()
+        self.topParent.rasterExploreDialog.setSpotCount(spotcount)
+        self.topParent.rasterExploreDialog.setTotalIntensity(intensity)
+        self.topParent.rasterExploreDialog.setResolution(d_min)
 
 
 
@@ -1529,10 +1514,7 @@ class controlMain(QtGui.QMainWindow):
         
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"]+".RBV")
-        if (1):                                                        
-          self.rasterStepDefs = {"Coarse":20.0,"Fine":10.0,"VFine":5.0}
-        else:
-          self.rasterStepDefs = {"Coarse":30.0,"Fine":10.0,"VFine":5.0}          
+        self.rasterStepDefs = {"Coarse":20.0,"Fine":10.0,"VFine":5.0}
         self.createSampleTab()
         
         self.initCallbacks()
@@ -1755,9 +1737,8 @@ class controlMain(QtGui.QMainWindow):
         hBoxColParams25.addWidget(self.totalExptime_ledit)
         if (daq_utils.beamline == "fmx"):
           hBoxColParams25.addWidget(calcLifetimeButton)
-        if (1):                                                        
-          hBoxColParams25.addWidget(sampleLifetimeLabel)
-          hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
+        hBoxColParams25.addWidget(sampleLifetimeLabel)
+        hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtGui.QHBoxLayout()
         if (daq_utils.beamline == "fmx"):
           if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"attenType") == "RI"):
@@ -2527,10 +2508,9 @@ class controlMain(QtGui.QMainWindow):
     def rasterGrainToggledCB(self,identifier):
       if (identifier == "Coarse" or identifier == "Fine" or identifier == "VFine"):
         cellSize = self.rasterStepDefs[identifier]                  
-        if (1):
-          self.rasterStepEdit.setText(str(cellSize))
-          self.beamWidth_ledit.setText(str(cellSize))
-          self.beamHeight_ledit.setText(str(cellSize))          
+        self.rasterStepEdit.setText(str(cellSize))
+        self.beamWidth_ledit.setText(str(cellSize))
+        self.beamHeight_ledit.setText(str(cellSize))          
 
 
 
@@ -2585,13 +2565,6 @@ class controlMain(QtGui.QMainWindow):
         self.processSampMove(self.sampx_pv.get(),"x")
         self.processSampMove(self.sampy_pv.get(),"y")
         self.processSampMove(self.sampz_pv.get(),"z")
-      if (0):#this is not needed b/c processSampMove takes care of it
-        for i in range (0,len(self.centeringMarksList)):
-          markerXPixels = float(self.centeringMarksList[i]["graphicsItem"].x())
-          markerYPixels = float(self.centeringMarksList[i]["graphicsItem"].y())
-          markerXmicrons = markerXPixels * (fov["x"]/daq_utils.screenPixX)
-          markerYmicrons = markerYPixels * (fov["y"]/daq_utils.screenPixY)
-          self.centeringMarksList[i]["graphicsItem"].setPos(self.screenXmicrons2pixels(markerXmicrons)-daq_utils.screenPixCenterX-self.centerMarker.x()-self.centerMarkerCharOffsetX,self.screenYmicrons2pixels(markerYmicrons)-daq_utils.screenPixCenterY-self.centerMarker.y()-self.centerMarkerCharOffsetY)
 
     def flushBuffer(self,vidStream):
       if (vidStream == None):
@@ -3536,17 +3509,11 @@ class controlMain(QtGui.QMainWindow):
         if (len(self.click_positions) == 2): #draws a single row or column
           logger.info("2-click raster")
           polyPoints.append(self.click_positions[0])
-          if (1): #straight line bug fix                        
-            point = QtCore.QPointF(self.click_positions[0].x(),self.click_positions[1].y())
-          else:
-            point = QtCore.QPointF(self.click_positions[0].x(),self.click_positions[1].y())
+          point = QtCore.QPointF(self.click_positions[0].x(),self.click_positions[1].y())
           polyPoints.append(point)
           point = QtCore.QPointF(self.click_positions[0].x()+2,self.click_positions[1].y())
           polyPoints.append(point)          
-          if (1):
-            point = QtCore.QPointF(self.click_positions[0].x()+2,self.click_positions[0].y())
-          else:
-            point = QtCore.QPointF(self.click_positions[0].x(),self.click_positions[0].y())
+          point = QtCore.QPointF(self.click_positions[0].x()+2,self.click_positions[0].y())
           polyPoints.append(point)
           self.rasterPoly = QtGui.QGraphicsPolygonItem(QtGui.QPolygonF(polyPoints))
         else:
@@ -3909,11 +3876,10 @@ class controlMain(QtGui.QMainWindow):
           for j in xrange(numsteps_v):
             newCellX = point_x+(i*stepsizeXPix)+point_offset_x
             newCellY = point_y+(j*stepsizeYPix)+point_offset_y
-            if (1):
-              if (rowCellCount == 0): #start of a new row
-                rowStartX = newCellX
-                rowStartY = newCellY
-              rowCellCount = rowCellCount+1
+            if (rowCellCount == 0): #start of a new row
+              rowStartX = newCellX
+              rowStartY = newCellY
+            rowCellCount = rowCellCount+1
           if (rowCellCount != 0): #test for no points in this row of the bounding rect are in the poly?
             vectorStartX = self.screenXPixels2microns(rowStartX-self.centerMarker.x()-self.centerMarkerCharOffsetX)
             vectorEndX = vectorStartX 
@@ -3927,11 +3893,10 @@ class controlMain(QtGui.QMainWindow):
           for j in xrange(numsteps_h):
             newCellX = point_x+(j*stepsizeXPix)+point_offset_x
             newCellY = point_y+(i*stepsizeYPix)+point_offset_y
-            if (1):
-              if (rowCellCount == 0): #start of a new row
-                rowStartX = newCellX
-                rowStartY = newCellY
-              rowCellCount = rowCellCount+1
+            if (rowCellCount == 0): #start of a new row
+              rowStartX = newCellX
+              rowStartY = newCellY
+            rowCellCount = rowCellCount+1
           if (rowCellCount != 0): #testing for no points in this row of the bounding rect are in the poly?
             vectorStartX = self.screenXPixels2microns(rowStartX-self.centerMarker.x()-self.centerMarkerCharOffsetX)
             vectorEndX = vectorStartX + self.screenXPixels2microns(rowCellCount*stepsizeXPix) #this looks better
@@ -3965,10 +3930,7 @@ class controlMain(QtGui.QMainWindow):
       stepsizeX = self.screenXmicrons2pixels(rasterDef["stepsize"])
       stepsizeY = self.screenYmicrons2pixels(rasterDef["stepsize"])      
       pen = QtGui.QPen(QtCore.Qt.green)
-      if (0):
-        pen = QtGui.QPen(QtCore.Qt.green)
-      else:
-        pen = QtGui.QPen(QtCore.Qt.red)
+      pen = QtGui.QPen(QtCore.Qt.red)
       newRasterCellList = []
       try:
         if (rasterDef["rowDefs"][0]["start"]["y"] == rasterDef["rowDefs"][0]["end"]["y"]): #this is a horizontal raster
@@ -4030,11 +3992,7 @@ class controlMain(QtGui.QMainWindow):
       height,width=self.currentFrame.shape[:2]
       qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
       pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-      if (0): 
-        pixmap = pixmap_orig.scaled(frameWidth/2,frameHeight/2)
-        self.pixmap_item.setPixmap(pixmap)
-      else:
-        self.pixmap_item.setPixmap(pixmap_orig)
+      self.pixmap_item.setPixmap(pixmap_orig)
 
     def timerEvent(self, event): #12/19 not used?
       retval,self.readframe = self.capture.read()
@@ -4044,11 +4002,7 @@ class controlMain(QtGui.QMainWindow):
       height,width=self.currentFrame.shape[:2]
       qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
       pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-      if (0): 
-        pixmap = pixmap_orig.scaled(frameWidth/2,frameHeight/2)
-        self.pixmap_item.setPixmap(pixmap)
-      else:
-        self.pixmap_item.setPixmap(pixmap_orig)
+      self.pixmap_item.setPixmap(pixmap_orig)
 
 
     def sceneKey(self, event):
@@ -4106,10 +4060,7 @@ class controlMain(QtGui.QMainWindow):
         else:
           comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"])  + "," + '"screen",0)'
         if (not self.vidActionRasterExploreRadio.isChecked()):
-          if (1):              
-            self.aux_send_to_server(comm_s)
-          else:
-            self.send_to_server(comm_s)          
+          self.aux_send_to_server(comm_s)
         if (self.threeClickCount == 4):
           self.threeClickCount = 0
           self.click3Button.setStyleSheet("background-color: None")          
@@ -4425,28 +4376,27 @@ class controlMain(QtGui.QMainWindow):
           if (float(self.osc_end_ledit.text()) < 5.0):              
             self.popupServerMessage("Vector oscillation must be at least 5.0 degrees.")
             return
-          if (1):
-            selectedCenteringFound = 1            
-            x_vec_end = self.vectorEnd["coords"]["x"]
-            y_vec_end = self.vectorEnd["coords"]["y"]
-            z_vec_end = self.vectorEnd["coords"]["z"]
-            x_vec_start = self.vectorStart["coords"]["x"]
-            y_vec_start = self.vectorStart["coords"]["y"]
-            z_vec_start = self.vectorStart["coords"]["z"]
-            x_vec = x_vec_end - x_vec_start
-            y_vec = y_vec_end - y_vec_start
-            z_vec = z_vec_end - z_vec_start
-            trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
-            self.vecLenLabelOutput.setText(str(int(trans_total)))
-            try:
-              totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
-              speed = trans_total/totalExpTime
-              self.vecSpeedLabelOutput.setText(str(int(speed)))
-            except:
-              pass
-            framesPerPoint = int(self.vectorFPP_ledit.text())
-            vectorParams={"vecStart":self.vectorStart["coords"],"vecEnd":self.vectorEnd["coords"],"x_vec":x_vec,"y_vec":y_vec,"z_vec":z_vec,"trans_total":trans_total,"fpp":framesPerPoint}
-            reqObj["vectorParams"] = vectorParams
+          selectedCenteringFound = 1            
+          x_vec_end = self.vectorEnd["coords"]["x"]
+          y_vec_end = self.vectorEnd["coords"]["y"]
+          z_vec_end = self.vectorEnd["coords"]["z"]
+          x_vec_start = self.vectorStart["coords"]["x"]
+          y_vec_start = self.vectorStart["coords"]["y"]
+          z_vec_start = self.vectorStart["coords"]["z"]
+          x_vec = x_vec_end - x_vec_start
+          y_vec = y_vec_end - y_vec_start
+          z_vec = z_vec_end - z_vec_start
+          trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
+          self.vecLenLabelOutput.setText(str(int(trans_total)))
+          try:
+            totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
+            speed = trans_total/totalExpTime
+            self.vecSpeedLabelOutput.setText(str(int(speed)))
+          except:
+            pass
+          framesPerPoint = int(self.vectorFPP_ledit.text())
+          vectorParams={"vecStart":self.vectorStart["coords"],"vecEnd":self.vectorEnd["coords"],"x_vec":x_vec,"y_vec":y_vec,"z_vec":z_vec,"trans_total":trans_total,"fpp":framesPerPoint}
+          reqObj["vectorParams"] = vectorParams
         colRequest["request_obj"] = reqObj
         newSampleRequestID = db_lib.addRequesttoSample(self.selectedSampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=daq_utils.getProposalID())
 #attempt here to select a newly created request.        
@@ -4509,7 +4459,6 @@ class controlMain(QtGui.QMainWindow):
       self.photonShutterOpen_pv.put(1)
 
     def popUserScreenCB(self):
-#      if (1):
       if (self.controlEnabled()):                
         self.userScreenDialog.show()
       else:
@@ -4997,7 +4946,6 @@ class controlMain(QtGui.QMainWindow):
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):
-#      if (1):          
         self.staffScreenDialog = staffScreenDialog(self)
       else:
         self.popupServerMessage("You don't have control")          
@@ -5135,13 +5083,12 @@ class controlMain(QtGui.QMainWindow):
       self.beamAvailable_pv.add_callback(self.beamAvailableChangedCB)
       self.connect(self, QtCore.SIGNAL("sampleExposedSignal"),self.processSampleExposed)      
       self.sampleExposed_pv.add_callback(self.sampleExposedChangedCB)
-      if (1):
-        self.connect(self, QtCore.SIGNAL("highMagCursorChangeSignal"),self.processHighMagCursorChange)
-        self.highMagCursorX_pv.add_callback(self.processHighMagCursorChangeCB,ID="x")
-        self.highMagCursorY_pv.add_callback(self.processHighMagCursorChangeCB,ID="y")      
-        self.connect(self, QtCore.SIGNAL("lowMagCursorChangeSignal"),self.processLowMagCursorChange)
-        self.lowMagCursorX_pv.add_callback(self.processLowMagCursorChangeCB,ID="x")
-        self.lowMagCursorY_pv.add_callback(self.processLowMagCursorChangeCB,ID="y")      
+      self.connect(self, QtCore.SIGNAL("highMagCursorChangeSignal"),self.processHighMagCursorChange)
+      self.highMagCursorX_pv.add_callback(self.processHighMagCursorChangeCB,ID="x")
+      self.highMagCursorY_pv.add_callback(self.processHighMagCursorChangeCB,ID="y")      
+      self.connect(self, QtCore.SIGNAL("lowMagCursorChangeSignal"),self.processLowMagCursorChange)
+      self.lowMagCursorX_pv.add_callback(self.processLowMagCursorChangeCB,ID="x")
+      self.lowMagCursorY_pv.add_callback(self.processLowMagCursorChangeCB,ID="y")      
         
 
         
@@ -5191,12 +5138,6 @@ class controlMain(QtGui.QMainWindow):
         self.controlMaster_pv.put(self.processID)
         return
       if (self.controlEnabled()):
-        if (0):
-          proposalID=daq_utils.getProposalID()
-          text, ok = QtGui.QInputDialog.getInteger(self, 'Input Dialog','Enter your 6-digit Proposal ID:',value=proposalID)
-          if ok:
-            daq_utils.setProposalID(int(text))
-            self.proposalID = text
 
         time.sleep(.01)
         self.comm_pv.put(s)

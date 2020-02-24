@@ -38,12 +38,11 @@ def pybass_init():
   det_lib.init_detector()  
   daq_lib.message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "message_string")    
   daq_lib.gui_popup_message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "gui_popup_message_string")    
-  if (1):
-    beamline_lib.read_db()
-    logger.info("init mots")
-    init_mots()    #for now
-    logger.info("init done mots")
-    init_diffractometer()
+  beamline_lib.read_db()
+  logger.info("init mots")
+  init_mots()    #for now
+  logger.info("init done mots")
+  init_diffractometer()
   try:
     sitefilename = os.environ["LSDC_SITE_FILE"]
   except KeyError:

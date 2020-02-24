@@ -216,9 +216,8 @@ def autoRasterLoop(currentRequest):
         if (status== 0):
           mvrDescriptor("sampleX",1000)
           status = loop_center_xrec()
-      if (1):
-        time.sleep(2.0)
-        status = loop_center_xrec()              
+      time.sleep(2.0)
+      status = loop_center_xrec()              
       return status
   setTrans(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans"))
   set_field("xrecRasterFlag","100")        
@@ -231,9 +230,8 @@ def autoRasterLoop(currentRequest):
     if (status== 0):
       mvrDescriptor("sampleX",1000)
       status = loop_center_xrec()
-  if (1):
-    time.sleep(2.0)
-    status = loop_center_xrec()              
+  time.sleep(2.0)
+  status = loop_center_xrec()              
   if (status == -99): #abort, never hit this
     db_lib.updatePriority(currentRequest["uid"],5000)
     return 0    
@@ -248,8 +246,7 @@ def autoRasterLoop(currentRequest):
   runRasterScan(currentRequest,"Fine")
   time.sleep(1)
   runRasterScan(currentRequest,"Line")
-  if (1):
-    daq_lib.setGovRobotDI()  
+  daq_lib.setGovRobotDI()  
   time.sleep(1)
   autoRasterFlag = 0      
 
@@ -604,18 +601,6 @@ def vectorActiveWait():
   time.sleep(0.15)
   while (beamline_support.getPvValFromDescriptor("VectorActive")!=1):
     time.sleep(0.05)
-  if (0):
-    if (beamline_support.getPvValFromDescriptor("zebraTriggering") == 0.0):
-      time.sleep(5.0)      
-      logger.info("check trigger 1")
-      if (beamline_support.getPvValFromDescriptor("zebraTriggering") == 0.0):
-        logger.info("check trigger 2")        
-        if (beamline_support.getPvValFromDescriptor("zebraTriggering") == 0.0):
-          logger.info("check trigger 3")          
-          beamline_support.setPvValFromDescriptor("photonShutterClose",1)
-          daq_lib.gui_message("Timeout in Trigger Wait! Call Staff!!")
-          sys.exit()
-          
 
 def vectorHoldWait():
   time.sleep(0.15)
@@ -728,10 +713,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     comm_s = "eiger2cbf-linux " + hdfRowFilepattern
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
-    if (0):
-      comm_s = "ssh -q " + node + " \"" + cbfComm + " "  + hdfRowFilepattern  + " 1 " + CBF_conversion_pattern + "000001.cbf\""          
-    else:
-      comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only
+    comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only
     logger.info(comm_s)
     os.system(comm_s)
     CBFpattern = CBF_conversion_pattern + "*.cbf"
@@ -1027,9 +1009,6 @@ def snakeRasterNoTile(rasterReqID,grain=""):
     else:
       multiColThreshold  = reqObj["diffCutoff"]         
     gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
-  else:
-    if (0):
-      gotoMaxRaster(rasterResult)
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   
@@ -1231,10 +1210,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
     logger.info(processedRasterRowCount)
     if (processedRasterRowCount == numberOfSubrasters):
       break
-  if (0):
-    rasterResult = generateGridMapFine(rasterRequest,rasterEncoderMap) #I think rasterRequest is entire request, of raster type    
-  else:
-    rasterResult = generateGridMapFine(rasterRequest,rowsOfSubrasters=rowsOfSubrasters,columnsOfSubrasters=columnsOfSubrasters,rowsPerSubraster=rowsPerSubraster,cellsPerSubrasterRow=subrasterColumns)
+  rasterResult = generateGridMapFine(rasterRequest,rowsOfSubrasters=rowsOfSubrasters,columnsOfSubrasters=columnsOfSubrasters,rowsPerSubraster=rowsPerSubraster,cellsPerSubrasterRow=subrasterColumns)
     
   rasterRequest["request_obj"]["rasterDef"]["status"] = 2
   rasterRequestID = rasterRequest["uid"]
@@ -1375,12 +1351,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
     zebraWait()
     zebraWaitDownload(numsteps)
     if (procFlag):    
-      if (0):
-        rasterRowEncoderVals = {"x":beamline_support.getPvValFromDescriptor("zebraEncX"),"y":beamline_support.getPvValFromDescriptor("zebraEncY"),"z":beamline_support.getPvValFromDescriptor("zebraEncZ"),"omega":beamline_support.getPvValFromDescriptor("zebraEncOmega")}
-        for j in range (0,numsteps):
-          dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
-          imIndexStr = str((i*numsteps)+j+1)
-          rasterEncoderMap[dataFileName[:-4]] = {"x":rasterRowEncoderVals["x"][j],"y":rasterRowEncoderVals["y"][j],"z":rasterRowEncoderVals["z"][j],"omega":rasterRowEncoderVals["omega"][j]}        
       if (daq_utils.detector_id == "EIGER-16"):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
@@ -1411,10 +1381,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
       logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
       if (processedRasterRowCount == rowCount):
         break
-    if (0):
-      rasterResult = generateGridMap(rasterRequest,rasterEncoderMap) #I think rasterRequest is entire request, of raster type    
-    else:
-      rasterResult = generateGridMap(rasterRequest)     
+    rasterResult = generateGridMap(rasterRequest)     
     rasterRequest["request_obj"]["rasterDef"]["status"] = 2
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
@@ -1425,16 +1392,14 @@ def snakeRasterNormal(rasterReqID,grain=""):
         multiColThreshold  = reqObj["diffCutoff"]         
       gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
     else:
-      if (1):
-        gotoMaxRaster(rasterResult)
+      gotoMaxRaster(rasterResult)
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
   if (lastOnSample() and not autoRasterFlag):  
     daq_lib.setGovRobotSA()
   elif (autoRasterFlag):
-    if (1):        
-      daq_lib.setGovRobotDI()    
+    daq_lib.setGovRobotDI()    
   if (procFlag):
     time.sleep(2.0)    
     set_field("xrecRasterFlag",rasterRequest["uid"])
@@ -1543,15 +1508,11 @@ def reprocessRaster(rasterReqID):
       logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
       if (processedRasterRowCount == rowCount):
         break
-    if (0):
-      rasterResult = generateGridMap(rasterRequest,rasterEncoderMap) #I think rasterRequest is entire request, of raster type    
-    else:
-      rasterResult = generateGridMap(rasterRequest)     
+    rasterResult = generateGridMap(rasterRequest)     
     rasterRequest["request_obj"]["rasterDef"]["status"] = 2
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
-    if (1):
-      gotoMaxRaster(rasterResult)
+    gotoMaxRaster(rasterResult)
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
@@ -2158,9 +2119,8 @@ def eScan(energyScanRequest):
   right = (steps*stepsize)/2
   mcaRoiLo = reqObj['mcaRoiLo']
   mcaRoiHi = reqObj['mcaRoiHi']
-  if (1):
-    beamline_support.setPvValFromDescriptor("mcaRoiLo",mcaRoiLo)
-    beamline_support.setPvValFromDescriptor("mcaRoiHi",mcaRoiHi)      
+  beamline_support.setPvValFromDescriptor("mcaRoiLo",mcaRoiLo)
+  beamline_support.setPvValFromDescriptor("mcaRoiHi",mcaRoiHi)      
   
   logger.info("energy scan for " + str(targetEnergy))
   scan_element = reqObj['element']
@@ -2699,9 +2659,8 @@ def importSpreadsheet(fname):
 
 def zebraDaqPrep():
 
-  if (1):
-    beamline_support.setPvValFromDescriptor("zebraReset",1)
-    time.sleep(2.0)      
+  beamline_support.setPvValFromDescriptor("zebraReset",1)
+  time.sleep(2.0)      
   beamline_support.setPvValFromDescriptor("zebraTTlSel",31)
 
   beamline_support.setPvValFromDescriptor("zebraM1SetPosProc",1)
@@ -2805,8 +2764,6 @@ def getLoopSize():
 def loop_center_xrec():
   global face_on
 
-  if (0):
-    return loop_center_xrec_slow()
   daq_lib.abort_flag = 0    
   os.system("chmod 777 .")
   pic_prefix = "findloop"
@@ -3000,10 +2957,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     beamline_support.setPvValFromDescriptor("zebraReset",1)      
   
   if (lastOnSample() and changeState):
-    if (0):
-      daq_lib.setGovRobotSE()
-    else:
-      daq_lib.setGovRobotSA_nowait()    
+    daq_lib.setGovRobotSA_nowait()    
   logger.info("stop det acquire")
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()

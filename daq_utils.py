@@ -187,13 +187,10 @@ def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):
   zoom = int(czoom)
   if not (has_xtalview):
     return
-  if (1):
-    if (zoom==0):
-      r=requests.get(xtal_url)
-    else:
-      r=requests.get(xtal_url_small)
-  else: #password, need to change to requests module if we need this
-    comm_s = "curl -u %s:%s -o %s.jpg -s %s" % (xtalview_user,xtalview_pass,filename,xtal_url)
+  if (zoom==0):
+    r=requests.get(xtal_url)
+  else:
+    r=requests.get(xtal_url_small)
   data = r.content
   if (filename != None):
     fd = open(filename+".jpg","wb+")

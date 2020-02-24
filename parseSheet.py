@@ -38,11 +38,8 @@ def insertSpreadsheetDict(d,owner):
       logger.info("create container " + str(container_name))
       containerUID = db_lib.createContainer(container_name,16,owner,"16_pin_puck")
     sampleUID = db_lib.getSampleIDbyName(item_name,owner) #this line looks like not needed anymore
-    if (1):
-      logger.info("create sample " + str(item_name))
-      sampleUID = db_lib.createSample(item_name,owner,"pin",model=modelFilename,sequence=sequenceFilename,proposalID=propNum)
-    else:
-      logger.info("WARNING - DUPLICATE SAMPLE NAME " + str(item_name))
+    logger.info("create sample " + str(item_name))
+    sampleUID = db_lib.createSample(item_name,owner,"pin",model=modelFilename,sequence=sequenceFilename,proposalID=propNum)
     if (containerUID not in currentPucks):
       db_lib.emptyContainer(containerUID)
       currentPucks.append(containerUID)

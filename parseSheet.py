@@ -1,5 +1,6 @@
 import pandas
 import db_lib
+import sanitize_sheet
 import logging
 logger = logging.getLogger(__name__)
 
@@ -15,6 +16,16 @@ def parseSpreadsheet(infilename):
 def insertSpreadsheetDict(d,owner):
   currentPucks = []
   first_container_name = str(d["puckName"][0]).replace(" ","")
+  try:
+    sanitize_sheet.check_sampleNames(d["sampleName"].values())
+    sanitize_sheet.check_for_duplicate_samples(d["sampleName"].values())
+    #sanitize_sheet.check_for_sequence(d["sequence"].values()) #remove for now
+    sanitize_sheet.check_proposalNum(d["proposalNum"].values())
+  except Exception as e:
+    message = 'Insert spreadsheet aborting due to %s' % repr(e)
+    logger.error(message)
+    print(message)
+    return
   print("Spreadsheet starting with puck %s being created..." % first_container_name)
   for i in range (0,len(d["puckName"])): #number of rows in sheet
     container_name = str(d["puckName"][i]).replace(" ","")

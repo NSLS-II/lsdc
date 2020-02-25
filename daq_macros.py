@@ -1933,8 +1933,8 @@ def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of wha
   parentRequest = db_lib.getRequestByID(parentReqID)
   sampleID = parentRequest["sample"]
 
-  print (str(sampleID))
-  print (hitCoords)
+  logger.info(str(sampleID))
+  logger.info(hitCoords)
   currentOmega = round(motorPosFromDescriptor("omega"),2)
   dataDirectory = parentRequest["request_obj"]['directory']+"multi_"+str(locIndex)
   runNum = parentRequest["request_obj"]['runNum']
@@ -2651,7 +2651,7 @@ def setAttens(transmission): #where transmission = 0.0-1.0
     pvVal = attenValList[i]
     pvKeyName = "Atten%02d-%d" % (i+1,pvVal)    
     beamline_support.setPvValFromDescriptor(pvKeyName,1)
-    print (pvKeyName)
+    logger.info(pvKeyName)
 
 def importSpreadsheet(fname):
   parseSheet.importSpreadsheet(fname,daq_utils.owner)

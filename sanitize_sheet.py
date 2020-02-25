@@ -4,7 +4,7 @@ import math
 valid_length = 25
 valid_filename_chars = '[0-9a-zA-Z-_]{0,%s}' % valid_length
 valid_chars_re = re.compile(valid_filename_chars)
-valid_seq_file_re = re.compile('[0-9a-zA-Z-_]{0,%s}\.?[0-9a-zA-Z]{0,3}' % valid_length)
+valid_seq_file_re = re.compile('[0-9a-zA-Z-_]{0,%s}.?[0-9a-zA-Z]{0,3}' % valid_length)
 def print_all_errors(all_errors):
     to_return = "the following errors were found:\n"
     for error in all_errors:
@@ -18,6 +18,7 @@ def check_sampleNames(sampleNames):
         #check for anything besides letters, numbers, '-', '_' and length
         if not valid_chars_re.fullmatch(sampleName):
             raise Exception('invalid characters or bad length of samplename "%s". only up to %s numbers, letters, dash ("-"), and underscore ("_") are allowed' % (sampleName, valid_length))
+    return True
 
 def create_containers():
     pass
@@ -30,13 +31,18 @@ def check_for_sequence(sequence_entry):
     #otherwise, it should be a valid filename. shouldn't this allow one "." for extension as well?
     valid_amino_acid_chars = '[ACDEFGHIKLMNPQRSTVWY]'
     for sequence in sequence_entry:
-        if not math.isnan(sequence):
-            if not re.match(valid_amino_acid_chars, sequence):
-                # must be a filename
-                if not valid_seq_file_re.fullmatch(sequence):
-                    raise Exception('invalid filename for sequence "%s".' % (sequence))
-            else:
-                raise Exception('sequence should not be directly entered into filename entry!')
+        try:
+            if math.isnan(sequence):
+               continue
+        except TypeError:
+            pass
+        if not re.match(valid_amino_acid_chars, sequence):
+            # must be a filename
+            if not valid_seq_file_re.fullmatch(sequence):
+                raise Exception('invalid filename for sequence "%s".' % (sequence))
+        else:
+            raise Exception('sequence should not be directly entered into filename entry!')
+    return True
 
 def check_proposalNum(proposalNums):
     all_errors = []
@@ -50,6 +56,7 @@ def check_proposalNum(proposalNums):
     	proposals.add(proposalNum)
     if len(proposals) > 1:
         raise Exception('there cannot be multiple proposal numbers in spreadsheet:' + str(proposals))
+    return True
 
 def check_for_duplicate_samples(sampleNames):
     #sampleName must be unique
@@ -58,6 +65,7 @@ def check_for_duplicate_samples(sampleNames):
         if sampleName in sampleNamesSet:
             raise Exception("duplicate sampleName: sampleName: %s" % (sampleName))
         sampleNamesSet.add(sampleName)
+    return True
 
 if __name__ == '__main__':
 	info = []

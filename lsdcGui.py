@@ -31,11 +31,23 @@ import numpy as np
 import thread
 import lsdcOlog
 import StringIO
+
+import socket
+hostname = socket.gethostname()
+if hostname == 'xf17id1-ws4' or hostname == 'xf17id2-ws2':
+    logging_file = 'lsdcGuiLog.txt'
+elif hostname == 'xf17id1-ws2' or hostname == 'xf17id2-ws4':
+    user = os.environ['USER']
+    logging_file = '/home/%s/lsdcGuiLog.txt' % user
+else:
+    print('lsdcGui not being run on one of the "normal" workstations. log going into home directory of current user')
+    user = os.environ['USER']
+    logging_file = '/home/%s/lsdcGuiLog.txt' % user
 import logging
 from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
-handler1 = handlers.RotatingFileHandler('lsdcGuiLog.txt', maxBytes=50000000)
+handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=50000000)
 #TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')

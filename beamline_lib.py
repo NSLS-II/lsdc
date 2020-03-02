@@ -202,10 +202,7 @@ def move_mono(energy):  # for now, not sure if this should go in macros
 
 
 def get_mono_energy():
-  if (0):
-    return 12398.5
-  else:
-    return motorPosFromDescriptor("energy")
+  return motorPosFromDescriptor("energy")
 
 
 def mono_plot_spectrum():

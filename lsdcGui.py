@@ -1536,21 +1536,6 @@ class controlMain(QtGui.QMainWindow):
             self.controlMasterCheckBox.setChecked(True)            
         self.XRFInfoDict = self.parseXRFTable() #I don't like this
 
-        while (0):            
-          proposalID=daq_utils.getProposalID()
-          text, ok = QtGui.QInputDialog.getInteger(self, 'Input Dialog','Enter your 6-digit Proposal ID:',value=proposalID)
-          if ok:
-            propID = int(text)
-            if (propID != -999999): #assume they entered a real propID
-              daq_utils.setProposalID(int(text))
-              self.proposalID = propID              
-              try:
-                self.dataPathGB.prefixTextChanged("")
-                self.EScanDataPathGBTool.prefixTextChanged("")
-                self.EScanDataPathGB.prefixTextChanged("")
-              except KeyError:
-                pass
-              break
 
     def parseXRFTable(self):
       XRFFile = open(os.environ["CONFIGDIR"] + "/XRF-AMX_simple.txt")

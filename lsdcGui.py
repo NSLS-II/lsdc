@@ -47,6 +47,7 @@ import logging
 from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
+logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=50000000)
 #TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)

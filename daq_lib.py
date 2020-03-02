@@ -861,7 +861,7 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   centerPixX = beamline_support.getPvValFromDescriptor("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
-  logger.info(target)
+  logger.info('checkC2C_X target: %s' % target)
   xlimLow = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountLowLim")
   xlimHi = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountHiLim")
   if (target<xlimLow or target>xlimHi):

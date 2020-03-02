@@ -222,8 +222,7 @@ def createResult(result_type, owner,request_id=None, sample_id=None, result_obj=
     header = analysis_ref.insert_analysis_header(result_type=result_type,owner=owner, uid=str(uuid.uuid4()),
                                                 sample=sample_id, request=request_id,
                                                  provenance={'lsdc':1}, result_obj=result_obj,proposalID=proposalID,time=time.time(),**kwargs)
-    logger.info("return from insert")
-    logger.info(header)
+    logger.info("uuid of result inserted into analysisstore: %s" % header)
 
     return header
 

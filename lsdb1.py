@@ -111,7 +111,7 @@ def getMountCount(start_thuman, end_thuman, beamline):
             mountCount+=1
             currentSampID = sampID
       except KeyError:
-        logger.info(reqs[i])
+        logger.info('sample field not found: %s' % reqs[i])
     return mountCount
 
       

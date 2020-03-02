@@ -686,7 +686,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams + " min_spot_size=" + str(dialsTuneMinSpotSize)
   else:
     dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams
-  logger.info(dialsCommWithParams)
+  logger.info('dials spotfinder command: %s' % dialsCommWithParams)
   if (rowIndex%8 == 0):
     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")
   elif (rowIndex%8 == 1):
@@ -714,7 +714,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
     comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only
-    logger.info(comm_s)
+    logger.info('eiger2cbf command: %s' % comm_s)
     os.system(comm_s)
     CBFpattern = CBF_conversion_pattern + "*.cbf"
   else:
@@ -723,7 +723,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
   lsOut = os.system(comm_s)
   comm_s = "ssh -q " + node + " \"ls " + CBFpattern + "|" + dialsCommWithParams + "\""  
-  logger.info(comm_s)
+  logger.info('checking for results on remote node: %s' % comm_s)
   retry = 3
   while(1):
     resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
@@ -993,7 +993,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
     if (timerCount>rasterTimeout):
       break
     time.sleep(1)
-    logger.info(processedRasterRowCount)
+    logger.info('rastering row processed: %s' % processedRasterRowCount)
     if (processedRasterRowCount == rowCount):
       break
   if (daq_utils.beamline == "amx"):                
@@ -1853,9 +1853,7 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
         ceiling = scoreVal
         hotFile = cellResults[i]["image"]        
   if (hotFile != ""):
-    logger.info(ceiling)
-    logger.info(floor)
-    logger.info(hotFile)
+    logger.info('raster score ceiling: %s floor: %s hotfile: %s' % (ceiling, floor, hotFile))
     hotCoords = rasterMap[hotFile[:-4]]     
     x = hotCoords["x"]
     y = hotCoords["y"]

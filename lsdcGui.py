@@ -679,7 +679,7 @@ class screenDefaultsDialog(QDialog):
         hBoxColParams2 = QtGui.QHBoxLayout()
         colRangeLabel = QtGui.QLabel('Oscillation Width:')
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
-        self.osc_range_ledit = QtGui.QLineEdit()
+        self.osc_range_ledit = QtGui.QLineEdit() # note, this is for rastering! same name used for data collections
         self.osc_range_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth")))
         self.osc_range_ledit.returnPressed.connect(self.screenDefaultsOKCB)                        
         colExptimeLabel = QtGui.QLabel('ExposureTime:')
@@ -2697,7 +2697,7 @@ class controlMain(QtGui.QMainWindow):
         return
       if (state == QtCore.Qt.Checked):
         self.controlMaster_pv.put(processID)
-        if (float(str(self.osc_range_ledit.text())) == 0):
+        if (float(self.osc_range_ledit.text()) == 0):
           self.stillMode_pv.put(1)
         else:
           self.standardMode_pv.put(1)                      

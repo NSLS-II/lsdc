@@ -3265,14 +3265,14 @@ def newVisit():
 
 def logMe():
   """logMe() : Edwin asked for this"""
-  logger.info(time.ctime())
-  logger.info("governor: " + str(beamline_support.getPvValFromDescriptor("governorMessage")))
-  logger.info("SampleX: " + str(motorPosFromDescriptor("sampleX")) + " SampleY: " + str(motorPosFromDescriptor("sampleY")) + "SampleZ: " + str(motorPosFromDescriptor("sampleZ")))
-  logger.info("CryoXY: " + str(motorPosFromDescriptor("cryoXY")))
-  logger.info("Gripper Temp: " + str(beamline_support.getPvValFromDescriptor("gripTemp")))
-  logger.info("Dewar Position: " + str(motorPosFromDescriptor("dewarRot")))
-  logger.info("Force Torque Sensor Status: " + str(beamline_support.getPvValFromDescriptor("robotFTSensorStat")))
-  logger.info("Force Torque X " + str(beamline_support.getPvValFromDescriptor("robotForceX")) + " Y: " + str(beamline_support.getPvValFromDescriptor("robotForceY")) + " Z: " + str(beamline_support.getPvValFromDescriptor("robotForceZ")))
+  print(time.ctime())
+  print("governor: " + str(beamline_support.getPvValFromDescriptor("governorMessage")))
+  print("SampleX: " + str(motorPosFromDescriptor("sampleX")) + " SampleY: " + str(motorPosFromDescriptor("sampleY")) + "SampleZ: " + str(motorPosFromDescriptor("sampleZ")))
+  print("CryoXY: " + str(motorPosFromDescriptor("cryoXY")))
+  print("Gripper Temp: " + str(beamline_support.getPvValFromDescriptor("gripTemp")))
+  print("Dewar Position: " + str(motorPosFromDescriptor("dewarRot")))
+  print("Force Torque Sensor Status: " + str(beamline_support.getPvValFromDescriptor("robotFTSensorStat")))
+  print("Force Torque X " + str(beamline_support.getPvValFromDescriptor("robotForceX")) + " Y: " + str(beamline_support.getPvValFromDescriptor("robotForceY")) + " Z: " + str(beamline_support.getPvValFromDescriptor("robotForceZ")))
   
 
 def setSlit1X(mval):

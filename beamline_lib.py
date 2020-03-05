@@ -116,7 +116,7 @@ def init_counters():
 def countdwell(time_to_count):
   beamline_support.set_count_time(time_to_count)
 
-def ri():
+def ri(time_to_count = beamline_support.get_count_time()):
   global CNT
   local_count = []
 
@@ -137,23 +137,8 @@ def ri():
 
 
 def read_intensity(time_to_count):
-  global CNT
-  local_count = []
-  
-  local_count = beamline_support.get_counts(time_to_count)  #index0=timer,1=chan2,...
-  for i in range(1,number_of_counter_readouts+1):
-    CNT[i] = local_count[i-1]       
-    update_s = "channel %d: %d" % (i,CNT[i])
-    daq_utils.broadcast_output(update_s)
-  if (daq_lib.ringfile == "wire"):
-    current = daq_utils.ring_current_from_wire(CNT[6],beamline_support.get_count_time())
-  else:
-    current = daq_utils.ring_current()
-  if (beamline_support.get_count_time() > 0 and current > 0):
-    daq_lib.set_field("beamline_merit",int((CNT[2]/beamline_support.get_count_time())/current))
-  else:
-    daq_lib.set_field("beamline_merit",0)
-  
+  ri(time_to_count)
+
 
 def get_counts(ctime,count_list):
   global CNT

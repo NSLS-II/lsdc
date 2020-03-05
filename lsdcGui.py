@@ -1,4 +1,7 @@
 #!/opt/conda_envs/lsdc_dev/bin/python
+"""
+The GUI for the LSDC system
+"""
 import sys
 import os
 import string

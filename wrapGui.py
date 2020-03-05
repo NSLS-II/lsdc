@@ -1,4 +1,7 @@
 #!/opt/conda_envs/lsdc_dev/bin/python
+"""
+If lsdcGui is stopped abnormally, restart it!
+"""
 import os
 from epics import PV
 import db_lib

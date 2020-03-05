@@ -1,4 +1,7 @@
 #!/opt/conda_envs/collection-2018-1.0/bin/ipython -i
+"""
+The main server for the LSDC system
+"""
 import string
 import sys
 import os

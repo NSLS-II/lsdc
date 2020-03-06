@@ -24,14 +24,13 @@ def validate_date(d):
         logger.info('new formated date {}'.format(d))
     return d
 
-
-def getResultsByTimeInterval(start_thuman, end_thuman = None):
+def getValidTimeInterval(start_thuman, end_thuman = None):
     """
       In order to limit our querys, get headers results for an interval of time.
     :params  start_thuman, required
     :params  end_thuman opt. default to now
      format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
-    :return list of full headers:  format list of dict
+    :return valid start and end dates
     """
     # validate and convert to isoformat
     start_thuman = validate_date(start_thuman)
@@ -45,55 +44,43 @@ def getResultsByTimeInterval(start_thuman, end_thuman = None):
     else:
         end_thuman = validate_date(end_thuman)
         end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
-        logger.info(end_t)
-        logger.info(start_t)
-    headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t}))
-    return headers
+    return start_t, end_t
 
-
-def getColRequestsByTimeInterval(start_thuman, end_thuman = None):
+def getResultsByTimeInterval(start_thuman, end_thuman = None):
     """
-     In order to limit our querys, get headers for requests for an interval of time.
+     Get headers for results for an interval of time.
     :params  start_thuman, required
     :params  end_thuman opt. default to now
      format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
     :return list of full headers:  format list of dict
     """
-    # validate and convert to isoformat
-    start_thuman = validate_date(start_thuman)
+    start_t, end_t = getValidTimeInterval(start_thuman, end_thuman)
+    headers = list(db_lib.analysis_ref.find_analysis_header(time={'$lt': end_t, '$gte': start_t}))
+    return headers
 
-    start_t = time.mktime(datetime.strptime(start_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
 
-    if end_thuman is None:
-        now = datetime.now()
-        end_t =time.mktime(now.timetuple())
 
-    else:
-        end_thuman = validate_date(end_thuman)
-        end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
+def getColRequestsByTimeInterval(start_thuman, end_thuman = None):
+    """
+     Get collection requests for an interval of time.
+    :params  start_thuman, required
+    :params  end_thuman opt. default to now
+     format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
+    :return list of full headers:  format list of dict
+    """
+    start_t, end_t = getValidTimeInterval(start_thuman, end_thuman)
     headers = list(db_lib.request_ref.find(time={'$lt': end_t, '$gte': start_t},request_type={'$in':['standard','vector']},priority=-1))
     return headers
 
 def getAllRequestsByTimeInterval(start_thuman, end_thuman = None):
     """
-     In order to limit our querys, get headers for requests for an interval of time.
-    :params  start_thuman, required
-    :params  end_thuman opt. default to now
+     Get all requests for an interval of time.
+    :param  start_thuman, required
+    :param  end_thuman opt. default to now
      format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
     :return list of full headers:  format list of dict
     """
-    # validate and convert to isoformat
-    start_thuman = validate_date(start_thuman)
-
-    start_t = time.mktime(datetime.strptime(start_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
-
-    if end_thuman is None:
-        now = datetime.now()
-        end_t =time.mktime(now.timetuple())
-
-    else:
-        end_thuman = validate_date(end_thuman)
-        end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
+    start_t, end_t = getValidTimeInterval(start_thuman, end_thuman)
     headers = list(db_lib.request_ref.find(time={'$lt': end_t, '$gte': start_t},priority=-1))
     return headers
 
@@ -155,48 +142,27 @@ def printColRequestsByTimeInterval(start_thuman, end_thuman = None, fname = "swe
 
 def getRasterRequestsByTimeInterval(start_thuman, end_thuman = None):
     """
-     In order to limit our querys, get headers for requests for an interval of time.
+     Get headers for raster requests for an interval of time.
     :params  start_thuman, required
     :params  end_thuman opt. default to now
      format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
     :return list of full headers:  format list of dict
     """
-    # validate and convert to isoformat
-    start_thuman = validate_date(start_thuman)
 
-    start_t = time.mktime(datetime.strptime(start_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
-
-    if end_thuman is None:
-        now = datetime.now()
-        end_t =time.mktime(now.timetuple())
-
-    else:
-        end_thuman = validate_date(end_thuman)
-        end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
+    start_t, end_t = getValidTimeInterval(start_thuman, end_thuman)
     headers = list(db_lib.request_ref.find(time={'$lt': end_t, '$gte': start_t},request_type='raster'))
     return headers
 
 
 def getAllRequestsByTimeInterval(start_thuman, end_thuman = None):
     """
-     In order to limit our querys, get headers for requests for an interval of time.
+     Get headers for all requests for an interval of time.
     :params  start_thuman, required
     :params  end_thuman opt. default to now
      format is friendlier than timestamp 'yyyy-mm-ddThh:mm' (hours 0-24)
     :return list of full headers:  format list of dict
     """
-    # validate and convert to isoformat
-    start_thuman = validate_date(start_thuman)
-
-    start_t = time.mktime(datetime.strptime(start_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
-
-    if end_thuman is None:
-        now = datetime.now()
-        end_t =time.mktime(now.timetuple())
-
-    else:
-        end_thuman = validate_date(end_thuman)
-        end_t = time.mktime(datetime.strptime(end_thuman, '%Y-%m-%dT%H:%M:%S').timetuple())
+    start_t, end_t = getValidTimeInterval(start_thuman, end_thuman)
     headers = list(db_lib.request_ref.find(time={'$lt': end_t, '$gte': start_t},priority=-1))
     return headers
 

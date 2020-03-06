@@ -111,7 +111,7 @@ def getMountCount(start_thuman, end_thuman, beamline):
             mountCount+=1
             currentSampID = sampID
       except KeyError:
-        logger.info('sample field not found: %s' % reqs[i])
+        logger.error('sample field not found: %s' % reqs[i])
     return mountCount
 
       
@@ -224,7 +224,7 @@ def getSampleReqRes(reqid):
                 try:
                     FASTDP == reqRes['request_obj']['fastDP']
                 except KeyError as e:
-                    logger.info(" no FASTDP key " + repr(e))
+                    logger.error(" no FASTDP key " + repr(e))
                 logger.info('{:>20} {:6} {:12} {:12}{:6} {:>6}-{:6}'.format('requests', 'FastDP', 'wavelength A',
                                                                       'DetDist mm','width (Deg)', 'Start','End' ))
                 logger.info('{:>20} {:<6} {:10} {:10}{:6} {:>10}-{:6}'.format(r['request_type'], FASTDP,
@@ -242,8 +242,8 @@ def getSampleReqRes(reqid):
                         if rr['result_type'] == 'rasterResult':
                             logger.info('{:>38}'.format(rr['result_obj']['rasterCellResults']['type']))
                 except Exception as e:
-                    logger.info('in 2nd exception')
-                    logger.info('{:20}'.format('none'))
+                    logger.error('in 2nd exception')
+                    logger.error('{:20}'.format('none'))
 
 
 def getSamplesByTimeInterval(start_thuman, end_thuman = None):
@@ -299,7 +299,7 @@ def getVisitSummary(start_thuman, end_thuman = None):
             try:
                 sampleInfo = getSampleReqRes(reqid)
             except Exception as e:
-                logger.info('problem with sample info ' + repr(e))
+                logger.error('problem with sample info ' + repr(e))
 
 
 

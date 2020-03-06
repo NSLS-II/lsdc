@@ -87,11 +87,11 @@ def process_command_file(command_file_name):
         exec(command_string);    
       except NameError:
         error_string = "Unknown command: " + command_string
-        logger.info(error_string)
+        logger.error(error_string)
       except SyntaxError:
-        logger.info("Syntax error")
+        logger.error("Syntax error")
       except KeyError:
-        logger.info("Key error")
+        logger.error("Key error")
   command_file.close()
   
 
@@ -157,15 +157,15 @@ def process_input(command_string):
     execute_command(command_string)
   except NameError:
     error_string = "Unknown command: " + command_string
-    logger.info(error_string)
+    logger.error(error_string)
   except SyntaxError:
-    logger.info("Syntax error")
+    logger.error("Syntax error")
   except KeyError:
-    logger.info("Key error")
+    logger.error("Key error")
   except TypeError:
-    logger.info("Type error")
+    logger.error("Type error")
   except AttributeError:
-    logger.info("Attribute Error")
+    logger.error("Attribute Error")
   except KeyboardInterrupt:
     abort_data_collection()
     logger.info("Interrupt caught by daq server\n")

@@ -204,7 +204,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException:
-   logger.info("caught ISPyBNoResultException")
+   logger.error("caught ISPyBNoResultException")
    sessionid = createVisit(visitName)
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
@@ -380,7 +380,7 @@ def insertRasterResult(result,request,visitName):
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException:
-   logger.info("caught ISPyBNoResultException, bye")
+   logger.error("caught ISPyBNoResultException, bye")
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
  result_obj = result['result_obj']

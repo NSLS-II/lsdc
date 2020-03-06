@@ -59,7 +59,7 @@ logger.addHandler(handler1)
 try:
   import ispybLib
 except:
-  logger.info("ISPYB import error")
+  logger.error("ISPYB import error")
 import raddoseLib
 
 global sampleNameDict
@@ -3597,9 +3597,9 @@ class controlMain(QtGui.QMainWindow):
           try:
             cellResult = cellResults[spotLineCounter]
           except IndexError:
-            logger.info("caught index error #1")
-            logger.info("numlines = " + str(numLines))
-            logger.info("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
+            logger.error("caught index error #1")
+            logger.error("numlines = " + str(numLines))
+            logger.error("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
             return #means a raster failure, and not enough data to cover raster, caused a gui crash
           try:
             spotcount = cellResult["spot_count_no_ice"]
@@ -3626,9 +3626,9 @@ class controlMain(QtGui.QMainWindow):
               else:
                 my_array[cellIndex] = float(cellResult["d_min"])
           except IndexError:
-            logger.info("caught index error #2")
-            logger.info("numlines = " + str(numLines))
-            logger.info("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
+            logger.error("caught index error #2")
+            logger.error("numlines = " + str(numLines))
+            logger.error("expected: " + str(len(rasterDef["rowDefs"])*numsteps))
             return #means a raster failure, and not enough data to cover raster, caused a gui crash
           cellResults_array[cellIndex] = cellResult #instead of just grabbing filename, get everything. Not sure why I'm building my own list of results. How is this different from cellResults?
 #I don't think cellResults_array is different from cellResults, could maybe test that below by subtituting one for the other. It may be a remnant of trying to store less than the whole result set.          
@@ -4357,8 +4357,9 @@ class controlMain(QtGui.QMainWindow):
         try:
           reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())
         except ValueError:
-          logger.info("set dist to 500 in exception handler 1")
-          reqObj["detDist"] = 502.0
+          new_distance = 502.0
+          logger.error("set dist to %s in exception handler 1" % new_distance)
+          reqObj["detDist"] = new_distance
         if (reqObj["protocol"] == "multiCol" or reqObj["protocol"] == "multiColQ"):
           reqObj["gridStep"] = float(self.rasterStepEdit.text())
           reqObj["diffCutoff"] = float(self.multiColCutoffEdit.text())
@@ -4448,7 +4449,7 @@ class controlMain(QtGui.QMainWindow):
           if (daq_utils.beamline == "fmx"):                                        
             os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
           else:
-            os.system("ssh -q -X xf17id2-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")            
+            os.system("ssh -q -X xf17id2-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
       else:
         self.popupServerMessage("You don't have control")
           
@@ -5108,6 +5109,7 @@ class controlMain(QtGui.QMainWindow):
         self.textWindowMessageInit = 0
         return        
       logger.info(message_s)
+      print(message_s)
 
 
     def colorProgramState(self,programState_s):

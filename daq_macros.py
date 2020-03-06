@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except:
-  logger.info("ISPYB import error")
+  logger.error("ISPYB import error")
   
 import sys
 from XSDataMXv1 import XSDataResultCharacterisation
@@ -66,7 +66,7 @@ def abortBS():
     try:
       RE.abort()
     except super_state_machine.errors.TransitionError:
-      logger.info("caught BS")
+      logger.error("caught BS")
 
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)
@@ -729,7 +729,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
     localDialsResultDict = xmltodict.parse(resultString)
     if (localDialsResultDict["data"] == None and retry>0):
-      logger.info("ERROR \n" + resultString + " retry = " + str(retry))
+      logger.error("ERROR \n" + resultString + " retry = " + str(retry))
       retry = retry - 1
       if (retry==0):
         localDialsResultDict["data"]={}
@@ -1372,10 +1372,10 @@ def snakeRasterNormal(rasterReqID,grain=""):
     while (1):
       timerCount +=1
       if (daq_lib.abort_flag == 1):
-        logger.info("caught abort waiting for raster!")
+        logger.error("caught abort waiting for raster!")
         break
       if (timerCount>rasterTimeout):
-        logger.info("Raster timeout!")
+        logger.error("Raster timeout!")
         break
       time.sleep(1)
       logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
@@ -1499,10 +1499,10 @@ def reprocessRaster(rasterReqID):
     while (1):
       timerCount +=1
       if (daq_lib.abort_flag == 1):
-        logger.info("caught abort waiting for raster!")
+        logger.error("caught abort waiting for raster!")
         break
       if (timerCount>rasterTimeout):
-        logger.info("Raster timeout!")
+        logger.error("Raster timeout!")
         break
       time.sleep(1)
       logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
@@ -2518,7 +2518,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
       collect_and_characterize_success = 1
   if (not collect_and_characterize_success):
     dna_comment =  "Characterize Failure"
-    logger.info(dna_comment)
+    logger.error(dna_comment)
     return 0
   else:
     xsDataCharacterisation = XSDataResultCharacterisation.parseFile( strXMLFileName )
@@ -2688,7 +2688,7 @@ def zebraWait(timeoutCheck=True):
     now = time.time()
     if (now > (downloadStart+timeoutLimit) and timeoutCheck):
       beamline_support.setPvValFromDescriptor("zebraReset",1)
-      logger.info("timeout in zebra wait!")
+      logger.error("timeout in zebra wait!")
       daq_lib.gui_message("Timeout in Trigger Wait! Call Staff!!")
       break
     time.sleep(.1)
@@ -2703,7 +2703,7 @@ def zebraWaitDownload(numsteps):
     now = time.time()
     if (now > (downloadStart+timeoutLimit)):
       beamline_support.setPvValFromDescriptor("zebraReset",1)
-      logger.info("timeout in zebra wait download!")      
+      logger.error("timeout in zebra wait download!")
       break
     time.sleep(.1)
     if (beamline_support.getPvValFromDescriptor("zebraDownloadCount") == numsteps):
@@ -3156,7 +3156,7 @@ def guiRemote(): #monitor omega VAL
 def spotNodes(*args):
   """spotNodes(*args) : Set the dials spotfinding nodes. You must give 8 nodes. Example: spotNodes(4,5,7,8,12,13,14,15)"""
   if (len(args) != 8):
-    logger.info("C'mon, I need 8 nodes. No change. Try again.")
+    logger.error("C'mon, I need 8 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
       db_lib.setBeamlineConfigParam(daq_utils.beamline,"spotNode"+str(i+1),"cpu-%03d" % args[i])
@@ -3164,7 +3164,7 @@ def spotNodes(*args):
 def fastDPNodes(*args):
   """fastDPNodes(*args) : Set the fastDP nodes. You must give 4 nodes. Example: fastDPNodes(4,5,7,8)"""  
   if (len(args) != 4):
-    logger.info("C'mon, I need 4 nodes. No change. Try again.")
+    logger.error("C'mon, I need 4 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
       db_lib.setBeamlineConfigParam(daq_utils.beamline,"fastDPNode"+str(i+1),"cpu-%03d" % args[i])
@@ -3222,7 +3222,7 @@ def set_beamsize(sizeV, sizeH):
     beamline_support.setPvValFromDescriptor("CRL_V1A_IN",1)
     beamline_support.setPvValFromDescriptor("CRL_V1B_OUT",1)
   else:
-    logger.info("Error: Vertical size argument has to be \'V0\' or  \'V1\'")
+    logger.error("Error: Vertical size argument has to be \'V0\' or  \'V1\'")
   if (sizeH == 'H0'):  
     beamline_support.setPvValFromDescriptor("CRL_H4A_OUT",1)
     beamline_support.setPvValFromDescriptor("CRL_H2A_OUT",1)
@@ -3234,7 +3234,7 @@ def set_beamsize(sizeV, sizeH):
     beamline_support.setPvValFromDescriptor("CRL_H1A_IN",1)
     beamline_support.setPvValFromDescriptor("CRL_H1B_IN",1)
   else:
-    logger.info("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
+    logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
   if (sizeV == 'V0' and sizeH == 'H0'):
     set_field("size_mode",0)
   elif (sizeV == 'V0' and sizeH == 'H1'):

@@ -113,7 +113,7 @@ def mvrOld(*args):
     for i in range(0,(len(args)/2)):
       motor_channel_dict[multimot_list[i]].wait()
   except epicsMotorException as status:
-    logger.info("CAUGHT MOTOR EXCEPTION")
+    logger.error("CAUGHT MOTOR EXCEPTION")
     try:
       ii = 0
       status_string = ""
@@ -121,7 +121,7 @@ def mvrOld(*args):
         status_string = status_string + str(status[ii])
         ii = ii + 1
     except IndexError:
-      logger.info(status_string)
+      logger.error(status_string)
       raise epicsMotorException(status_string)
 
 
@@ -255,11 +255,11 @@ def read_db():
   try:
     dbfilename = os.environ[envname]
   except KeyError:
-    logger.info(envname + " not defined. Defaulting to epx.db.")
+    logger.error(envname + " not defined. Defaulting to epx.db.")
     dbfilename = "epx.db"
   if (os.path.exists(dbfilename) == 0):
     error_msg = "EPICS BEAMLINE INFO %s does not exist.\n Program exiting." % dbfilename
-    logger.info(error_msg)
+    logger.error(error_msg)
     sys.exit()
   else:
     dbfile = open(dbfilename,'r')

@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except:
-  logger.info("ISPYB import error")
+  logger.error("ISPYB import error")
 
 import db_lib
 
@@ -303,7 +303,7 @@ def setProposalID(proposalID,createVisit=True):
         visitName = ispybLib.createVisitName(proposalID)
     except:
       visitName = "999999-1234"
-      logger.info("ispyb error in set proposal")
+      logger.error("ispyb error in set proposal")
     setVisitName(visitName)
 
 def getProposalID():

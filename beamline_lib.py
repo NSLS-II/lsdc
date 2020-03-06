@@ -57,7 +57,7 @@ def get_epics_motor_pos(motcode): #gets an epics motor pos with error handling
     current_pos = beamline_support.get_motor_pos(motcode)
     return current_pos
   except KeyError:
-    logger.info("No data available for EPICS channel %s\n" % (mcode))
+    logger.error("No data available for EPICS channel %s\n" % (mcode))
     return -9999.9
 
 def mvr(*args):
@@ -72,9 +72,10 @@ def mva(*args):
       beamline_support.mva(*args)
     except Exception as e:      
       bl_stop_motors()
-      e_s = str(e)        
-      daq_lib.gui_message("detector move error: " + e_s)              
-      logger.info(e)
+      e_s = str(e)
+      error_msg = "detector move error: %s" % e_s
+      daq_lib.gui_message(error_msg)
+      logger.error(error_msg)
 
 def read_db():
   beamline_support.read_db()

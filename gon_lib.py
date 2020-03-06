@@ -86,8 +86,8 @@ def wait_for_goniohead(): #why can't I just call wait_motors????
     except KeyboardInterrupt:
       pass
     except CaChannelException as status:
-      logger.info(ca.message(status))
-      logger.info("\n\nHandled Epics Error in wait for motors-2\n\n")
+      logger.error(ca.message(status))
+      logger.error("\n\nHandled Epics Error in wait for motors-2\n\n")
       continue
   
   

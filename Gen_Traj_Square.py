@@ -16,19 +16,19 @@ def gen_traj_square(x_start, x_end, y_start, y_end, z_start, z_end, col, row):
     x = x_end-x_start
     # If the X size of the raster area is larger than 180 micron, return an error message
     if np.abs(x) > 180:
-        logger.info('x range error')
+        logger.error('x range error')
         return
 
     y = y_end-y_start
     z = z_end-z_start
     # If the Y size of the raster area is larger than 150 micron, return an error message
     if np.abs(y) > 150:
-        logger.info('y range error')
+        logger.error('y range error')
         return
 
     # If the Z size of the raster area is larger than 150 micron, return an error message
     if np.abs(z) > 150:
-        logger.info('z range error')
+        logger.error('z range error')
         return
 
     step = x / col

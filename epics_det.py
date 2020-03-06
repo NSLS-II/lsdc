@@ -23,11 +23,11 @@ def read_db():
   try:
     dbfilename = os.environ["DET_PV_LIST"]
   except KeyError:
-    logger.info("det_pv_list not defined. Please set the environment variable det_pv_list to the name of the detector pv list file and try again.")
+    logger.error("det_pv_list not defined. Please set the environment variable det_pv_list to the name of the detector pv list file and try again.")
     sys.exit()
   if (os.path.exists(dbfilename) == 0):
     error_msg = "\ndet_pv_list: %s does not exist.\n Program exiting." % dbfilename
-    logger.info(error_msg)
+    logger.error(error_msg)
     sys.exit()
   else:
     dbfile = open(dbfilename,'r')
@@ -99,7 +99,7 @@ def det_channels_init():
         set_det_pv('filenum_auto_inc_flag',0)
         det_set_file_template("img")        
   except KeyError:
-    logger.info("No ENV VAR %s\n" % varname)
+    logger.error("No ENV VAR %s\n" % varname)
       
 
 def set_det_pv(pvcode,val):

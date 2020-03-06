@@ -33,9 +33,10 @@ def finish():
       RobotControlLib.runCmd("finish")
       return 1    
     except Exception as e:
-      e_s = str(e)        
-      daq_lib.gui_message("ROBOT Finish ERROR: " + e_s)        
-      logger.info(e)
+      e_s = str(e)
+      message = "ROBOT Finish ERROR: " + e_s
+      daq_lib.gui_message(message)
+      logger.error(message)
       return 0
 
 def warmupGripperRecoverThread(savedThreshold,junk):
@@ -107,9 +108,10 @@ def wait90TopviewThread(prefix1,prefix90):
       for outputline in lines:
         logger.info(outputline)
   except Exception as e:
-    e_s = str(e)        
-    daq_lib.gui_message("TopView check ERROR, will continue: " + e_s)        
-    logger.info(e_s)
+    e_s = str(e)
+    message = "TopView check ERROR, will continue: " + e_s
+    daq_lib.gui_message(message)
+    logger.error(message)
     
   
   
@@ -190,9 +192,10 @@ def parkGripper():
   try:
     RobotControlLib.runCmd("park")
   except Exception as e:
-    e_s = str(e)        
-    daq_lib.gui_message("Park gripper Failed!: " + e_s)        
-    logger.info(e_s)
+    e_s = str(e)
+    message = "Park gripper Failed!: " + e_s
+    daq_lib.gui_message(message)
+    logger.error(message)
     
 
 def setWorkposThread(init,junk):
@@ -212,9 +215,10 @@ def testRobot():
     logger.info("Test Robot passed!")
     daq_lib.gui_message("Test Robot passed!")
   except Exception as e:
-    e_s = str(e)        
-    daq_lib.gui_message("Test Robot failed!: " + e_s)        
-    logger.info(e_s)
+    e_s = str(e)
+    message = "Test Robot failed!: " + e_s
+    daq_lib.gui_message(message)
+    logger.error(message)
 
   
 def openGripper():
@@ -245,9 +249,10 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"        
         daq_macros.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
       except Exception as e:
-        e_s = str(e)        
-        daq_lib.gui_message("TopView check ERROR, will continue: " + e_s)        
-        logger.info(e_s)
+        e_s = str(e)
+        message = "TopView check ERROR, will continue: " + e_s
+        daq_lib.gui_message(message)
+        logger.error(message)
     logger.info("mounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
     logger.info("absPos = " + str(absPos))
     platePos = int(puckPos/3)
@@ -261,9 +266,10 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         if (init == 0):
           RobotControlLib.runCmd("park")
       except Exception as e:
-        e_s = str(e)        
-        daq_lib.gui_message("ROBOT Park ERROR: " + e_s)                  
-        logger.info(e)
+        e_s = str(e)
+        message = "ROBOT Park ERROR: " + e_s
+        daq_lib.gui_message(message)
+        logger.error(message)
         return 0
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
@@ -291,9 +297,10 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           try:
             RobotControlLib.mount(absPos)
           except Exception as e:
-            e_s = str(e)        
-            daq_lib.gui_message("ROBOT mount ERROR: " + e_s)        
-            logger.info(e)
+            e_s = str(e)
+            message = "ROBOT mount ERROR: " + e_s
+            daq_lib.gui_message(message)
+            logger.error(message)
             return 0
         else:
           time.sleep(0.5)
@@ -327,7 +334,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       daq_lib.setGovRobotSA()
       return 1
     except Exception as e:
-      logger.info(e)
+      logger.error(e)
       e_s = str(e)
       if (e_s.find("Fatal") != -1):
         daq_macros.robotOff()
@@ -378,9 +385,10 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       try:
         RobotControlLib.runCmd("park")
       except Exception as e:
-        e_s = str(e)        
-        daq_lib.gui_message("ROBOT park ERROR: " + e_s)        
-        logger.info(e)
+        e_s = str(e)
+        message = "ROBOT park ERROR: " + e_s
+        daq_lib.gui_message(message)
+        logger.error(message)
         return 0
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
@@ -388,15 +396,16 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       par_cool=(beamline_support.getPvValFromDescriptor("gripTemp")>-170)
       RobotControlLib.unmount1(init=par_init,cooldown=par_cool)
     except Exception as e:
-      e_s = str(e)        
-      daq_lib.gui_message("ROBOT unmount ERROR: " + e_s)        
-      logger.info(e)
+      e_s = str(e)
+      message = "ROBOT unmount ERROR: " + e_s
+      daq_lib.gui_message(message)
+      logger.error(message)
       return 0
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
     if (detDist<200.0):
       beamline_lib.mvaDescriptor("detectorDist",200.0)
     if (beamline_lib.motorPosFromDescriptor("detectorDist") < 199.0):
-      logger.info("ERROR - Detector < 200.0!")
+      logger.error("ERROR - Detector < 200.0!")
       return 0
     try:
       RobotControlLib.unmount2(absPos)
@@ -407,8 +416,9 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
         daq_macros.disableMount()          
         daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
         return 0
-      daq_lib.gui_message("ROBOT unmount2 ERROR: " + e_s)        
-      logger.info(e)
+      message = "ROBOT unmount2 ERROR: " + e_s
+      daq_lib.gui_message(message)
+      logger.error(message)
       return 0
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.clearMountedSample()

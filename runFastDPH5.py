@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except:
-  logger.info("ISPYB import error")
+  logger.error("ISPYB import error")
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
@@ -54,7 +54,7 @@ visitName = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
 except:
-  logger.info("ispyb error")
+  logger.error("ispyb error")
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):

@@ -428,7 +428,7 @@ def insertIntoContainer(container_name, owner, position, itemID):
         updateContainer(c)
         return True
     else:
-        logger.info("bad container name")
+        logger.error("bad container name %s" % container_name)
         return False
 
 
@@ -442,7 +442,7 @@ def emptyContainer(uid):
         updateContainer(c)
         return True
     else:
-        logger.info("container not found")
+        logger.error("container not found")
         return False
 
 

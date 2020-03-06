@@ -4189,21 +4189,12 @@ class controlMain(QtGui.QMainWindow):
           colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
           sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
           runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
-          (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])                
-          reqObj = colRequest["request_obj"]
-          reqObj["element"] = self.periodicTable.eltCurrent.symbol          
-          reqObj["runNum"] = runNum
-          reqObj["file_prefix"] = str(self.EScanDataPathGBTool.prefix_ledit.text())
-          reqObj["basePath"] = str(self.EScanDataPathGBTool.base_path_ledit.text())
-          reqObj["directory"] = str(self.EScanDataPathGBTool.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
-          reqObj["file_number_start"] = int(self.EScanDataPathGBTool.file_numstart_ledit.text())
-          reqObj["exposure_time"] = float(self.exp_time_ledit.text())          
-          reqObj["protocol"] = "eScan"
-          reqObj["scanEnergy"] = targetEnergy
-          reqObj["runChooch"] = True #just hardcode for now
-          reqObj["steps"] = int(self.escan_steps_ledit.text())          
-          reqObj["stepsize"] = int(self.escan_stepsize_ledit.text())          
-          colRequest["request_obj"] = reqObj             
+          (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])
+          reqObj = get_request_object_escan(colRequest["request_obj"], self.periodicTable.eltCurrent.symbol, runNum, self.EScanDataPathGBTool.prefix_ledit.text(),
+                                            self.EScanDataPathGBTool.base_path_ledit.text(), sampleName, containerID, samplePositionInContainer,
+                                            self.EScanDataPathGBTool.file_numstart_ledit.text(), self.exp_time_ledit.text(), targetEnergy, self.escan_steps_ledit.text(),
+                                            self.escan_stepsize_ledit.text())
+          colRequest["request_obj"] = reqObj
           newSampleRequestID = db_lib.addRequesttoSample(self.selectedSampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=daq_utils.getProposalID())
 #attempt here to select a newly created request.        
           self.SelectedItemData = newSampleRequestID
@@ -4229,26 +4220,17 @@ class controlMain(QtGui.QMainWindow):
           colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
           sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
           runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
-          (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])                
-          reqObj = colRequest["request_obj"]
-          reqObj["element"] = self.periodicTable.eltCurrent.symbol
-          reqObj["mcaRoiLo"] = mcaRoiLo
-          reqObj["mcaRoiHi"] = mcaRoiHi
-          reqObj["runNum"] = runNum
-          reqObj["file_prefix"] = str(self.EScanDataPathGB.prefix_ledit.text())
-          reqObj["basePath"] = str(self.EScanDataPathGB.base_path_ledit.text())
-          reqObj["directory"] = str(self.EScanDataPathGB.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"          
-          reqObj["file_number_start"] = int(self.EScanDataPathGB.file_numstart_ledit.text())
-          reqObj["exposure_time"] = float(self.exp_time_ledit.text())                    
-          reqObj["protocol"] = "eScan"
+          (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])
+          reqObj = get_request_object_escan(colRequest["request_obj"], self.periodicTable.eltCurrent.symbol, runNum, self.EScanDataPathGB.prefix_ledit.text(),
+                                           self.EScanDataPathGB.base_path_ledit.text(), sampleName, containerID, samplePositionInContainer,
+                                            self.EScanDataPathGB.file_numstart_ledit.text(), self.exp_time_ledit.text(), targetEnergy, self.escan_steps_ledit.text(),
+                                            self.escan_stepsize_ledit.text())
           reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())
           reqObj["attenuation"] = float(self.transmission_ledit.text())          
-          reqObj["steps"] = int(self.escan_steps_ledit.text())          
-          reqObj["stepsize"] = int(self.escan_stepsize_ledit.text())          
-          
-          reqObj["scanEnergy"] = targetEnergy
-          reqObj["runChooch"] = True #just hardcode for now
-          colRequest["request_obj"] = reqObj             
+          reqObj["mcaRoiLo"] = mcaRoiLo
+          reqObj["mcaRoiHi"] = mcaRoiHi
+
+          colRequest["request_obj"] = reqObj
           newSampleRequestID = db_lib.addRequesttoSample(self.selectedSampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=daq_utils.getProposalID())
 #attempt here to select a newly created request.        
           self.SelectedItemData = newSampleRequestID
@@ -4409,7 +4391,6 @@ class controlMain(QtGui.QMainWindow):
           self.drawPolyRaster(newSampleRequest)
       if (selectedSampleID == None): #this is a temp kludge to see if this is called from addAll
         self.treeChanged_pv.put(1)
-
 
 
     def cloneRequestCB(self):
@@ -5156,6 +5137,24 @@ class controlMain(QtGui.QMainWindow):
       else:
         self.popupServerMessage("You don't have control")
 
+
+def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sampleName, containerID, samplePositionInContainer,
+                             file_number_start, exposure_time, targetEnergy, steps, stepsize):
+    reqObj["element"] = symbol
+    reqObj["runNum"] = runNum
+    reqObj["file_prefix"] = str(file_prefix)
+    reqObj["basePath"] = str(base_path)
+    reqObj["directory"] = str(base_path) + "/" + str(
+        daq_utils.getVisitName()) + "/" + sampleName + "/" + str(runNum) + "/" + db_lib.getContainerNameByID(
+        containerID) + "_" + str(samplePositionInContainer + 1) + "/"
+    reqObj["file_number_start"] = int(file_number_start)
+    reqObj["exposure_time"] = float(exposure_time)
+    reqObj["protocol"] = "eScan"
+    reqObj["scanEnergy"] = targetEnergy
+    reqObj["runChooch"] = True  # just hardcode for now
+    reqObj["steps"] = int(steps)
+    reqObj["stepsize"] = int(stepsize)
+    return reqObj
 
 def main():
     daq_utils.init_environment()

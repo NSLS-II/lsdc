@@ -71,17 +71,7 @@ def init_environment():
     xtal_url = db_lib.getBeamlineConfigParam(beamline,"xtal_url")
   mono_mot_code = db_lib.getBeamlineConfigParam(beamline,"mono_mot_code")
   screenProtocol = db_lib.getBeamlineConfigParam(beamline,"screen_default_protocol")
-  screenPhist = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_phist"))
-  screenPhiend = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_phi_end"))
-  screenWidth = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_width"))
-  screenDist =  float(db_lib.getBeamlineConfigParam(beamline,"screen_default_dist"))
-  screenExptime = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_time"))
-  screenReso = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_reso"))
-  screenWave = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_wave"))
-  screenEnergy = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_energy"))
-  screenbeamWidth = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_beamWidth"))
-  screenbeamHeight = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_beamHeight"))
-  screenTransmissionPercent = float(db_lib.getBeamlineConfigParam(beamline,"stdTrans"))
+  screenDist, screenEnergy, screenExptime, screenPhiend, screenPhist, screenReso, screenTransmissionPercent, screenWidth, screenbeamHeight, screenbeamWidth = getScreenDefaultParams()
   beamstop_x_pvname = db_lib.getBeamlineConfigParam(beamline,"beamstop_x_pvname")
   beamstop_y_pvname = db_lib.getBeamlineConfigParam(beamline,"beamstop_y_pvname")
   varname = "DETECTOR_OFFLINE"
@@ -142,17 +132,7 @@ def createDefaultRequest(sample_id,createVisit=True):
       propNum = 999999        
     if (propNum != getProposalID()):
       setProposalID(propNum,createVisit)
-    screenPhist = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_phist"))
-    screenPhiend = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_phi_end"))
-    screenWidth = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_width"))
-    screenDist =  float(db_lib.getBeamlineConfigParam(beamline,"screen_default_dist"))
-    screenExptime = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_time"))
-    screenReso = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_reso"))
-    screenWave = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_wave"))
-    screenEnergy = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_energy"))
-    screenbeamWidth = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_beamWidth"))
-    screenbeamHeight = float(db_lib.getBeamlineConfigParam(beamline,"screen_default_beamHeight"))
-    screenTransmissionPercent = float(db_lib.getBeamlineConfigParam(beamline,"stdTrans"))
+    screenDist, screenEnergy, screenExptime, screenPhiend, screenPhist, screenReso, screenTransmissionPercent, screenWidth, screenbeamHeight, screenbeamWidth = getScreenDefaultParams()
     sampleName = str(db_lib.getSampleNamebyID(sample_id))
     basePath = os.getcwd()
     runNum = db_lib.getSampleRequestCount(sample_id)
@@ -181,6 +161,20 @@ def createDefaultRequest(sample_id,createVisit=True):
 
     return request
 
+
+def getScreenDefaultParams():
+    screenPhist = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_phist"))
+    screenPhiend = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_phi_end"))
+    screenWidth = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_width"))
+    screenDist = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_dist"))
+    screenExptime = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_time"))
+    screenReso = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_reso"))
+    screenWave = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_wave"))
+    screenEnergy = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_energy"))
+    screenbeamWidth = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_beamWidth"))
+    screenbeamHeight = float(db_lib.getBeamlineConfigParam(beamline, "screen_default_beamHeight"))
+    screenTransmissionPercent = float(db_lib.getBeamlineConfigParam(beamline, "stdTrans"))
+    return screenDist, screenEnergy, screenExptime, screenPhiend, screenPhist, screenReso, screenTransmissionPercent, screenWidth, screenbeamHeight, screenbeamWidth
 
 
 def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):

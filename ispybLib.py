@@ -95,16 +95,7 @@ def createVisitName(propNum): # this is for the GUI to know what a datapath woul
 
 
 def createVisit(propNum):
-  logger.info("creating visit for propnum " + str(propNum))
-  propID = proposalIdFromProposal(propNum)
-  if (propID == 0): #proposal doesn't exist, just create and assign to boaty
-    createProposal(propNum)
-  maxVis = maxVisitNumfromProposal(propNum)
-  if (maxVis == None): #1st visit
-    newVisitNum = 1
-  else:
-    newVisitNum = 1 + maxVis
-  visitName = "mx"+str(propNum)+"-"+str(newVisitNum)
+  visitName = createVisitName(propNum)
   personID = personIdFromProposal(propNum)
   params = core.get_session_for_proposal_code_number_params()
   params['proposal_code'] = 'mx'
@@ -250,43 +241,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
        params['experimenttype'] = 'OSC'
      elif request_type == 'vector':
        params['experimenttype'] = 'Helical'
-     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-     params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-     dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
-     logger.info("dcg_id: %i" % dcg_id)
-     params = mxacquisition.get_data_collection_params()
-     params['parentid'] = dcg_id
-     params['visitid'] = sessionid
-     params['imgdir'] = directory
-     params['imgprefix'] = filePrefix
-     params['imgsuffix'] = 'cbf' # assume CBF ...?
-     params['wavelength'] = request_obj['wavelength']
-     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-     params['run_status'] = 'DataCollection Successful' # assume success / not aborted
-     params['datacollection_number'] = request_obj['runNum']
-     params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
-     params['exp_time'] = request_obj['exposure_time']
-     params['start_image_number'] = request_obj['file_number_start']
-     params['axis_start'] = request_obj['sweep_start']
-     params['axis_end'] = request_obj['sweep_end']
-     params['axis_range'] = request_obj['img_width']
-     params['resolution'] = request_obj['resolution']
-     params['detector_distance'] = request_obj['detDist']
-     params['slitgap_horizontal'] = request_obj['slit_width']
-     params['slitgap_vertical'] = request_obj['slit_height']
-     params['transmission'] = request_obj['attenuation']
-     params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix']) # assume cbf ...
-     params['overlap'] = 0.0
-     params['rotation_axis'] = 'Omega' # assume Omega unless we know otherwise
-     logger.info("jpegimfilename = " + jpegImageFilename)
-     params['xtal_snapshot1'] = jpegImageFilename
-     params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
-     params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
-     params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
-     dc_id = mxacquisition.insert_data_collection(list(params.values()))
-     logger.info("dc_id: %i" % dc_id)
-     return dc_id
-
+     return createDataCollection(directory, filePrefix, jpegImageFilename, params, request_obj, sessionid)
 
                  ## For strategies (EDNA or otherwise)
                  # params = mxscreening.get_screening_params()
@@ -372,6 +327,47 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
                  # params['omegastart'] = ?
 
        # hard-coding hack to make SynchWeb understand whether it's a full data collection or a screening
+
+
+def createDataCollection(directory, filePrefix, jpegImageFilename, params, request_obj, sessionid):
+    params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
+    logger.info("dcg_id: %i" % dcg_id)
+    params = mxacquisition.get_data_collection_params()
+    params['parentid'] = dcg_id
+    params['visitid'] = sessionid
+    params['imgdir'] = directory
+    params['imgprefix'] = filePrefix
+    params['imgsuffix'] = 'cbf'  # assume CBF ...?
+    params['wavelength'] = request_obj['wavelength']
+    params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+    params['run_status'] = 'DataCollection Successful'  # assume success / not aborted
+    params['datacollection_number'] = request_obj['runNum']
+    params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    params['exp_time'] = request_obj['exposure_time']
+    params['start_image_number'] = request_obj['file_number_start']
+    params['axis_start'] = request_obj['sweep_start']
+    params['axis_end'] = request_obj['sweep_end']
+    params['axis_range'] = request_obj['img_width']
+    params['resolution'] = request_obj['resolution']
+    params['detector_distance'] = request_obj['detDist']
+    params['slitgap_horizontal'] = request_obj['slit_width']
+    params['slitgap_vertical'] = request_obj['slit_height']
+    params['transmission'] = request_obj['attenuation']
+    params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix'])  # assume cbf ...
+    params['overlap'] = 0.0
+    params['rotation_axis'] = 'Omega'  # assume Omega unless we know otherwise
+    logger.info("jpegimfilename = " + jpegImageFilename)
+    params['xtal_snapshot1'] = jpegImageFilename
+    params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
+    params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
+    params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
+    dc_id = mxacquisition.insert_data_collection(list(params.values()))
+    logger.info("dc_id: %i" % dc_id)
+    return dc_id
+
+
 #         if request_type == 'screening':
 #           params['overlap'] = 89.0
                  
@@ -401,39 +397,4 @@ def insertRasterResult(result,request,visitName):
  params = mxacquisition.get_data_collection_group_params()
  params['parentid'] = sessionid
  params['experimenttype'] = 'OSC'
- params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
- params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
- dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
- logger.info("dcg_id: %i" % dcg_id)
- params = mxacquisition.get_data_collection_params()
- params['parentid'] = dcg_id
- params['visitid'] = sessionid
- params['imgdir'] = directory
- params['imgprefix'] = filePrefix
- params['imgsuffix'] = 'cbf' # assume CBF ...?
- params['wavelength'] = request_obj['wavelength']
- params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
- params['run_status'] = 'DataCollection Successful' # assume success / not aborted
- params['datacollection_number'] = request_obj['runNum']
- params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
- params['exp_time'] = request_obj['exposure_time']
- params['start_image_number'] = request_obj['file_number_start']
- params['axis_start'] = request_obj['sweep_start']
- params['axis_end'] = request_obj['sweep_end']
- params['axis_range'] = request_obj['img_width']
- params['resolution'] = request_obj['resolution']
- params['detector_distance'] = request_obj['detDist']
- params['slitgap_horizontal'] = request_obj['slit_width']
- params['slitgap_vertical'] = request_obj['slit_height']
- params['transmission'] = request_obj['attenuation']
- params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix']) # assume cbf ...
- params['overlap'] = 0.0
- params['rotation_axis'] = 'Omega' # assume Omega unless we know otherwise
- logger.info("jpegimfilename from raster = " + jpegImageFilename)
- params['xtal_snapshot1'] = jpegImageFilename
- params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
- params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
- params['xtal_snapshot4'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_93.0.png'
- dc_id = mxacquisition.insert_data_collection(list(params.values()))
- logger.info("dc_id: %i" % dc_id)
- return dc_id
+ return createDataCollection(directory, filePrefix, jpegImageFilename, params, request_obj, sessionid)

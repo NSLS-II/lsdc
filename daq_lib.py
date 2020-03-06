@@ -257,6 +257,7 @@ def setGovRobot(state):
   if state == "DI":
     return setGovRobotDI()
   else:
+    logger.info('setGovRob%s' % state)
     setRobotGovState(state)
     altName = state.lower().capitalize()
     waitGov()

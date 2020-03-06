@@ -4430,7 +4430,7 @@ class controlMain(QtGui.QMainWindow):
         self.timerSample.start(0)            
         self.timerHutch.start(500)      
         if reply == QtGui.QMessageBox.Yes:
-          if (daq_utils.beamline == "fmx"):                                        
+          if (daq_utils.beamline == "fmx"):  #TODO replace with directly getting hostname
             os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
           else:
             os.system("ssh -q -X xf17id2-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")

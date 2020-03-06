@@ -651,16 +651,16 @@ class userScreenDialog(QFrame):
       self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-      self.parent.send_to_server("setGovRobotSE()")
+      self.parent.send_to_server("setGovRobot('SE')")
 
     def SAgovCB(self):
-      self.parent.send_to_server("setGovRobotSA()")
+      self.parent.send_to_server("setGovRobot('SA')")
 
     def DAgovCB(self):
-      self.parent.send_to_server("setGovRobotDA()")
+      self.parent.send_to_server("setGovRobot('DA')")
 
     def BLgovCB(self):
-      self.parent.send_to_server("setGovRobotBL()")
+      self.parent.send_to_server("setGovRobot('BL')")
 
     def userScreenOKCB(self):
       self.hide()

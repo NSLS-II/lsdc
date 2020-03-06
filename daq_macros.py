@@ -199,7 +199,7 @@ def autoRasterLoop(currentRequest):
   global autoRasterFlag
 
   
-  if not (daq_lib.setGovRobotSA()):
+  if not (daq_lib.setGovRobot('SA')):
     return 0
   if (daq_utils.beamline == "amx"):  
     if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
@@ -246,7 +246,7 @@ def autoRasterLoop(currentRequest):
   runRasterScan(currentRequest,"Fine")
   time.sleep(1)
   runRasterScan(currentRequest,"Line")
-  daq_lib.setGovRobotDI()  
+  daq_lib.setGovRobot('DI')
   time.sleep(1)
   autoRasterFlag = 0      
 
@@ -256,7 +256,7 @@ def autoRasterLoop(currentRequest):
 def autoVector(currentRequest): #12/19 - not tested!
   global autoVectorFlag
 
-  if not (daq_lib.setGovRobotSA()):
+  if not (daq_lib.setGovRobot('SA')):
     return 0
   reqObj = currentRequest["request_obj"]
   set_field("xrecRasterFlag","100")        
@@ -322,7 +322,7 @@ def autoVector(currentRequest): #12/19 - not tested!
   currentRequest["request_obj"] = reqObj
   db_lib.updateRequest(currentRequest)
   daq_lib.collectData(currentRequest)
-  daq_lib.setGovRobotSA()              
+  daq_lib.setGovRobot('SA')
   return 1
 
 def rasterScreen(currentRequest):
@@ -879,7 +879,7 @@ def snakeRaster(rasterReqID,grain=""):
 def snakeRasterNoTile(rasterReqID,grain=""):
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
 
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   
   rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -983,7 +983,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
     db_lib.updateRequest(rasterRequest)    
     db_lib.updatePriority(rasterRequestID,-1)  
     if (lastOnSample()):  
-      daq_lib.setGovRobotSA()      
+      daq_lib.setGovRobot('SA')
     return 1
       
   rasterTimeout = 600
@@ -1015,7 +1015,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   db_lib.updatePriority(rasterRequestID,-1)  
   set_field("xrecRasterFlag",rasterRequest["uid"])
   if (lastOnSample()):    
-    daq_lib.setGovRobotSA()      
+    daq_lib.setGovRobot('SA')
   return 1
 
     
@@ -1023,7 +1023,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
 def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. It was challenging to write. It was working the last time the scanner was on. 
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
 
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   
   rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -1218,7 +1218,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   db_lib.updatePriority(rasterRequestID,-1)
   set_field("xrecRasterFlag",rasterRequest["uid"])
   if (lastOnSample()):    
-    daq_lib.setGovRobotSA()      
+    daq_lib.setGovRobot('SA')
   return 1
 
   
@@ -1274,7 +1274,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(numsteps)  
   detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     if (daq_utils.beamline == "fmx"):
       beamline_support.setPvValFromDescriptor("sampleProtect",1)    
     return      
@@ -1283,7 +1283,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   
   for i in range(len(rasterDef["rowDefs"])):
     if (daq_lib.abort_flag == 1):
-      daq_lib.setGovRobotSA()
+      daq_lib.setGovRobot('SA')
       if (daq_utils.beamline == "fmx"):
         beamline_support.setPvValFromDescriptor("sampleProtect",1)    
       return 0
@@ -1397,9 +1397,9 @@ def snakeRasterNormal(rasterReqID,grain=""):
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
   if (lastOnSample() and not autoRasterFlag):  
-    daq_lib.setGovRobotSA()
+    daq_lib.setGovRobot('SA')
   elif (autoRasterFlag):
-    daq_lib.setGovRobotDI()    
+    daq_lib.setGovRobot('DI')
   if (procFlag):
     time.sleep(2.0)    
     set_field("xrecRasterFlag",rasterRequest["uid"])
@@ -1523,7 +1523,7 @@ def reprocessRaster(rasterReqID):
 
 
 def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
@@ -1646,7 +1646,7 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
   
   db_lib.updatePriority(rasterReqID,-1)  
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()      
+    daq_lib.setGovRobot('SA')
   return 1
 
 
@@ -1730,7 +1730,7 @@ def snakeStepRasterSpec(rasterReqID,grain=""): #12/19 - only tested recently, bu
       collectSpec(data_directory_name+"/"+filePrefix+"_"+str(file_number_start),gotoSA=False)    
   db_lib.updatePriority(rasterReqID,-1)  
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()      
+    daq_lib.setGovRobot('SA')
   return 1
 
 def setGridRasterParams(xsep,ysep,xstep,ystep,sizex,sizey,stepsize):
@@ -1756,7 +1756,7 @@ def printGridRasterParams():
   
 
 def gridRaster(currentRequest):
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   
   sampleID = currentRequest["sample"]  
@@ -2080,7 +2080,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
 
 def collectSpec(filename,gotoSA=True):
   """collectSpec(filenamePrefix) : collect a spectrum, save to file"""  
-  daq_lib.setGovRobotXF()      
+  daq_lib.setGovRobot('XF')
   open_shutter()
   beamline_support.setPvValFromDescriptor("mercuryEraseStart",1)
   while (1):
@@ -2102,7 +2102,7 @@ def collectSpec(filename,gotoSA=True):
   specFile.close()
   close_shutter()
   if (gotoSA):
-    daq_lib.setGovRobotSA()    
+    daq_lib.setGovRobot('SA')
 
     
 def eScan(energyScanRequest):
@@ -2123,13 +2123,13 @@ def eScan(energyScanRequest):
   logger.info("energy scan for " + str(targetEnergy))
   scan_element = reqObj['element']
   mvaDescriptor("energy",targetEnergy)
-  if not (daq_lib.setGovRobotXF()):    
+  if not (daq_lib.setGovRobot('XF')):
     return
   open_shutter()
   scanID = RE(bp.rel_scan([mercury],vdcm.e,left,right,steps),[LivePlot("mercury_mca_rois_roi0_count")])
   close_shutter()
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()  
+    daq_lib.setGovRobot('SA')
   scanData = db[scanID[0]]
   for ev in scanData.events():
     if ('mercury_mca_spectrum' in ev['data']):
@@ -2225,7 +2225,7 @@ def vectorZebraScan(vecRequest):
 
     
 def vectorZebraScanFine(vecRequest):
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   
   reqObj = vecRequest["request_obj"]
@@ -2319,7 +2319,7 @@ def vectorZebraScanFine(vecRequest):
   mvaDescriptor("fineX",0,"fineY",0,"fineZ",0)  
   
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()    
+    daq_lib.setGovRobot('SA')
     
 
 def vectorZebraScanNormal(vecRequest): 
@@ -2352,10 +2352,10 @@ def vectorZebraScanNormal(vecRequest):
   scanWidth = float(numImages)*imgWidth
   zebraDaq(sweep_start_angle,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()    
+    daq_lib.setGovRobot('SA')
 
 def vectorZebraStepScan(vecRequest):
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   
   reqObj = vecRequest["request_obj"]
@@ -2403,7 +2403,7 @@ def vectorZebraStepScan(vecRequest):
     beamline_support.setPvValFromDescriptor("vectorNumFrames",numImagesPerStep)
     zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
   if (lastOnSample()):  
-    daq_lib.setGovRobotSA()    
+    daq_lib.setGovRobot('SA')
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   if (daq_utils.beamline == "amxz"):  
@@ -2939,7 +2939,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
   logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
   startArm = time.time()
-  if not (daq_lib.setGovRobotDA()):
+  if not (daq_lib.setGovRobot('DA')):
     return
   endArm = time.time()
   armTime = endArm-startArm

@@ -253,31 +253,25 @@ def waitGovRobotSE():
     gui_message("Governor did not reach SE.")    
     return 0
 
-def setGovRobotSE():
-  setRobotGovState("SE")
-  waitGov()    
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotSeActive") or beamline_support.getPvValFromDescriptor("humanSeActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    return 1
+def setGovRobot(state):
+  if state == "DI":
+    return setGovRobotDI()
   else:
-    logger.info("Governor did not reach SE")
-    gui_message("Governor did not reach SE.")        
-    return 0
+    setRobotGovState(state)
+    altName = state.lower().capitalize()
+    waitGov()
+    robotGovState = (beamline_support.getPvValFromDescriptor("robot%sActive" % altName) or beamline_support.getPvValFromDescriptor("human%sActive" % altName))
+    logger.info("robot gov state = " + str(robotGovState))
+    if (robotGovState != 0):
+      if state in ["SA", "DA"]:
+        toggleLowMagCameraSettings(state)
+      return 1
+    else:
+      logger.info("Governor did not reach %s" % state)
+      gui_message("Governor did not reach %s." % state)
+      return 0
 
-def setGovRobotXF():
-  setRobotGovState("XF")
-  waitGov()    
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotXfActive") or beamline_support.getPvValFromDescriptor("humanXfActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    return 1
-  else:
-    logger.info("Governor did not reach XF")
-    gui_message("Governor did not reach XF.")        
-    return 0
-
-def setGovRobotDI():
+def setGovRobotDI(): # keep this because it is different from the others
   setRobotGovState("DI")
   waitGov()    
   robotGovState = beamline_support.getPvValFromDescriptor("robotDiActive")
@@ -289,35 +283,9 @@ def setGovRobotDI():
     logger.info("Governor did not reach DI")
     gui_message("Governor did not reach DI.")        
     return 0
-  
-def setGovRobotBL():
-  setRobotGovState("BL")
-  waitGov()    
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotBlActive") or beamline_support.getPvValFromDescriptor("humanBlActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    return 1
-  else:
-    logger.info("Governor did not reach BL")
-    gui_message("Governor did not reach BL.")        
-    return 0
-  
+
 def govBusy():
   return (beamline_support.getPvValFromDescriptor("robotGovStatus") == 1 or beamline_support.getPvValFromDescriptor("humanGovStatus") == 1)
-
-def setGovRobotSA():
-  logger.info("setGovRobotSA")  
-  setRobotGovState("SA")
-  waitGov()  
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotSaActive") or beamline_support.getPvValFromDescriptor("humanSaActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("SA")    
-    return 1
-  else:
-    logger.info("Governor did not reach SA")
-    gui_message("Governor did not reach SA.")        
-    return 0
 
 def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
   logger.info("setGovRobotSA")  
@@ -326,19 +294,6 @@ def setGovRobotSA_nowait(): #called at end of a data collection. The idea is thi
   return 1
 
 
-def setGovRobotDA():
-  setRobotGovState("DA")
-  waitGov()
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotDaActive") or beamline_support.getPvValFromDescriptor("humanDaActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("DA")    
-    return 1
-  else:
-    logger.info("Governor did not reach DA")
-    gui_message("Governor did not reach DA.")        
-    return 0
-  
 def waitGov():
   govTimeout = 120  
   startTime = time.time()

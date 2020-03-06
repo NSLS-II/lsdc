@@ -236,7 +236,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
   if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')):
     if (not daq_lib.waitGovRobotSE()):
-      daq_lib.setGovRobotSE()
+      daq_lib.setGovRobot('SE')
     if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
       try:
         if (daq_utils.beamline == "fmx"):                  
@@ -283,7 +283,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             if (daq_utils.beamline == "fmx"):
               daq_macros.homePins()
               time.sleep(3.0)
-            if (not daq_lib.setGovRobotSE()):
+            if (not daq_lib.setGovRobot('SE')):
               return
         if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
@@ -324,14 +324,14 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         else:
           RobotControlLib._mount(absPos)
       if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
-        daq_lib.setGovRobotSA()  #make sure we're in SA before moving motors
+        daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
         if (sampYadjust != 0):
           pass
         else:
           logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
       
-      daq_lib.setGovRobotSA()
+      daq_lib.setGovRobot('SA')
       return 1
     except Exception as e:
       logger.error(e)

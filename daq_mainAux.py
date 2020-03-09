@@ -19,7 +19,7 @@ import beamline_support
 import beamline_lib
 from beamline_lib import *
 import atexit
-from daq_main2 import execute_command, pybass_init, process_command_file, process_immediate_commands, process_commands, print_status_thread, comm_cb, comm2_cb, process_input, run_server
+from daq_main_common import pybass_init
 import logging
 logger = logging.getLogger(__name__)
 

@@ -11,6 +11,12 @@ import beamline_lib
 from start_bs import plt
 import atexit
 
+#imports to get useful things into namespace for server
+from daq_macros import *
+from daq_lib import *
+from robot_lib import *
+from beamline_lib import *
+
 import logging
 logger = logging.getLogger(__name__)
 

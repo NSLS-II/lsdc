@@ -116,7 +116,16 @@ def init_counters():
 def countdwell(time_to_count):
   beamline_support.set_count_time(time_to_count)
 
-def ri(time_to_count = beamline_support.get_count_time()):
+
+def ri():
+  ri_actual(beamline_support.get_count_time())
+
+
+def read_intensity(time_to_count):
+  ri_actual(time_to_count)
+
+
+def ri_actual(time_to_count):
   global CNT
   local_count = []
 
@@ -134,10 +143,6 @@ def ri(time_to_count = beamline_support.get_count_time()):
     daq_lib.set_field("beamline_merit",int((CNT[2]/beamline_support.get_count_time())/current))
   else:
     daq_lib.set_field("beamline_merit",0)
-
-
-def read_intensity(time_to_count):
-  ri(time_to_count)
 
 
 def get_counts(ctime,count_list):

@@ -33,7 +33,7 @@ from element_info import element_info
 import numpy as np
 import thread
 import lsdcOlog
-import StringIO
+import daq_utils
 
 import socket
 hostname = socket.gethostname()
@@ -639,15 +639,19 @@ class userScreenDialog(QFrame):
       self.parent.send_to_server("dryGripper()")
       
     def stopDetCB(self):
+      logger.info('stopping detector')
       self.parent.stopDet_pv.put(1)
 
     def rebootDetIocCB(self):
-      self.parent.rebootDetIOC_pv.put(1)      
+      logger.info('rebooting detector IOC')
+      self.parent.rebootDetIOC_pv.put(1)     # no differences visible, but zebra IOC reboot works, this doesn't! 
 
     def resetZebraCB(self):
+      logger.info('resetting zebra')
       self.parent.resetZebra_pv.put(1)
 
     def rebootZebraIOC_CB(self):
+      logger.info('rebooting zebra IOC')
       self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
@@ -4949,10 +4953,18 @@ class controlMain(QtGui.QMainWindow):
       self.mountedPin_pv = PV(daq_utils.beamlineComm + "mounted_pin")
       self.connect(self, QtCore.SIGNAL("mountedPinSignal"),self.processMountedPin)
       self.mountedPin_pv.add_callback(self.mountedPinChangedCB)
-      self.stopDet_pv = PV(daq_utils.beamlineComm + "stopEiger")
+      det_stop_pv = daq_utils.pvLookupDict["stopEiger"]
+      logger.info('setting stop Eiger detector PV: %s' % det_stop_pv)
+      self.stopDet_pv = PV(det_stop_pv)
+      det_reboot_pv = daq_utils.pvLookupDict["eigerIOC_reboot"]
+      logger.info('setting detector ioc reboot PV: %s' % det_reboot_pv)
       self.rebootDetIOC_pv = PV(daq_utils.beamlineComm + "eigerIOC_reboot")      
-      self.resetZebra_pv = PV(daq_utils.beamlineComm + "zebraReset")
-      self.rebootZebraIOC_pv = PV(daq_utils.beamlineComm + "zebraRebootIOC")      
+      rz_pv = daq_utils.pvLookupDict["zebraReset"]
+      logger.info('setting zebra reset PV: %s' % rz_pv)
+      self.resetZebra_pv = PV(rz_pv)
+      rz_reboot_pv = daq_utils.pvLookupDict["zebraRebootIOC"]
+      logger.info('setting zebra reboot ioc PV: %s' % rz_reboot_pv)
+      self.rebootZebraIOC_pv = PV(rz_reboot_pv)      
       self.zebraArmedPV = PV(daq_utils.pvLookupDict["zebraArmStatus"])
       self.connect(self, QtCore.SIGNAL("zebraArmStateSignal"),self.processZebraArmState)
       self.zebraArmedPV.add_callback(self.zebraArmStateChangedCB)

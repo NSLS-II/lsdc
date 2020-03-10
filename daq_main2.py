@@ -2,12 +2,8 @@
 """
 The main server for the LSDC system
 """
-import string
 import sys
 import os
-import time
-import _thread
-import atexit
 from daq_main_common import pybass_init, run_server
 
 import logging

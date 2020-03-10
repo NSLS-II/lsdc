@@ -1,9 +1,7 @@
-import sys
 import os
 import time
 from string import *
 import daq_utils
-import math
 from element_info import *
 import beamline_support
 import daq_lib

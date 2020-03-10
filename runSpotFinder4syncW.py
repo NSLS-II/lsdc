@@ -4,7 +4,6 @@ import os
 import sys
 import db_lib
 import xmltodict
-import daq_utils
 import ispybLib
 
 baseDirectory = os.environ["PWD"]

@@ -9,13 +9,8 @@ import daq_utils
 import db_lib
 import det_lib
 import math
-import robot_lib
 import time
-from random import randint
-import glob
 import xmltodict
-from importlib import reload
-import start_bs
 from start_bs import *
 import super_state_machine
 import _thread
@@ -31,7 +26,6 @@ try:
 except:
   logger.error("ISPYB import error")
   
-import sys
 from XSDataMXv1 import XSDataResultCharacterisation
 global rasterRowResultsList, processedRasterRowCount
 global ednaActiveFlag

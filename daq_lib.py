@@ -1,10 +1,7 @@
-import sys
 import os
 import grp
 import getpass
 import time
-import string
-import math
 import daq_macros
 from math import *
 from gon_lib import *

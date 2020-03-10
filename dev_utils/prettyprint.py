@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 
-from bson import json_util, ObjectId
+from bson import json_util
 from bson.py3compat import string_types
 from bson.dbref import DBRef
 

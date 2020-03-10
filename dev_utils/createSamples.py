@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import time
 import mongoengine
 
 from db_lib import *

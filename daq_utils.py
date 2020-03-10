@@ -1,8 +1,6 @@
-import time
 import os
 from math import *
 import requests
-import xmltodict
 import getpass
 import logging
 logger = logging.getLogger(__name__)

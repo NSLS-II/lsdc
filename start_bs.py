@@ -1,8 +1,8 @@
 #!/opt/conda_envs/lsdc_dev3/bin/ipython -i
 # import asyncio
 from ophyd import *
-from ophyd.mca import (EpicsMCA, EpicsDXP, Mercury1, SoftDXPTrigger)
-from ophyd import Device, Component as Cpt, EpicsMotor, EpicsSignalRO
+from ophyd.mca import (Mercury1, SoftDXPTrigger)
+from ophyd import Device, EpicsMotor
 import os
 setup_ophyd()
 #12/19 - author unknown. DAMA can help
@@ -33,7 +33,6 @@ install_qt_kicker()
 #get_ipython().register_magics(BlueskyMagics)
 
 #nslsii.configure_base(get_ipython().user_ns, 'amx')
-import bluesky.plans as bp
 
 from bluesky.run_engine import RunEngine
 from bluesky.utils import get_history
@@ -56,9 +55,6 @@ from bluesky.callbacks import *
 # from bluesky.global_state import gs, abort, stop, resume
 # from databroker import (DataBroker as db, get_events, get_images,
 #                                                 get_table, get_fields, restream, process)
-from time import sleep
-import numpy as np
-
 
 # RE = gs.RE  # convenience alias
 #rest is hugo
@@ -74,14 +70,8 @@ RE.md['beamline_id'] = beamline.upper()
 
 
 
-from ophyd import (SingleTrigger, TIFFPlugin, ProsilicaDetector,
-                   ImagePlugin, StatsPlugin, ROIPlugin, DetectorBase, HDF5Plugin,
-                   AreaDetector)
-
-import ophyd.areadetector.cam as cam
-
-from ophyd.areadetector.filestore_mixins import (FileStoreTIFFIterativeWrite,
-                                                 FileStoreHDF5IterativeWrite)
+from ophyd import (SingleTrigger, ProsilicaDetector,
+                   ImagePlugin, StatsPlugin, ROIPlugin)
 
 from ophyd import Component as Cpt
 

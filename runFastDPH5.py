@@ -1,10 +1,8 @@
 #!/opt/conda_envs/collection-2018-1.0/bin/python
-import time
 import os
 import sys
 import db_lib
 import xmltodict
-import daq_utils
 import logging
 logger = logging.getLogger(__name__)
 

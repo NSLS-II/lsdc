@@ -5102,7 +5102,6 @@ class controlMain(QtGui.QMainWindow):
       else:
         self.statusLabel.setColor("#99FF66")        
 
-
     def changePauseButtonState(self,buttonState_s):
       self.pauseQueueButton.setText(buttonState_s)
       if (string.find(buttonState_s,"Pause") != -1):
@@ -5124,6 +5123,7 @@ class controlMain(QtGui.QMainWindow):
       if (self.controlEnabled()):
 
         time.sleep(.01)
+        logger.info('send_to_server: %s' % s)
         self.comm_pv.put(s)
       else:
         self.popupServerMessage("You don't have control")
@@ -5133,6 +5133,7 @@ class controlMain(QtGui.QMainWindow):
     def aux_send_to_server(self,s):
       if (self.controlEnabled()):
         time.sleep(.01)
+        logger.info('aux_send_to_server: %s' % s)
         self.immediate_comm_pv.put(s)
       else:
         self.popupServerMessage("You don't have control")

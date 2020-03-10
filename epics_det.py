@@ -2,7 +2,6 @@ import os
 import sys
 import time
 from string import *
-import beamline_support
 from beamline_support import *
 import logging
 logger = logging.getLogger(__name__)

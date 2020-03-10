@@ -1,6 +1,3 @@
-import sys
-import os
-import time
 from string import *
 import epics_det
 import logging

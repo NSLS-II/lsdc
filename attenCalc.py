@@ -1,15 +1,12 @@
 #   Routine to set attenuator foils for the RI attenuator, with setup imports and a testing program.
 #
 
-import matplotlib.pyplot as plt
+import logging
+from math import *
+
 import numpy as np
 from pylab import *
-from math import *
-import itertools as iter
-import scipy
-from functools import reduce
-from operator import mul
-import logging
+
 logger = logging.getLogger(__name__)
 
 ###  RIfoils testing script

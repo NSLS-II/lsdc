@@ -1,5 +1,3 @@
-import sys
-import os
 import time
 import beamline_lib
 import beamline_support

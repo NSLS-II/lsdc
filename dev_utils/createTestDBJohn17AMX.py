@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import time
 import db_lib
 
 db_lib.db_connect()

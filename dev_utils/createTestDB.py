@@ -2,14 +2,6 @@
 ####!/usr/bin/python
 from __future__ import (absolute_import, print_function)
 
-import time
-import os
-
-import sys
-#sys.path.append('/h/cowan/projects')  # until we get this packaged+installed
-
-import traceback
-
 #from odm_templates import collections
 
 #import lsdc.db_lib  # makes db connection

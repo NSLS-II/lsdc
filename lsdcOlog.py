@@ -1,7 +1,6 @@
 #!/usr/bin/python
 from pyOlog import OlogClient 
 from pyOlog.OlogDataTypes import * 
-import requests 
 import os
 
 global client

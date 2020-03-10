@@ -1,7 +1,6 @@
 import ispyb.factory
 import os
 from datetime import datetime
-import sys
 from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
 import daq_utils
 from epics import PV

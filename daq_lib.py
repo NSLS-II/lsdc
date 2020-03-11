@@ -197,9 +197,11 @@ def relative_zero_to_cp():
 
 
 def unlockGUI():
+  logger.info('unlocking GUI')
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"zinger_flag","VAL",1)  
 
 def lockGUI():
+  logger.info('locking GUI')
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"zinger_flag","VAL",-1)  
   
 def refreshGuiTree():

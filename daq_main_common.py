@@ -90,13 +90,17 @@ def process_command_file(command_file_name):
 def process_immediate_commands(frequency):
   while (1):
     if (len(immediate_command_list) > 0):
-      process_input(immediate_command_list.pop(0))
+      command = immediate_command_list.pop(0)
+      logger.info('immediate command: %s' % command)
+      process_input(command)
     time.sleep(frequency)      
 
 def process_commands(frequency):
   while (1):
     if (len(command_list) > 0):
-      process_input(command_list.pop(0))
+      command = command_list.pop(0)
+      logger.info('command: %s' % command)
+      process_input(command)
     plt.pause(frequency)    
 
     

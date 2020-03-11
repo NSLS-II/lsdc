@@ -6,6 +6,12 @@ import sys
 import os
 from daq_main_common import pybass_init, run_server
 
+#TODO understand why imports are required here - GUI requires imports in daq_main_common
+from daq_macros import *
+from daq_lib import *
+from robot_lib import *
+from beamline_lib import *
+
 import logging
 from logging import handlers
 logger = logging.getLogger()

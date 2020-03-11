@@ -2379,8 +2379,8 @@ def vectorZebraStepScan(vecRequest):
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  expTime - detector_dead_time  
   det_lib.detector_set_num_triggers(numImages)
-  detector_set_period(expTime)
-  detector_set_exposure_time(exposureTimePerImage)
+  det_lib.detector_set_period(expTime)
+  det_lib.detector_set_exposure_time(exposureTimePerImage)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(500)
   daq_lib.detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits  
@@ -2899,9 +2899,9 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     beamline_support.setPvValFromDescriptor("vectorBufferTime",3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
-  detector_set_exposure_time(exposurePeriodPerImage)  
-  detector_set_period(exposurePeriodPerImage)
-  detector_dead_time = detector_get_deadtime()
+  det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
+  det_lib.detector_set_period(exposurePeriodPerImage)
+  detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
   beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)  
   beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)

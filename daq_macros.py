@@ -448,7 +448,7 @@ def generateRasterCoords4Traj(rasterRequest):
 
 #9/18 - I think these are crap, but will leave them  
   xRelativeMove = sx1
-  yzRelativeMove = sy1*sin(omegaRad)
+  yzRelativeMove = sy1*math.sin(omegaRad)
   yyRelativeMove = sy1*cos(omegaRad)
   xMotAbsoluteMove1 = xRelativeMove    
   yMotAbsoluteMove1 = yyRelativeMove
@@ -465,10 +465,10 @@ def generateRasterCoords4Traj(rasterRequest):
   deltay = ey1-sy1
   xMotAbsoluteMove1 = -(deltax/2.0)
   xMotAbsoluteMove2 = (deltax/2.0)  
-  yMotAbsoluteMove1 = -(deltay/2.0)*cos(omegaRad)
-  yMotAbsoluteMove2 = (deltay/2.0)*cos(omegaRad)
-  zMotAbsoluteMove1 = -(deltay/2.0)*sin(omegaRad)
-  zMotAbsoluteMove2 = (deltay/2.0)*sin(omegaRad)
+  yMotAbsoluteMove1 = -(deltay/2.0)*math.cos(omegaRad)
+  yMotAbsoluteMove2 = (deltay/2.0)*math.cos(omegaRad)
+  zMotAbsoluteMove1 = -(deltay/2.0)*math.sin(omegaRad)
+  zMotAbsoluteMove2 = (deltay/2.0)*math.sin(omegaRad)
 
   logger.info(xMotAbsoluteMove1)
   logger.info(yMotAbsoluteMove1)
@@ -513,8 +513,8 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
         startX = (numsteps*stepsize) + rasterDef["rowDefs"][i]["start"]["x"]-(stepsize/2.0)
       startY = rasterDef["rowDefs"][i]["start"]["y"]+(stepsize/2.0)
       xRelativeMove = startX
-      yzRelativeMove = startY*sin(omegaRad)
-      yyRelativeMove = startY*cos(omegaRad)
+      yzRelativeMove = startY*math.sin(omegaRad)
+      yyRelativeMove = startY*math.cos(omegaRad)
       xMotAbsoluteMove = rasterStartX+xRelativeMove    
       yMotAbsoluteMove = rasterStartY-yyRelativeMove
       zMotAbsoluteMove = rasterStartZ-yzRelativeMove
@@ -538,8 +538,8 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
         startY = (numsteps*stepsize) + rasterDef["rowDefs"][i]["start"]["y"]-(stepsize/2.0)
       startX = rasterDef["rowDefs"][i]["start"]["x"]+(stepsize/2.0)
       xRelativeMove = startX
-      yzRelativeMove = startY*sin(omegaRad)
-      yyRelativeMove = startY*cos(omegaRad)
+      yzRelativeMove = startY*math.sin(omegaRad)
+      yyRelativeMove = startY*math.cos(omegaRad)
       xMotAbsoluteMove = rasterStartX+xRelativeMove    
       yMotAbsoluteMove = rasterStartY-yyRelativeMove
       zMotAbsoluteMove = rasterStartZ-yzRelativeMove
@@ -547,11 +547,11 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
       for j in range(numsteps):
         imIndexStr = str((i*numsteps)+j+1)              
         if (i%2 == 0): #top to bottom if even, else bottom to top - a snake attempt
-          yMotCellAbsoluteMove = yMotAbsoluteMove-(cos(omegaRad)*(j*stepsize))
-          zMotCellAbsoluteMove = zMotAbsoluteMove-(sin(omegaRad)*(j*stepsize))          
+          yMotCellAbsoluteMove = yMotAbsoluteMove-(math.cos(omegaRad)*(j*stepsize))
+          zMotCellAbsoluteMove = zMotAbsoluteMove-(math.sin(omegaRad)*(j*stepsize))          
         else:
-          yMotCellAbsoluteMove = yMotAbsoluteMove+(cos(omegaRad)*(j*stepsize))
-          zMotCellAbsoluteMove = zMotAbsoluteMove+(sin(omegaRad)*(j*stepsize))          
+          yMotCellAbsoluteMove = yMotAbsoluteMove+(math.cos(omegaRad)*(j*stepsize))
+          zMotCellAbsoluteMove = zMotAbsoluteMove+(math.sin(omegaRad)*(j*stepsize))          
         if (daq_utils.detector_id == "EIGER-16"):
           dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
         else:
@@ -769,8 +769,8 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
         startX = (numsteps*stepsize) + rasterDef["rowDefs"][i]["start"]["x"]-(stepsize/2.0)
       startY = rasterDef["rowDefs"][i]["start"]["y"]+(stepsize/2.0)
       xRelativeMove = startX
-      yzRelativeMove = startY*sin(omegaRad)
-      yyRelativeMove = startY*cos(omegaRad)
+      yzRelativeMove = startY*math.sin(omegaRad)
+      yyRelativeMove = startY*math.cos(omegaRad)
       xMotAbsoluteMove = rasterStartX+xRelativeMove    
       yMotAbsoluteMove = rasterStartY-yyRelativeMove
       zMotAbsoluteMove = rasterStartZ-yzRelativeMove
@@ -794,8 +794,8 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
         startY = (numsteps*stepsize) + rasterDef["rowDefs"][i]["start"]["y"]-(stepsize/2.0)
       startX = rasterDef["rowDefs"][i]["start"]["x"]+(stepsize/2.0)
       xRelativeMove = startX
-      yzRelativeMove = startY*sin(omegaRad)
-      yyRelativeMove = startY*cos(omegaRad)
+      yzRelativeMove = startY*math.sin(omegaRad)
+      yyRelativeMove = startY*math.cos(omegaRad)
       xMotAbsoluteMove = rasterStartX+xRelativeMove    
       yMotAbsoluteMove = rasterStartY-yyRelativeMove
       zMotAbsoluteMove = rasterStartZ-yzRelativeMove
@@ -803,11 +803,11 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
       for j in range(numsteps):
         imIndexStr = str((i*numsteps)+j+1)              
         if (i%2 == 0): #top to bottom if even, else bottom to top - a snake attempt
-          yMotCellAbsoluteMove = yMotAbsoluteMove-(cos(omegaRad)*(j*stepsize))
-          zMotCellAbsoluteMove = zMotAbsoluteMove-(sin(omegaRad)*(j*stepsize))          
+          yMotCellAbsoluteMove = yMotAbsoluteMove-(math.cos(omegaRad)*(j*stepsize))
+          zMotCellAbsoluteMove = zMotAbsoluteMove-(math.sin(omegaRad)*(j*stepsize))          
         else:
-          yMotCellAbsoluteMove = yMotAbsoluteMove+(cos(omegaRad)*(j*stepsize))
-          zMotCellAbsoluteMove = zMotAbsoluteMove+(sin(omegaRad)*(j*stepsize))          
+          yMotCellAbsoluteMove = yMotAbsoluteMove+(math.cos(omegaRad)*(j*stepsize))
+          zMotCellAbsoluteMove = zMotAbsoluteMove+(math.sin(omegaRad)*(j*stepsize))          
         if (daq_utils.detector_id == "EIGER-16"):
           dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
         else:
@@ -915,8 +915,8 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   rasterCenterScreenX = (rows[0]["start"]["x"]+rows[0]["end"]["x"])/2.0
   rasterCenterScreenY = ((rows[-1]["start"]["y"]+rows[0]["start"]["y"])/2.0)+(stepsize/2.0)
   xRelativeMove = rasterCenterScreenX
-  yzRelativeMove = -(rasterCenterScreenY*sin(omegaRad))
-  yyRelativeMove = -(rasterCenterScreenY*cos(omegaRad))
+  yzRelativeMove = -(rasterCenterScreenY*math.sin(omegaRad))
+  yyRelativeMove = -(rasterCenterScreenY*math.cos(omegaRad))
 
   xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
   yMotAbsoluteMove = rasterStartY+yyRelativeMove
@@ -1099,10 +1099,10 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
 
   xMotAbsoluteMove1 = -(deltax/2.0)
   xMotAbsoluteMove2 = deltax/2.0
-  yMotAbsoluteMove1 = -(deltay*cos(omegaRad))/2.0
-  yMotAbsoluteMove2 = (deltay*cos(omegaRad))/2.0
-  zMotAbsoluteMove1 = -(deltay*sin(omegaRad))/2.0
-  zMotAbsoluteMove2 = (deltay*sin(omegaRad))/2.0
+  yMotAbsoluteMove1 = -(deltay*math.cos(omegaRad))/2.0
+  yMotAbsoluteMove2 = (deltay*math.cos(omegaRad))/2.0
+  zMotAbsoluteMove1 = -(deltay*math.sin(omegaRad))/2.0
+  zMotAbsoluteMove2 = (deltay*math.sin(omegaRad))/2.0
   
 
   logger.info("columns of subrasters " + str(columnsOfSubrasters))
@@ -1158,8 +1158,8 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
     Gen_Commands.gen_commands(genTraj,exptimePerCell)
 
     xRelativeMove = subrasters[i]["startX"]
-    yzRelativeMove = subrasters[i]["startY"]*sin(omegaRad)
-    yyRelativeMove = subrasters[i]["startY"]*cos(omegaRad)
+    yzRelativeMove = subrasters[i]["startY"]*math.sin(omegaRad)
+    yyRelativeMove = subrasters[i]["startY"]*math.cos(omegaRad)
     xMotAbsoluteMove = rasterStartX+xRelativeMove
     yMotAbsoluteMove = rasterStartY-yyRelativeMove
     zMotAbsoluteMove = rasterStartZ-yzRelativeMove
@@ -1297,8 +1297,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
       
     xRelativeMove = startX
 
-    yzRelativeMove = startY*sin(omegaRad)
-    yyRelativeMove = startY*cos(omegaRad)
+    yzRelativeMove = startY*math.sin(omegaRad)
+    yyRelativeMove = startY*math.cos(omegaRad)
     logger.info("x rel move = " + str(xRelativeMove))
     xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
     yMotAbsoluteMove = rasterStartY-yyRelativeMove
@@ -1306,8 +1306,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
     xRelativeMove = endX-startX
     yRelativeMove = endY-startY
     
-    yyRelativeMove = yRelativeMove*cos(omegaRad)
-    yzRelativeMove = yRelativeMove*sin(omegaRad)
+    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
 
     xEnd = xMotAbsoluteMove + xRelativeMove
     yEnd = yMotAbsoluteMove - yyRelativeMove
@@ -1453,16 +1453,16 @@ def reprocessRaster(rasterReqID):
       
     xRelativeMove = startX
 
-    yzRelativeMove = startY*sin(omegaRad)
-    yyRelativeMove = startY*cos(omegaRad)
+    yzRelativeMove = startY*math.sin(omegaRad)
+    yyRelativeMove = startY*math.cos(omegaRad)
     xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
     yMotAbsoluteMove = rasterStartY-yyRelativeMove
     zMotAbsoluteMove = rasterStartZ-yzRelativeMove
     xRelativeMove = endX-startX
     yRelativeMove = endY-startY
     
-    yyRelativeMove = yRelativeMove*cos(omegaRad)
-    yzRelativeMove = yRelativeMove*sin(omegaRad)
+    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
 
     xEnd = xMotAbsoluteMove + xRelativeMove
     yEnd = yMotAbsoluteMove - yyRelativeMove
@@ -1580,8 +1580,8 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
       
     xRelativeMove = startX
 
-    yzRelativeMove = startY*sin(omegaRad)
-    yyRelativeMove = startY*cos(omegaRad)
+    yzRelativeMove = startY*math.sin(omegaRad)
+    yyRelativeMove = startY*math.cos(omegaRad)
     logger.info("x rel move = " + str(xRelativeMove))
     xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
     yMotAbsoluteMove = rasterStartY-yyRelativeMove
@@ -1589,8 +1589,8 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
     xRelativeMove = endX-startX
     yRelativeMove = endY-startY
     
-    yyRelativeMove = yRelativeMove*cos(omegaRad)
-    yzRelativeMove = yRelativeMove*sin(omegaRad)
+    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
 
     xEnd = xMotAbsoluteMove + xRelativeMove
     yEnd = yMotAbsoluteMove - yyRelativeMove
@@ -1685,8 +1685,8 @@ def snakeStepRasterSpec(rasterReqID,grain=""): #12/19 - only tested recently, bu
       startX = startX + (stepsize/2.0)
       endX = startX
     xRelativeMove = startX
-    yzRelativeMove = startY*sin(omegaRad)
-    yyRelativeMove = startY*cos(omegaRad)
+    yzRelativeMove = startY*math.sin(omegaRad)
+    yyRelativeMove = startY*math.cos(omegaRad)
     logger.info("x rel move = " + str(xRelativeMove))
     xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
     yMotAbsoluteMove = rasterStartY-yyRelativeMove
@@ -1694,8 +1694,8 @@ def snakeStepRasterSpec(rasterReqID,grain=""): #12/19 - only tested recently, bu
     xRelativeMove = endX-startX
     yRelativeMove = endY-startY
     
-    yyRelativeMove = yRelativeMove*cos(omegaRad)
-    yzRelativeMove = yRelativeMove*sin(omegaRad)
+    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
 
     xEnd = xMotAbsoluteMove + xRelativeMove
     yEnd = yMotAbsoluteMove - yyRelativeMove
@@ -1767,8 +1767,8 @@ def gridRaster(currentRequest):
   rasterStartX = motorPosFromDescriptor("sampleX") #these are real sample motor positions
   rasterStartY = motorPosFromDescriptor("sampleY")
   rasterStartZ = motorPosFromDescriptor("sampleZ")
-  yzRelativeMove = ysep*sin(omegaRad)
-  yyRelativeMove = ysep*cos(omegaRad)
+  yzRelativeMove = ysep*math.sin(omegaRad)
+  yyRelativeMove = ysep*math.cos(omegaRad)
   for i in range (0,ywells):
     for j in range (0,xwells):
       mvaDescriptor("sampleX",rasterStartX+(j*xsep),"sampleY",rasterStartY+(i*yyRelativeMove),"sampleZ",rasterStartZ+(i*yzRelativeMove))
@@ -2434,7 +2434,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     det_radius = 212.0
   theta_radians = 0.0
   wave = 12398.5/beamline_lib.get_mono_energy() #for now
-  dx = det_radius/(tan(2.0*(asin(wave/(2.0*dna_res)))-theta_radians))
+  dx = det_radius/(math.tan(2.0*(math.asin(wave/(2.0*dna_res)))-theta_radians))
   logger.info("distance = ",dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
   logger.info("skinner about to take reference images.")

@@ -2973,7 +2973,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
     beamline_support.setPvValFromDescriptor("vectorBufferTime",1000)
   else:
     beamline_support.setPvValFromDescriptor("vectorBufferTime",3)    
-  detector_dead_time = detector_get_deadtime()
+  detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
   beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)  
   beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)

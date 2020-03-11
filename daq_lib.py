@@ -784,10 +784,10 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
 def detectorArm(angle_start,image_width,number_of_images,exposure_period,fileprefix,data_directory_name,file_number): #will need some environ info to diff eiger/pilatus
   global image_started,allow_overwrite,abort_flag
 
-  det_lib.detector_save_files()
-  det_lib.detector_set_username(getpass.getuser())
-  det_lib.detector_set_groupname(grp.getgrgid(os.getgid())[0])
-  det_lib.detector_set_fileperms(420)
+  detector_save_files()
+  detector_set_username(getpass.getuser())
+  detector_set_groupname(grp.getgrgid(os.getgid())[0])
+  detector_set_fileperms(420)
   logger.info("data directory = " + data_directory_name)
 
   file_prefix_minus_directory = str(fileprefix)
@@ -795,13 +795,13 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
     file_prefix_minus_directory = file_prefix_minus_directory[file_prefix_minus_directory.rindex("/")+1:len(file_prefix_minus_directory)]
   except ValueError: 
     pass
-  det_lib.detector_set_exposure_time(exposure_period)  
-  det_lib.detector_set_period(exposure_period) #apparently this takes care of itself for deadtime
-  det_lib.detector_set_numimages(number_of_images)
-  det_lib.detector_set_filepath(data_directory_name)
-  det_lib.detector_set_fileprefix(file_prefix_minus_directory)
-  det_lib.detector_set_filenumber(file_number)
-  det_lib.detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),beamline_lib.motorPosFromDescriptor("wavelength"),0.0,exposure_period,beamline_support.getPvValFromDescriptor("beamCenterX"),beamline_support.getPvValFromDescriptor("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
+  detector_set_exposure_time(exposure_period)  
+  detector_set_period(exposure_period) #apparently this takes care of itself for deadtime
+  detector_set_numimages(number_of_images)
+  detector_set_filepath(data_directory_name)
+  detector_set_fileprefix(file_prefix_minus_directory)
+  detector_set_filenumber(file_number)
+  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),beamline_lib.motorPosFromDescriptor("wavelength"),0.0,exposure_period,beamline_support.getPvValFromDescriptor("beamCenterX"),beamline_support.getPvValFromDescriptor("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
   
   detector_start() #but you need wired or manual trigger
   startArm = time.time()

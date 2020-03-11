@@ -482,6 +482,7 @@ def runDCQueue(): #maybe don't run rasters from here???
     refreshGuiTree() #just tells the GUI to repopulate the tree from the DB
     logger.info("calling collect data " + str(time.time()))    
     colStatus = collectData(currentRequest)
+    logger.info("done collecting data")
     if (autoMounted and db_lib.queueDone(daq_utils.beamline)):
       unmountSample()
 
@@ -734,8 +735,10 @@ def collectData(currentRequest):
       comm_s = "ssh -q xf17id1-srv1 \"" + os.environ["LSDCHOME"] + "/runXia2.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + "\"&"
       os.system(comm_s)
   
+  logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)
   refreshGuiTree()
+  logger.info('after refresh GUI tree')
   
   return status
 

@@ -10,6 +10,7 @@ import beamline_support
 import beamline_lib
 from start_bs import plt
 import atexit
+import traceback
 
 #imports to get useful things into namespace for server
 from daq_macros import *
@@ -77,7 +78,7 @@ def process_command_file(command_file_name):
       try:
         exec(command_string);    
       except NameError as e:
-        error_string = "Unknown command: %s Error: %s" % (command_string, e)
+        error_string = "Unknown command in file: %s Error: %s" % (command_string, e)
         logger.error(error_string)
       except SyntaxError:
         logger.error("Syntax error")
@@ -151,8 +152,11 @@ def process_input(command_string):
     daq_lib.set_field("program_state","Program Busy")
     execute_command(command_string)
   except NameError as e:
-    error_string = "Unknown command: %s Error: %s" % (command_string, e)
+    error_string = "Unknown command in queue: %s Error: %s" % (command_string, e)
     logger.error(error_string)
+    exc_type, exc_value, exc_traceback = sys.exc_info()
+    print("*** print_tb:")
+    traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
   except SyntaxError:
     logger.error("Syntax error")
   except KeyError as e:

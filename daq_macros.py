@@ -1340,10 +1340,12 @@ def snakeRasterNormal(rasterReqID,grain=""):
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
     beamline_support.setPvValFromDescriptor("vectorGo",1)
+    logger.info('raster done setting up')
     vectorActiveWait()    
     vectorWait()
     zebraWait()
     zebraWaitDownload(numsteps)
+    logger.info('done raster')
     if (procFlag):    
       if (daq_utils.detector_id == "EIGER-16"):
         seqNum = int(det_lib.detector_get_seqnum())
@@ -1352,6 +1354,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
       _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
+  logger.info('detector finished waiting')
   if (daq_utils.beamline == "amxz"):  
     beamline_support.setPvValFromDescriptor("zebraReset",1)      
   

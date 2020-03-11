@@ -76,8 +76,8 @@ def process_command_file(command_file_name):
       logger.info(command_string)
       try:
         exec(command_string);    
-      except NameError:
-        error_string = "Unknown command: " + command_string
+      except NameError as e:
+        error_string = "Unknown command: %s Error: %s" % (command_string, e)
         logger.error(error_string)
       except SyntaxError:
         logger.error("Syntax error")
@@ -150,8 +150,8 @@ def process_input(command_string):
   try:
     daq_lib.set_field("program_state","Program Busy")
     execute_command(command_string)
-  except NameError:
-    error_string = "Unknown command: " + command_string
+  except NameError as e:
+    error_string = "Unknown command: %s Error: %s" % (command_string, e)
     logger.error(error_string)
   except SyntaxError:
     logger.error("Syntax error")

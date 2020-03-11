@@ -81,8 +81,8 @@ def process_command_file(command_file_name):
         logger.error(error_string)
       except SyntaxError:
         logger.error("Syntax error")
-      except KeyError:
-        logger.error("Key error")
+      except KeyError as e:
+        logger.error("Key error. Error: %s" % e)
   command_file.close()
   
 
@@ -155,8 +155,8 @@ def process_input(command_string):
     logger.error(error_string)
   except SyntaxError:
     logger.error("Syntax error")
-  except KeyError:
-    logger.error("Key error")
+  except KeyError as e:
+    logger.error("Key error. Error: %s" % e)
   except TypeError:
     logger.error("Type error")
   except AttributeError:

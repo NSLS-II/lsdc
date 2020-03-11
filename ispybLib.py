@@ -90,11 +90,11 @@ def createVisitName(propNum): # this is for the GUI to know what a datapath woul
   else:
     newVisitNum = 1 + maxVis
   visitName = "mx"+str(propNum)+"-"+str(newVisitNum)
-  return visitName
+  return visitName, newVisitNum
 
 
 def createVisit(propNum):
-  visitName = createVisitName(propNum)
+  visitName, newVisitNum = createVisitName(propNum)
   personID = personIdFromProposal(propNum)
   params = core.get_session_for_proposal_code_number_params()
   params['proposal_code'] = 'mx'

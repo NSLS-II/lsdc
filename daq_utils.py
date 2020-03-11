@@ -292,10 +292,10 @@ def setProposalID(proposalID,createVisit=True):
         visitName = ispybLib.createVisit(proposalID)
         db_lib.setBeamlineConfigParam(beamline,"proposal",proposalID)                
       else:
-        visitName = ispybLib.createVisitName(proposalID)
-    except:
+        visitName, visitNum = ispybLib.createVisitName(proposalID)
+    except Exception as e:
       visitName = "999999-1234"
-      logger.error("ispyb error in set proposal")
+      logger.error("ispyb error in set proposal. Error: %s" % e)
     setVisitName(visitName)
 
 def getProposalID():

@@ -935,7 +935,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   det_lib.detector_set_num_triggers(totalImages)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(numsteps)  
-  detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
 
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,totalImages,rasterFilePrefix,data_directory_name,file_number_start)
   procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))  
@@ -1135,7 +1135,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   det_lib.detector_setImagesPerFile(cellsPerSubraster)  
 
 #this could be tricky, b/c omega is angle start that ends up in header, so if you want to arm once, this won't be right
-  detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
   procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))  
   
   subrasters = []
@@ -1267,7 +1267,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_set_num_triggers(totalImages)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(numsteps)  
-  detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
   if not (daq_lib.setGovRobot('DA')):
     if (daq_utils.beamline == "fmx"):
       beamline_support.setPvValFromDescriptor("sampleProtect",1)    
@@ -1555,11 +1555,11 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
   total_exposure_time = exptimePerCell*totalImages
   exposureTimePerImage =  exptimePerCell - detector_dead_time
   det_lib.detector_set_num_triggers(totalImages)
-  detector_set_period(exptimePerCell)
-  detector_set_exposure_time(exposureTimePerImage)
+  det_lib.detector_set_period(exptimePerCell)
+  det_lib.detector_set_exposure_time(exposureTimePerImage)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(numImagesPerStep)
-  detectorArm(sweep_start_angle,img_width_per_cell,totalImages,exptimePerCell,filePrefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(sweep_start_angle,img_width_per_cell,totalImages,exptimePerCell,filePrefix,data_directory_name,file_number_start) #this waits
   
   for i in range(len(rasterDef["rowDefs"])):
     if (daq_lib.abort_flag == 1):
@@ -2256,7 +2256,7 @@ def vectorZebraScanFine(vecRequest):
   det_lib.detector_set_num_triggers(numImages)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(1000)  
-  detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits
 
   zebraVecDaqSetup(sweep_start_angle,imgWidth,expTime,numImages,file_prefix,data_directory_name,file_number_start)  
   
@@ -2383,7 +2383,7 @@ def vectorZebraStepScan(vecRequest):
   detector_set_exposure_time(exposureTimePerImage)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(500)
-  detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits  
+  daq_lib.detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits  
   for i in range (0,numVecSteps):
     beamline_support.setPvValFromDescriptor("vectorStartOmega",sweep_start_angle+(i*scanWidthPerStep))
     beamline_support.setPvValFromDescriptor("vectorEndOmega",sweep_end_angle+(i*scanWidthPerStep)+scanWidthPerStep)  
@@ -2930,7 +2930,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   det_lib.detector_set_trigger_mode(2)
   det_lib.detector_set_trigger_exposure(exposureTimePerImage)
   logger.info("detector arm " + str(time.time()))        
-  detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
+  daq_lib.detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
   logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
   startArm = time.time()
   if not (daq_lib.setGovRobot('DA')):

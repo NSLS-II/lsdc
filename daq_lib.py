@@ -575,7 +575,9 @@ def collectData(currentRequest):
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
   if (prot == "raster"):
+    logger.info('entering raster')
     status = daq_macros.snakeRaster(currentRequest["uid"])
+    logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
   elif (prot == "specRaster"):

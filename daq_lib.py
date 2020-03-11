@@ -525,9 +525,9 @@ def logMxRequestParams(currentRequest):
   try: #I'm worried about unforseen ispyb db errors
     time.sleep(5) #this sleep fixes black xtal picture in ispyb - see Edwin! 
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
-  except:
+  except Exception as e:
     currentIspybDCID = 999999
-    logger.error("ispyb error")
+    logger.error("ispyb error: %s" % e)
 
 
 

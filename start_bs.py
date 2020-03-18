@@ -33,6 +33,7 @@ install_qt_kicker()
 #get_ipython().register_magics(BlueskyMagics)
 
 #nslsii.configure_base(get_ipython().user_ns, 'amx')
+import bluesky.plans as bp
 
 from bluesky.run_engine import RunEngine
 from bluesky.utils import get_history

@@ -89,6 +89,7 @@ def createVisitName(propNum): # this is for the GUI to know what a datapath woul
     newVisitNum = 1
   else:
     newVisitNum = 1 + maxVis
+    logger.info('new visit number: %s' % newVisitNum)
   visitName = "mx"+str(propNum)+"-"+str(newVisitNum)
   return visitName, newVisitNum
 
@@ -218,7 +219,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
      comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
-     logger.info(comm_s)
+     logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
      seqNum = int(detSeqNumPV.get())          
      hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
@@ -231,7 +232,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
      adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
      comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
-     logger.info(comm_s)
+     logger.info('diffraction thumbnail image: %s' % comm_s)
      os.system(comm_s)
      # Create a new data collection group entry:
      params = mxacquisition.get_data_collection_group_params()
@@ -390,7 +391,7 @@ def insertRasterResult(result,request,visitName):
  jpegImageFilename = jpegImagePrefix+".jpg"
  jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
  comm_s = "convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "&"     
- logger.info(comm_s)
+ logger.info('raster thumbnail creation: %s' %comm_s)
  os.system(comm_s)
  # Create a new data collection group entry:
  params = mxacquisition.get_data_collection_group_params()

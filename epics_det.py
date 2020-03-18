@@ -192,7 +192,12 @@ def det_waitArmed(): #not even sure what this means.
     return  
   if (det_type == "pixel_array"):
     logger.info("armed = " + str(get_det_pv("armed_state")))
+    timeout = 30 # sec
+    start_time = time.time()
     while (get_det_pv("armed_state") == 0):
+      if time.time() - start_time > timeout:
+        logger.info('aborting arm')
+        sys.exit(1)
       time.sleep(.01)
 
 def det_getSeqNum():

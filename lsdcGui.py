@@ -23,7 +23,7 @@ from QtEpicsPVEntry import *
 import cv2
 from cv2 import *
 from PIL import Image
-import ImageQt
+from PIL import ImageQt
 import daq_utils
 import albulaUtils
 import functools

@@ -7,7 +7,7 @@ import os
 import string
 import math
 import urllib
-import cStringIO
+from io import StringIO
 from epics import PV
 from PyQt4 import QtGui
 from PyQt4 import QtCore
@@ -3970,7 +3970,7 @@ class ControlMain(QtGui.QMainWindow):
 
     def timerHutchRefresh(self):
       try:
-        file = cStringIO.StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL"))).read())
+        file = StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL"))).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
@@ -3978,7 +3978,7 @@ class ControlMain(QtGui.QMainWindow):
       except:
         pass
       try:
-        file = cStringIO.StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL"))).read())
+        file = StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL"))).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
@@ -5197,7 +5197,7 @@ if __name__ == '__main__':
         if '-pc' in sys.argv or '-p' in sys.argv:
             pass
             #pr.disable()
-            #s = io.StringIO()
+            #s = StringIO()
             #sortby = 'cumulative'
             #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
             #ps.print_stats()  # dies here, expected unicode, got string, need unicode io stream?

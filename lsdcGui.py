@@ -28,10 +28,10 @@ import daq_utils
 import albulaUtils
 import functools
 from QPeriodicTable import *
-from PyMca.QtBlissGraph import QtBlissGraph
-from PyMca.McaAdvancedFit import McaAdvancedFit
-from PyMca import ElementsInfo
-from element_info import element_info 
+from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow
+from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
+from PyMca5.PyMcaPhysics.xrf.Elements import ElementsInfo
+from element_info import element_info
 import numpy as np
 import thread
 import lsdcOlog
@@ -2422,11 +2422,11 @@ class controlMain(QtWidgets.QMainWindow):
         hBoxEScan.addLayout(vBoxEScan)
         verticalLine = QFrame()
         verticalLine.setFrameStyle(QFrame.VLine)
-        self.EScanGraph = QtBlissGraph(self.energyFrame)
+        self.EScanGraph = McaWindow(self.energyFrame)
         hBoxEScan.addWidget(verticalLine)
         hBoxEScan.addWidget(self.EScanGraph)
         vBoxEScanFull.addLayout(hBoxEScan)
-        self.choochGraph = QtBlissGraph(self.energyFrame)
+        self.choochGraph = McaWindow(self.energyFrame) #TODO should be another type? need to be able to add curves
         vBoxEScanFull.addWidget(self.choochGraph)
         self.energyFrame.setLayout(vBoxEScanFull)
         splitter11.addWidget(self.VidFrame)
@@ -3098,7 +3098,7 @@ class controlMain(QtWidgets.QMainWindow):
       graph_x = choochResultObj["choochInXAxis"]
       graph_y = choochResultObj["choochInYAxis"]      
       self.EScanGraph.setTitle("Chooch PLot")
-      self.EScanGraph.newcurve("whatever", graph_x, graph_y)
+      #self.EScanGraph.newcurve("whatever", graph_x, graph_y)
       self.EScanGraph.replot()
       chooch_graph_x = choochResultObj["choochOutXAxis"]
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]

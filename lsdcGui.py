@@ -31,7 +31,7 @@ from PyMca.McaAdvancedFit import McaAdvancedFit
 from PyMca import ElementsInfo
 from element_info import element_info 
 import numpy as np
-import thread
+import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
 import daq_utils
 
@@ -2094,11 +2094,11 @@ class ControlMain(QtGui.QMainWindow):
         self.captureLowMagZoom = None          
         if (daq_utils.has_xtalview):
           if (self.zoom3FrameRatePV.get() != 0):          
-            thread.start_new_thread(self.initVideo2,(.25,)) #highMag
+            _thread.start_new_thread(self.initVideo2,(.25,)) #highMag
           if (self.zoom4FrameRatePV.get() != 0):            
-            thread.start_new_thread(self.initVideo4,(.25,))          #this sets up highMagDigiZoom
+            _thread.start_new_thread(self.initVideo4,(.25,))          #this sets up highMagDigiZoom
           if (self.zoom2FrameRatePV.get() != 0):            
-            thread.start_new_thread(self.initVideo3,(.25,))          #this sets up lowMagDigiZoom
+            _thread.start_new_thread(self.initVideo3,(.25,))          #this sets up lowMagDigiZoom
           if (self.zoom1FrameRatePV.get() != 0):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
         time.sleep(5) # is this needed????

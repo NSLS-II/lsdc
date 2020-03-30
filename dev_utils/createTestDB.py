@@ -109,6 +109,10 @@ def createTestDB():
         setBeamlineConfigParam(beamline, 'beamstop_x_pvname', 'beamStopX')
         setBeamlineConfigParam(beamline, 'beamstop_y_pvname', 'beamStopY')
 
+        #used only from GUI below?
+        setBeamlineConfigParam(beamline, 'scannerType', 'Normal')
+        setBeamlineConfigParam(beamline, 'attenType', 'RI')
+
         
 
 

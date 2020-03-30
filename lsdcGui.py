@@ -2459,7 +2459,7 @@ class ControlMain(QtGui.QMainWindow):
       if state != QtCore.Qt.Checked:
         albulaUtils.albulaClose()
       else:
-        albulaUtils.albulaOpen()
+        albulaUtils.albulaOpen() #TODO there is no albulaOpen method! remove?
 
     def annealButtonCB(self):
       try:

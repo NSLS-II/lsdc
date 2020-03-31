@@ -23,8 +23,8 @@ logger = logging.getLogger(__name__)
 
 try:
   import ispybLib
-except:
-  logger.error("ISPYB import error")
+except Exception as e:
+  logger.error("daq_macros ISPYB import error: %s" % e)
   
 from XSDataMXv1 import XSDataResultCharacterisation
 global rasterRowResultsList, processedRasterRowCount

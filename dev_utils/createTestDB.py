@@ -62,7 +62,7 @@ def createTestDB():
 
 
         #setBeamlineConfigParam(beamline, 'mountedSample', {'puckPos': 0, 'pinPos': 0, 'sampleID': -99}) #mountedSample has no val... why??
-        beamlineInfo(beamline, 'mountedSample', {'puckPos': 0, 'pinPos': 0, 'sampleID': -99})
+        beamlineInfo(beamline, 'mountedSample', {'puckPos': 0, 'pinPos': 0, 'sampleID': '-99'})
         setBeamlineConfigParam(beamline, 'dewarPlateMap', {'0':[180,-180], '1':[135,225], '2':[90,-270], '3':[45,-315], '4':[0,360], '5':[315,-45], '6':[270,90], '7':[225,-135]})
         setBeamlineConfigParam(beamline, 'dewarPlateName', 'dewarPlateJohn')
         setBeamlineConfigParam(beamline, 'lowMagCamURL', 'http://xf17id1c-ioc2.cs.nsls2.local:8007/C2.MJPG.mjpg')

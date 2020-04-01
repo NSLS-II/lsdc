@@ -50,6 +50,7 @@ def init_var_channels():
   global var_channel_list
 
   for varname in list(var_list.keys()):
+    logger.debug('initing %s' % varname)
     var_channel_list[varname] = beamline_support.pvCreate(daq_utils.beamlineComm + varname)
     if (varname != 'size_mode'):
       beamline_support.pvPut(var_channel_list[varname],var_list[varname])

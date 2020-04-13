@@ -55,7 +55,7 @@ if options['do_it_for_real']:
     user_changer_utils.make_directory(long_dir_name) #mode=0x770 by default
 globus_directory_name = '/~/nsls2/direct/%s' % short_dir_name
 print('for globus, use the following: %s' % globus_directory_name)
-print('preparing Globus endpoint and adding the following people to the endpoing: %s' % email_list)
+print('preparing Globus endpoint and adding the following people to the endpoint: %s' % email_list)
 
 #the Globus part!
 #just in case of NFS or other issues, wait for a second before trying to create an endpoint

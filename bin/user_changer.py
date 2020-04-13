@@ -63,6 +63,6 @@ if options['do_it_for_real']:
     time.sleep(1)
     globus_dict = globus_user_generic.native_app_authenticate()
     nsls_ii_endpoint_id = '92212f64-44f2-11e9-9e69-0266b1fe9f9e' #NSLS-II collection
-    globus_dict = globus_user_generic.create_shared_endpoint(globus_dict, nsls_ii_endpoint_id, globus_directory_name)
+    globus_dict = globus_user_generic.create_shared_endpoint(globus_dict, nsls_ii_endpoint_id, host_path=globus_directory_name)
     #shared_endpoint_id = '2a2d449a-783d-11ea-9615-0afc9e7dd773' #only for testing!
     globus_user_generic.add_users_to_shared_endpoint(globus_dict, emails)

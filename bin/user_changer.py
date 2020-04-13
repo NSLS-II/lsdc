@@ -52,7 +52,7 @@ for single_email in emails:
 long_dir_name, short_dir_name = user_changer_utils.get_directory_name(base_directory, beamline_folder, options['prop_type'].upper(), proposal_number, options['is_remote'])
 print('folder name: %s' % long_dir_name)
 if options['do_it_for_real']:
-    user_changer_utils.make_directory(long_dir_name) #mode=0x770 by default
+    user_changer_utils.make_directory(long_dir_name) #mode=0x755 by default
 globus_directory_name = '/~/nsls2/direct/%s' % short_dir_name
 print('for globus, use the following: %s' % globus_directory_name)
 print('preparing Globus endpoint and adding the following people to the endpoint: %s' % email_list)

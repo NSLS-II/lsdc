@@ -23,7 +23,7 @@ def get_directory_name(central_storage_prefix, beamline_prefix, prop_type, prop_
 
 #mode must be an octal literal - 0o??? where ??? are octal digits
 #owner - if empty, use current user. if running as sudo and owner is specified, change owner to that user
-def make_directory(directory_name, mode=0o770, owner=''):
+def make_directory(directory_name, mode=0o755, owner=''):
     os.makedirs(directory_name, mode=mode)
     if len(owner)>1:
         owner_uid = getpwnam(owner).pw_uid

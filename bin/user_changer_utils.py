@@ -17,9 +17,10 @@ def get_directory_name(central_storage_prefix, beamline_prefix, prop_type, prop_
         remote_text = 'Remote_' # underscore to space from visit_date
     else:
         remote_text = ''
-    dir_name = f"{central_storage_prefix}/{beamline_prefix}/{prop_type.upper()}-{prop_number}_{remote_text}{visit_date}"
-    short_dir_name = f"{beamline_prefix}/{prop_type.upper()}-{prop_number}_{remote_text}{visit_date}"
-    return dir_name, short_dir_name
+    shortest_dir_name = f"{prop_type.upper()}-{prop_number}_{remote_text}{visit_date}"
+    short_dir_name = f"{beamline_prefix}/{shortest_dir_name}"
+    dir_name = f"{central_storage_prefix}/{short_dir_name}"
+    return dir_name, short_dir_name, shortest_dir_name
 
 #mode must be an octal literal - 0o??? where ??? are octal digits
 #owner - if empty, use current user. if running as sudo and owner is specified, change owner to that user

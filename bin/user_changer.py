@@ -49,7 +49,7 @@ for single_email in emails:
     email_list.append(parsed_email[1])
 
 #the folder part!
-long_dir_name, short_dir_name = user_changer_utils.get_directory_name(base_directory, beamline_folder, options['prop_type'].upper(), proposal_number, options['is_remote'])
+long_dir_name, short_dir_name, shortest_dir_name = user_changer_utils.get_directory_name(base_directory, beamline_folder, options['prop_type'].upper(), proposal_number, options['is_remote'])
 print('folder name: %s' % long_dir_name)
 if options['do_it_for_real']:
     user_changer_utils.make_directory(long_dir_name) #mode=0x755 by default
@@ -65,4 +65,4 @@ if options['do_it_for_real']:
     nsls_ii_endpoint_id = '92212f64-44f2-11e9-9e69-0266b1fe9f9e' #NSLS-II collection
     globus_dict = globus_user_generic.create_shared_endpoint(globus_dict, nsls_ii_endpoint_id, host_path=globus_directory_name)
     #shared_endpoint_id = '2a2d449a-783d-11ea-9615-0afc9e7dd773' #only for testing!
-    globus_user_generic.add_users_to_shared_endpoint(globus_dict, emails)
+    globus_user_generic.add_users_to_shared_endpoint(globus_dict, emails, shortest_dir_name)

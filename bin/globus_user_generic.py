@@ -20,7 +20,7 @@ def native_app_authenticate():
     globus_transfer_token = token_response.by_resource_server['transfer.api.globus.org']['access_token']
     return {'transfer_token':globus_transfer_token, 'auth_token':globus_auth_token}
 
-def create_shared_endpoint(globus_dict, host_endpoint, host_path, display_name='display_name', description='description'):
+def create_shared_endpoint(globus_dict, host_endpoint, host_path, display_name='Globus endpoint', description='description'):
     globus_transfer_token = globus_dict['transfer_token']
     scopes = "urn:globus:auth:scopes:transfer.api.globus.org:all"
     authorizer = globus_sdk.AccessTokenAuthorizer(globus_transfer_token)
@@ -34,6 +34,8 @@ def create_shared_endpoint(globus_dict, host_endpoint, host_path, display_name='
       # optionally specify additional endpoint fields
       "description": description
     }
+    #r = tc.operation_mkdir(host_id, path=share_path) #TODO create the directory directly from here instead of at local level?
+
     tc.endpoint_autoactivate(host_endpoint, if_expires_in=3600) #necessary for real use?
     create_result = tc.create_shared_endpoint(shared_ep_data) #not the app's end point, so should fail
     endpoint_id = create_result['id']
@@ -41,7 +43,7 @@ def create_shared_endpoint(globus_dict, host_endpoint, host_path, display_name='
     globus_dict['transfer_client'] = tc
     return globus_dict
 
-def add_users_to_shared_endpoint(globus_dict, user_emails):
+def add_users_to_shared_endpoint(globus_dict, user_emails, dir_name):
     auth_token = globus_dict['auth_token']
     tc = globus_dict['transfer_client']
     share_id = globus_dict['endpoint_id']
@@ -60,7 +62,7 @@ def add_users_to_shared_endpoint(globus_dict, user_emails):
             'permissions': 'r', # Read-only
             'notify_email': user_email, # Email invite
             'notify_message': # Invite msg
-            'Requested data is available.'
+            f'Data collected at the NSLS-II beamlines is now available at endpoint {dir_name} for the next two weeks.'
         }
         r = tc.add_endpoint_acl_rule(share_id, rule_data)
         print('added %s' % user_email)

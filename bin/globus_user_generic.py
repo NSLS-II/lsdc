@@ -18,9 +18,10 @@ def native_app_authenticate():
 
     globus_auth_token = token_response.by_resource_server['auth.globus.org']['access_token']
     globus_transfer_token = token_response.by_resource_server['transfer.api.globus.org']['access_token']
-    return globus_transfer_token, globus_auth_token
+    return {'transfer_token':globus_transfer_token, 'auth_token':globus_auth_token}
 
-def create_shared_endpoint(globus_transfer_token, host_endpoint, host_path, display_name='display_name', description='description'):
+def create_shared_endpoint(globus_dict, host_endpoint, host_path, display_name='display_name', description='description'):
+    globus_transfer_token = globus_dict['transfer_token']
     scopes = "urn:globus:auth:scopes:transfer.api.globus.org:all"
     authorizer = globus_sdk.AccessTokenAuthorizer(globus_transfer_token)
     tc = TransferClient(authorizer=authorizer)
@@ -36,9 +37,15 @@ def create_shared_endpoint(globus_transfer_token, host_endpoint, host_path, disp
     tc.endpoint_autoactivate(host_endpoint, if_expires_in=3600) #necessary for real use?
     create_result = tc.create_shared_endpoint(shared_ep_data) #not the app's end point, so should fail
     endpoint_id = create_result['id']
-    return endpoint_id
+    globus_dict['endpoint_id'] = endpoint_id
+    globus_dict['transfer_client'] = tc
+    return globus_dict
 
-def add_users_to_shared_endpoint(auth_token, user_emails, share_id):
+def add_users_to_shared_endpoint(globus_dict, user_emails):
+    auth_token = globus_dict['auth_token']
+    tc = globus_dict['transfer_client']
+    share_id = globus_dict['endpoint_id']
+
     #https://github.com/slateci/slate-portal/blob/0ee1df2b40e813702338bf989a19c12a8eb066d1/notebook/mrdp-notebook.ipynb
     ac = globus_sdk.AuthClient(authorizer=globus_sdk.AccessTokenAuthorizer(auth_token))
     r = ac.get_identities(usernames=user_emails)
@@ -59,8 +66,8 @@ def add_users_to_shared_endpoint(auth_token, user_emails, share_id):
         print('added %s' % user_email)
 
 def test_shared_endpoint():
-    transfer_token, auth_token = native_app_authenticate()
+    globus_dict = native_app_authenticate()
     host_endpoint = '9d3b99d4-7836-11ea-af54-0201714f6eab'#'JunLaptop'
-    shared_endpoint_id = create_shared_endpoint(transfer_token, host_endpoint=host_endpoint, host_path='/~/anaconda3')
+    globus_dict = create_shared_endpoint(globus_dict, host_endpoint=host_endpoint, host_path='/~/anaconda3')
     emails =['jaishima@bnl.gov','mfuchs@bnl.gov']
-    add_users_to_shared_endpoint(auth_token, emails, shared_endpoint_id)
+    add_users_to_shared_endpoint(globus_dict, emails)

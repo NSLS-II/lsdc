@@ -61,8 +61,8 @@ print('preparing Globus endpoint and adding the following people to the endpoing
 #just in case of NFS or other issues, wait for a second before trying to create an endpoint
 if options['do_it_for_real']:
     time.sleep(1)
-    transfer_token, auth_token = globus_user_generic.native_app_authenticate()
+    globus_dict = globus_user_generic.native_app_authenticate()
     nsls_ii_endpoint_id = '92212f64-44f2-11e9-9e69-0266b1fe9f9e' #NSLS-II collection
-    shared_endpoint_id = globus_user_generic.create_shared_endpoint(transfer_token, nsls_ii_endpoint_id, globus_directory_name)
+    globus_dict = globus_user_generic.create_shared_endpoint(globus_dict, nsls_ii_endpoint_id, globus_directory_name)
     #shared_endpoint_id = '2a2d449a-783d-11ea-9615-0afc9e7dd773' #only for testing!
-    globus_user_generic.add_users_to_shared_endpoint(auth_token, emails, shared_endpoint_id)
+    globus_user_generic.add_users_to_shared_endpoint(globus_dict, emails)

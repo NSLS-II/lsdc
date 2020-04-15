@@ -68,6 +68,7 @@ sampleNameDict = {}
 global containerDict
 containerDict = {}
 
+cryojetTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
 class snapCommentDialog(QDialog):
     def __init__(self,parent = None):
@@ -1516,6 +1517,7 @@ class controlMain(QtGui.QMainWindow):
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = PV(daq_utils.pvLookupDict["gripTemp"])
+	self.cryojetTemp_pv = PV(cryojetTempPV[daq_utils.beamline])
         if (daq_utils.beamline == "fmx"):        
           self.slit1XGapSP_pv = PV(daq_utils.motor_dict["slit1XGap"] + ".VAL")
           self.slit1YGapSP_pv = PV(daq_utils.motor_dict["slit1YGap"] + ".VAL")        
@@ -2425,8 +2427,13 @@ class controlMain(QtGui.QMainWindow):
           self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")              
         gripperLabel = QtGui.QLabel('Gripper Temp:')
         self.gripperTempLabel = QtGui.QLabel(str(self.gripTemp_pv.get()))
+	cryojetLabel = QtGui.QLabel('Cryojet Temp:')
+	self.cryojetTempLabel = QtGui.QLabel(str(self.cryojetTemp_pv.get()))
+
         fileHBoxLayout.addWidget(gripperLabel)
         fileHBoxLayout.addWidget(self.gripperTempLabel)
+	fileHBoxLayout.addWidget(cryojetLabel)
+	fileHBoxLayout.addWidget(self.cryojetTempLabel)
         fileHBoxLayout.addWidget(ringCurrentMessageLabel)
         fileHBoxLayout.addWidget(self.ringCurrentMessage)
         fileHBoxLayout.addWidget(self.beamAvailLabel)
@@ -4843,6 +4850,10 @@ class controlMain(QtGui.QMainWindow):
       gripVal = value        
       self.emit(QtCore.SIGNAL("gripTempSignal"),gripVal)
 
+    def cryojetTempChangedCB(self, value=None, char_value=None, **kw):
+      cryojetTemp = value
+      self.emit(QtCore.SIGNAL("cryojetTempSignal"), cryojetTemp)
+
     def ringCurrentChangedCB(self,value=None, char_value=None, **kw):
       ringCurrentVal = value        
       self.emit(QtCore.SIGNAL("ringCurrentSignal"),ringCurrentVal)
@@ -5075,6 +5086,7 @@ class controlMain(QtGui.QMainWindow):
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
       self.connect(self, QtCore.SIGNAL("gripTempSignal"),self.processGripTemp)      
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
+      self.cryojetTemp_pv.add_callback(self.cryojetTempChangedCB)
       self.connect(self, QtCore.SIGNAL("ringCurrentSignal"),self.processRingCurrent)      
       self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)
       self.connect(self, QtCore.SIGNAL("beamAvailableSignal"),self.processBeamAvailable)      

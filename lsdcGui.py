@@ -72,7 +72,7 @@ global containerDict
 containerDict = {}
 
 
-class snapCommentDialog(QDialog):
+class SnapCommentDialog(QDialog):
     def __init__(self,parent = None):
         QDialog.__init__(self,parent)
         self.setWindowTitle("Snapshot Comment")
@@ -107,11 +107,11 @@ class snapCommentDialog(QDialog):
     
     @staticmethod
     def getComment(parent = None):
-        dialog = snapCommentDialog(parent)
+        dialog = SnapCommentDialog(parent)
         result = dialog.exec_()
         return (dialog.comment, dialog.useOlog,result == QDialog.Accepted)
 
-class rasterExploreDialog(QDialog):
+class RasterExploreDialog(QDialog):
     def __init__(self):
         QDialog.__init__(self)
         self.setModal(False)
@@ -163,7 +163,7 @@ class rasterExploreDialog(QDialog):
       self.done(QDialog.Rejected)
 
 
-class staffScreenDialog(QFrame):  
+class StaffScreenDialog(QFrame):  
     def __init__(self,parent = None):
         self.parent=parent
         QFrame.__init__(self)
@@ -453,7 +453,7 @@ class staffScreenDialog(QFrame):
       self.hide()
         
 
-class userScreenDialog(QFrame):  
+class UserScreenDialog(QFrame):  
     def __init__(self,parent = None):
         self.parent=parent
         QFrame.__init__(self)
@@ -676,7 +676,7 @@ class userScreenDialog(QFrame):
       self.done(QDialog.Accepted)        
       
 
-class screenDefaultsDialog(QDialog):
+class ScreenDefaultsDialog(QDialog):
     def __init__(self,parent = None):
         QDialog.__init__(self,parent)
         self.parent=parent        
@@ -1396,7 +1396,7 @@ class DataLocInfo(QtGui.QGroupBox):
 
 
 
-class rasterCell(QtGui.QGraphicsRectItem):
+class RasterCell(QtGui.QGraphicsRectItem):
 
     def __init__(self,x,y,w,h,topParent,scene):
       super(rasterCell,self).__init__(x,y,w,h,None,scene)
@@ -1413,11 +1413,11 @@ class rasterCell(QtGui.QGraphicsRectItem):
           if (self.topParent.albulaDispCheckBox.isChecked()):
             if (str(self.data(1).toString()) != "empty"):
               albulaUtils.albulaDispFile(str(self.data(1).toString()))
-          if not (self.topParent.rasterExploreDialog.isVisible()):
-            self.topParent.rasterExploreDialog.show()
-          self.topParent.rasterExploreDialog.setSpotCount(spotcount)
-          self.topParent.rasterExploreDialog.setTotalIntensity(intensity)
-          self.topParent.rasterExploreDialog.setResolution(d_min)
+          if not (self.topParent.RasterExploreDialog.isVisible()):
+            self.topParent.RasterExploreDialog.show()
+          self.topParent.RasterExploreDialog.setSpotCount(spotcount)
+          self.topParent.RasterExploreDialog.setTotalIntensity(intensity)
+          self.topParent.RasterExploreDialog.setResolution(d_min)
           groupList = self.group().childItems()
           for i in range (0,len(groupList)):
             groupList[i].setPen(self.topParent.redPen)
@@ -1432,23 +1432,23 @@ class rasterCell(QtGui.QGraphicsRectItem):
         spotcount = self.data(0).toInt()[0]
         d_min = self.data(2).toDouble()[0]
         intensity = self.data(3).toInt()[0]
-        if not (self.topParent.rasterExploreDialog.isVisible()):
-          self.topParent.rasterExploreDialog.show()
-        self.topParent.rasterExploreDialog.setSpotCount(spotcount)
-        self.topParent.rasterExploreDialog.setTotalIntensity(intensity)
-        self.topParent.rasterExploreDialog.setResolution(d_min)
+        if not (self.topParent.RasterExploreDialog.isVisible()):
+          self.topParent.RasterExploreDialog.show()
+        self.topParent.RasterExploreDialog.setSpotCount(spotcount)
+        self.topParent.RasterExploreDialog.setTotalIntensity(intensity)
+        self.topParent.RasterExploreDialog.setResolution(d_min)
 
 
 
-class rasterGroup(QtGui.QGraphicsItemGroup):
+class RasterGroup(QtGui.QGraphicsItemGroup):
     def __init__(self,parent = None):
-        super(rasterGroup, self).__init__()
+        super(RasterGroup, self).__init__()
         self.parent=parent
         self.setHandlesChildEvents(False)
 
 
     def mousePressEvent(self, e):
-      super(rasterGroup, self).mousePressEvent(e)
+      super(RasterGroup, self).mousePressEvent(e)
       logger.info("mouse pressed on group")
       for i in xrange(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
@@ -1465,11 +1465,11 @@ class rasterGroup(QtGui.QGraphicsItemGroup):
         if e.buttons() == QtCore.Qt.RightButton:
           pass
 
-        super(rasterGroup, self).mouseMoveEvent(e)
+        super(RasterGroup, self).mouseMoveEvent(e)
         logger.info("pos " + str(self.pos()))
 
     def mouseReleaseEvent(self, e):
-        super(rasterGroup, self).mouseReleaseEvent(e)
+        super(RasterGroup, self).mouseReleaseEvent(e)
         if e.button() == QtCore.Qt.LeftButton:
           pass
         if e.button() == QtCore.Qt.RightButton:
@@ -1477,7 +1477,7 @@ class rasterGroup(QtGui.QGraphicsItemGroup):
 
 
 
-class controlMain(QtGui.QMainWindow):
+class ControlMain(QtGui.QMainWindow):
 #1/13/15 - are these necessary?
     Signal = QtCore.pyqtSignal()
     refreshTreeSignal = QtCore.pyqtSignal()
@@ -1488,7 +1488,7 @@ class controlMain(QtGui.QMainWindow):
 
     
     def __init__(self):
-        super(controlMain, self).__init__()
+        super(ControlMain, self).__init__()
         self.SelectedItemData = "" #attempt to know what row is selected
         self.popUpMessageInit = 1 # I hate these next two, but I don't want to catch old messages. Fix later, maybe.
         self.textWindowMessageInit = 1
@@ -1546,8 +1546,8 @@ class controlMain(QtGui.QMainWindow):
         if (self.mountedPin_pv.get() == ""):
           mountedPin = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')["sampleID"]
           self.mountedPin_pv.put(mountedPin)
-        self.rasterExploreDialog = rasterExploreDialog()
-        self.userScreenDialog = userScreenDialog(self)        
+        self.rasterExploreDialog = RasterExploreDialog()
+        self.userScreenDialog = UserScreenDialog(self)        
         self.detDistMotorEntry.getEntry().setText(self.detDistRBVLabel.getEntry().text()) #this is to fix the current val being overwritten by reso
         self.proposalID = -999999
         if (len(sys.argv)>1):
@@ -2647,7 +2647,7 @@ class controlMain(QtGui.QMainWindow):
       
 
     def saveVidSnapshotButtonCB(self): 
-      comment,useOlog,ok = snapCommentDialog.getComment()
+      comment,useOlog,ok = SnapCommentDialog.getComment()
       if (ok):
         self.saveVidSnapshotCB(comment,useOlog)
 
@@ -3956,11 +3956,11 @@ class controlMain(QtGui.QMainWindow):
           if (rowCellCount == 0): #start of a new row
             rowStartX = newCellX
             rowStartY = newCellY
-          newCell = rasterCell(newCellX,newCellY,stepsizeX, stepsizeY, self,self.scene)
+          newCell = RasterCell(newCellX,newCellY,stepsizeX, stepsizeY, self,self.scene)
           newRasterCellList.append(newCell)
           newCell.setPen(pen)
           rowCellCount = rowCellCount+1 #really just for test of new row
-      newItemGroup = rasterGroup(self)
+      newItemGroup = RasterGroup(self)
       self.scene.addItem(newItemGroup)
       for i in xrange(len(newRasterCellList)):
         newItemGroup.addToGroup(newRasterCellList[i])
@@ -4073,7 +4073,7 @@ class controlMain(QtGui.QMainWindow):
 
 
     def editScreenParamsCB(self):
-      self.screenDefaultsDialog = screenDefaultsDialog(self)
+      self.screenDefaultsDialog = ScreenDefaultsDialog(self)
       self.screenDefaultsDialog.show()
 
 
@@ -4933,7 +4933,7 @@ class controlMain(QtGui.QMainWindow):
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):
-        self.staffScreenDialog = staffScreenDialog(self)
+        self.staffScreenDialog = StaffScreenDialog(self)
       else:
         self.popupServerMessage("You don't have control")          
       

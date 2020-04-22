@@ -163,8 +163,8 @@ def process_input(command_string):
     logger.error("Key error. Error: %s" % e)
   except TypeError:
     logger.error("Type error")
-  except AttributeError:
-    logger.error("Attribute Error")
+  except AttributeError as e:
+    logger.error("Attribute Error: %s" % e)
   except KeyboardInterrupt:
     abort_data_collection()
     logger.info("Interrupt caught by daq server\n")

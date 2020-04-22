@@ -2127,7 +2127,7 @@ def eScan(energyScanRequest):
   scanData = db[scanID[0]]
   for ev in scanData.events():
     if ('mercury_mca_spectrum' in ev['data']):
-      logger.info(ev['seq_num'], ev['data']['mercury_mca_spectrum'].sum())
+      logger.info('%s %s' % (ev['seq_num'], ev['data']['mercury_mca_spectrum'].sum()))
       
   scanDataTable = scanData.table()
 #these next lines only make sense for the mca

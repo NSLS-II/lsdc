@@ -193,10 +193,9 @@ def autoRasterLoop(currentRequest):
   
   if not (daq_lib.setGovRobot('SA')):
     return 0
-  if (daq_utils.beamline == "amx"):  
-    if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
-      delayTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"autoRasterDelay")
-      time.sleep(delayTime)
+  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
+    delayTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"autoRasterDelay")
+    time.sleep(delayTime)
     
   reqObj = currentRequest["request_obj"]
   if ("centeringOption" in reqObj):

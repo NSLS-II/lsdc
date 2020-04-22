@@ -5109,14 +5109,14 @@ class ControlMain(QtGui.QMainWindow):
 
 
     def colorProgramState(self,programState_s):
-      if (string.find(programState_s,"Ready") == -1):
+      if (programState_s.find("Ready") == -1):
         self.statusLabel.setColor("yellow")
       else:
         self.statusLabel.setColor("#99FF66")        
 
     def changePauseButtonState(self,buttonState_s):
       self.pauseQueueButton.setText(buttonState_s)
-      if (string.find(buttonState_s,"Pause") != -1):
+      if (buttonState_s.find("Pause") != -1):
         self.pauseQueueButton.setStyleSheet("background-color: None")                  
       else:
         self.pauseQueueButton.setStyleSheet("background-color: yellow")                    

@@ -2618,7 +2618,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
 def setTrans(transmission): #where transmission = 0.0-1.0
   if (daq_utils.beamline == "fmx"):  
     if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"attenType") == "RI"):
-      beamline_support.setPvValFromDescriptor("RIattenEnergySP",beamline_lib.beamline_lib.motorPosFromDescriptor("energy"))
+      beamline_support.setPvValFromDescriptor("RIattenEnergySP",beamline_lib.motorPosFromDescriptor("energy"))
       beamline_support.setPvValFromDescriptor("RI_Atten_SP",transmission)      
       beamline_support.setPvValFromDescriptor("RI_Atten_SET",1)
       

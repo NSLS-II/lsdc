@@ -2931,6 +2931,9 @@ class controlMain(QtGui.QMainWindow):
       else:
         self.gripperTempLabel.setStyleSheet("background-color: #99FF66;")        
 
+    def processCryostreamTemp(self,cryostreamVal):
+        self.cryostreamTempLabel.setText(str(cryostreamVal))
+
     def processRingCurrent(self,ringCurrentVal):
       self.ringCurrentMessage.setText(str(int(ringCurrentVal)))
       if (int(ringCurrentVal) < 390):
@@ -5086,6 +5089,7 @@ class controlMain(QtGui.QMainWindow):
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
       self.connect(self, QtCore.SIGNAL("gripTempSignal"),self.processGripTemp)      
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
+      self.connect(self, QtCore.SIGNAL("cryostreamTempSignal"), self.processCryostreamTemp)
       self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
       self.connect(self, QtCore.SIGNAL("ringCurrentSignal"),self.processRingCurrent)      
       self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)

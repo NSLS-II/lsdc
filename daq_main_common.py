@@ -29,6 +29,7 @@ z = 25
 
   
 def execute_command(command_s):
+  logger.info('executing command: %s' % command_s)
   exec(command_s)
 
 

@@ -2725,7 +2725,7 @@ def loop_center_mask():
     logger.info("x = " + str(x) + " y = " + str(y))
     fovx = daq_utils.lowMagFOVx
     fovy = daq_utils.lowMagFOVy
-    center_on_click(320.0,y,fovx,fovy,source="macro")
+    daq_lib.center_on_click(320.0,y,fovx,fovy,source="macro")
   beamline_lib.mvrDescriptor("omega",-90.0)    
 
 def getLoopSize():
@@ -2802,8 +2802,8 @@ def loop_center_xrec():
   fovx = daq_utils.lowMagFOVx
   fovy = daq_utils.lowMagFOVy
   
-  center_on_click(x_center,y_center-radius,fovx,fovy,source="macro")
-  center_on_click((x_center*2) - y_centre_xrec,x_centre_xrec,fovx,fovy,source="macro")
+  daq_lib.center_on_click(x_center,y_center-radius,fovx,fovy,source="macro")
+  daq_lib.center_on_click((x_center*2) - y_centre_xrec,x_centre_xrec,fovx,fovy,source="macro")
   beamline_lib.mvaDescriptor("omega",face_on)
   #now try to get the loopshape starting from here
   return 1

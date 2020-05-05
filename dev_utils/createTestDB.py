@@ -114,6 +114,7 @@ def createTestDB():
         setBeamlineConfigParam(beamline, 'scannerType', 'Normal')
         setBeamlineConfigParam(beamline, 'attenType', 'RI')
         setBeamlineConfigParam(beamline, 'omegaMonitorPV', 'VAL')
+        setBeamlineConfigParam(beamline, 'mountEnabled', '1')
 
         
 

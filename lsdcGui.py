@@ -889,7 +889,7 @@ class PuckDialog(QtWidgets.QDialog):
     def initUI(self):
         self.tv = QtWidgets.QListView(self)
         self.tv.setModel(self.model)
-        QtCore.QObject.connect(self.tv, QtCore.SIGNAL("doubleClicked (QModelIndex)"),self.containerOKCB)
+        self.tv.doubleClicked[QModelIndex].connect(self.containerOKCB)
         behavior = QtWidgets.QAbstractItemView.SelectRows
         self.tv.setSelectionBehavior(behavior)
         
@@ -1484,12 +1484,41 @@ class controlMain(QtWidgets.QMainWindow):
 #1/13/15 - are these necessary?
     Signal = QtCore.pyqtSignal()
     refreshTreeSignal = QtCore.pyqtSignal()
-    serverMessageSignal = QtCore.pyqtSignal()
-    serverPopupMessageSignal = QtCore.pyqtSignal()
-    programStateSignal = QtCore.pyqtSignal()
-    pauseButtonStateSignal = QtCore.pyqtSignal()    
+    serverMessageSignal = QtCore.pyqtSignal(str)
+    serverPopupMessageSignal = QtCore.pyqtSignal(str)
+    programStateSignal = QtCore.pyqtSignal(str)
+    pauseButtonStateSignal = QtCore.pyqtSignal(str)    
 
-    
+
+    xrecRasterSignal = QtCore.pyqtSignal(int)
+    choochResultSignal = QtCore.pyqtSignal(str)
+    energyChangeSignal = QtCore.pyqtSignal(str)
+    mountedPinSignal = QtCore.pyqtSignal(int)
+    beamSizeSignal = QtCore.pyqtSignal(str)
+    controlMasterSignal = QtCore.pyqtSignal(int)
+    zebraArmStateSignal = QtCore.pyqtSignal(int)
+    govRobotSeReachSignal = QtCore.pyqtSignal(int)
+    govRobotSaReachSignal = QtCore.pyqtSignal(int)
+    govRobotDaReachSignal = QtCore.pyqtSignal(int)
+    govRobotBlReachSignal = QtCore.pyqtSignal(int)
+    detMessageSignal = QtCore.pyqtSignal(str)
+    sampleFluxSignal = QtCore.pyqtSignal(str)
+    zebraPulseStateSignal = QtCore.pyqtSignal(int)
+    stillModeStateSignal = QtCore.pyqtSignal(str)
+    zebraDownloadStateSignal = QtCore.pyqtSignal(int)
+    zebraSentTriggerStateSignal = QtCore.pyqtSignal(int)
+    zebraReturnedTriggerStateSignal = QtCore.pyqtSignal(int)
+    fastShutterSignal = QtCore.pyqtSignal(str)
+    gripTempSignal = QtCore.pyqtSignal(str)
+    ringCurrentSignal = QtCore.pyqtSignal(str)
+    beamAvailableSignal = QtCore.pyqtSignal(str)
+    sampleExposedSignal = QtCore.pyqtSignal(str)
+    sampMoveSignal = QtCore.pyqtSignal(int, str)
+    roiChangeSignal = QtCore.pyqtSignal(str)
+    highMagCursorChangeSignal = QtCore.pyqtSignal(str)
+    lowMagCursorChangeSignal = QtCore.pyqtSignal(str)
+    cryostreamTempSignal = QtCore.pyqtSignal(str)
+
     def __init__(self):
         super(controlMain, self).__init__()
         self.SelectedItemData = "" #attempt to know what row is selected
@@ -1598,7 +1627,7 @@ class controlMain(QtWidgets.QMainWindow):
         self.selectedSampleRequest = {}
         self.selectedSampleID = ""
         self.dewarTree   = DewarTree(self)
-        QtCore.QObject.connect(self.dewarTree, QtCore.SIGNAL("clicked (QModelIndex)"),self.row_clicked)
+        self.dewarTree.clicked[QModelIndex].connect(self.row_clicked)
         treeSelectBehavior = QtWidgets.QAbstractItemView.SelectItems
         treeSelectMode = QtWidgets.QAbstractItemView.ExtendedSelection
         self.dewarTree.setSelectionMode(treeSelectMode)
@@ -2668,8 +2697,8 @@ class controlMain(QtWidgets.QMainWindow):
       height=512
       targetrect = QRectF(0, 0, width, height)
       sourcerect = QRectF(0, 0, width, height)
-      pix = QtWidgets.QPixmap(width, height)
-      painter = QtWidgets.QPainter(pix)
+      pix = QtGui.QPixmap(width, height)
+      painter = QtGui.QPainter(pix)
       self.scene.render(painter, targetrect,sourcerect)
       painter.end()
       now = time.time()
@@ -3532,9 +3561,9 @@ class controlMain(QtWidgets.QMainWindow):
           polyPoints.append(point)          
           point = QtCore.QPointF(self.click_positions[0].x()+2,self.click_positions[0].y())
           polyPoints.append(point)
-          self.rasterPoly = QtWidgets.QGraphicsPolygonItem(QtWidgets.QPolygonF(polyPoints))
+          self.rasterPoly = QtWidgets.QGraphicsPolygonItem(QtGui.QPolygonF(polyPoints))
         else:
-          self.rasterPoly = QtWidgets.QGraphicsPolygonItem(QtWidgets.QPolygonF(self.click_positions))
+          self.rasterPoly = QtWidgets.QGraphicsPolygonItem(QtGui.QPolygonF(self.click_positions))
       else:
         return
       self.polyBoundingRect = self.rasterPoly.boundingRect()
@@ -3985,7 +4014,7 @@ class controlMain(QtWidgets.QMainWindow):
         file = cStringIO.StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL"))).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
-        pixmap_orig = QtWidgets.QPixmap.fromImage(qimage)
+        pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchCorner.setPixmap(pixmap_orig)        
       except:
         pass
@@ -3993,7 +4022,7 @@ class controlMain(QtWidgets.QMainWindow):
         file = cStringIO.StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL"))).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
-        pixmap_orig = QtWidgets.QPixmap.fromImage(qimage)
+        pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchTop.setPixmap(pixmap_orig)
       except:
         pass
@@ -4007,8 +4036,8 @@ class controlMain(QtWidgets.QMainWindow):
         return #maybe stop the timer also???
       self.currentFrame = cv2.cvtColor(self.readframe,cv2.COLOR_BGR2RGB)
       height,width=self.currentFrame.shape[:2]
-      qimage=QtWidgets.QImage(self.currentFrame,width,height,3*width,QtWidgets.QImage.Format_RGB888)
-      pixmap_orig = QtWidgets.QPixmap.fromImage(qimage)
+      qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
+      pixmap_orig = QtGui.QPixmap.fromImage(qimage)
       self.pixmap_item.setPixmap(pixmap_orig)
 
     def timerEvent(self, event): #12/19 not used?
@@ -4017,8 +4046,8 @@ class controlMain(QtWidgets.QMainWindow):
         return #maybe stop the timer also???
       self.currentFrame = cv2.cvtColor(self.readframe,cv2.COLOR_BGR2RGB)
       height,width=self.currentFrame.shape[:2]
-      qimage=QtWidgets.QImage(self.currentFrame,width,height,3*width,QtWidgets.QImage.Format_RGB888)
-      pixmap_orig = QtWidgets.QPixmap.fromImage(qimage)
+      qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
+      pixmap_orig = QtGui.QPixmap.fromImage(qimage)
       self.pixmap_item.setPixmap(pixmap_orig)
 
 
@@ -4764,144 +4793,144 @@ class controlMain(QtWidgets.QMainWindow):
     def processXrecRasterCB(self,value=None, char_value=None, **kw):
       xrecFlag = value
       if (xrecFlag != "0"):
-        self.emit(QtCore.SIGNAL("xrecRasterSignal"),xrecFlag)
+        self.xrecRasterSignal.emit(xrecFlag)
 
     def processChoochResultsCB(self,value=None, char_value=None, **kw):
       choochFlag = value
       if (choochFlag != "0"):
-        self.emit(QtCore.SIGNAL("choochResultSignal"),choochFlag)
+        self.choochResultSignal.emit(choochFlag)
 
     def processEnergyChangeCB(self,value=None, char_value=None, **kw):
       energyVal = value
-      self.emit(QtCore.SIGNAL("energyChangeSignal"),energyVal)
+      self.energyChangeSignal.emit(energyVal)
 
     def mountedPinChangedCB(self,value=None, char_value=None, **kw):
       mountedPinPos = value
-      self.emit(QtCore.SIGNAL("mountedPinSignal"),mountedPinPos)
+      self.mountedPinSignal.emit(mountedPinPos)
 
     def beamSizeChangedCB(self,value=None, char_value=None, **kw):
       beamSizeFlag = value
-      self.emit(QtCore.SIGNAL("beamSizeSignal"),beamSizeFlag)
+      self.beamSizeSignal.emit(beamSizeFlag)
     
     def controlMasterChangedCB(self,value=None, char_value=None, **kw):
       controlMasterPID = value
-      self.emit(QtCore.SIGNAL("controlMasterSignal"),controlMasterPID)
+      self.controlMasterSignal.emit(controlMasterPID)
 
     def zebraArmStateChangedCB(self,value=None, char_value=None, **kw):
       armState = value
-      self.emit(QtCore.SIGNAL("zebraArmStateSignal"),armState)
+      self.zebraArmStateSignal.emit(armState)
       
     def govRobotSeReachChangedCB(self,value=None, char_value=None, **kw):
       armState = value
-      self.emit(QtCore.SIGNAL("govRobotSeReachSignal"),armState)
+      self.govRobotSeReachSignal.emit(armState)
 
     def govRobotSaReachChangedCB(self,value=None, char_value=None, **kw):
       armState = value
-      self.emit(QtCore.SIGNAL("govRobotSaReachSignal"),armState)
+      self.govRobotSaReachSignal.emit(armState)
 
     def govRobotDaReachChangedCB(self,value=None, char_value=None, **kw):
       armState = value
-      self.emit(QtCore.SIGNAL("govRobotDaReachSignal"),armState)
+      self.govRobotDaReachSignal.emit(armState)
 
     def govRobotBlReachChangedCB(self,value=None, char_value=None, **kw):
       armState = value
-      self.emit(QtCore.SIGNAL("govRobotBlReachSignal"),armState)      
+      self.govRobotBlReachSignal.emit(armState)
 
 
     def detMessageChangedCB(self,value=None, char_value=None, **kw):
       state = char_value
-      self.emit(QtCore.SIGNAL("detMessageSignal"),state)
+      self.detMessageSignal.emit(state)
       
     def sampleFluxChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("sampleFluxSignal"),state)
+      self.sampleFluxSignal.emit(state)
       
     def zebraPulseStateChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("zebraPulseStateSignal"),state)
+      self.zebraPulseStateSignal.emit(state)
 
     def stillModeStateChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("stillModeStateSignal"),state)
+      self.stillModeStateSignal.emit(state)
 
     def zebraDownloadStateChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("zebraDownloadStateSignal"),state)
+      self.zebraDownloadStateSignal.emit(state)
 
     def zebraSentTriggerStateChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("zebraSentTriggerStateSignal"),state)
+      self.zebraSentTriggerStateSignal.emit(state)
       
     def zebraReturnedTriggerStateChangedCB(self,value=None, char_value=None, **kw):
       state = value
-      self.emit(QtCore.SIGNAL("zebraReturnedTriggerStateSignal"),state)
+      self.zebraReturnedTriggerStateSignal.emit(state)
       
     def shutterChangedCB(self,value=None, char_value=None, **kw):
       shutterVal = value        
-      self.emit(QtCore.SIGNAL("fastShutterSignal"),shutterVal)
+      self.fastShutterSignal.emit(shutterVal)
       
     def gripTempChangedCB(self,value=None, char_value=None, **kw):
       gripVal = value        
-      self.emit(QtCore.SIGNAL("gripTempSignal"),gripVal)
+      self.gripTempSignal.emit(gripVal)
 
     def cryostreamTempChangedCB(self, value=None, char_value=None, **kw):
       cryostreamTemp = value
-      self.emit(QtCore.SIGNAL("cryostreamTempSignal"), cryostreamTemp)
+      self.cryostreamTempSignal.emit(cryostreamTemp)
 
     def ringCurrentChangedCB(self,value=None, char_value=None, **kw):
       ringCurrentVal = value        
-      self.emit(QtCore.SIGNAL("ringCurrentSignal"),ringCurrentVal)
+      self.ringCurrentSignal.emit(ringCurrentVal)
 
     def beamAvailableChangedCB(self,value=None, char_value=None, **kw):
       beamAvailableVal = value        
-      self.emit(QtCore.SIGNAL("beamAvailableSignal"),beamAvailableVal)
+      self.beamAvailableSignal.emit(beamAvailableVal)
 
     def sampleExposedChangedCB(self,value=None, char_value=None, **kw):
       sampleExposedVal = value        
-      self.emit(QtCore.SIGNAL("sampleExposedSignal"),sampleExposedVal)
+      self.sampleExposedSignal.emit(sampleExposedVal)
       
     def processSampMoveCB(self,value=None, char_value=None, **kw):
       posRBV = value
       motID = kw["motID"]
-      self.emit(QtCore.SIGNAL("sampMoveSignal"),posRBV,motID)
+      self.sampMoveSignal.emit(posRBV,motID)
 
     def processROIChangeCB(self,value=None, char_value=None, **kw):
       posRBV = value
       ID = kw["ID"]
-      self.emit(QtCore.SIGNAL("roiChangeSignal"),posRBV,ID)
+      self.roiChangeSignal.emit(posRBV,ID)
       
 
     def processHighMagCursorChangeCB(self,value=None, char_value=None, **kw):
       posRBV = value
       ID = kw["ID"]
-      self.emit(QtCore.SIGNAL("highMagCursorChangeSignal"),posRBV,ID)
+      self.highMagCursorChangeSignal.emit(posRBV,ID)
       
     def processLowMagCursorChangeCB(self,value=None, char_value=None, **kw):
       posRBV = value
       ID = kw["ID"]
-      self.emit(QtCore.SIGNAL("lowMagCursorChangeSignal"),posRBV,ID)
+      self.lowMagCursorChangeSignal.emit(posRBV,ID)
       
 
     def treeChangedCB(self,value=None, char_value=None, **kw):
       if (self.processID != self.treeChanged_pv.get()):
-        self.emit(QtCore.SIGNAL("refreshTreeSignal"))
+        self.refreshTreeSignal.emit()
 
     def serverMessageCB(self,value=None, char_value=None, **kw):
       serverMessageVar = char_value
-      self.emit(QtCore.SIGNAL("serverMessageSignal"),serverMessageVar)
+      self.serverMessageSignal.emit(serverMessageVar)
 
     def serverPopupMessageCB(self,value=None, char_value=None, **kw):
       serverMessageVar = char_value
-      self.emit(QtCore.SIGNAL("serverPopupMessageSignal"),serverMessageVar)
+      self.serverPopupMessageSignal.emit(serverMessageVar)
 
       
     def programStateCB(self, value=None, char_value=None, **kw):
       programStateVar = value
-      self.emit(QtCore.SIGNAL("programStateSignal"),programStateVar)
+      self.programStateSignal.emit(programStateVar)
 
     def pauseButtonStateCB(self, value=None, char_value=None, **kw):
       pauseButtonStateVar = value
-      self.emit(QtCore.SIGNAL("pauseButtonStateSignal"),pauseButtonStateVar)
+      self.pauseButtonStateSignal.emit(pauseButtonStateVar)
 
         
     def initUI(self):               
@@ -4960,14 +4989,14 @@ class controlMain(QtWidgets.QMainWindow):
 
     def initCallbacks(self):
 
-      self.connect(self, QtCore.SIGNAL("beamSizeSignal"),self.processBeamSize)
+      self.beamSizeSignal.connect(self.processBeamSize)
       self.beamSize_pv.add_callback(self.beamSizeChangedCB)  
 
       self.treeChanged_pv = PV(daq_utils.beamlineComm + "live_q_change_flag")
-      self.connect(self, QtCore.SIGNAL("refreshTreeSignal"),self.dewarTree.refreshTree)
+      self.refreshTreeSignal.connect(self.dewarTree.refreshTree)
       self.treeChanged_pv.add_callback(self.treeChangedCB)  
       self.mountedPin_pv = PV(daq_utils.beamlineComm + "mounted_pin")
-      self.connect(self, QtCore.SIGNAL("mountedPinSignal"),self.processMountedPin)
+      self.mountedPinSignal.connect(self.processMountedPin)
       self.mountedPin_pv.add_callback(self.mountedPinChangedCB)
       det_stop_pv = daq_utils.pvLookupDict["stopEiger"]
       logger.info('setting stop Eiger detector PV: %s' % det_stop_pv)
@@ -4982,84 +5011,84 @@ class controlMain(QtWidgets.QMainWindow):
       logger.info('setting zebra reboot ioc PV: %s' % rz_reboot_pv)
       self.rebootZebraIOC_pv = PV(rz_reboot_pv)      
       self.zebraArmedPV = PV(daq_utils.pvLookupDict["zebraArmStatus"])
-      self.connect(self, QtCore.SIGNAL("zebraArmStateSignal"),self.processZebraArmState)
+      self.zebraArmStateSignal.connect(self.processZebraArmState)
       self.zebraArmedPV.add_callback(self.zebraArmStateChangedCB)
 
       self.govRobotSeReachPV = PV(daq_utils.pvLookupDict["govRobotSeReach"])
-      self.connect(self, QtCore.SIGNAL("govRobotSeReachSignal"),self.processGovRobotSeReach)
+      self.govRobotSeReachSignal.connect(self.processGovRobotSeReach)
       self.govRobotSeReachPV.add_callback(self.govRobotSeReachChangedCB)
 
       self.govRobotSaReachPV = PV(daq_utils.pvLookupDict["govRobotSaReach"])
-      self.connect(self, QtCore.SIGNAL("govRobotSaReachSignal"),self.processGovRobotSaReach)
+      self.govRobotSaReachSignal.connect(self.processGovRobotSaReach)
       self.govRobotSaReachPV.add_callback(self.govRobotSaReachChangedCB)
 
       self.govRobotDaReachPV = PV(daq_utils.pvLookupDict["govRobotDaReach"])
-      self.connect(self, QtCore.SIGNAL("govRobotDaReachSignal"),self.processGovRobotDaReach)
+      self.govRobotDaReachSignal.connect(self.processGovRobotDaReach)
       self.govRobotDaReachPV.add_callback(self.govRobotDaReachChangedCB)
 
       self.govRobotBlReachPV = PV(daq_utils.pvLookupDict["govRobotBlReach"])
-      self.connect(self, QtCore.SIGNAL("govRobotBlReachSignal"),self.processGovRobotBlReach)
+      self.govRobotBlReachSignal.connect(self.processGovRobotBlReach)
       self.govRobotBlReachPV.add_callback(self.govRobotBlReachChangedCB)
       
       self.detectorMessagePV = PV(daq_utils.pvLookupDict["eigerStatMessage"])
-      self.connect(self, QtCore.SIGNAL("detMessageSignal"),self.processDetMessage)
+      self.detMessageSignal.connect(self.processDetMessage)
       self.detectorMessagePV.add_callback(self.detMessageChangedCB)
 
 
-      self.connect(self, QtCore.SIGNAL("sampleFluxSignal"),self.processSampleFlux)
+      self.sampleFluxSignal.connect(self.processSampleFlux)
       self.sampleFluxPV.add_callback(self.sampleFluxChangedCB)
       
-      self.connect(self, QtCore.SIGNAL("stillModeStateSignal"),self.processStillModeState)
+      self.stillModeStateSignal.connect(self.processStillModeState)
       self.stillModeStatePV.add_callback(self.stillModeStateChangedCB)      
 
       self.zebraPulsePV = PV(daq_utils.pvLookupDict["zebraPulseStatus"])
-      self.connect(self, QtCore.SIGNAL("zebraPulseStateSignal"),self.processZebraPulseState)
+      self.zebraPulseStateSignal.connect(self.processZebraPulseState)
       self.zebraPulsePV.add_callback(self.zebraPulseStateChangedCB)
 
       self.zebraDownloadPV = PV(daq_utils.pvLookupDict["zebraDownloading"])
-      self.connect(self, QtCore.SIGNAL("zebraDownloadStateSignal"),self.processZebraDownloadState)
+      self.zebraDownloadStateSignal.connect(self.processZebraDownloadState)
       self.zebraDownloadPV.add_callback(self.zebraDownloadStateChangedCB)
 
       self.zebraSentTriggerPV = PV(daq_utils.pvLookupDict["zebraSentTriggerStatus"])
-      self.connect(self, QtCore.SIGNAL("zebraSentTriggerStateSignal"),self.processZebraSentTriggerState)
+      self.zebraSentTriggerStateSignal.connect(self.processZebraSentTriggerState)
       self.zebraSentTriggerPV.add_callback(self.zebraSentTriggerStateChangedCB)
 
       self.zebraReturnedTriggerPV = PV(daq_utils.pvLookupDict["zebraTriggerReturnStatus"])
-      self.connect(self, QtCore.SIGNAL("zebraReturnedTriggerStateSignal"),self.processZebraReturnedTriggerState)
+      self.zebraReturnedTriggerStateSignal.connect(self.processZebraReturnedTriggerState)
       self.zebraReturnedTriggerPV.add_callback(self.zebraReturnedTriggerStateChangedCB)
       
       self.controlMaster_pv = PV(daq_utils.beamlineComm + "zinger_flag")
-      self.connect(self, QtCore.SIGNAL("controlMasterSignal"),self.processControlMaster)
+      self.controlMasterSignal.connect(self.processControlMaster)
       self.controlMaster_pv.add_callback(self.controlMasterChangedCB)
 
       self.beamCenterX_pv = PV(daq_utils.pvLookupDict["beamCenterX"])
       self.beamCenterY_pv = PV(daq_utils.pvLookupDict["beamCenterY"])      
 
       self.choochResultFlag_pv = PV(daq_utils.beamlineComm + "choochResultFlag")
-      self.connect(self, QtCore.SIGNAL("choochResultSignal"),self.processChoochResult)
+      self.choochResultSignal.connect(self.processChoochResult)
       self.choochResultFlag_pv.add_callback(self.processChoochResultsCB)  
       self.xrecRasterFlag_pv = PV(daq_utils.beamlineComm + "xrecRasterFlag")
       self.xrecRasterFlag_pv.put("0")
-      self.connect(self, QtCore.SIGNAL("xrecRasterSignal"),self.displayXrecRaster)
+      self.xrecRasterSignal.connect(self.displayXrecRaster)
       self.xrecRasterFlag_pv.add_callback(self.processXrecRasterCB)  
       self.message_string_pv = PV(daq_utils.beamlineComm + "message_string") 
-      self.connect(self, QtCore.SIGNAL("serverMessageSignal"),self.printServerMessage)
+      self.serverMessageSignal.connect(self.printServerMessage)
       self.message_string_pv.add_callback(self.serverMessageCB)  
       self.popup_message_string_pv = PV(daq_utils.beamlineComm + "gui_popup_message_string") 
-      self.connect(self, QtCore.SIGNAL("serverPopupMessageSignal"),self.popupServerMessage)
+      self.serverPopupMessageSignal.connect(self.popupServerMessage)
       self.popup_message_string_pv.add_callback(self.serverPopupMessageCB)  
       self.program_state_pv = PV(daq_utils.beamlineComm + "program_state") 
-      self.connect(self, QtCore.SIGNAL("programStateSignal"),self.colorProgramState)
+      self.programStateSignal.connect(self.colorProgramState)
       self.program_state_pv.add_callback(self.programStateCB)  
       self.pause_button_state_pv = PV(daq_utils.beamlineComm + "pause_button_state") 
-      self.connect(self, QtCore.SIGNAL("pauseButtonStateSignal"),self.changePauseButtonState)
+      self.pauseButtonStateSignal.connect(self.changePauseButtonState)
       self.pause_button_state_pv.add_callback(self.pauseButtonStateCB)  
 
-      self.connect(self, QtCore.SIGNAL("energyChangeSignal"),self.processEnergyChange)
+      self.energyChangeSignal.connect(self.processEnergyChange)
       self.energy_pv.add_callback(self.processEnergyChangeCB,motID="x")
 
       self.sampx_pv = PV(daq_utils.motor_dict["sampleX"]+".RBV")      
-      self.connect(self, QtCore.SIGNAL("sampMoveSignal"),self.processSampMove)
+      self.sampMoveSignal.connect(self.processSampMove)
       self.sampx_pv.add_callback(self.processSampMoveCB,motID="x")
       self.sampy_pv = PV(daq_utils.motor_dict["sampleY"]+".RBV")
       self.sampy_pv.add_callback(self.processSampMoveCB,motID="y")
@@ -5084,22 +5113,22 @@ class controlMain(QtWidgets.QMainWindow):
       self.photonShutterOpen_pv = PV(daq_utils.pvLookupDict["photonShutterOpen"])
       self.photonShutterClose_pv = PV(daq_utils.pvLookupDict["photonShutterClose"])      
       self.fastShutterRBV_pv = PV(daq_utils.motor_dict["fastShutter"] + ".RBV")
-      self.connect(self, QtCore.SIGNAL("fastShutterSignal"),self.processFastShutter)      
+      self.fastShutterSignal.connect(self.processFastShutter)
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
-      self.connect(self, QtCore.SIGNAL("gripTempSignal"),self.processGripTemp)      
+      self.gripTempSignal.connect(self.processGripTemp)
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
-      self.connect(self, QtCore.SIGNAL("cryostreamTempSignal"), self.processCryostreamTemp)
+      self.cryostreamTempSignal.connect(self.processCryostreamTemp)
       self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
-      self.connect(self, QtCore.SIGNAL("ringCurrentSignal"),self.processRingCurrent)      
+      self.ringCurrentSignal.connect(self.processRingCurrent)      
       self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)
-      self.connect(self, QtCore.SIGNAL("beamAvailableSignal"),self.processBeamAvailable)      
+      self.beamAvailableSignal.connect(self.processBeamAvailable)      
       self.beamAvailable_pv.add_callback(self.beamAvailableChangedCB)
-      self.connect(self, QtCore.SIGNAL("sampleExposedSignal"),self.processSampleExposed)      
+      self.sampleExposedSignal.connect(self.processSampleExposed)      
       self.sampleExposed_pv.add_callback(self.sampleExposedChangedCB)
-      self.connect(self, QtCore.SIGNAL("highMagCursorChangeSignal"),self.processHighMagCursorChange)
+      self.highMagCursorChangeSignal.connect(self.processHighMagCursorChange)
       self.highMagCursorX_pv.add_callback(self.processHighMagCursorChangeCB,ID="x")
       self.highMagCursorY_pv.add_callback(self.processHighMagCursorChangeCB,ID="y")      
-      self.connect(self, QtCore.SIGNAL("lowMagCursorChangeSignal"),self.processLowMagCursorChange)
+      self.lowMagCursorChangeSignal.connect(self.processLowMagCursorChange)
       self.lowMagCursorX_pv.add_callback(self.processLowMagCursorChangeCB,ID="x")
       self.lowMagCursorY_pv.add_callback(self.processLowMagCursorChangeCB,ID="y")      
         

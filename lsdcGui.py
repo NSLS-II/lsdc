@@ -2157,9 +2157,13 @@ class controlMain(QtWidgets.QMainWindow):
         self.view = QtWidgets.QGraphicsView(self.scene)
         self.viewHutchCorner = QtWidgets.QGraphicsView(self.sceneHutchCorner)
         self.viewHutchTop = QtWidgets.QGraphicsView(self.sceneHutchTop)                
-        self.pixmap_item = QtWidgets.QGraphicsPixmapItem(None, self.scene)
-        self.pixmap_item_HutchCorner = QtWidgets.QGraphicsPixmapItem(None, self.sceneHutchCorner)
-        self.pixmap_item_HutchTop = QtWidgets.QGraphicsPixmapItem(None, self.sceneHutchTop)                      
+        self.pixmap_item = QtWidgets.QGraphicsPixmapItem(None)
+        self.scene.addItem(self.pixmap_item)
+        self.pixmap_item_HutchCorner = QtWidgets.QGraphicsPixmapItem(None)
+        self.sceneHutchCorner.addItem(self.pixmap_item_HutchCorner)
+        self.pixmap_item_HutchTop = QtWidgets.QGraphicsPixmapItem(None)
+        self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
+
         self.pixmap_item.mousePressEvent = self.pixelSelect
         centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)                
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)

@@ -319,8 +319,6 @@ class QPeriodicTable(QWidget):
             QWidget.__init__(self,parent)
             self.setWindowTitle(name)
             self.gridLayout= QGridLayout(self)
-            self.gridLayout.setMargin(0)
-            #, 6, 10, 0, 0, "PTLayout")
             self.gridLayout.addItem(QSpacerItem(0, 5), 7, 0)
 
         for idx in range(10):

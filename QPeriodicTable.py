@@ -25,7 +25,8 @@
 # is a problem for you.
 #############################################################################*/
 import sys
-from PyMca.PyMcaQt import *
+from qtpy.QtWidgets import *
+from PyMca5.PyMcaGui.PyMcaQt import *
 from element_info import element_info #skinner, from nsls-I
 import logging
 logger = logging.getLogger(__name__)
@@ -36,6 +37,8 @@ if QTVERSION < '4.0.0':
     QComboTableItem = qttable.QComboTableItem
     MyQListView = QListView
 else:
+    if QTVERSION > '5.0.0':
+        QStringList = list
     qttable = QTableWidget
     QComboTableItem = QComboBox
     MyQListView = QTreeWidget
@@ -160,6 +163,11 @@ Elements = [
 ElementList= [ elt[0] for elt in Elements ]
 
 class ElementButton(QPushButton):
+    elementEnterSignal = pyqtSignal(str)
+    elementLeaveSignal = pyqtSignal(str)
+    elementClickedSignal = pyqtSignal(str)
+    selectionChanged = pyqtSignal(str)
+
     def __init__(self, parent, symbol, Z, name):
         if QTVERSION < '4.0.0':
             QPushButton.__init__(self, parent, symbol)
@@ -187,7 +195,7 @@ class ElementButton(QPushButton):
         else:
             self.brush= QBrush()
 
-        self.connect(self, SIGNAL("clicked()"), self.clickedSlot)
+        self.clicked.connect(self.clickedSlot)
 
     if QTVERSION > '4.3.0':
         def sizeHint(self):
@@ -260,6 +268,8 @@ class ElementButton(QPushButton):
     def enterEvent(self, e):
         if QTVERSION < '4.0.0':
             self.emit(PYSIGNAL("elementEnter"), (self.symbol,self.Z,self.name))
+        elif QTVERSION > '5.0.0':
+            self.elementEnterSignal.emit(self.symbol, self.Z, self.name)
         else:
             self.emit(SIGNAL("elementEnter"),
                               self.symbol, self.Z,
@@ -268,12 +278,16 @@ class ElementButton(QPushButton):
     def leaveEvent(self, e):
         if QTVERSION < '4.0.0':
             self.emit(PYSIGNAL("elementLeave"), (self.symbol,))
+        elif QTVERSION > '5.0.0':
+            self.elementLeaveSignal.emit(self.symbol)
         else:
             self.emit(SIGNAL("elementLeave"), self.symbol)
 
     def clickedSlot(self):
         if QTVERSION < '4.0.0':
             self.emit(PYSIGNAL("elementClicked"), (self.symbol,))
+        elif QTVERSION > '5.0.0':
+            self.elementClickedSignal.emit(self.symbol)
         else:
             self.emit(SIGNAL("elementClicked"), self.symbol)
 
@@ -290,6 +304,9 @@ class QPeriodicTable(QWidget):
         Signal (PYSIGNAL):
             elementClicked(symbol):
     """
+
+    elementClickedSignal = pyqtSignal(str)
+
     def __init__(self, parent=None, name="PeriodicTable", fl=0,butSize=0):
         self.butSize = butSize
         if QTVERSION < '4.0.0': 
@@ -341,6 +358,10 @@ class QPeriodicTable(QWidget):
             QObject.connect(b, PYSIGNAL("elementEnter"), self.elementEnter)
             QObject.connect(b, PYSIGNAL("elementLeave"), self.elementLeave)
             QObject.connect(b, PYSIGNAL("elementClicked"), self.elementClicked)
+        elif QTVERSION > '5.0.0':
+            b.elementEnterSignal.connect(self.elementEnter)
+            b.elementLeaveSignal.connect(self.elementLeave)
+            b.elementClickedSignal.connect(self.elementClicked)
         else:
             QObject.connect(b, SIGNAL(("elementEnter")), self.elementEnter)
             QObject.connect(b, SIGNAL("elementLeave"), self.elementLeave)
@@ -360,6 +381,8 @@ class QPeriodicTable(QWidget):
         self.eltCurrent= self.eltButton[symbol]
         if QTVERSION < '4.0.0':
             self.emit(PYSIGNAL("elementClicked"), (symbol,))
+        elif QTVERSION > '5.0.0':
+            self.elementClickedSignal.emit(symbol)
         else:
             self.emit(SIGNAL("elementClicked"), symbol)
         logger.info(self.eltCurrent.symbol)
@@ -460,11 +483,13 @@ class QPeriodicCombo(QComboBox):
             else: self.insertItem(i,txt)
             i += 1
             
-        self.connect(self, SIGNAL("activated(int)"), self.__selectionChanged)
+        self.activated(int).connect(self.__selectionChanged)
 
     def __selectionChanged(self, idx):
         if QTVERSION < '4.0.0':
             self.emit(PYSIGNAL("selectionChanged"), (Elements[idx][0],))
+        elif QTVERSION > '5.0.0':
+            self.selectionChanged.emit(Elements[idx][0])
         else:
             self.emit(SIGNAL("selectionChanged"), Elements[idx][0])
 
@@ -494,6 +519,9 @@ class QPeriodicList(MyQListView):
                 signal sent when the selection changed
                 send list of symbol selected
     """
+
+    itemSelectionChanged = pyqtSignal()
+
     def __init__(self, master=None, name=None, fl=0, detailed=1, single=0):
         if QTVERSION < '4.0.0':
             MyQListView.__init__(self, master, name, fl)
@@ -528,7 +556,10 @@ class QPeriodicList(MyQListView):
             self.setHeaderLabels(strlist)
             self.header().setStretchLastSection(False)
             self.setRootIsDecorated(0)
-            self.connect(self, SIGNAL("itemSelectionChanged()"), self.__selectionChanged)
+            if QTVERSION > '5.0.0':
+                self.itemSelectionChanged.connect(self.__selectionChanged)
+            else:
+                self.connect(self, SIGNAL("itemSelectionChanged()"), self.__selectionChanged)
             logger.info("what to do? ")
             """
             self.header().setClickEnabled(0, -1)
@@ -571,6 +602,8 @@ class QPeriodicList(MyQListView):
     def __selectionChanged(self):
         if QTVERSION < "4.0.0":
             self.emit(PYSIGNAL("selectionChanged"), (self.getSelection(),))
+        elif QTVERSION > "5.0.0":
+            self.selectionChanged.emit(self.getSelection())
         else:
             self.emit(SIGNAL("selectionChanged"), self.getSelection())
     
@@ -596,7 +629,10 @@ def testwidget():
         logger.info("New selection:", list)
 
     a = QApplication(sys.argv)
-    QObject.connect(a,SIGNAL("lastWindowClosed()"),a, SLOT("quit()"))
+    if QTVERSION > '5.0.0':
+        a.lastWindowClosed.connect(a.quit)
+    else:
+        QObject.connect(a,SIGNAL("lastWindowClosed()"),a, SLOT("quit()"))
 
     w = QTabWidget()
 
@@ -659,6 +695,10 @@ def testwidget():
         QObject.connect(f, PYSIGNAL("elementClicked"), f.elementToggle)
         QObject.connect(l, PYSIGNAL("selectionChanged"), change)
         QObject.connect(c, PYSIGNAL("selectionChanged"), change)
+    elif QTVERSION > '5.0.0':
+        f.elementClickedSignal.connect(f.elementToggle)
+        l.selectionChanged.connect(change)
+        c.selectionChanged.connect(change)
     else:
         QObject.connect(f, SIGNAL("elementClicked"), f.elementToggle)
         QObject.connect(l, SIGNAL("selectionChanged"), change)

@@ -2658,7 +2658,6 @@ def zebraDaqPrep():
   beamline_support.setPvValFromDescriptor("zebraM1SetPosProc",1)
   beamline_support.setPvValFromDescriptor("zebraM2SetPosProc",1)
   beamline_support.setPvValFromDescriptor("zebraM3SetPosProc",1)
-  beamline_support.setPvValFromDescriptor("zebraM4SetPosProc",1)
   beamline_support.setPvValFromDescriptor("zebraArmTrigSource",1)
 
 

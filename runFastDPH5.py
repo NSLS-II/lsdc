@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 try:
   import ispybLib
-except:
-  logger.error("ISPYB import error")
+except Exception as e:
+  logger.error("runFastDPH5 ISPYB import error: %s" % e)
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]

@@ -1504,7 +1504,7 @@ class ControlMain(QtWidgets.QMainWindow):
     detMessageSignal = QtCore.Signal(str)
     sampleFluxSignal = QtCore.Signal(str)
     zebraPulseStateSignal = QtCore.Signal(int)
-    stillModeStateSignal = QtCore.Signal(str)
+    stillModeStateSignal = QtCore.Signal(int)
     zebraDownloadStateSignal = QtCore.Signal(int)
     zebraSentTriggerStateSignal = QtCore.Signal(int)
     zebraReturnedTriggerStateSignal = QtCore.Signal(int)

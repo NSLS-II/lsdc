@@ -2746,10 +2746,10 @@ class ControlMain(QtWidgets.QMainWindow):
         return
       if (state == QtCore.Qt.Checked):
         self.controlMaster_pv.put(processID)
-        if (float(self.osc_range_ledit.text()) == 0):
+        if len(self.osc_range_ledit.text()) == 0 or abs(float(self.osc_range_ledit.text())) > 0:
+          self.standardMode_pv.put(1)
+        elif(float(self.osc_range_ledit.text()) == 0):
           self.stillMode_pv.put(1)
-        else:
-          self.standardMode_pv.put(1)                      
       else:
         self.userScreenDialog.hide()
         if (self.staffScreenDialog != None):

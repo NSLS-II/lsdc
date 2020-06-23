@@ -4023,16 +4023,16 @@ class ControlMain(QtWidgets.QMainWindow):
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchCorner.setPixmap(pixmap_orig)        
-      except:
-        pass
+      except Exception as e:
+        logger.error('Exception during hutch corner cam handling: %s' % e)
       try:
         file = BytesIO(urllib.request.urlopen(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL")).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchTop.setPixmap(pixmap_orig)
-      except:
-        pass
+      except Exception as e:
+        logger.error('Exception during hutch top cam handling: %s' % e)
       
 
     def timerSampleRefresh(self):

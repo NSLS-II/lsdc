@@ -7,7 +7,8 @@ import os
 import string
 import math
 import urllib
-from io import StringIO
+import urllib.request
+from io import BytesIO
 from epics import PV
 from qtpy import QtWidgets
 from qtpy import QtCore
@@ -4015,7 +4016,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def timerHutchRefresh(self):
       try:
-        file = StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL"))).read())
+        # instead of the previous StringIO, use BytesIO:
+        # https://stackoverflow.com/questions/41340296/how-can-pillow-open-uploaded-image-file-from-stringio-directly
+        file = BytesIO(urllib.request.urlopen(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL")).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
@@ -4023,7 +4026,7 @@ class ControlMain(QtWidgets.QMainWindow):
       except:
         pass
       try:
-        file = StringIO(urllib.urlopen(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL"))).read())
+        file = BytesIO(urllib.request.urlopen(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL")).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)

@@ -2,8 +2,8 @@
 
 * https://github.com/NSLS-II/RobotControlLib.git 
 * https://github.com/NSLS-II/lsdc_bnlpx_config
-* https://github.com/jskinner53/epicsPython
-* Dectris Albula - get the download from www.dectris.com - registration required
+* https://github.com/JunAishima/epicsPython
+* Dectris Albula - get the download from www.dectris.com - registration required - then converted to python 3 using 2to3
 
 == Procedure to set things up ==
 

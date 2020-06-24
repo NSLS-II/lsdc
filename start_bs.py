@@ -22,10 +22,6 @@ gs.RE.subscribe('stop', post_run(verify_files_saved))
 import matplotlib.pyplot as plt
 plt.ion()
 
-# Make plots update live while scans run.
-from bluesky.utils import install_qt_kicker
-install_qt_kicker()
-
 # import nslsii
 
 # Register bluesky IPython magics.

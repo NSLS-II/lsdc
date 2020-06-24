@@ -5224,7 +5224,7 @@ def main():
     daq_utils.init_environment()
     daq_utils.readPVDesc()    
     app = QtWidgets.QApplication(sys.argv)
-    ex = controlMain()
+    ex = ControlMain()
     sys.exit(app.exec_())
 
 #skinner - I think Matt did a lot of what's below and I have no idea what it is. 

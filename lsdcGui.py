@@ -16,10 +16,10 @@ from qtpy.QtCore import *
 from qtpy.QtGui import * 
 QString = str
 import db_lib
-from QtEpicsMotorEntry import *
-from QtEpicsMotorLabel import *
-from QtEpicsPVLabel import *
-from QtEpicsPVEntry import *
+from qt_epics.QtEpicsMotorEntry import *
+from qt_epics.QtEpicsMotorLabel import *
+from qt_epics.QtEpicsPVLabel import *
+from qt_epics.QtEpicsPVEntry import *
 import cv2
 from cv2 import *
 from PIL import Image

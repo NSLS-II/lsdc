@@ -163,7 +163,7 @@ Elements = [
 ElementList= [ elt[0] for elt in Elements ]
 
 class ElementButton(QPushButton):
-    elementEnterSignal = pyqtSignal(str)
+    elementEnterSignal = pyqtSignal(str, int, str)
     elementLeaveSignal = pyqtSignal(str)
     elementClickedSignal = pyqtSignal(str)
     selectionChanged = pyqtSignal(str)

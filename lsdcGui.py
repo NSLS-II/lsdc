@@ -1241,7 +1241,7 @@ class DewarTree(QtWidgets.QTreeView):
 
 
     def queueSelectedSample(self,item):
-        reqID = str(item.data(32).toString())
+        reqID = str(item.data(32))
         checkedSampleRequest = db_lib.getRequestByID(reqID) #line not needed???
         if (item.checkState() == Qt.Checked):
           db_lib.updatePriority(reqID,5000)
@@ -1257,8 +1257,8 @@ class DewarTree(QtWidgets.QTreeView):
       indexes = selection.indexes()
       for i in range(len(indexes)):
         item = self.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32).toString())
-        itemDataType = str(item.data(33).toString())
+        itemData = str(item.data(32))
+        itemDataType = str(item.data(33))
         if (itemDataType == "request"): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,5000)
@@ -1271,8 +1271,8 @@ class DewarTree(QtWidgets.QTreeView):
       indexes = selection.indexes()
       for i in range(len(indexes)):
         item = self.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32).toString())
-        itemDataType = str(item.data(33).toString())
+        itemData = str(item.data(32))
+        itemDataType = str(item.data(33))
         if (itemDataType == "request"): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,0)
@@ -1306,8 +1306,8 @@ class DewarTree(QtWidgets.QTreeView):
       for i in range(len(indexes)):
         self.parent.progressDialog.setValue(int((i+1)*progressInc))
         item = self.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32).toString())
-        itemDataType = str(item.data(33).toString())
+        itemData = str(item.data(32))
+        itemDataType = str(item.data(33))
         if (itemDataType == "request"): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.selectedSampleID = selectedSampleRequest["sample"]
@@ -1410,12 +1410,12 @@ class RasterCell(QtWidgets.QGraphicsRectItem):
       if (self.topParent.vidActionRasterExploreRadio.isChecked()):
         if (self.data(0) != None):
           spotcount = self.data(0).toInt()[0]
-          filename = self.data(1).toString()
+          filename = self.data(1)
           d_min = self.data(2).toDouble()[0]
           intensity = self.data(3).toInt()[0]
           if (self.topParent.albulaDispCheckBox.isChecked()):
-            if (str(self.data(1).toString()) != "empty"):
-              albulaUtils.albulaDispFile(str(self.data(1).toString()))
+            if (str(self.data(1)) != "empty"):
+              albulaUtils.albulaDispFile(str(self.data(1)))
           if not (self.topParent.RasterExploreDialog.isVisible()):
             self.topParent.RasterExploreDialog.show()
           self.topParent.RasterExploreDialog.setSpotCount(spotcount)
@@ -4131,8 +4131,8 @@ class ControlMain(QtWidgets.QMainWindow):
       singleRequest = 1
       for i in range(len(indexes)):
         item = self.dewarTree.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32).toString())
-        itemDataType = str(item.data(33).toString())
+        itemData = str(item.data(32))
+        itemDataType = str(item.data(33))
         if (itemDataType == "request"): 
           self.selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.editSampleRequestCB(singleRequest)
@@ -4186,8 +4186,8 @@ class ControlMain(QtWidgets.QMainWindow):
       for i in range(len(indexes)):
         self.progressDialog.setValue(int((i+1)*progressInc))
         item = self.dewarTree.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32).toString())
-        itemDataType = str(item.data(33).toString())        
+        itemData = str(item.data(32))
+        itemDataType = str(item.data(33))        
         if (itemDataType == "sample"): 
           self.selectedSampleID = itemData
           if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):
@@ -4723,12 +4723,12 @@ class ControlMain(QtWidgets.QMainWindow):
       item = self.dewarTree.model.itemFromIndex(indexes[i])
       parent = indexes[i].parent()
       try:
-        puck_name = parent.data().toString()
+        puck_name = parent.data()
       except AttributeError as e:
-        logger.error(e)
+        logger.error('attribute error in row_clicked: %s', e)
         return
-      itemData = str(item.data(32).toString())
-      itemDataType = str(item.data(33).toString())
+      itemData = str(item.data(32))
+      itemDataType = str(item.data(33))
       self.SelectedItemData = itemData # an attempt to know what is selected and preserve it when refreshing the tree
       if (itemData == ""):
         logger.info("nothing there")

@@ -582,7 +582,7 @@ def getCoordsfromSampleID(beamline,sample_id):
 
     # find container in the primary_dewar_item_list (pdil) which has the sample
 
-    filters = {'$and': [{'uid': {'$in':pdil_set}}, {'content': {'$in':[sample_id]}}]}
+    filters = {'$and': [{'uid': {'$in':list(pdil_set)}}, {'content': {'$in':[sample_id]}}]}
     c = getContainers(filters=filters)
 
     # get the index of the found container in the primary dewar

@@ -4608,7 +4608,11 @@ class ControlMain(QtWidgets.QMainWindow):
         return
       logger.info("mount selected sample")
       self.eraseCB()      
-      self.selectedSampleID = self.selectedSampleRequest["sample"]
+      try:
+        self.selectedSampleID = self.selectedSampleRequest["sample"]
+      except KeyError as e:
+        logger.error('unable to get sample')
+        return
       self.send_to_server("mountSample(\""+str(self.selectedSampleID)+"\")")
       self.zoom1Radio.setChecked(True)      
       self.zoomLevelToggledCB("Zoom1")

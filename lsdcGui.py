@@ -3358,7 +3358,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerHutch.start(500)            
       if (fname != ""):
         logger.info(fname)
-        comm_s = "importSpreadsheet(\""+str(fname)+"\")"
+        comm_s = "importSpreadsheet(\""+str(fname[0])+"\")"
         logger.info(comm_s)
         self.send_to_server(comm_s)
         

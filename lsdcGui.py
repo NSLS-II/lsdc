@@ -1096,7 +1096,7 @@ class DewarTree(QtWidgets.QTreeView):
                 st = time.time()
                 sampleRequestList = db_lib.getRequestsBySampleID(puckContents[j])
                 for k in range(len(sampleRequestList)):
-                  if not (sampleRequestList[k]["request_obj"].has_key("protocol")):
+                  if not ("protocol" in sampleRequestList[k]["request_obj"]):
                     continue
                   col_item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QString(sampleRequestList[k]["request_obj"]["file_prefix"]+"_"+sampleRequestList[k]["request_obj"]["protocol"]))
                   col_item.setData(sampleRequestList[k]["uid"],32)
@@ -4647,13 +4647,13 @@ class ControlMain(QtWidgets.QMainWindow):
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
       self.beamHeight_ledit.setText(str(reqObj["slit_height"]))
       self.transmission_ledit.setText(str(reqObj["attenuation"]))
-      if (reqObj.has_key("fastDP")):
+      if ("fastDP" in reqObj):
         self.fastDPCheckBox.setChecked((reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"]))
-      if (reqObj.has_key("fastEP")):
+      if ("fastEP" in reqObj):
         self.fastEPCheckBox.setChecked(reqObj["fastEP"])
-      if (reqObj.has_key("dimple")):
+      if ("dimple" in reqObj):
         self.dimpleCheckBox.setChecked(reqObj["dimple"])        
-      if (reqObj.has_key("xia2")):
+      if ("xia2" in reqObj):
         self.xia2CheckBox.setChecked(reqObj["xia2"])
       reqObj["energy"] = float(self.energy_ledit.text())
       self.energy_ledit.setText(str(reqObj["energy"]))                        
@@ -4670,7 +4670,7 @@ class ControlMain(QtWidgets.QMainWindow):
       fnumstart=reqObj["file_number_start"]
 
       if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
-        if (selectedSampleRequest.has_key("priority")):
+        if ("priority" in selectedSampleRequest):
           if (selectedSampleRequest["priority"] < 0 and self.albulaDispCheckBox.isChecked()):
             firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
             albulaUtils.albulaDispFile(firstFilename)            

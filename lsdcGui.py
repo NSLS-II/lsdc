@@ -4722,7 +4722,11 @@ class ControlMain(QtWidgets.QMainWindow):
       i = 0
       item = self.dewarTree.model.itemFromIndex(indexes[i])
       parent = indexes[i].parent()
-      puck_name = parent.data().toString()
+      try:
+        puck_name = parent.data().toString()
+      except AttributeError as e:
+        logger.error(e)
+        return
       itemData = str(item.data(32).toString())
       itemDataType = str(item.data(33).toString())
       self.SelectedItemData = itemData # an attempt to know what is selected and preserve it when refreshing the tree

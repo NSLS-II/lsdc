@@ -1,7 +1,7 @@
 try:
   import dectris.albula
-except ImportError:
-  pass
+except ImportError as e:
+  print('albula library import error: %s' %e)
 global albulaFrame, albulaSubFrame
 albulaFrame = None
 albulaSubframeFrame = None

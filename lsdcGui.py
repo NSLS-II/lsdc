@@ -30,7 +30,7 @@ import functools
 from QPeriodicTable import *
 from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow
 from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
-from PyMca5.PyMcaPhysics.xrf.Elements import ElementsInfo
+from PyMca5.PyMcaPhysics.xrf import Elements
 from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
@@ -4237,7 +4237,7 @@ class ControlMain(QtWidgets.QMainWindow):
         if (self.periodicTableTool.eltCurrent != None):
           symbol = self.periodicTableTool.eltCurrent.symbol
           targetEdge = element_info[symbol][2]
-          targetEnergy = ElementsInfo.Elements.Element[symbol]["binding"][targetEdge]
+          targetEnergy = Elements.Element[symbol]["binding"][targetEdge]
           colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
           sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
           runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
@@ -4268,7 +4268,7 @@ class ControlMain(QtWidgets.QMainWindow):
           else:
             mcaRoiLo = self.XRFInfoDict[symbol]-25
             mcaRoiHi = self.XRFInfoDict[symbol]+25
-          targetEnergy = ElementsInfo.Elements.Element[symbol]["binding"][targetEdge]
+          targetEnergy = Elements.Element[symbol]["binding"][targetEdge]
           colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
           sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
           runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])

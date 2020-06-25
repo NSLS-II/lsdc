@@ -1401,8 +1401,8 @@ class DataLocInfo(QtWidgets.QGroupBox):
 
 class RasterCell(QtWidgets.QGraphicsRectItem):
 
-    def __init__(self,x,y,w,h,topParent,scene):
-      super(RasterCell,self).__init__(x,y,w,h,None,scene)
+    def __init__(self,x,y,w,h,topParent):
+      super(RasterCell,self).__init__(x,y,w,h,None)
       self.topParent = topParent
       self.setAcceptHoverEvents(True)
 
@@ -1447,7 +1447,6 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
     def __init__(self,parent = None):
         super(RasterGroup, self).__init__()
         self.parent=parent
-        self.setHandlesChildEvents(False)
 
 
     def mousePressEvent(self, e):
@@ -4001,7 +4000,9 @@ class ControlMain(QtWidgets.QMainWindow):
           if (rowCellCount == 0): #start of a new row
             rowStartX = newCellX
             rowStartY = newCellY
-          newCell = RasterCell(newCellX,newCellY,stepsizeX, stepsizeY, self,self.scene)
+          newCellX = int(newCellX)
+          newCellY = int(newCellY)
+          newCell = RasterCell(newCellX,newCellY,stepsizeX, stepsizeY, self)
           newRasterCellList.append(newCell)
           newCell.setPen(pen)
           rowCellCount = rowCellCount+1 #really just for test of new row

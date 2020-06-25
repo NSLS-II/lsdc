@@ -1402,7 +1402,7 @@ class DataLocInfo(QtWidgets.QGroupBox):
 class RasterCell(QtWidgets.QGraphicsRectItem):
 
     def __init__(self,x,y,w,h,topParent,scene):
-      super(rasterCell,self).__init__(x,y,w,h,None,scene)
+      super(RasterCell,self).__init__(x,y,w,h,None,scene)
       self.topParent = topParent
       self.setAcceptHoverEvents(True)
 
@@ -1427,7 +1427,7 @@ class RasterCell(QtWidgets.QGraphicsRectItem):
           self.setPen(self.topParent.yellowPen)
                                               
       else:
-        super(rasterCell, self).mousePressEvent(e)
+        super(RasterCell, self).mousePressEvent(e)
 
 
     def hoverEnterEvent(self, e):

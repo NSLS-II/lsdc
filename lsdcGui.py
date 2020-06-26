@@ -2945,7 +2945,11 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         logger.info("xrecrasterflag = ")
         logger.info(xrecRasterFlag)
-        rasterReq = db_lib.getRequestByID(xrecRasterFlag)
+        try:
+          rasterReq = db_lib.getRequestByID(xrecRasterFlag)
+        except IndexError:
+          logger.error('bad xrecRasterFlag: %s' % xrecRasterFlag)
+          return
         rasterDef = rasterReq["request_obj"]["rasterDef"]
         if (rasterDef["status"] == 1):
           self.drawPolyRaster(rasterReq)
@@ -4802,14 +4806,17 @@ class ControlMain(QtWidgets.QMainWindow):
         sample = db_lib.getSampleByID(self.selectedSampleID)
         owner = sample["owner"]
         if (reqObj["protocol"] == "eScan"):
-          if (reqObj["runChooch"]):
-            resultList = db_lib.getResultsforRequest(reqID)
-            if (len(resultList) > 0):
-              lastResult = resultList[-1]
-              if (db_lib.getResult(lastResult['uid'])["result_type"] == "choochResult"):                  
-                resultID = lastResult['uid']
-                logger.info("plotting chooch")
-                self.processChoochResult(resultID)
+          try:
+            if (reqObj["runChooch"]):
+              resultList = db_lib.getResultsforRequest(reqID)
+              if (len(resultList) > 0):
+                lastResult = resultList[-1]
+                if (db_lib.getResult(lastResult['uid'])["result_type"] == "choochResult"):                  
+                  resultID = lastResult['uid']
+                  logger.info("plotting chooch")
+                  self.processChoochResult(resultID)
+          except KeyError:
+            logger.error('KeyError - ignoring chooch-related items, perhaps from a bad energy scan')
         self.refreshCollectionParams(self.selectedSampleRequest)
 
 

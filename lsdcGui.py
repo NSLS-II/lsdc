@@ -1501,7 +1501,7 @@ class ControlMain(QtWidgets.QMainWindow):
     govRobotDaReachSignal = QtCore.Signal(int)
     govRobotBlReachSignal = QtCore.Signal(int)
     detMessageSignal = QtCore.Signal(str)
-    sampleFluxSignal = QtCore.Signal(str)
+    sampleFluxSignal = QtCore.Signal(float)
     zebraPulseStateSignal = QtCore.Signal(int)
     stillModeStateSignal = QtCore.Signal(int)
     zebraDownloadStateSignal = QtCore.Signal(int)

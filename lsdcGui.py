@@ -75,9 +75,9 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
-class SnapCommentDialog(QDialog):
+class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
-        QDialog.__init__(self,parent)
+        QtWidgets.QDialog.__init__(self,parent)
         self.setWindowTitle("Snapshot Comment")
         self.setModal(False)
         vBoxColParams1 = QtWidgets.QVBoxLayout()
@@ -114,7 +114,7 @@ class SnapCommentDialog(QDialog):
         result = dialog.exec_()
         return (dialog.comment, dialog.useOlog,result == QDialog.Accepted)
 
-class RasterExploreDialog(QDialog):
+class RasterExploreDialog(QtWidgets.QDialog):
     def __init__(self):
         QDialog.__init__(self)
         self.setModal(False)
@@ -679,9 +679,9 @@ class UserScreenDialog(QFrame):
       self.done(QDialog.Accepted)        
       
 
-class ScreenDefaultsDialog(QDialog):
+class ScreenDefaultsDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
-        QDialog.__init__(self,parent)
+        QtWidgets.QDialog.__init__(self,parent)
         self.parent=parent        
         self.setModal(False)
         self.setWindowTitle("Raster Params")        

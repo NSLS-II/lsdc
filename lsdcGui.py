@@ -1381,8 +1381,16 @@ class DataLocInfo(QtWidgets.QGroupBox):
 
     def prefixTextChanged(self,text):
       prefix = self.prefix_ledit.text()
-      runNum = db_lib.getSampleRequestCount(self.parent.selectedSampleID)
-      (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,self.parent.selectedSampleID)
+      try:
+        runNum = db_lib.getSampleRequestCount(self.parent.selectedSampleID)
+      except KeyError:
+        logger.error('just setting a value of 1 for now')
+        runNum = 1
+      try:
+        (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,self.parent.selectedSampleID)
+      except IndexError:
+        logger.error('IndexError returning')
+        return
       self.setDataPath_ledit(self.base_path_ledit.text()+"/"+ str(daq_utils.getVisitName()) + "/"+prefix+"/"+str(runNum+1)+"/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/")      
 
     def setFileNumstart_ledit(self,s):

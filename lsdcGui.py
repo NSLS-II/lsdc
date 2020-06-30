@@ -1497,7 +1497,7 @@ class ControlMain(QtWidgets.QMainWindow):
     pauseButtonStateSignal = QtCore.Signal(str)    
 
 
-    xrecRasterSignal = QtCore.Signal(int)
+    xrecRasterSignal = QtCore.Signal(str)
     choochResultSignal = QtCore.Signal(str)
     energyChangeSignal = QtCore.Signal(float)
     mountedPinSignal = QtCore.Signal(int)

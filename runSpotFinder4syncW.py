@@ -1,4 +1,4 @@
-#!/opt/conda_envs/collection-2018-1.0/bin/python
+#!/home/jaishima/conda_envs/lsdcServer_2020-1.0/bin/python
 import time
 import os
 import sys

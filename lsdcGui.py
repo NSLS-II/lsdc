@@ -2933,7 +2933,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.treeChanged_pv.put(1)      
 
     def clearEnScanPlotCB(self):
-      self.EScanGraph.removeCurves()     
+      self.EScanGraph.removeCurves()     # get list of all curves to provide to method?
       self.choochGraph.removeCurves()
 
     def displayXrecRaster(self,xrecRasterFlag):
@@ -3108,15 +3108,15 @@ class ControlMain(QtWidgets.QMainWindow):
       choochResultObj = choochResult["result_obj"]
       graph_x = choochResultObj["choochInXAxis"]
       graph_y = choochResultObj["choochInYAxis"]      
-      self.EScanGraph.setTitle("Chooch PLot")
+      self.EScanGraph.name = "Chooch PLot"
       #self.EScanGraph.newcurve("whatever", graph_x, graph_y)
       self.EScanGraph.replot()
       chooch_graph_x = choochResultObj["choochOutXAxis"]
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]
       chooch_graph_y2 = choochResultObj["choochOutY2Axis"]      
-      self.choochGraph.setTitle("Chooch PLot")
-      self.choochGraph.newcurve("spline", chooch_graph_x, chooch_graph_y1)
-      self.choochGraph.newcurve("fp", chooch_graph_x, chooch_graph_y2)
+      self.choochGraph.name = "Chooch PLot"
+      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y1, legend='spline')
+      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y2, legend='fp')
       self.choochGraph.replot()
       self.choochInfl.setText(str(choochResultObj["infl"]))
       self.choochPeak.setText(str(choochResultObj["peak"]))

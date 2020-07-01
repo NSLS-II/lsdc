@@ -1413,29 +1413,6 @@ class RasterCell(QtWidgets.QGraphicsRectItem):
       super(RasterCell,self).__init__(x,y,w,h,None)
       self.topParent = topParent
 
-    def mousePressEvent(self, e):
-      if (self.topParent.vidActionRasterExploreRadio.isChecked()):
-        if (self.data(0) != None):
-          spotcount = self.data(0).toInt()[0]
-          filename = self.data(1)
-          d_min = self.data(2).toDouble()[0]
-          intensity = self.data(3).toInt()[0]
-          if (self.topParent.albulaDispCheckBox.isChecked()):
-            if (str(self.data(1)) != "empty"):
-              albulaUtils.albulaDispFile(str(self.data(1)))
-          if not (self.topParent.RasterExploreDialog.isVisible()):
-            self.topParent.RasterExploreDialog.show()
-          self.topParent.RasterExploreDialog.setSpotCount(spotcount)
-          self.topParent.RasterExploreDialog.setTotalIntensity(intensity)
-          self.topParent.RasterExploreDialog.setResolution(d_min)
-          groupList = self.group().childItems()
-          for i in range (0,len(groupList)):
-            groupList[i].setPen(self.topParent.redPen)
-          self.setPen(self.topParent.yellowPen)
-                                              
-      else:
-        super(RasterCell, self).mousePressEvent(e)
-
 
 def isInCell(position, item):
     if item.contains(position):
@@ -1446,6 +1423,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
     def __init__(self,parent = None):
         super(RasterGroup, self).__init__()
         self.parent=parent
+        self.setAcceptHoverEvents(True)
 
 
     def mousePressEvent(self, e):
@@ -1457,6 +1435,29 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             logger.info("found selected raster")
             self.parent.SelectedItemData = self.parent.rasterList[i]["uid"]
             self.parent.treeChanged_pv.put(1)
+      if (self.parent.vidActionRasterExploreRadio.isChecked()):
+          for cell in self.childItems():
+              if isInCell(e.scenePos(), cell):
+                  if (cell.data(0) != None):
+                      spotcount = cell.data(0)
+                      filename = cell.data(1)
+                      d_min = cell.data(2)
+                      intensity = cell.data(3)
+                      if (self.parent.albulaDispCheckBox.isChecked()):
+                          if (str(self.data(1)) != "empty"):
+                              albulaUtils.albulaDispFile(str(self.data(1)))
+                      if not (self.parent.rasterExploreDialog.isVisible()):
+                          self.parent.rasterExploreDialog.show()
+                      self.parent.rasterExploreDialog.setSpotCount(spotcount)
+                      self.parent.rasterExploreDialog.setTotalIntensity(intensity)
+                      self.parent.rasterExploreDialog.setResolution(d_min)
+                      groupList = self.childItems()
+                      for i in range (0,len(groupList)):
+                          groupList[i].setPen(self.parent.redPen)
+
+      else:
+        super(RasterGroup, self).mousePressEvent(e)
+
 
 
     def mouseMoveEvent(self, e):
@@ -1477,6 +1478,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
           pass
 
     def hoverEnterEvent(self, e):
+        super(RasterGroup, self).hoverEnterEvent(e)
         for cell in self.childItems():
             if isInCell(e.scenePos(), cell):
                 if (cell.data(0) != None):

@@ -1412,7 +1412,6 @@ class RasterCell(QtWidgets.QGraphicsRectItem):
     def __init__(self,x,y,w,h,topParent):
       super(RasterCell,self).__init__(x,y,w,h,None)
       self.topParent = topParent
-      self.setAcceptHoverEvents(True)
 
     def mousePressEvent(self, e):
       if (self.topParent.vidActionRasterExploreRadio.isChecked()):
@@ -1438,18 +1437,10 @@ class RasterCell(QtWidgets.QGraphicsRectItem):
         super(RasterCell, self).mousePressEvent(e)
 
 
-    def hoverEnterEvent(self, e):
-      if (self.data(0) != None):
-        spotcount = self.data(0).toInt()[0]
-        d_min = self.data(2).toDouble()[0]
-        intensity = self.data(3).toInt()[0]
-        if not (self.topParent.RasterExploreDialog.isVisible()):
-          self.topParent.RasterExploreDialog.show()
-        self.topParent.RasterExploreDialog.setSpotCount(spotcount)
-        self.topParent.RasterExploreDialog.setTotalIntensity(intensity)
-        self.topParent.RasterExploreDialog.setResolution(d_min)
-
-
+def isInCell(position, item):
+    if item.contains(position):
+        return True
+    return False
 
 class RasterGroup(QtWidgets.QGraphicsItemGroup):
     def __init__(self,parent = None):
@@ -1485,6 +1476,18 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         if e.button() == QtCore.Qt.RightButton:
           pass
 
+    def hoverEnterEvent(self, e):
+        for cell in self.childItems():
+            if isInCell(e.scenePos(), cell):
+                if (cell.data(0) != None):
+                    spotcount = cell.data(0)
+                    d_min = cell.data(2)
+                    intensity = cell.data(3)
+                    if not (self.parent.rasterExploreDialog.isVisible()):
+                        self.parent.rasterExploreDialog.show()
+                    self.parent.rasterExploreDialog.setSpotCount(spotcount)
+                    self.parent.rasterExploreDialog.setTotalIntensity(intensity)
+                    self.parent.rasterExploreDialog.setResolution(d_min)
 
 
 class ControlMain(QtWidgets.QMainWindow):

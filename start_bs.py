@@ -32,9 +32,11 @@ plt.ion()
 import bluesky.plans as bp
 
 from bluesky.run_engine import RunEngine
-from bluesky.utils import get_history
-RE = RunEngine(get_history())
+from bluesky.utils import get_history, PersistentDict
+RE = RunEngine()
 beamline = os.environ["BEAMLINE_ID"]
+configdir = os.environ['CONFIGDIR']
+RE.md = PersistentDict('%s%s_bluesky_config' % (configdir, beamline))
 from databroker import Broker
 db = Broker.named(beamline)
 
@@ -59,8 +61,9 @@ abort = RE.abort
 resume = RE.resume
 stop = RE.stop
 
-RE.md['group'] = beamline
-RE.md['beamline_id'] = beamline.upper()
+# the following lines should not be needed as these should be persisted
+#RE.md['group'] = beamline
+#RE.md['beamline_id'] = beamline.upper()
 
 # loop = asyncio.get_event_loop()
 # loop.set_debug(False)

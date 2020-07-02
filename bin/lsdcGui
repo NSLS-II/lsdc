@@ -1,10 +1,8 @@
 export PROJDIR=/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/
 export CONFIGDIR=${PROJDIR}bnlpx_config/
 export LSDCHOME=${PROJDIR}lsdc
-export PYTHONPATH=".:${CONFIGDIR}:${PROJDIR}epics_python_dist_2k15/GUI-Qt-PyEpics:/usr/local/dectris/albula/3.2/python:/usr/local/crys/edna-mx/mxv1/src:/usr/local/crys/edna-mx/kernel/src:${PROJDIR}lsdc"
-export PATH=/opt/conda_envs/lsdc_dev/bin/:/usr/local/bin:/usr/bin:/bin
-export PYTHONPATH=${PYTHONPATH}:/usr/local/dectris/albula/3.2/python
-source activate lsdc_dev
-source ${CONFIGDIR}daq_env.txt
-$LSDCHOME/lsdcGui.py&
 
+export PATH=/usr/local/bin:/usr/bin:/bin
+export PYTHONPATH=".:${CONFIGDIR}:/usr/local/albula_py3/dectris/albula/3.2/python:/usr/local/crys/edna-mx/mxv1/src:/usr/local/crys/edna-mx/kernel/src:${PROJDIR}lsdc"
+source ${CONFIGDIR}daq_env.txt
+/opt/conda_envs/lsdcGui_2020-1.0/bin/python $LSDCHOME/lsdcGui.py&

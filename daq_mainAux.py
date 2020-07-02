@@ -1,4 +1,4 @@
-#!/opt/conda_envs/collection-2018-1.0/bin/ipython -i
+#!/opt/conda_envs/lsdcServer_2020-1.0/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """
@@ -14,6 +14,8 @@ import logging
 from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
+logging.getLogger('ophyd').setLevel(logging.WARN)
+logging.getLogger('caproto').setLevel(logging.WARN)
 handler1 = handlers.RotatingFileHandler('lsdcServerLog.txt', maxBytes=50000000)
 handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcServerLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')

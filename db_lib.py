@@ -24,12 +24,13 @@ configuration_ref = None
 mds_ref = None
 analysis_ref = None
 
+main_server = 'xf17id1-ca1.cs.nsls2.local'
 
 services_config = {
-    'amostra': {'host': 'xf17id1-ca1.cs.nsls2.local', 'port': '7770'},
-    'conftrak': {'host': 'xf17id1-ca1.cs.nsls2.local', 'port': '7771'},
-    'metadataservice': {'host': 'xf17id1-ca1.cs.nsls2.local', 'port': '7772'},
-    'analysisstore': {'host': 'xf17id1-ca1.cs.nsls2.local', 'port': '7773'}    
+    'amostra': {'host': main_server, 'port': '7770'},
+    'conftrak': {'host': main_server, 'port': '7771'},
+    'metadataservice': {'host': main_server, 'port': '7772'},
+    'analysisstore': {'host': main_server, 'port': '7773'}    
 }
 
 
@@ -581,7 +582,7 @@ def getCoordsfromSampleID(beamline,sample_id):
 
     # find container in the primary_dewar_item_list (pdil) which has the sample
 
-    filters = {'$and': [{'uid': {'$in':pdil_set}}, {'content': {'$in':[sample_id]}}]}
+    filters = {'$and': [{'uid': {'$in':list(pdil_set)}}, {'content': {'$in':[sample_id]}}]}
     c = getContainers(filters=filters)
 
     # get the index of the found container in the primary dewar

@@ -1,4 +1,4 @@
-#!/opt/conda_envs/collection-2018-1.0/bin/python
+#!/opt/conda_envs/lsdcServer_2020-1.0/bin/python
 import os
 import sys
 import db_lib
@@ -8,8 +8,8 @@ logger = logging.getLogger(__name__)
 
 try:
   import ispybLib
-except:
-  logger.error("ISPYB import error")
+except Exception as e:
+  logger.error("runFastDPH5 ISPYB import error: %s" % e)
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]

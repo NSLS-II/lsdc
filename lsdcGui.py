@@ -3920,8 +3920,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.eraseCB()        
         return
           
-      beamWidth = float(self.beamWidth_ledit.text())
-      beamHeight = float(self.beamHeight_ledit.text())
+      try:
+        beamWidth = float(self.beamWidth_ledit.text())
+        beamHeight = float(self.beamHeight_ledit.text())
+      except ValueError:
+        logger.error('bad value for beam width or beam height')
+        self.popupServerMessage('bad value for beam width or beam height')
+        return
       if (self.scannerType == "PI"):
         rasterDef = {"rasterType":"normal","beamWidth":beamWidth,"beamHeight":beamHeight,"status":0,"x":self.sampx_pv.get()+self.sampFineX_pv.get(),"y":self.sampy_pv.get()+self.sampFineY_pv.get(),"z":self.sampz_pv.get()+self.sampFineZ_pv.get(),"omega":self.omega_pv.get(),"stepsize":stepsize,"rowDefs":[]} #just storing step as microns, not using her
       else:
@@ -4363,7 +4368,12 @@ class ControlMain(QtWidgets.QMainWindow):
           message.showMessage("You need to select a centering.")
       else: #autocenter or interactive
         colRequest=self.selectedSampleRequest
-        sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
+        try:
+          sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
+        except KeyError:
+          logger.error('no sample selected')
+          self.popupServerMessage('no sample selected')
+          return
         (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])              
         runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
         reqObj = colRequest["request_obj"]

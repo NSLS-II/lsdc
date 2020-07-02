@@ -1506,7 +1506,7 @@ class ControlMain(QtWidgets.QMainWindow):
     choochResultSignal = QtCore.Signal(str)
     energyChangeSignal = QtCore.Signal(float)
     mountedPinSignal = QtCore.Signal(int)
-    beamSizeSignal = QtCore.Signal(str)
+    beamSizeSignal = QtCore.Signal(float)
     controlMasterSignal = QtCore.Signal(int)
     zebraArmStateSignal = QtCore.Signal(int)
     govRobotSeReachSignal = QtCore.Signal(int)

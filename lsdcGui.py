@@ -73,6 +73,8 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
+HUTCH_TIMER_DELAY = 1000
+
 class snapCommentDialog(QDialog):
     def __init__(self,parent = None):
         QDialog.__init__(self,parent)
@@ -1283,7 +1285,7 @@ class DewarTree(QtGui.QTreeView):
       self.parent.timerSample.stop()      
       reply = QtGui.QMessageBox.question(self, 'Message',quit_msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
       self.parent.timerSample.start(0)            
-      self.parent.timerHutch.start(500)      
+      self.parent.timerHutch.start(HUTCH_TIMER_DELAY)      
       if reply == QtGui.QMessageBox.Yes:
         return(1)
       else:
@@ -2107,7 +2109,7 @@ class controlMain(QtGui.QMainWindow):
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()
         self.timerHutch.timeout.connect(self.timerHutchRefresh)
-        self.timerHutch.start(500)
+        self.timerHutch.start(HUTCH_TIMER_DELAY)
 
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
@@ -3320,7 +3322,7 @@ class controlMain(QtGui.QMainWindow):
       self.timerSample.stop()            
       fname = QtGui.QFileDialog.getOpenFileName(self, 'Choose Spreadsheet File', '',filter="*.xls *.xlsx",options=QtGui.QFileDialog.DontUseNativeDialog)
       self.timerSample.start(0)            
-      self.timerHutch.start(500)            
+      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       if (fname != ""):
         logger.info(fname)
         comm_s = "importSpreadsheet(\""+str(fname)+"\")"
@@ -4442,7 +4444,7 @@ class controlMain(QtGui.QMainWindow):
         self.timerSample.stop()      
         reply = QtGui.QMessageBox.question(self, 'Message',msg, QtGui.QMessageBox.Yes, QtGui.QMessageBox.No)
         self.timerSample.start(0)            
-        self.timerHutch.start(500)      
+        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtGui.QMessageBox.Yes:
           if (daq_utils.beamline == "fmx"):  #TODO replace with directly getting hostname
             os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
@@ -4473,7 +4475,7 @@ class controlMain(QtGui.QMainWindow):
       self.timerSample.stop()                    
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
       self.timerSample.start(0)            
-      self.timerHutch.start(500)            
+      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       
 
     def setVectorStartCB(self): #save sample x,y,z
@@ -4539,13 +4541,13 @@ class controlMain(QtGui.QMainWindow):
         self.timerSample.stop()      
         puckName, ok = PuckDialog.getPuckName()
         self.timerSample.start(0)            
-        self.timerHutch.start(500)      
+        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if (ok):
           self.timerHutch.stop()
           self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
           self.timerSample.start(0)            
-          self.timerHutch.start(500)      
+          self.timerHutch.start(HUTCH_TIMER_DELAY)      
           ipos = int(dewarPos)+1
           if (ok):
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))

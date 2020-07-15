@@ -1444,8 +1444,8 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       d_min = cell.data(2)
                       intensity = cell.data(3)
                       if (self.parent.albulaDispCheckBox.isChecked()):
-                          if (str(self.data(1)) != "empty"):
-                              albulaUtils.albulaDispFile(str(self.data(1)))
+                          if (filename != "empty"):
+                              albulaUtils.albulaDispFile(filename)
                       if not (self.parent.rasterExploreDialog.isVisible()):
                           self.parent.rasterExploreDialog.show()
                       self.parent.rasterExploreDialog.setSpotCount(spotcount)

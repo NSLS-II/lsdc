@@ -1454,6 +1454,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       groupList = self.childItems()
                       for i in range (0,len(groupList)):
                           groupList[i].setPen(self.parent.redPen)
+                      cell.setPen(self.parent.yellowPen)
 
       else:
         super(RasterGroup, self).mousePressEvent(e)

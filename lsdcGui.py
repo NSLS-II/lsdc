@@ -1437,7 +1437,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             self.parent.treeChanged_pv.put(1)
       if (self.parent.vidActionRasterExploreRadio.isChecked()):
           for cell in self.childItems():
-              if isInCell(e.scenePos(), cell):
+              if isInCell(e.pos(), cell):
                   if (cell.data(0) != None):
                       spotcount = cell.data(0)
                       filename = cell.data(1)

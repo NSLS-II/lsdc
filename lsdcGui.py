@@ -1477,7 +1477,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         if e.button() == QtCore.Qt.RightButton:
           pass
 
-    def hoverEnterEvent(self, e):
+    def hoverMoveEvent(self, e):
         super(RasterGroup, self).hoverEnterEvent(e)
         for cell in self.childItems():
             if isInCell(e.scenePos(), cell):

@@ -1343,11 +1343,12 @@ class DataLocInfo(QtGui.QGroupBox):
         self.vBoxDPathParams1 = QtGui.QVBoxLayout()
         self.hBoxDPathParams1 = QtGui.QHBoxLayout()
         self.basePathLabel = QtGui.QLabel('Base Path:')
-        self.base_path_ledit = QtGui.QLineEdit() #leave editable for now
+        self.base_path_ledit = QtGui.QLabel() #leave editable for now
         self.base_path_ledit.setText(os.getcwd())
-        self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
+        #self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
         self.browseBasePathButton = QtGui.QPushButton("Browse...") 
-        self.browseBasePathButton.clicked.connect(self.parent.popBaseDirectoryDialogCB)
+        self.browseBasePathButton.setEnabled(False)
+        #self.browseBasePathButton.clicked.connect(self.parent.popBaseDirectoryDialogCB)
         self.hBoxDPathParams1.addWidget(self.basePathLabel)
         self.hBoxDPathParams1.addWidget(self.base_path_ledit)
         self.hBoxDPathParams1.addWidget(self.browseBasePathButton)

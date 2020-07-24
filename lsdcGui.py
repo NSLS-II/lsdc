@@ -1345,6 +1345,7 @@ class DataLocInfo(QtGui.QGroupBox):
         self.basePathLabel = QtGui.QLabel('Base Path:')
         self.base_path_ledit = QtGui.QLabel() #leave editable for now
         self.base_path_ledit.setText(os.getcwd())
+        self.base_path_ledit.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         #self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
         self.browseBasePathButton = QtGui.QPushButton("Browse...") 
         self.browseBasePathButton.setEnabled(False)

@@ -5,6 +5,7 @@ from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
 import daq_utils
 from epics import PV
 import db_lib
+import beamline_support
 import time
 import mysql.connector
 import logging
@@ -358,11 +359,13 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['detector_distance'] = request_obj['detDist']
     params['slitgap_horizontal'] = request_obj['slit_width']
     params['slitgap_vertical'] = request_obj['slit_height']
-    params['transmission'] = request_obj['attenuation']
+    params['transmission'] = request_obj['attenuation'] * 100.0
     params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix'])  # assume cbf ...
     params['overlap'] = 0.0
     params['rotation_axis'] = 'Omega'  # assume Omega unless we know otherwise
     logger.info("jpegimfilename = " + jpegImageFilename)
+    params['xbeam'] = beamline_support.getPvValFromDescriptor("beamCenterX")
+    params['ybeam'] = beamline_support.getPvValFromDescriptor("beamCenterY")
     params['xtal_snapshot1'] = jpegImageFilename
     params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
     params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'

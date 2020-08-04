@@ -198,7 +198,8 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
    logger.error("caught ISPyBNoResultException: %s" % e)
-   sessionid = createVisit(visitName)
+   propNum = visitName.split('-')[0]
+   sessionid = createVisit(propNum)
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
    sample = request['sample'] # this needs to be created and linked to a DC group

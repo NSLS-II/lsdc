@@ -196,8 +196,8 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
  try:
    sessionid = core.retrieve_visit_id(visitName)
- except ISPyBNoResultException:
-   logger.error("caught ISPyBNoResultException")
+ except ISPyBNoResultException as e:
+   logger.error("caught ISPyBNoResultException: %s" % e)
    sessionid = createVisit(visitName)
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
@@ -383,8 +383,8 @@ def insertRasterResult(result,request,visitName):
 
  try:
    sessionid = core.retrieve_visit_id(visitName)
- except ISPyBNoResultException:
-   logger.error("caught ISPyBNoResultException, bye")
+ except ISPyBNoResultException as e:
+   logger.error("caught ISPyBNoResultException, bye: %s" % e)
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
  result_obj = result['result_obj']

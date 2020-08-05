@@ -528,7 +528,7 @@ def logMxRequestParams(currentRequest):
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
   except Exception as e:
     currentIspybDCID = 999999
-    logger.error("ispyb error: %s" % e)
+    logger.error("logMxRequestParams - ispyb error: %s" % e)
 
 
 

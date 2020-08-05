@@ -57,7 +57,7 @@ visitName = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
 except:
-  logger.error("ispyb error")
+  logger.error("runfastdph5 insert result ispyb error")
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):

@@ -502,6 +502,8 @@ def logMxRequestParams(currentRequest):
   resultObj = {"requestObj":reqObj,"transmissionReadback":transmissionReadback,"flux":flux}  
   resultID = db_lib.addResultforRequest("mxExpParams",currentRequest["uid"],owner=daq_utils.owner,result_obj=resultObj,proposalID=daq_utils.getProposalID(),beamline=daq_utils.beamline)
   newResult = db_lib.getResult(resultID)
+  newResult['result_obj']['requestObj']['xbeam'] = currentRequest['xbeam']
+  newResult['result_obj']['requestObj']['ybeam'] = currentRequest['ybeam']
   db_lib.beamlineInfo(daq_utils.beamline, 'currentSampleID', info_dict={'sampleID':currentRequest["sample"]})
   db_lib.beamlineInfo(daq_utils.beamline, 'currentRequestID', info_dict={'requestID':currentRequest["uid"]})
   logfile = open("dataColLog.txt","a+")

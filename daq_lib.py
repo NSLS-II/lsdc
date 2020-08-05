@@ -574,6 +574,9 @@ def collectData(currentRequest):
     os.system(comm_s)
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
+  # now that the detector is in the correct position, get the beam center
+  currentRequest['xbeam'] = beamline_support.getPvValFromDescriptor('beamCenterX')
+  currentRequest['ybeam'] = beamline_support.getPvValFromDescriptor('beamCenterY')
   if (prot == "raster"):
     logger.info('entering raster')
     status = daq_macros.snakeRaster(currentRequest["uid"])

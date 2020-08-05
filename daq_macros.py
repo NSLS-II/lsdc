@@ -1755,7 +1755,7 @@ def gridRaster(currentRequest):
   
   sampleID = currentRequest["sample"]  
   reqObj = currentRequest["request_obj"]
-  omega = beamline_lib.beamline_lib.motorPosFromDescriptor("omega")
+  omega = beamline_lib.motorPosFromDescriptor("omega")
   omegaRad = math.radians(omega)
   xwells = int(db_lib.getBeamlineConfigParam("fmx","gridRasterXStep"))
   ywells = int(db_lib.getBeamlineConfigParam("fmx","gridRasterYStep"))        
@@ -2450,7 +2450,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     dna_prefix = "ref-"+prefix
     image_number = start_image_number+i
     dna_prefix_long = dna_directory+"/"+dna_prefix
-    beamline_lib.beamline_lib.mvaDescriptor("omega",float(colstart))
+    beamline_lib.mvaDescriptor("omega",float(colstart))
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
       ednaActiveFlag = 0
@@ -3191,9 +3191,9 @@ def procOff():
 
 def backoffDetector():
   if (daq_utils.beamline == "amx"):
-    beamline_lib.beamline_lib.mvaDescriptor("detectorDist",700.0)
+    beamline_lib.mvaDescriptor("detectorDist",700.0)
   else:
-    beamline_lib.beamline_lib.mvaDescriptor("detectorDist",1000.0)
+    beamline_lib.mvaDescriptor("detectorDist",1000.0)
 
 def disableMount():
   """disableMount() : turn off robot mounting. Usually done in an error situation where we want staff intervention before resuming."""

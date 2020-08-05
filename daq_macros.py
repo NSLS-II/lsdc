@@ -2454,7 +2454,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
       ednaActiveFlag = 0
-    imagesAttempted = collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
+    imagesAttempted = daq_lib.collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
     filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"

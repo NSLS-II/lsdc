@@ -1528,7 +1528,7 @@ class controlMain(QtGui.QMainWindow):
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = PV(daq_utils.pvLookupDict["gripTemp"])
-	self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
+        self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
         if (daq_utils.beamline == "fmx"):        
           self.slit1XGapSP_pv = PV(daq_utils.motor_dict["slit1XGap"] + ".VAL")
           self.slit1YGapSP_pv = PV(daq_utils.motor_dict["slit1YGap"] + ".VAL")        

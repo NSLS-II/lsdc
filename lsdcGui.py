@@ -1899,7 +1899,7 @@ class controlMain(QtGui.QMainWindow):
         self.fastEPCheckBox.setChecked(False)
         self.fastEPCheckBox.setEnabled(False)
         self.dimpleCheckBox = QCheckBox("Dimple")
-        self.dimpleCheckBox.setChecked(False)        
+        self.dimpleCheckBox.setChecked(True)        
         self.xia2CheckBox = QCheckBox("Xia2")
         self.xia2CheckBox.setChecked(False)
         self.hBoxProcessingLayout1.addWidget(self.autoProcessingCheckBox)                

@@ -3115,7 +3115,7 @@ class ControlMain(QtWidgets.QMainWindow):
       graph_x = choochResultObj["choochInXAxis"]
       graph_y = choochResultObj["choochInYAxis"]      
       self.EScanGraph.name = "Chooch PLot"
-      #self.EScanGraph.newcurve("whatever", graph_x, graph_y)
+      self.EScanGraph.newcurve("whatever", graph_x, graph_y)
       self.EScanGraph.replot()
       chooch_graph_x = choochResultObj["choochOutXAxis"]
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]

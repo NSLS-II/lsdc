@@ -241,8 +241,8 @@ class StaffScreenDialog(QFrame):
         self.closePortsButton.clicked.connect(self.closePortsCB)
         self.warmupButton = QtWidgets.QPushButton("Dry Gripper")        
         self.warmupButton.clicked.connect(self.parent.dryGripperCB)
-        self.cooldownButton = QtWidgets.QPushButton("Cooldown Gripper")        
-        self.cooldownButton.clicked.connect(self.parent.cooldownGripperCB)
+        self.enableTScreenButton = QtWidgets.QPushButton("Enable Dewar Tscreen")        
+        self.enableTScreenButton.clicked.connect(self.parent.enableTScreenGripperCB)
         self.parkButton = QtWidgets.QPushButton("Park Gripper")        
         self.parkButton.clicked.connect(self.parent.parkGripperCB)
         self.homePinsButton = QtWidgets.QPushButton("Home Pins")
@@ -253,7 +253,7 @@ class StaffScreenDialog(QFrame):
         hBoxColParams2.addWidget(self.closePortsButton)        
         hBoxColParams2.addWidget(self.unmountColdButton)
         hBoxColParams2.addWidget(self.warmupButton)
-        hBoxColParams2.addWidget(self.cooldownButton)
+        hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)                        
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
         hBoxColParams1.addWidget(self.homePinsButton)        
@@ -4493,8 +4493,8 @@ class ControlMain(QtWidgets.QMainWindow):
     def dryGripperCB(self):
       self.send_to_server("dryGripper()")      
 
-    def cooldownGripperCB(self):
-      self.send_to_server("cooldownGripper()")      
+    def enableTScreenGripperCB(self):
+      self.send_to_server("enableDewarTscreen()")      
 
     def parkGripperCB(self):
       self.send_to_server("parkGripper()")      

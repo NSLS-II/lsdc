@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except Exception as e:
-  logger.error("daq_macros ISPYB import error: %s" % e)
+  logger.error("daq_macros: ISPYB import error, %s" % e)
   
 from XSDataMXv1 import XSDataResultCharacterisation
 global rasterRowResultsList, processedRasterRowCount
@@ -892,8 +892,8 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   exptimePerCell = reqObj["exposure_time"]
   img_width_per_cell = reqObj["img_width"]
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX") * 0.075
+  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY") * 0.075
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
   omega = float(rasterDef["omega"])
@@ -1755,7 +1755,7 @@ def gridRaster(currentRequest):
   
   sampleID = currentRequest["sample"]  
   reqObj = currentRequest["request_obj"]
-  omega = beamline_lib.beamline_lib.motorPosFromDescriptor("omega")
+  omega = beamline_lib.motorPosFromDescriptor("omega")
   omegaRad = math.radians(omega)
   xwells = int(db_lib.getBeamlineConfigParam("fmx","gridRasterXStep"))
   ywells = int(db_lib.getBeamlineConfigParam("fmx","gridRasterYStep"))        
@@ -2435,7 +2435,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   theta_radians = 0.0
   wave = 12398.5/beamline_lib.get_mono_energy() #for now
   dx = det_radius/(math.tan(2.0*(math.asin(wave/(2.0*dna_res)))-theta_radians))
-  logger.info("distance = ",dx)
+  logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
   logger.info("skinner about to take reference images.")
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
@@ -2450,11 +2450,11 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     dna_prefix = "ref-"+prefix
     image_number = start_image_number+i
     dna_prefix_long = dna_directory+"/"+dna_prefix
-    beamline_lib.beamline_lib.mvaDescriptor("omega",float(colstart))
+    beamline_lib.mvaDescriptor("omega",float(colstart))
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
       ednaActiveFlag = 0
-    imagesAttempted = collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
+    imagesAttempted = daq_lib.collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
     filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"
@@ -3191,9 +3191,9 @@ def procOff():
 
 def backoffDetector():
   if (daq_utils.beamline == "amx"):
-    beamline_lib.beamline_lib.mvaDescriptor("detectorDist",700.0)
+    beamline_lib.mvaDescriptor("detectorDist",700.0)
   else:
-    beamline_lib.beamline_lib.mvaDescriptor("detectorDist",1000.0)
+    beamline_lib.mvaDescriptor("detectorDist",1000.0)
 
 def disableMount():
   """disableMount() : turn off robot mounting. Usually done in an error situation where we want staff intervention before resuming."""

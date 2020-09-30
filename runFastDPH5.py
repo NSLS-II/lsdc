@@ -4,12 +4,17 @@ import sys
 import db_lib
 import xmltodict
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger()
+logging.getLogger().setLevel(logging.INFO)
+handler1 = logging.FileHandler('fast_dp.txt')
+myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
+handler1.setFormatter(myformat)
+logger.addHandler(handler1)
 
 try:
   import ispybLib
 except Exception as e:
-  logger.error("runFastDPH5 ISPYB import error: %s" % e)
+  logger.error("runFastDPH5: ISPYB import error, %s" % e)
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
@@ -52,10 +57,11 @@ visitName = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
 except:
-  logger.error("ispyb error")
+  logger.error("runfastdph5 insert result ispyb error")
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):
+  logger.info('run dimple selected')
   sampleID = request["sample"]
   sample = db_lib.getSampleByID(sampleID)
   try:

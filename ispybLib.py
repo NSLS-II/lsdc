@@ -1,4 +1,5 @@
 import ispyb.factory
+from ispyb.exception import ISPyBNoResultException
 import os
 from datetime import datetime
 from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
@@ -194,15 +195,20 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
  try:
    sessionid = core.retrieve_visit_id(visitName)
- except ISPyBNoResultException:
-   logger.error("caught ISPyBNoResultException")
-   sessionid = createVisit(visitName)
+ except ISPyBNoResultException as e:
+   logger.error("caught ISPyBNoResultException: %s. make sure visit name is in the format mx999999-1234" % e)
+   propNum = visitName.split('-')[0]
+   sessionid = createVisit(propNum)
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
    sample = request['sample'] # this needs to be created and linked to a DC group
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
+     params = mxprocessing.get_program_params()
+     params['id'] = app_id
+     params['status'] = 1
+     mxprocessing.upsert_program(list(params.values()))
          
    elif resultType == 'mxExpParams':
      result_obj = result['result_obj']
@@ -354,11 +360,13 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['detector_distance'] = request_obj['detDist']
     params['slitgap_horizontal'] = request_obj['slit_width']
     params['slitgap_vertical'] = request_obj['slit_height']
-    params['transmission'] = request_obj['attenuation']
+    params['transmission'] = request_obj['attenuation'] * 100.0
     params['file_template'] = '%s_####.cbf' % (request_obj['file_prefix'])  # assume cbf ...
     params['overlap'] = 0.0
     params['rotation_axis'] = 'Omega'  # assume Omega unless we know otherwise
     logger.info("jpegimfilename = " + jpegImageFilename)
+    params['xbeam'] = request_obj['xbeam']
+    params['ybeam'] = request_obj['ybeam']
     params['xtal_snapshot1'] = jpegImageFilename
     params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
     params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'
@@ -375,8 +383,8 @@ def insertRasterResult(result,request,visitName):
 
  try:
    sessionid = core.retrieve_visit_id(visitName)
- except ISPyBNoResultException:
-   logger.error("caught ISPyBNoResultException, bye")
+ except ISPyBNoResultException as e:
+   logger.error("caught ISPyBNoResultException, make sure visit name is in the format mx999999-1234. bye: %s" % e)
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
  result_obj = result['result_obj']

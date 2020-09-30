@@ -64,7 +64,7 @@ logger.addHandler(handler1)
 try:
   import ispybLib
 except Exception as e:
-  logger.error("lsdcGui ISPYB import error: %s" % e)
+  logger.error("lsdcGui: ISPYB import error, %s" % e)
 import raddoseLib
 
 global sampleNameDict
@@ -74,6 +74,8 @@ global containerDict
 containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
+
+HUTCH_TIMER_DELAY = 1000
 
 class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
@@ -1285,7 +1287,7 @@ class DewarTree(QtWidgets.QTreeView):
       self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       self.parent.timerSample.start(0)            
-      self.parent.timerHutch.start(500)      
+      self.parent.timerHutch.start(HUTCH_TIMER_DELAY)      
       if reply == QtWidgets.QMessageBox.Yes:
         return(1)
       else:
@@ -1343,11 +1345,13 @@ class DataLocInfo(QtWidgets.QGroupBox):
         self.vBoxDPathParams1 = QtWidgets.QVBoxLayout()
         self.hBoxDPathParams1 = QtWidgets.QHBoxLayout()
         self.basePathLabel = QtWidgets.QLabel('Base Path:')
-        self.base_path_ledit = QtWidgets.QLineEdit() #leave editable for now
+        self.base_path_ledit = QtWidgets.QLabel() #leave editable for now
         self.base_path_ledit.setText(os.getcwd())
-        self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
+        self.base_path_ledit.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+        #self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
         self.browseBasePathButton = QtWidgets.QPushButton("Browse...") 
-        self.browseBasePathButton.clicked.connect(self.parent.popBaseDirectoryDialogCB)
+        self.browseBasePathButton.setEnabled(False)
+        #self.browseBasePathButton.clicked.connect(self.parent.popBaseDirectoryDialogCB)
         self.hBoxDPathParams1.addWidget(self.basePathLabel)
         self.hBoxDPathParams1.addWidget(self.base_path_ledit)
         self.hBoxDPathParams1.addWidget(self.browseBasePathButton)
@@ -1938,7 +1942,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.fastEPCheckBox.setChecked(False)
         self.fastEPCheckBox.setEnabled(False)
         self.dimpleCheckBox = QCheckBox("Dimple")
-        self.dimpleCheckBox.setChecked(False)        
+        self.dimpleCheckBox.setChecked(True)        
         self.xia2CheckBox = QCheckBox("Xia2")
         self.xia2CheckBox.setChecked(False)
         self.hBoxProcessingLayout1.addWidget(self.autoProcessingCheckBox)                
@@ -2150,7 +2154,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()
         self.timerHutch.timeout.connect(self.timerHutchRefresh)
-        self.timerHutch.start(500)
+        self.timerHutch.start(HUTCH_TIMER_DELAY)
 
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
@@ -3371,7 +3375,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerSample.stop()            
       fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose Spreadsheet File', '',filter="*.xls *.xlsx",options=QtWidgets.QFileDialog.DontUseNativeDialog)
       self.timerSample.start(0)            
-      self.timerHutch.start(500)            
+      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       if (fname != ""):
         logger.info(fname)
         comm_s = "importSpreadsheet(\""+str(fname[0])+"\")"
@@ -4507,7 +4511,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerSample.stop()      
         reply = QtWidgets.QMessageBox.question(self, 'Message',msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
         self.timerSample.start(0)            
-        self.timerHutch.start(500)      
+        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
           if (daq_utils.beamline == "fmx"):  #TODO replace with directly getting hostname
             os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
@@ -4538,7 +4542,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerSample.stop()                    
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
       self.timerSample.start(0)            
-      self.timerHutch.start(500)            
+      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       
 
     def setVectorStartCB(self): #save sample x,y,z
@@ -4604,13 +4608,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerSample.stop()      
         puckName, ok = PuckDialog.getPuckName()
         self.timerSample.start(0)            
-        self.timerHutch.start(500)      
+        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if (ok):
           self.timerHutch.stop()
           self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
           self.timerSample.start(0)            
-          self.timerHutch.start(500)      
+          self.timerHutch.start(HUTCH_TIMER_DELAY)      
           ipos = int(dewarPos)+1
           if (ok):
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))

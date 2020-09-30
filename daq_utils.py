@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 try:
   import ispybLib
 except Exception as e:
-  logger.error("daq_utils ISPYB import error: %s" % e)
+  logger.error("daq_utils: ISPYB import error, %s" %e)
 
 import db_lib
 

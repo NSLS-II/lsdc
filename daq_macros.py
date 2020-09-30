@@ -604,47 +604,149 @@ def vectorProceed():
 def vectorSync():
   beamline_support.setPvValFromDescriptor("vectorSync",1)
 
-def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):  #12/19 - we haven't tried dozor in about one year
-  global rasterRowResultsList,processedRasterRowCount
-  time.sleep(1.0)
-  dozorComm = os.environ["CONFIGDIR"] + "software/bin/spot_test_row"
-  if (rowIndex%2 == 0):
-    node = "cpu-003"
-  else:
-    node = "cpu-003"    
-  hdfSampleDataPattern = directory+"/"+prefix+"_" 
-  hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-  startIndex=(rowIndex*rowCellCount) + 1
-  endIndex = startIndex+rowCellCount-1
-  comm_s = "ssh -q " + node + " \"source /home/skinner/.bashrc;" + dozorComm + " " + hdfRowFilepattern  + " " + str(startIndex) + " " + str(endIndex) + " "  + str(rowCellCount) + "\""  #works for rectangles only
-  logger.info(comm_s)
-  localDozorResultDict={}
-  localDozorResultDict["data"]={}
-  localDozorResultDict["data"]["response"]=[]  
-  lines = os.popen(comm_s).readlines()
-  found = 0
-  for line in lines:
-    line.strip()
-    tokens = line.split()
-    if (found == 0):
-      if (tokens[0] == 'sort_key'):
-        found = 1
-      else:
-        continue
-    else:
-      if (len(tokens) == 5):
-        index = float(tokens[0])
-        column = int(tokens[1])
-        row = int(tokens[2])
-        mainScore = float(tokens[3])
-        spotScore = float(tokens[4])
-        logger.info(tokens)
-        localDozorResultDict["data"]["response"].append({'masterIndex': index,'mainScore': mainScore,'spotScore': spotScore,'spot_count_no_ice':spotScore,'image':hdfRowFilepattern,'d_min': index,'total_intensity':mainScore}) ###kludge to give GUI what it wants! see the dials keys in the dict
-  processedRasterRowCount+=1
-  rasterRowResultsList[rowIndex] = localDozorResultDict["data"]["response"]
-  return
+def makeDozorRowDir(directory,rowIndex):
+    """Makes separate directory for each row for dozor output,
+    necessary to prevent file overwriting with mult. threads.
 
-  
+    Parameters
+    ----------
+    directory: str
+        main data directory with .h5 files
+    rowIndex: int
+        raster row index starts at 0
+
+    Returns
+    -------
+    rowDir: str
+        path to row directory
+    """
+
+    dozorDir = directory + "/dozor"
+    rowDir = dozorDir + "/row_{}/".format(rowIndex)
+    os.system("mkdir -p " + rowDir)
+
+    return rowDir
+
+def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
+    """Creates input file for dozor that corresponds to an individual
+    raster row.
+
+    Parameters
+    ----------
+    directory: str
+        main data directory with .h5 files
+    prefix: str
+        sample name from spreadsheet and include _Raster if raster
+    rowIndex: int
+        index of row to be processed from raster
+    rowCellCount: int
+        number of frames in specified row
+    seqNum: int
+        seqNum, not sure why skinner included these (unique id?)
+    """
+
+    orgX = 1610
+    orgY = 1594
+    detectorDistance = 150
+    firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
+    hdf5TemplateImage = "{}/{}_{}_??????.h5".format(directory,prefix,seqNum)
+    inputTemplate = open("h5_template.dat")
+    src = Template(inputTemplate.read())
+    dozorRowDir = makeDozorRowDir(directory,rowIndex)
+    f = open(dozorRowDir + "h5_row_{}.dat".format(rowIndex),"w")
+    templateDict = {"orgx": orgX,
+                    "orgy": orgY,
+                    "detector_distance": detectorDistance,
+                    "first_image_number": firstImageNumber,
+                    "number_images": rowCellCount,
+                    "name_template_image": hdf5TemplateImage,}
+    f.write(src.substitute(templateDict))
+    return dozorRowDir
+
+def dozorOutputToList(dozorRowDir,rowIndex):
+    """Takes a dozor_average.dat file and converts the results into
+    a list of dictionaries in the format previously implemented
+    in lsdc for dials.find_spots_client output. Intended for use
+    on a single row.
+
+    Parameters
+    ----------
+    dozorRowDir: str
+        path to dozor row directory
+    rowIndex: int
+        index of row currently being processed by dozor thread
+
+    Returns
+    -------
+    localDozorRowList: list
+        list of dictionaries for input into analysisstore database
+    """
+
+    dozorDat = str(os.path.join(dozorRowDir,"dozor_average.dat"))
+    if os.path.isfile(dozorDat):
+        dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
+
+        keys = ["image",
+                "spot_count",
+                "spot_count_no_ice",
+                "d_min",
+                "d_min_method_1",
+                "d_min_method_2",
+                "total_intensity"]
+
+        localList = []
+
+        for cell in range(0,dozorData.shape[0]):
+            values = [dozorData[cell,:][0],
+                      dozorData[cell,:][1],
+                      dozorData[cell,:][1],
+                      dozorData[cell,:][3],
+                      dozorData[cell,:][3],
+                      dozorData[cell,:][3],
+                      dozorData[cell,:][1]*dozorData[cell,:][2]]
+            localList.append(dict(zip(keys,values)))
+
+    else:
+        raise Exception("Did not find dozor_average.dat file")
+
+    return localList
+
+def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
+    """Creates sub-directory that contains dozor input and output files
+    that result from master.h5 file in directory. Dozor executed via
+    ssh on remote node(s).
+
+    Parameters
+    ----------
+    directory: str
+        path to directory containing .h5 files
+    prefix: str
+        includes sample name from spreadsheet and protocol if raster
+    rowIndex: int
+        row number to be processed (starts at 0)
+    seqNum: int
+        some parameter Skinner included, maybe to avoid duplicate filenames
+    """
+
+    time.sleep(1.0) #allow for file writing
+    dozorComm = "/home/dkreitler/.local/dozor-10Aug2020/dozor"
+    node="cpu-026" 
+
+    if (seqNum>-1): #eiger
+        dozorRowDir = makeDozorInputFile(directory,
+                                         prefix,
+                                         rowIndex,
+                                         rowCellCount,
+                                         seqNum)
+    else:
+        raise Exception("seqNum seems to be non-standard (<0)")
+
+    comm_s = "ssh -q " + node + " "+ "\"cd {};{} -w h5_row_{}.dat\"".format(dozorRowDir,
+                                                                     dozorComm,
+                                                                     rowIndex)
+    os.system(comm_s)
+    logger.info('checking for results on remote node: %s' % comm_s)
+    return dozorOutputToList(dozorRowDir,rowIndex)
 
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount

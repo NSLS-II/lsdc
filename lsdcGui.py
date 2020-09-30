@@ -4215,7 +4215,12 @@ class ControlMain(QtWidgets.QMainWindow):
               self.progressDialog.close()              
               return
           
-        self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+        try:
+          self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+        except KeyError:
+          self.popupServerMessage("Please select a sample!")
+          self.progressDialog.close()
+          return
         if (len(indexes)>1):
           self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
           self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))

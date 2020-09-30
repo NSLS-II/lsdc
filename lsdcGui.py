@@ -3120,7 +3120,7 @@ class ControlMain(QtWidgets.QMainWindow):
       graph_y = choochResultObj["choochInYAxis"]
       self.EScanGraph.name = "Chooch PLot"
       try:
-        self.EScanGraph.addCurve(graph_x, graph_y)
+        self.EScanGraph.addCurve(graph_x, graph_y, 'Raw counts vs. energy')
         self.EScanGraph.replot()
       except TypeError as e:
         logger.error('Problems with data type going into energy scan plot: %s' % (e))

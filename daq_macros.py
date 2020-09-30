@@ -2118,6 +2118,7 @@ def eScan(energyScanRequest):
   scan_element = reqObj['element']
   beamline_lib.mvaDescriptor("energy",targetEnergy)
   if not (daq_lib.setGovRobot('XF')):
+    daq_lib.gui_message('Governor did not reach XF state')
     return
   daq_lib.open_shutter()
   scanID = RE(bp.rel_scan([mercury],vdcm.e,left,right,steps),[LivePlot("mercury_mca_rois_roi0_count")])

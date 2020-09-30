@@ -138,19 +138,15 @@ def dryGripper():
     
 def DewarAutoFillOn():
   RobotControlLib.runCmd("turnOnAutoFill")
-  enableDewarTscreen()
 
 def DewarAutoFillOff():
   RobotControlLib.runCmd("turnOffAutoFill")
-  enableDewarTscreen()
 
 def DewarHeaterOn():
   RobotControlLib.runCmd("dewarHeaterOn")
-  enableDewarTscreen()
   
 def DewarHeaterOff():
   RobotControlLib.runCmd("dewarHeaterOff")
-  enableDewarTscreen()
 
 
 def warmupGripper():
@@ -172,11 +168,9 @@ def enableDewarTscreen():
   
 def openPort(portNo):
   RobotControlLib.openPort(int(portNo))
-  enableDewarTscreen()
 
 def closePorts():
   RobotControlLib.runCmd("closePorts")
-  enableDewarTscreen()
   
 def rebootEMBL():
   RobotControlLib.rebootEMBL()

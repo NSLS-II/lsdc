@@ -28,7 +28,7 @@ import daq_utils
 import albulaUtils
 import functools
 from QPeriodicTable import *
-from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow
+from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
 from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
 from PyMca5.PyMcaPhysics.xrf import Elements
 from element_info import element_info
@@ -53,7 +53,7 @@ from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
-handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=50000000)
+handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=10)
 #TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
@@ -243,8 +243,8 @@ class StaffScreenDialog(QFrame):
         self.closePortsButton.clicked.connect(self.closePortsCB)
         self.warmupButton = QtWidgets.QPushButton("Dry Gripper")        
         self.warmupButton.clicked.connect(self.parent.dryGripperCB)
-        self.cooldownButton = QtWidgets.QPushButton("Cooldown Gripper")        
-        self.cooldownButton.clicked.connect(self.parent.cooldownGripperCB)
+        self.enableTScreenButton = QtWidgets.QPushButton("Enable Dewar Tscreen")        
+        self.enableTScreenButton.clicked.connect(self.parent.enableTScreenGripperCB)
         self.parkButton = QtWidgets.QPushButton("Park Gripper")        
         self.parkButton.clicked.connect(self.parent.parkGripperCB)
         self.homePinsButton = QtWidgets.QPushButton("Home Pins")
@@ -255,7 +255,7 @@ class StaffScreenDialog(QFrame):
         hBoxColParams2.addWidget(self.closePortsButton)        
         hBoxColParams2.addWidget(self.unmountColdButton)
         hBoxColParams2.addWidget(self.warmupButton)
-        hBoxColParams2.addWidget(self.cooldownButton)
+        hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)                        
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
         hBoxColParams1.addWidget(self.homePinsButton)        
@@ -1441,15 +1441,15 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             self.parent.treeChanged_pv.put(1)
       if (self.parent.vidActionRasterExploreRadio.isChecked()):
           for cell in self.childItems():
-              if isInCell(e.scenePos(), cell):
+              if isInCell(e.pos(), cell):
                   if (cell.data(0) != None):
                       spotcount = cell.data(0)
                       filename = cell.data(1)
                       d_min = cell.data(2)
                       intensity = cell.data(3)
                       if (self.parent.albulaDispCheckBox.isChecked()):
-                          if (str(self.data(1)) != "empty"):
-                              albulaUtils.albulaDispFile(str(self.data(1)))
+                          if (filename != "empty"):
+                              albulaUtils.albulaDispFile(filename)
                       if not (self.parent.rasterExploreDialog.isVisible()):
                           self.parent.rasterExploreDialog.show()
                       self.parent.rasterExploreDialog.setSpotCount(spotcount)
@@ -1458,6 +1458,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       groupList = self.childItems()
                       for i in range (0,len(groupList)):
                           groupList[i].setPen(self.parent.redPen)
+                      cell.setPen(self.parent.yellowPen)
 
       else:
         super(RasterGroup, self).mousePressEvent(e)
@@ -2438,7 +2439,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxEScan.addLayout(vBoxEScan)
         verticalLine = QFrame()
         verticalLine.setFrameStyle(QFrame.VLine)
-        self.EScanGraph = McaWindow(self.energyFrame)
+        self.EScanGraph = ScanWindow(self.energyFrame)
         hBoxEScan.addWidget(verticalLine)
         hBoxEScan.addWidget(self.EScanGraph)
         vBoxEScanFull.addLayout(hBoxEScan)
@@ -3116,26 +3117,32 @@ class ControlMain(QtWidgets.QMainWindow):
       choochResult = db_lib.getResult(choochResultFlag)
       choochResultObj = choochResult["result_obj"]
       graph_x = choochResultObj["choochInXAxis"]
-      graph_y = choochResultObj["choochInYAxis"]      
+      graph_y = choochResultObj["choochInYAxis"]
       self.EScanGraph.name = "Chooch PLot"
-      #self.EScanGraph.newcurve("whatever", graph_x, graph_y)
-      self.EScanGraph.replot()
+      try:
+        self.EScanGraph.addCurve(graph_x, graph_y)
+        self.EScanGraph.replot()
+      except TypeError as e:
+        logger.error('Problems with data type going into energy scan plot: %s' % (e))
       chooch_graph_x = choochResultObj["choochOutXAxis"]
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]
       chooch_graph_y2 = choochResultObj["choochOutY2Axis"]      
       self.choochGraph.name = "Chooch PLot"
-      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y1, legend='spline')
-      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y2, legend='fp')
-      self.choochGraph.replot()
-      self.choochInfl.setText(str(choochResultObj["infl"]))
-      self.choochPeak.setText(str(choochResultObj["peak"]))
-      self.choochFPrimeInfl.setText(str(choochResultObj["fprime_infl"]))
-      self.choochFPrimePeak.setText(str(choochResultObj["fprime_peak"]))
-      self.choochF2PrimeInfl.setText(str(choochResultObj["f2prime_infl"]))
-      self.choochF2PrimePeak.setText(str(choochResultObj["f2prime_peak"]))
-      self.choochResultFlag_pv.put("0")
-      self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
-      self.protoComboActivatedCB("standard")
+      try:
+        self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y1, legend='spline')
+        self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y2, legend='fp')
+        self.choochGraph.replot()
+        self.choochInfl.setText(str(choochResultObj["infl"]))
+        self.choochPeak.setText(str(choochResultObj["peak"]))
+        self.choochFPrimeInfl.setText(str(choochResultObj["fprime_infl"]))
+        self.choochFPrimePeak.setText(str(choochResultObj["fprime_peak"]))
+        self.choochF2PrimeInfl.setText(str(choochResultObj["f2prime_infl"]))
+        self.choochF2PrimePeak.setText(str(choochResultObj["f2prime_peak"]))
+        self.choochResultFlag_pv.put("0")
+        self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
+        self.protoComboActivatedCB("standard")
+      except TypeError:
+        logger.error('Chooch plotting failed - check whether scan had a strong signal or not')
       
 
 
@@ -4223,7 +4230,12 @@ class ControlMain(QtWidgets.QMainWindow):
               self.progressDialog.close()              
               return
           
-        self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+        try:
+          self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+        except KeyError:
+          self.popupServerMessage("Please select a sample!")
+          self.progressDialog.close()
+          return
         if (len(indexes)>1):
           self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
           self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
@@ -4498,8 +4510,8 @@ class ControlMain(QtWidgets.QMainWindow):
     def dryGripperCB(self):
       self.send_to_server("dryGripper()")      
 
-    def cooldownGripperCB(self):
-      self.send_to_server("cooldownGripper()")      
+    def enableTScreenGripperCB(self):
+      self.send_to_server("enableDewarTscreen()")      
 
     def parkGripperCB(self):
       self.send_to_server("parkGripper()")      

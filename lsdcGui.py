@@ -3113,10 +3113,13 @@ class ControlMain(QtWidgets.QMainWindow):
       choochResult = db_lib.getResult(choochResultFlag)
       choochResultObj = choochResult["result_obj"]
       graph_x = choochResultObj["choochInXAxis"]
-      graph_y = choochResultObj["choochInYAxis"]      
+      graph_y = choochResultObj["choochInYAxis"]
       self.EScanGraph.name = "Chooch PLot"
-      self.EScanGraph.addCurve(graph_x, graph_y, legend='raw counts')
-      self.EScanGraph.replot()
+      try:
+        self.EScanGraph.addCurve(graph_x, graph_y)
+        self.EScanGraph.replot()
+      except TypeError as e:
+        logger.error('Problems with data type going into energy scan plot: %s' % (e))
       chooch_graph_x = choochResultObj["choochOutXAxis"]
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]
       chooch_graph_y2 = choochResultObj["choochOutY2Axis"]      

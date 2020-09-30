@@ -3121,18 +3121,21 @@ class ControlMain(QtWidgets.QMainWindow):
       chooch_graph_y1 = choochResultObj["choochOutY1Axis"]
       chooch_graph_y2 = choochResultObj["choochOutY2Axis"]      
       self.choochGraph.name = "Chooch PLot"
-      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y1, legend='spline')
-      self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y2, legend='fp')
-      self.choochGraph.replot()
-      self.choochInfl.setText(str(choochResultObj["infl"]))
-      self.choochPeak.setText(str(choochResultObj["peak"]))
-      self.choochFPrimeInfl.setText(str(choochResultObj["fprime_infl"]))
-      self.choochFPrimePeak.setText(str(choochResultObj["fprime_peak"]))
-      self.choochF2PrimeInfl.setText(str(choochResultObj["f2prime_infl"]))
-      self.choochF2PrimePeak.setText(str(choochResultObj["f2prime_peak"]))
-      self.choochResultFlag_pv.put("0")
-      self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
-      self.protoComboActivatedCB("standard")
+      try:
+        self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y1, legend='spline')
+        self.choochGraph.addCurve(chooch_graph_x, chooch_graph_y2, legend='fp')
+        self.choochGraph.replot()
+        self.choochInfl.setText(str(choochResultObj["infl"]))
+        self.choochPeak.setText(str(choochResultObj["peak"]))
+        self.choochFPrimeInfl.setText(str(choochResultObj["fprime_infl"]))
+        self.choochFPrimePeak.setText(str(choochResultObj["fprime_peak"]))
+        self.choochF2PrimeInfl.setText(str(choochResultObj["f2prime_infl"]))
+        self.choochF2PrimePeak.setText(str(choochResultObj["f2prime_peak"]))
+        self.choochResultFlag_pv.put("0")
+        self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
+        self.protoComboActivatedCB("standard")
+      except TypeError:
+        logger.error('Chooch plotting failed - check whether scan had a strong signal or not')
       
 
 

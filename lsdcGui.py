@@ -28,7 +28,7 @@ import daq_utils
 import albulaUtils
 import functools
 from QPeriodicTable import *
-from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow
+from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
 from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
 from PyMca5.PyMcaPhysics.xrf import Elements
 from element_info import element_info
@@ -2435,7 +2435,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxEScan.addLayout(vBoxEScan)
         verticalLine = QFrame()
         verticalLine.setFrameStyle(QFrame.VLine)
-        self.EScanGraph = McaWindow(self.energyFrame)
+        self.EScanGraph = ScanWindow(self.energyFrame)
         hBoxEScan.addWidget(verticalLine)
         hBoxEScan.addWidget(self.EScanGraph)
         vBoxEScanFull.addLayout(hBoxEScan)

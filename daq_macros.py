@@ -18,6 +18,8 @@ import raddoseLib
 from raddoseLib import *
 import logging
 logger = logging.getLogger(__name__)
+import os #for runDozorThread
+import numpy as np # for runDozorThread
 
 try:
   import ispybLib

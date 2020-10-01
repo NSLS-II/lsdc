@@ -729,6 +729,7 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     seqNum: int
         some parameter Skinner included, maybe to avoid duplicate filenames
     """
+    global rasterRowResultsList,processedRasterRowCount
 
     time.sleep(1.0) #allow for file writing
     dozorComm = "/home/dkreitler/.local/dozor-10Aug2020/dozor"
@@ -748,7 +749,10 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
                                                                      rowIndex)
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
-    return dozorOutputToList(dozorRowDir,rowIndex)
+    logger.info("leaving thread")
+    processedRasterRowCount += 1
+    rasterRowResultsList[rowIndex] = dozorOutputToList(dozorRowDir,rowIndex)
+    return
 
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount

@@ -652,7 +652,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
     orgY = 1594
     detectorDistance = 150
     firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
-    hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum)
+    hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum,rowIndex)
     inputTemplate = open("/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/lsdc_amx/h5_template.dat")
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
@@ -732,9 +732,15 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     """
     global rasterRowResultsList,processedRasterRowCount
 
-    time.sleep(1.0) #allow for file writing
+    time.sleep(15) #allow for file writing
     dozorComm = "/home/dkreitler/.local/dozor-10Aug2020/dozor"
-    node="cpu-026" 
+     
+    if ( ( (rowIndex % 2) == 0) ):
+        node = "cpu-024"
+    elif (( (rowIndex % 3) == 0) ):
+        node = 'cpu-025'
+    else:
+        node="cpu-026"
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -742,6 +748,7 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
                                          rowIndex,
                                          rowCellCount,
                                          seqNum)
+
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 

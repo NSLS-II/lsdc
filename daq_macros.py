@@ -20,6 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 import os #for runDozorThread
 import numpy as np # for runDozorThread
+from string import Template
 
 try:
   import ispybLib
@@ -651,8 +652,8 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
     orgY = 1594
     detectorDistance = 150
     firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
-    hdf5TemplateImage = "{}/{}_{}_??????.h5".format(directory,prefix,seqNum)
-    inputTemplate = open("h5_template.dat")
+    hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum)
+    inputTemplate = open("/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/lsdc_amx/h5_template.dat")
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
     f = open(dozorRowDir + "h5_row_{}.dat".format(rowIndex),"w")
@@ -1456,7 +1457,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
+      _thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
+      time.sleep(2) #make up for lack of _thread join() method
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   logger.info('detector finished waiting')

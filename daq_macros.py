@@ -1459,11 +1459,13 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = -1
       #_thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
       #time.sleep(2) #make up for lack of _thread join() method
+  det_lib.detector_stop_acquire()
+  det_lib.detector_wait()
   for k in range(0,rasterDef['rowDefs']):
     _thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",k,numsteps,seqNum))
     time.sleep(2)#for lack of join()
-  det_lib.detector_stop_acquire()
-  det_lib.detector_wait()
+  #det_lib.detector_stop_acquire()
+  #det_lib.detector_wait()
   logger.info('detector finished waiting')
   if (daq_utils.beamline == "amxz"):  
     beamline_support.setPvValFromDescriptor("zebraReset",1)      

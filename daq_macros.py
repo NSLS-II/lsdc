@@ -1457,13 +1457,17 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
-      #_thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
-      #time.sleep(2) #make up for lack of _thread join() method
+        _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
+       #time.sleep(2) #make up for lack of _thread join() method
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
+
+  
+
   for k in range(0,rasterDef['rowDefs']):
-    _thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",k,numsteps,seqNum))
-    time.sleep(2)#for lack of join()
+    #_thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",k,numsteps,seqNum))
+    #time.sleep(2)#for lack of join()
+    print(k)
   #det_lib.detector_stop_acquire()
   #det_lib.detector_wait()
   logger.info('detector finished waiting')

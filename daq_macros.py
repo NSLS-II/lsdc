@@ -732,7 +732,7 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     """
     global rasterRowResultsList,processedRasterRowCount
 
-    time.sleep(15) #allow for file writing
+    time.sleep(0.5) #allow for file writing
     dozorComm = "/home/dkreitler/.local/dozor-10Aug2020/dozor"
      
     if ( ( (rowIndex % 2) == 0) ):
@@ -752,9 +752,10 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q " + node + " "+ "\"cd {};{} -w h5_row_{}.dat\"".format(dozorRowDir,
-                                                                     dozorComm,
-                                                                     rowIndex)
+    comm_s = "ssh -q {} \"cd {};{} -w h5_row_{}.dat\"".format(node,
+                                                              dozorRowDir,
+                                                              dozorComm,
+                                                              rowIndex)
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
@@ -1465,7 +1466,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
       else:
         seqNum = -1
       _thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
-      time.sleep(2) #make up for lack of _thread join() method
+      #time.sleep(2) #make up for lack of _thread join() method
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
 

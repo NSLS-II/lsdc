@@ -5271,7 +5271,11 @@ def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sam
     reqObj["directory"] = str(base_path) + "/" + str(
         daq_utils.getVisitName()) + "/" + sampleName + "/" + str(runNum) + "/" + db_lib.getContainerNameByID(
         containerID) + "_" + str(samplePositionInContainer + 1) + "/"
-    reqObj["file_number_start"] = int(file_number_start)
+    try:
+        reqObj["file_number_start"] = int(file_number_start)
+    except ValueError as e:
+        logger.error('Problem with a value passed in - %s' % e)
+        reqObj["file_number_start"] = 1
     reqObj["exposure_time"] = float(exposure_time)
     reqObj["protocol"] = "eScan"
     reqObj["scanEnergy"] = targetEnergy

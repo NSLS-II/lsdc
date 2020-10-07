@@ -365,8 +365,11 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['overlap'] = 0.0
     params['rotation_axis'] = 'Omega'  # assume Omega unless we know otherwise
     logger.info("jpegimfilename = " + jpegImageFilename)
-    params['xbeam'] = request_obj['xbeam']
-    params['ybeam'] = request_obj['ybeam']
+    try:
+      params['xbeam'] = request_obj['xbeam']
+      params['ybeam'] = request_obj['ybeam']
+    except KeyError:
+      logger.error('Value of xbeam or ybeam not present')
     params['xtal_snapshot1'] = jpegImageFilename
     params['xtal_snapshot2'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_1_1_90.0.png'
     params['xtal_snapshot3'] = '/dls/i03/data/2016/cm14451-2/jpegs/20160413/test_xtal/xtal1_3_1_183.0.png'

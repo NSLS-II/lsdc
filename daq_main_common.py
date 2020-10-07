@@ -161,8 +161,8 @@ def process_input(command_string):
     logger.error("Syntax error")
   except KeyError as e:
     logger.error("Key error. Error: %s" % e)
-  except TypeError:
-    logger.error("Type error")
+  except TypeError as e:
+    logger.error("Type error. Error: %s" % e)
   except AttributeError as e:
     logger.error("Attribute Error: %s" % e)
   except KeyboardInterrupt:

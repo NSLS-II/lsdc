@@ -2,7 +2,6 @@ from string import *
 import sys
 
 import ophyd
-ophyd.utils.startup.setup()
 from ophyd import EpicsMotor
 from ophyd import EpicsScaler
 import time

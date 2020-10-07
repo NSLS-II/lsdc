@@ -503,8 +503,8 @@ def logMxRequestParams(currentRequest):
   resultObj = {"requestObj":reqObj,"transmissionReadback":transmissionReadback,"flux":flux}  
   resultID = db_lib.addResultforRequest("mxExpParams",currentRequest["uid"],owner=daq_utils.owner,result_obj=resultObj,proposalID=daq_utils.getProposalID(),beamline=daq_utils.beamline)
   newResult = db_lib.getResult(resultID)
-  newResult['result_obj']['requestObj']['xbeam'] = currentRequest['xbeam']
-  newResult['result_obj']['requestObj']['ybeam'] = currentRequest['ybeam']
+  newResult['result_obj']['requestObj']['xbeam'] = reqObj['xbeam']
+  newResult['result_obj']['requestObj']['ybeam'] = reqObj['ybeam']
   db_lib.beamlineInfo(daq_utils.beamline, 'currentSampleID', info_dict={'sampleID':currentRequest["sample"]})
   db_lib.beamlineInfo(daq_utils.beamline, 'currentRequestID', info_dict={'requestID':currentRequest["uid"]})
   logfile = open("dataColLog.txt","a+")
@@ -578,8 +578,9 @@ def collectData(currentRequest):
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
   # now that the detector is in the correct position, get the beam center
-  currentRequest['xbeam'] = beamline_support.getPvValFromDescriptor('beamCenterX')
-  currentRequest['ybeam'] = beamline_support.getPvValFromDescriptor('beamCenterY')
+  currentRequest['request_obj']['xbeam'] = beamline_support.getPvValFromDescriptor('beamCenterX')
+  currentRequest['request_obj']['ybeam'] = beamline_support.getPvValFromDescriptor('beamCenterY')
+  db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
     logger.info('entering raster')
     status = daq_macros.snakeRaster(currentRequest["uid"])
@@ -709,6 +710,8 @@ def collectData(currentRequest):
     logger.error("caught type error in logging")
   except IndexError:
     logger.error("caught index error in logging")
+  except KeyError as e:
+    logger.error('caught key error in logging: %s' % e)
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
     seqNum = int(detector_get_seqnum())
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"

@@ -103,7 +103,6 @@ def process_commands(frequency):
       command = command_list.pop(0)
       logger.info('command: %s' % command)
       process_input(command)
-    plt.pause(frequency)    
 
     
 def print_status_thread(frequency):

@@ -1,4 +1,5 @@
 from ophyd import Device, Component as Cpt, EpicsSignal, EpicsSignalRO
+from .motors import *
 import socket
 
 
@@ -38,7 +39,6 @@ def get_energy():
     
     blStr = blStrGet()
     if blStr == -1: return -1
-    
     if blStr == 'AMX':
         energy = vdcm.e.user_readback.get()
     elif blStr == 'FMX':

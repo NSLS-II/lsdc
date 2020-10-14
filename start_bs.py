@@ -4,7 +4,6 @@ from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor
 import os
-setup_ophyd()
 #12/19 - author unknown. DAMA can help
 """
 # Subscribe metadatastore to documents.

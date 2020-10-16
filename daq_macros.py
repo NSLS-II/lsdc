@@ -666,7 +666,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
     f.write(src.substitute(templateDict))
     return dozorRowDir
 
-def dozorOutputToList(dozorRowDir,rowIndex):
+def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
     """Takes a dozor_average.dat file and converts the results into
     a list of dictionaries in the format previously implemented
     in lsdc for dials.find_spots_client output. Intended for use
@@ -700,7 +700,8 @@ def dozorOutputToList(dozorRowDir,rowIndex):
         localList = []
 
         for cell in range(0,dozorData.shape[0]):
-            values = [dozorData[cell,:][0],
+            seriesIndex = int(rowCellCount*rowIndex + dozorData[cell,:][0])
+            values = [(pathToMasterH5, seriesIndex),
                       dozorData[cell,:][1],
                       dozorData[cell,:][1],
                       dozorData[cell,:][3],
@@ -760,7 +761,13 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
     processedRasterRowCount += 1
-    rasterRowResultsList[rowIndex] = dozorOutputToList(dozorRowDir,rowIndex)
+    pathToMasterH5 = "{}/{}_{}_master.h5".format(directory,
+                                                 prefix,
+                                                 seqNum)
+    rasterRowResultsList[rowIndex] = dozorOutputToList(dozorRowDir,
+                                                       rowIndex,
+                                                       rowCellCount,
+                                                       pathToMasterH5)
     return
 
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):

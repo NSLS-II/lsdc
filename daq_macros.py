@@ -1612,11 +1612,15 @@ def reprocessRaster(rasterReqID):
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
     if (procFlag):    
-      if (daq_utils.detector_id == "EIGER-16"):
-        seqNum = int(det_lib.detector_get_seqnum())
-      else:
-        seqNum = -1
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,-1)) #note the -1 last param. That eliminates rerun of eiger2cbf.
+      #if (daq_utils.detector_id == "EIGER-16"):
+      #  seqNum = int(det_lib.detector_get_seqnum())
+      #else:
+      #  seqNum = -1
+      _thread.start_new_thread(runDialsThread,(data_directory_name,
+                                               filePrefix+"_Raster",
+                                               i,
+                                               numsteps,
+                                               int(det_lib.detector_get_seqnum()))) #note the -1 last param. That eliminates rerun of eiger2cbf.
 #I guess this starts the gather loop
   if (procFlag):
     rasterTimeout = 300

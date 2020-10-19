@@ -701,17 +701,14 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
 
         for cell in range(0,dozorData.shape[0]):
             seriesIndex = int(rowCellCount*rowIndex + dozorData[cell,:][0])
-            filenameTuple = tuple((pathToMasterH5, seriesIndex))
-            values = [filenameTuple,
+            values = [(pathToMasterH5,seriesIndex),
                       dozorData[cell,:][1],
                       dozorData[cell,:][1],
                       dozorData[cell,:][3],
                       dozorData[cell,:][3],
                       dozorData[cell,:][3],
                       dozorData[cell,:][1]*dozorData[cell,:][2]]
-            print(values)
             localList.append(dict(zip(keys,values)))
-
     else:
         raise Exception("Did not find dozor_average.dat file")
 

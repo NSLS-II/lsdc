@@ -66,7 +66,7 @@ def albulaDispH5(filename,imgNum=1):
 @singledispatch
 def albulaDispFile(filename):
     print(type(filename))
-    raise Exception("type not supported, only str or tuple")
+    raise Exception("type not supported, only str, list, or tuple")
 
 @albulaDispFile.register(str)
 def _albulaDispFile(filename):
@@ -82,9 +82,10 @@ def _albulaDispFile(filename):
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
         albulaSubFrame.loadFile(filename)
-    
-@albulaDispFile.register(tuple)
-def _albulaDispFile(filename: tuple):
+
+@albulaDispFile.register(tuple)    
+@albulaDispFile.register(list)
+def _albulaDispFile(filename):
     global albulaFrame,albulaSubFrame,currentMasterH5
 
     if (albulaFrame == None or albulaSubFrame == None):
@@ -95,13 +96,13 @@ def _albulaDispFile(filename: tuple):
     try:
         if not (currentMasterH5 == filename[0]):
             albulaSubFrame.loadFile(filename[0])
-            sleep(0.5)
+            sleep(1.2)
             currentMasterH5 = filename[0]
         albulaSubFrame.goTo(filename[1])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
         albulaSubFrame.loadFile(filename[0])
-        sleep(0.5)
+        sleep(1.2)
         albulaSubFrame.goTo(filename[1])
 

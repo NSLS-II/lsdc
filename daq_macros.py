@@ -701,13 +701,15 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
 
         for cell in range(0,dozorData.shape[0]):
             seriesIndex = int(rowCellCount*rowIndex + dozorData[cell,:][0])
-            values = [(pathToMasterH5, seriesIndex),
+            filenameTuple = tuple((pathToMasterH5, seriesIndex))
+            values = [filenameTuple,
                       dozorData[cell,:][1],
                       dozorData[cell,:][1],
                       dozorData[cell,:][3],
                       dozorData[cell,:][3],
                       dozorData[cell,:][3],
                       dozorData[cell,:][1]*dozorData[cell,:][2]]
+            print(values)
             localList.append(dict(zip(keys,values)))
 
     else:

@@ -63,23 +63,28 @@ def albulaDispH5(filename,imgNum=1):
   img = seriesDict[filename][imgNum]
   albulaDispImage(img)
 
-#@singledispatch
-#def albulaDispFile(filename):
-#    global albulaFrame,albulaSubFrame
-#
-#    if (albulaFrame == None or albulaSubFrame == None):
-#        albulaFrame = dectris.albula.openMainFrame()
-#        albulaFrame.disableClose()
-#        albulaSubFrame = albulaFrame.openSubFrame()
-#    try:
-#        albulaSubFrame.loadFile(filename)
-#    except dectris.albula.DNoObject:
-#        albulaFrame = dectris.albula.openMainFrame()
-#        albulaSubFrame = albulaFrame.openSubFrame()
-#        albulaSubFrame.loadFile(filename)
+@singledispatch
+def albulaDispFile(filename):
+    print(type(filename))
+    raise Exception("type not supported, only str or tuple")
+
+@albulaDispFile.register(str)
+def _albulaDispFile(filename):
+    global albulaFrame,albulaSubFrame
+
+    if (albulaFrame == None or albulaSubFrame == None):
+        albulaFrame = dectris.albula.openMainFrame()
+        albulaFrame.disableClose()
+        albulaSubFrame = albulaFrame.openSubFrame()
+    try:
+        albulaSubFrame.loadFile(filename)
+    except dectris.albula.DNoObject:
+        albulaFrame = dectris.albula.openMainFrame()
+        albulaSubFrame = albulaFrame.openSubFrame()
+        albulaSubFrame.loadFile(filename)
     
-#@albulaDispFile.register
-def albulaDispFile(filename: tuple):
+@albulaDispFile.register(tuple)
+def _albulaDispFile(filename: tuple):
     global albulaFrame,albulaSubFrame,currentMasterH5
 
     if (albulaFrame == None or albulaSubFrame == None):
@@ -90,12 +95,13 @@ def albulaDispFile(filename: tuple):
     try:
         if not (currentMasterH5 == filename[0]):
             albulaSubFrame.loadFile(filename[0])
-            sleep(1)
+            sleep(0.5)
             currentMasterH5 = filename[0]
         albulaSubFrame.goTo(filename[1])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
         albulaSubFrame.loadFile(filename[0])
+        sleep(0.5)
         albulaSubFrame.goTo(filename[1])
 

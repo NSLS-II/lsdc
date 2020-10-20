@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 import os #for runDozorThread
 import numpy as np # for runDozorThread
 from string import Template
+from collections import OrderedDict
 
 try:
   import ispybLib
@@ -708,7 +709,7 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
                       dozorData[cell,:][3],
                       dozorData[cell,:][3],
                       dozorData[cell,:][1]*dozorData[cell,:][2]]
-            localList.append(dict(zip(keys,values)))
+            localList.append(OrderedDict(zip(keys,values)))
     else:
         raise Exception("Did not find dozor_average.dat file")
 

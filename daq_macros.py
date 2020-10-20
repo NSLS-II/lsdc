@@ -631,7 +631,7 @@ def makeDozorRowDir(directory,rowIndex):
 
     return rowDir
 
-def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
+def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqObj):
     """Creates input file for dozor that corresponds to an individual
     raster row.
 
@@ -647,11 +647,14 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum):
         number of frames in specified row
     seqNum: int
         seqNum, not sure why skinner included these (unique id?)
+    rasterReqObj: dict
+        describes experimental metadata for raster request used to
+        set detector distance and beam center for dozor input file
     """
 
-    orgX = 1610
-    orgY = 1594
-    detectorDistance = 150
+    orgX = rasterReqObj["xbeam"]
+    orgY = rasterReqObj["ybeam"]
+    detectorDistance = rasterReqObj["detDist"]
     firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
     hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum,rowIndex)
     inputTemplate = open("/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/lsdc_amx/h5_template.dat")
@@ -715,7 +718,12 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
 
     return localList
 
-def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
+def runDozorThread(directory,
+                   prefix,
+                   rowIndex,
+                   rowCellCount,
+                   seqNum,
+                   rasterReqObj):
     """Creates sub-directory that contains dozor input and output files
     that result from master.h5 file in directory. Dozor executed via
     ssh on remote node(s).
@@ -730,6 +738,9 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
         row number to be processed (starts at 0)
     seqNum: int
         some parameter Skinner included, maybe to avoid duplicate filenames
+    rasterReqObj: dict
+        contains experimental metadata, used for setting detector dist and
+        beam center for dozor input files
     """
     global rasterRowResultsList,processedRasterRowCount
 
@@ -748,7 +759,8 @@ def runDozorThread(directory,prefix,rowIndex,rowCellCount,seqNum):
                                          prefix,
                                          rowIndex,
                                          rowCellCount,
-                                         seqNum)
+                                         seqNum,
+                                         rasterReqObj)
 
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
@@ -1367,6 +1379,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   wave = reqObj["wavelength"]
   xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
   ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  detDist = reqObj["detDist"]
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
   omega = float(rasterDef["omega"])
@@ -1472,17 +1485,14 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
-      _thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
-      #time.sleep(2) #make up for lack of _thread join() method
+      _thread.start_new_thread(runDozorThread,(data_directory_name,
+                                               filePrefix+"_Raster",
+                                               i,
+                                               numsteps,
+                                               seqNum,
+                                               reqObj))
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
-
-  #for k in range(0,rasterDef['rowDefs']):
-    #_thread.start_new_thread(runDozorThread,(data_directory_name,filePrefix+"_Raster",k,numsteps,seqNum))
-    #time.sleep(2)#for lack of join()
-    #print(k)
-  #det_lib.detector_stop_acquire()
-  #det_lib.detector_wait()
   logger.info('detector finished waiting')
   if (daq_utils.beamline == "amxz"):  
     beamline_support.setPvValFromDescriptor("zebraReset",1)      

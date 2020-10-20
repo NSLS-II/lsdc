@@ -745,14 +745,24 @@ def runDozorThread(directory,
     global rasterRowResultsList,processedRasterRowCount
 
     time.sleep(0.5) #allow for file writing
-    dozorComm = "/home/dkreitler/.local/dozor-10Aug2020/dozor"
+    dozorComm = "/usr/local/crys-local/dozor-10Aug2020/dozor"
      
-    if ( ( (rowIndex % 2) == 0) ):
-        node = "cpu-024"
-    elif (( (rowIndex % 3) == 0) ):
-        node = 'cpu-025'
+    if ((rowIndex % 8) == 1):
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")
+    elif ((rowIndex % 8) == 2):
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode2")
+    elif ((rowIndex % 8) == 3):
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode3")
+    elif ((rowIndex % 8) == 4):
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode4")
+    elif ((rowIndex % 8) == 5): 
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode5")
+    elif ((rowIndex % 8) == 6): 
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode6")
+    elif ((rowIndex % 8) == 7): 
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode7")
     else:
-        node="cpu-026"
+        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode8")
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,

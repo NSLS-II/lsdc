@@ -70,7 +70,7 @@ def albulaDispFile(filename):
 
 @albulaDispFile.register(str)
 def _albulaDispFile(filename):
-    global albulaFrame,albulaSubFrame
+    global albulaFrame,albulaSubFrame,currentMasterH5
 
     if (albulaFrame == None or albulaSubFrame == None):
         albulaFrame = dectris.albula.openMainFrame()
@@ -78,6 +78,7 @@ def _albulaDispFile(filename):
         albulaSubFrame = albulaFrame.openSubFrame()
     try:
         albulaSubFrame.loadFile(filename)
+        currentMasterH5 = ""
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()

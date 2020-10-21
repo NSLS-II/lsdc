@@ -669,7 +669,8 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     
     firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
     hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum,rowIndex)
-    inputTemplate = open("/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/lsdc_amx/h5_template.dat")
+    daqMacrosPath = os.path.dirname(__file__)
+    inputTemplate = open(os.path.join(daqMacrosPath,"h5_template.dat"))
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
     templateDict = {"detector": detector,

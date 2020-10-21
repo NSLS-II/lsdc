@@ -25,6 +25,7 @@ from cv2 import *
 from PIL import Image
 from PIL import ImageQt
 import daq_utils
+from daq_utils import getBlConfig, setBlConfig
 import albulaUtils
 import functools
 from QPeriodicTable import *
@@ -35,7 +36,6 @@ from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
-import daq_utils
 
 import socket
 hostname = socket.gethostname()
@@ -190,47 +190,47 @@ class StaffScreenDialog(QFrame):
         hBoxColParams0.addWidget(puckToDewarButton)
         hBoxColParams0.addWidget(removePuckButton )                        
         self.robotOnCheckBox = QCheckBox("Robot (On)")
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"robot_online") == 1):
+        if (getBlConfig("robot_online") == 1):
           self.robotOnCheckBox.setChecked(True)
         else:
           self.robotOnCheckBox.setChecked(False)            
         self.robotOnCheckBox.stateChanged.connect(self.robotOnCheckCB)
         self.topViewCheckOnCheckBox = QCheckBox("TopViewCheck (On)")
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+        if (getBlConfig("topViewCheck") == 1):
           self.topViewCheckOnCheckBox.setChecked(True)
         else:
           self.topViewCheckOnCheckBox.setChecked(False)            
         self.topViewCheckOnCheckBox.stateChanged.connect(self.topViewOnCheckCB)
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
+        if (getBlConfig("queueCollect") == 1):
           self.queueCollectOnCheckBox.setChecked(True)
         else:
           self.queueCollectOnCheckBox.setChecked(False)            
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"vertRasterOn") == 1):
+        if (getBlConfig("vertRasterOn") == 1):
           self.vertRasterOnCheckBox.setChecked(True)
         else:
           self.vertRasterOnCheckBox.setChecked(False)            
         self.vertRasterOnCheckBox.stateChanged.connect(self.vertRasterOnCheckCB)
         self.procRasterOnCheckBox = QCheckBox("Process Raster")
         hBoxColParams1.addWidget(self.procRasterOnCheckBox)        
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag") == 1):
+        if (getBlConfig("rasterProcessFlag") == 1):
           self.procRasterOnCheckBox.setChecked(True)
         else:
           self.procRasterOnCheckBox.setChecked(False)            
         self.procRasterOnCheckBox.stateChanged.connect(self.procRasterOnCheckCB)
         self.guiRemoteOnCheckBox = QCheckBox("GUI Remote")
         hBoxColParams1.addWidget(self.guiRemoteOnCheckBox)        
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV") == "VAL"):
+        if (getBlConfig("omegaMonitorPV") == "VAL"):
           self.guiRemoteOnCheckBox.setChecked(True)
         else:
           self.guiRemoteOnCheckBox.setChecked(False)            
         self.guiRemoteOnCheckBox.stateChanged.connect(self.guiRemoteOnCheckCB)
         self.enableMountCheckBox = QCheckBox("Enable Mount")
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"mountEnabled") == 1):
+        if (getBlConfig("mountEnabled") == 1):
           self.enableMountCheckBox.setChecked(True)
         else:
           self.enableMountCheckBox.setChecked(False)            
@@ -336,14 +336,14 @@ class StaffScreenDialog(QFrame):
     def getSpotNodeList(self):
       nodeList = []
       for i in range (0,self.spotNodeCount):
-        nodeList.append(int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('-')[1]))
       return nodeList
         
         
     def getFastDPNodeList(self):
       nodeList = []
       for i in range (0,self.fastDPNodeCount):
-        nodeList.append(int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"fastDPNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('-')[1]))
       return nodeList
 
     def setFastDPNodesCB(self):
@@ -411,45 +411,45 @@ class StaffScreenDialog(QFrame):
 
     def robotOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"robot_online",1)
+        setBlConfig("robot_online",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"robot_online",0)
+        setBlConfig("robot_online",0)
 
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"topViewCheck",1)
+        setBlConfig("topViewCheck",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"topViewCheck",0)
+        setBlConfig("topViewCheck",0)
         
     def vertRasterOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"vertRasterOn",1)
+        setBlConfig("vertRasterOn",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"vertRasterOn",0)
+        setBlConfig("vertRasterOn",0)
 
     def procRasterOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag",1)
+        setBlConfig("rasterProcessFlag",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag",0)
+        setBlConfig("rasterProcessFlag",0)
 
     def guiRemoteOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV","VAL")
+        setBlConfig("omegaMonitorPV","VAL")
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV","RBV")
+        setBlConfig("omegaMonitorPV","RBV")
         
     def queueCollectOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"queueCollect",1)
+        setBlConfig("queueCollect",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"queueCollect",0)
+        setBlConfig("queueCollect",0)
 
     def enableMountCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"mountEnabled",1)
+        setBlConfig("mountEnabled",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"mountEnabled",0)
+        setBlConfig("mountEnabled",0)
 
     def screenDefaultsCancelCB(self):
       self.hide()
@@ -692,22 +692,22 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         colRangeLabel = QtWidgets.QLabel('Oscillation Width:')
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_range_ledit = QtWidgets.QLineEdit() # note, this is for rastering! same name used for data collections
-        self.osc_range_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth")))
+        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
         self.osc_range_ledit.returnPressed.connect(self.screenDefaultsOKCB)                        
         colExptimeLabel = QtWidgets.QLabel('ExposureTime:')
         colExptimeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.exp_time_ledit = QtWidgets.QLineEdit()
-        self.exp_time_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime")))
+        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
         self.exp_time_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
         colTransLabel = QtWidgets.QLabel('Transmission (0.0-1.0):')
         colTransLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.trans_ledit = QtWidgets.QLineEdit()
-        self.trans_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans")))
+        self.trans_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
         self.trans_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
         colMinSpotLabel = QtWidgets.QLabel('Min Spot Size:')
         colMinSpotLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.minSpot_ledit = QtWidgets.QLineEdit()
-        self.minSpot_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultMinSpotSize")))
+        self.minSpot_ledit.setText(str(getBlConfig("rasterDefaultMinSpotSize")))
         self.minSpot_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
         hBoxColParams2.addWidget(colRangeLabel)
         hBoxColParams2.addWidget(self.osc_range_ledit)
@@ -723,13 +723,13 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.rasterResoCheckBox.stateChanged.connect(self.rasterResoCheckCB)
         rasterLowResLabel  = QtWidgets.QLabel('LowRes:')
         self.rasterLowRes = QtWidgets.QLineEdit()
-        self.rasterLowRes.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneLowRes")))
+        self.rasterLowRes.setText(str(getBlConfig("rasterTuneLowRes")))
         self.rasterLowRes.returnPressed.connect(self.screenDefaultsOKCB)                
         rasterHighResLabel  = QtWidgets.QLabel('HighRes:')
         self.rasterHighRes = QtWidgets.QLineEdit()
-        self.rasterHighRes.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneHighRes")))
+        self.rasterHighRes.setText(str(getBlConfig("rasterTuneHighRes")))
         self.rasterHighRes.returnPressed.connect(self.screenDefaultsOKCB)                
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag") == 1):
+        if (getBlConfig("rasterTuneResoFlag") == 1):
           resoFlag = True
         else:
           resoFlag = False
@@ -740,10 +740,10 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.rasterIceRingCheckBox.setChecked(False)
         self.rasterIceRingCheckBox.stateChanged.connect(self.rasterIceRingCheckCB)        
         self.rasterIceRingWidth = QtWidgets.QLineEdit()
-        self.rasterIceRingWidth.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingWidth")))
+        self.rasterIceRingWidth.setText(str(getBlConfig("rasterTuneIceRingWidth")))
         self.rasterIceRingWidth.returnPressed.connect(self.screenDefaultsOKCB)                
         self.rasterIceRingWidth.setEnabled(False)
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingFlag") == 1):
+        if (getBlConfig("rasterTuneIceRingFlag") == 1):
           iceRingFlag = True
         else:
           iceRingFlag = False            
@@ -758,7 +758,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
 
         self.hBoxRasterLayout3 = QtWidgets.QHBoxLayout()
         self.rasterThreshCheckBox = QCheckBox("Tune Threshold")
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshFlag") == 1):
+        if (getBlConfig("rasterThreshFlag") == 1):
           threshFlag = True
         else:
           threshFlag = False
@@ -767,15 +767,15 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         
         rasterThreshKernSizeLabel =  QtWidgets.QLabel('KernelSize')
         self.rasterThreshKernSize = QtWidgets.QLineEdit()
-        self.rasterThreshKernSize.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshKernSize")))
+        self.rasterThreshKernSize.setText(str(getBlConfig("rasterThreshKernSize")))
         self.rasterThreshKernSize.returnPressed.connect(self.screenDefaultsOKCB)                
         rasterThreshSigBckLabel =  QtWidgets.QLabel('SigmaBkrnd')        
         self.rasterThreshSigBckrnd = QtWidgets.QLineEdit()
-        self.rasterThreshSigBckrnd.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigBckrnd")))
+        self.rasterThreshSigBckrnd.setText(str(getBlConfig("rasterThreshSigBckrnd")))
         self.rasterThreshSigBckrnd.returnPressed.connect(self.screenDefaultsOKCB)                
         rasterThreshSigStrongLabel =  QtWidgets.QLabel('SigmaStrong')                
         self.rasterThreshSigStrong = QtWidgets.QLineEdit()
-        self.rasterThreshSigStrong.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigStrong")))
+        self.rasterThreshSigStrong.setText(str(getBlConfig("rasterThreshSigStrong")))
         self.rasterThreshSigStrong.returnPressed.connect(self.screenDefaultsOKCB)                
         self.rasterThreshKernSize.setEnabled(threshFlag)
         self.rasterThreshSigBckrnd.setEnabled(threshFlag)
@@ -815,24 +815,24 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
       self.done(QDialog.Rejected)
 
     def screenDefaultsOKCB(self):
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth",float(self.osc_range_ledit.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime",float(self.exp_time_ledit.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans",float(self.trans_ledit.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultMinSpotSize",float(self.minSpot_ledit.text()))            
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneLowRes",float(self.rasterLowRes.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneHighRes",float(self.rasterHighRes.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingWidth",float(self.rasterIceRingWidth.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterThreshKernSize",float(self.rasterThreshKernSize.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigBckrnd",float(self.rasterThreshSigBckrnd.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigStrong",float(self.rasterThreshSigStrong.text()))                  
+      setBlConfig("rasterDefaultWidth",float(self.osc_range_ledit.text()))
+      setBlConfig("rasterDefaultTime",float(self.exp_time_ledit.text()))
+      setBlConfig("rasterDefaultTrans",float(self.trans_ledit.text()))
+      setBlConfig("rasterDefaultMinSpotSize",float(self.minSpot_ledit.text()))            
+      setBlConfig("rasterTuneLowRes",float(self.rasterLowRes.text()))
+      setBlConfig("rasterTuneHighRes",float(self.rasterHighRes.text()))
+      setBlConfig("rasterTuneIceRingWidth",float(self.rasterIceRingWidth.text()))
+      setBlConfig("rasterThreshKernSize",float(self.rasterThreshKernSize.text()))
+      setBlConfig("rasterThreshSigBckrnd",float(self.rasterThreshSigBckrnd.text()))
+      setBlConfig("rasterThreshSigStrong",float(self.rasterThreshSigStrong.text()))                  
       if (self.rasterIceRingCheckBox.isChecked()):
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingFlag",1)
+        setBlConfig("rasterTuneIceRingFlag",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingFlag",0)          
+        setBlConfig("rasterTuneIceRingFlag",0)          
       if (self.rasterResoCheckBox.isChecked()):
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag",1)
+        setBlConfig("rasterTuneResoFlag",1)
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag",0)          
+        setBlConfig("rasterTuneResoFlag",0)          
     
     def rasterIceRingCheckCB(self,state):
       if state == QtCore.Qt.Checked:
@@ -842,22 +842,22 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
 
     def rasterResoCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag",1)        
+        setBlConfig("rasterTuneResoFlag",1)        
         self.rasterLowRes.setEnabled(True)
         self.rasterHighRes.setEnabled(True)                
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag",0)                
+        setBlConfig("rasterTuneResoFlag",0)                
         self.rasterLowRes.setEnabled(False)
         self.rasterHighRes.setEnabled(False)                
 
     def rasterThreshCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterThreshFlag",1)
+        setBlConfig("rasterThreshFlag",1)
         self.rasterThreshKernSize.setEnabled(True)
         self.rasterThreshSigBckrnd.setEnabled(True)
         self.rasterThreshSigStrong.setEnabled(True)                        
       else:
-        db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterThreshFlag",0)        
+        setBlConfig("rasterThreshFlag",0)        
         self.rasterThreshKernSize.setEnabled(False)
         self.rasterThreshSigBckrnd.setEnabled(False)
         self.rasterThreshSigStrong.setEnabled(False)                        
@@ -1546,7 +1546,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupMessage.setStyleSheet("background-color: red")
         self.popupMessage.setModal(False)
         self.groupName = "skinner"
-        self.scannerType = db_lib.getBeamlineConfigParam(daq_utils.beamline,"scannerType")
+        self.scannerType = getBlConfig("scannerType")
         self.vectorStart = None
         self.vectorEnd = None
         self.staffScreenDialog = None
@@ -1796,7 +1796,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
         if (daq_utils.beamline == "fmx"):
-          if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"attenType") == "RI"):
+          if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (RI) (0.0-1.0):')            
@@ -1816,7 +1816,7 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"stdTrans")))
+        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))
         self.transmission_ledit.returnPressed.connect(self.setTransCB)        
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
@@ -2235,7 +2235,7 @@ class ControlMain(QtWidgets.QMainWindow):
         setDC2CPButton = QtWidgets.QPushButton("SetStart")
         setDC2CPButton.clicked.connect(self.setDCStartCB)        
         omegaLabel = QtWidgets.QLabel("Omega:")
-        omegaMonitorPV = str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV"))
+        omegaMonitorPV = str(getBlConfig("omegaMonitorPV"))
         self.sampleOmegaRBVLedit = QtEpicsPVLabel(daq_utils.motor_dict["omega"] + "." + omegaMonitorPV,self,70) 
         omegaSPLabel = QtWidgets.QLabel("SetPoint:")
         self.sampleOmegaMoveLedit = QtEpicsPVEntry(daq_utils.motor_dict["omega"] + ".VAL",self,70,2)
@@ -3321,30 +3321,30 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoRasterRadio.setChecked(True)
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
-        self.osc_range_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth")))
-        self.exp_time_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime")))
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans")))
+        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
+        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
+        self.transmission_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
       elif (protocol == "rasterScreen"):
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
-        self.osc_range_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth")))
-        self.exp_time_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime")))
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans")))
+        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
+        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
+        self.transmission_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
         self.protoOtherRadio.setChecked(True)        
       elif (protocol == "standard"):
         self.protoStandardRadio.setChecked(True)
-        screenWidth = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_width"))
-        screenExptime = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_time"))
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"stdTrans")))
+        screenWidth = float(getBlConfig("screen_default_width"))
+        screenExptime = float(getBlConfig("screen_default_time"))
+        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))
         self.osc_range_ledit.setText(str(screenWidth))
         self.exp_time_ledit.setText(str(screenExptime))
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
       elif (protocol == "burn"):
         self.fastDPCheckBox.setChecked(False)        
-        screenWidth = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"burnDefaultNumFrames"))
-        screenExptime = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"burnDefaultTime"))
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"burnDefaultTrans")))
+        screenWidth = float(getBlConfig("burnDefaultNumFrames"))
+        screenExptime = float(getBlConfig("burnDefaultTime"))
+        self.transmission_ledit.setText(str(getBlConfig("burnDefaultTrans")))
         self.osc_end_ledit.setText(str(screenWidth))
         self.exp_time_ledit.setText(str(screenExptime))
         self.osc_range_ledit.setText("0.0")
@@ -3352,9 +3352,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_end_ledit.setEnabled(True)
         
       elif (protocol == "vector"):
-        screenWidth = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_width"))
-        screenExptime = float(db_lib.getBeamlineConfigParam(daq_utils.beamline,"screen_default_time"))
-        self.transmission_ledit.setText(str(db_lib.getBeamlineConfigParam(daq_utils.beamline,"stdTrans")))        
+        screenWidth = float(getBlConfig("screen_default_width"))
+        screenExptime = float(getBlConfig("screen_default_time"))
+        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))        
         self.osc_range_ledit.setText(str(screenWidth))
         self.exp_time_ledit.setText(str(screenExptime))
         self.osc_start_ledit.setEnabled(True)
@@ -3955,7 +3955,7 @@ class ControlMain(QtWidgets.QMainWindow):
         numsteps_v = numsteps_v + 1
       point_offset_x = -(numsteps_h*stepsizeXPix)/2
       point_offset_y = -(numsteps_v*stepsizeYPix)/2
-      if ((numsteps_h == 1) or (numsteps_v > numsteps_h and db_lib.getBeamlineConfigParam(daq_utils.beamline,"vertRasterOn"))): #vertical raster
+      if ((numsteps_h == 1) or (numsteps_v > numsteps_h and getBlConfig("vertRasterOn"))): #vertical raster
         for i in range(numsteps_h):
           rowCellCount = 0
           for j in range(numsteps_v):
@@ -3989,9 +3989,9 @@ class ControlMain(QtWidgets.QMainWindow):
             vectorEndY = vectorStartY
             newRowDef = {"start":{"x": vectorStartX,"y":vectorStartY},"end":{"x":vectorEndX,"y":vectorEndY},"numsteps":rowCellCount}
             rasterDef["rowDefs"].append(newRowDef)
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth",float(self.osc_range_ledit.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime",float(self.exp_time_ledit.text()))
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans",float(self.transmission_ledit.text()))
+      setBlConfig("rasterDefaultWidth",float(self.osc_range_ledit.text()))
+      setBlConfig("rasterDefaultTime",float(self.exp_time_ledit.text()))
+      setBlConfig("rasterDefaultTrans",float(self.transmission_ledit.text()))
       
       self.addSampleRequestCB(rasterDef)
       return #short circuit
@@ -4054,7 +4054,7 @@ class ControlMain(QtWidgets.QMainWindow):
       try:
         # instead of the previous StringIO, use BytesIO:
         # https://stackoverflow.com/questions/41340296/how-can-pillow-open-uploaded-image-file-from-stringio-directly
-        file = BytesIO(urllib.request.urlopen(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchCornerCamURL")).read())
+        file = BytesIO(urllib.request.urlopen(getBlConfig("hutchCornerCamURL")).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
@@ -4062,7 +4062,7 @@ class ControlMain(QtWidgets.QMainWindow):
       except Exception as e:
         logger.error('Exception during hutch corner cam handling: %s' % e)
       try:
-        file = BytesIO(urllib.request.urlopen(db_lib.getBeamlineConfigParam(daq_utils.beamline,"hutchTopCamURL")).read())
+        file = BytesIO(urllib.request.urlopen(getBlConfig("hutchTopCamURL")).read())
         img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
@@ -4227,7 +4227,7 @@ class ControlMain(QtWidgets.QMainWindow):
         itemDataType = str(item.data(33))        
         if (itemDataType == "sample"): 
           self.selectedSampleID = itemData
-          if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):
+          if (getBlConfig("queueCollect") == 0):
             if (self.mountedPin_pv.get() != self.selectedSampleID):                    
               self.popupServerMessage("You can only add requests to a mounted sample, for now.")
               self.progressDialog.close()              
@@ -4265,7 +4265,7 @@ class ControlMain(QtWidgets.QMainWindow):
           logger.info("setting proposal in add request")
           daq_utils.setProposalID(propNum,createVisit=True)
 
-      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):
+      if (getBlConfig("queueCollect") == 0):
         if (self.mountedPin_pv.get() != self.selectedSampleID):                    
           self.popupServerMessage("You can only add requests to a mounted sample, for now.")
           return
@@ -4349,10 +4349,10 @@ class ControlMain(QtWidgets.QMainWindow):
              reqObj["sweep_start"] = float(self.osc_start_ledit.text())
              reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
              reqObj["img_width"] = float(self.osc_range_ledit.text())
-             db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_width",float(self.osc_range_ledit.text()))
-             db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_time",float(self.exp_time_ledit.text()))
-             db_lib.setBeamlineConfigParam(daq_utils.beamline,"stdTrans",float(self.transmission_ledit.text()))
-             db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
+             setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+             setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+             setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+             setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
              reqObj["exposure_time"] = float(self.exp_time_ledit.text())
              reqObj["resolution"] = float(self.resolution_ledit.text())
              reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text()+"_C"+str(i+1))
@@ -4408,10 +4408,10 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["img_width"] = float(self.osc_range_ledit.text())
         reqObj["exposure_time"] = float(self.exp_time_ledit.text())
         if (rasterDef == None and reqObj["protocol"] != "burn"):        
-          db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_width",float(self.osc_range_ledit.text()))
-          db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_time",float(self.exp_time_ledit.text()))
-          db_lib.setBeamlineConfigParam(daq_utils.beamline,"stdTrans",float(self.transmission_ledit.text()))
-          db_lib.setBeamlineConfigParam(daq_utils.beamline,"screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
+          setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+          setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+          setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+          setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
         reqObj["resolution"] = float(self.resolution_ledit.text())
         reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+ "/" + str(daq_utils.getVisitName()) + "/" +str(self.dataPathGB.prefix_ledit.text())+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
         reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
@@ -4650,7 +4650,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.aux_send_to_server("stopDCQueue(2)")
 
     def mountSampleCB(self):
-      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"mountEnabled") == 0):
+      if (getBlConfig("mountEnabled") == 0):
         self.popupServerMessage("Mounting disabled!! Call staff!")
         return
       logger.info("mount selected sample")

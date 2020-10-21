@@ -10,6 +10,7 @@ import robot_lib
 import daq_utils
 import beamline_lib
 import beamline_support
+from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import db_lib
 import logging
 logger = logging.getLogger(__name__)
@@ -79,10 +80,10 @@ def set_distance_value(distance):
   set_field("distance",atof(distance))
   
 def set_xbeam(xbeam): #detector center for image header, in pixels
-  beamline_support.setPvValFromDescriptor("beamCenterX",float(xbeam))
+  setPvDesc("beamCenterX",float(xbeam))
 
 def set_ybeam(ybeam):
-  beamline_support.setPvValFromDescriptor("beamCenterY",float(ybeam))  
+  setPvDesc("beamCenterY",float(ybeam))  
 
 
 def set_beamcenter(xbeam,ybeam): #detector center for image header, in pixels
@@ -144,13 +145,13 @@ def abort_data_collection(flag):
     abort_flag = 2
     return
   gui_message("Aborting. This may take a minute or more.")  
-  while not (beamline_support.getPvValFromDescriptor("VectorActive")): #only stop if actually collecting
+  while not (getPvDesc("VectorActive")): #only stop if actually collecting
     time.sleep(0.1)
   destroy_gui_message()    
   abort_flag = 1
   time.sleep(1.0)
   gon_stop() #this calls osc abort
-  beamline_support.setPvValFromDescriptor("zebraDisarm",1)
+  setPvDesc("zebraDisarm",1)
   time.sleep(2)
   detector_stop()
 
@@ -216,34 +217,34 @@ def broadcast_output(s):
 
 
 def getRobotConfig():
-  return beamline_support.getPvValFromDescriptor("robotGovConfig",as_string=True)
+  return getPvDesc("robotGovConfig",as_string=True)
 
 
 def setRobotGovState(stateString):
   if (getRobotConfig() == "Robot"):
-    beamline_support.setPvValFromDescriptor("robotGovGo",stateString)
+    setPvDesc("robotGovGo",stateString)
   else:
-    beamline_support.setPvValFromDescriptor("humanGovGo",stateString)
+    setPvDesc("humanGovGo",stateString)
 
 def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
     lowMagExpTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"lowMagExptimeDA")    
-    beamline_support.setPvValFromDescriptor("lowMagGain",25)
-    beamline_support.setPvValFromDescriptor("lowMagAcquireTime",lowMagExpTime)
+    setPvDesc("lowMagGain",25)
+    setPvDesc("lowMagAcquireTime",lowMagExpTime)
   else:
     lowMagExpTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"lowMagExptime")
     if (daq_utils.beamline == "amx"):                              
-      beamline_support.setPvValFromDescriptor("lowMagGain",0.1)
+      setPvDesc("lowMagGain",0.1)
     else:
-      beamline_support.setPvValFromDescriptor("lowMagGain",1)      
-    beamline_support.setPvValFromDescriptor("lowMagAcquireTime",lowMagExpTime)                    
+      setPvDesc("lowMagGain",1)      
+    setPvDesc("lowMagAcquireTime",lowMagExpTime)                    
 
     
 
 def waitGovRobotSE():
   waitGovNoSleep()    
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotSeActive") or beamline_support.getPvValFromDescriptor("humanSeActive"))
+  robotGovState = (getPvDesc("robotSeActive") or getPvDesc("humanSeActive"))
   logger.info("robot gov state = " + str(robotGovState))
   if (robotGovState != 0):
     toggleLowMagCameraSettings("SE")
@@ -261,7 +262,7 @@ def setGovRobot(state):
     setRobotGovState(state)
     altName = state.lower().capitalize()
     waitGov()
-    robotGovState = (beamline_support.getPvValFromDescriptor("robot%sActive" % altName) or beamline_support.getPvValFromDescriptor("human%sActive" % altName))
+    robotGovState = (getPvDesc("robot%sActive" % altName) or getPvDesc("human%sActive" % altName))
     logger.info("robot gov state = " + str(robotGovState))
     if (robotGovState != 0):
       if state in ["SA", "DA"]:
@@ -275,7 +276,7 @@ def setGovRobot(state):
 def setGovRobotDI(): # keep this because it is different from the others
   setRobotGovState("DI")
   waitGov()    
-  robotGovState = beamline_support.getPvValFromDescriptor("robotDiActive")
+  robotGovState = getPvDesc("robotDiActive")
   logger.info("robot gov state = " + str(robotGovState))
   if (robotGovState != 0):
     toggleLowMagCameraSettings("DI")        
@@ -286,7 +287,7 @@ def setGovRobotDI(): # keep this because it is different from the others
     return 0
 
 def govBusy():
-  return (beamline_support.getPvValFromDescriptor("robotGovStatus") == 1 or beamline_support.getPvValFromDescriptor("humanGovStatus") == 1)
+  return (getPvDesc("robotGovStatus") == 1 or getPvDesc("humanGovStatus") == 1)
 
 def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
   logger.info("setGovRobotSA")  
@@ -340,10 +341,10 @@ def mountSample(sampID):
   if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
     logger.info("setting work pos")
     if (daq_utils.beamline == "amx"):                          
-      beamline_support.setPvValFromDescriptor("robotXWorkPos",beamline_support.getPvValFromDescriptor("robotXMountPos"))
-      beamline_support.setPvValFromDescriptor("robotYWorkPos",beamline_support.getPvValFromDescriptor("robotYMountPos"))
-      beamline_support.setPvValFromDescriptor("robotZWorkPos",beamline_support.getPvValFromDescriptor("robotZMountPos"))
-      beamline_support.setPvValFromDescriptor("robotOmegaWorkPos",90.0)    
+      setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
+      setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
+      setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
+      setPvDesc("robotOmegaWorkPos",90.0)    
       logger.info("done setting work pos")  
   if (currentMountedSampleID != ""): #then unmount what's there
     if (sampID!=currentMountedSampleID):
@@ -422,7 +423,7 @@ def unmountCold():
       robot_lib.parkGripper()
       set_field("mounted_pin","")
       db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
-      beamline_support.setPvValFromDescriptor("robotGovActive",1)
+      setPvDesc("robotGovActive",1)
       return 1
     else:
       return 0
@@ -430,7 +431,7 @@ def unmountCold():
 def waitBeam():
   waiting = 0
   while (1):
-    if (beamline_support.getPvValFromDescriptor("beamAvailable") or db_lib.getBeamlineConfigParam(daq_utils.beamline,"beamCheck") == 0):
+    if (getPvDesc("beamAvailable") or db_lib.getBeamlineConfigParam(daq_utils.beamline,"beamCheck") == 0):
       if (waiting):
         waiting = 0
         destroy_gui_message()          
@@ -457,11 +458,11 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    beamline_support.setPvValFromDescriptor("govRobotDetDist",reqObj["detDist"])
-    beamline_support.setPvValFromDescriptor("govHumanDetDist",reqObj["detDist"])
+    setPvDesc("govRobotDetDist",reqObj["detDist"])
+    setPvDesc("govHumanDetDist",reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 0):
-      beamline_support.setPvValFromDescriptor("govRobotDetDistOut",reqObj["detDist"])
-      beamline_support.setPvValFromDescriptor("govHumanDetDistOut",reqObj["detDist"])          
+      setPvDesc("govRobotDetDistOut",reqObj["detDist"])
+      setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]
@@ -498,8 +499,8 @@ def stopDCQueue(flag):
 def logMxRequestParams(currentRequest):
   global currentIspybDCID
   reqObj = currentRequest["request_obj"]
-  transmissionReadback = beamline_support.getPvValFromDescriptor("transmissionRBV")
-  flux = beamline_support.getPvValFromDescriptor("flux")
+  transmissionReadback = getPvDesc("transmissionRBV")
+  flux = getPvDesc("flux")
   resultObj = {"requestObj":reqObj,"transmissionReadback":transmissionReadback,"flux":flux}  
   resultID = db_lib.addResultforRequest("mxExpParams",currentRequest["uid"],owner=daq_utils.owner,result_obj=resultObj,proposalID=daq_utils.getProposalID(),beamline=daq_utils.beamline)
   newResult = db_lib.getResult(resultID)
@@ -517,7 +518,7 @@ def logMxRequestParams(currentRequest):
   logfile.write("data prefix: " + reqObj["file_prefix"] +"\n")
   logfile.write("flux: " + str(flux) +"\n")
   logfile.write("transimission percent: " + str(transmissionReadback) +"\n")
-  logfile.write("total current (BCU): " + str(beamline_support.getPvValFromDescriptor("totalCurrentBCU")) +"\n")    
+  logfile.write("total current (BCU): " + str(getPvDesc("totalCurrentBCU")) +"\n")    
   logfile.write("omega start: " + str(reqObj["sweep_start"]) +"\n")
   logfile.write("omega end: " + str(reqObj["sweep_end"]) +"\n")
   logfile.write("image width: " + str(reqObj["img_width"]) +"\n")
@@ -539,9 +540,9 @@ def collectData(currentRequest):
   global data_directory_name,currentIspybDCID,fastDPNodeCount,fastDPNodeCounter
 
   if (daq_utils.beamline == "fmx"):
-    if (beamline_support.getPvValFromDescriptor("detCoverRBV") == 0):
+    if (getPvDesc("detCoverRBV") == 0):
       logger.info("opening det cover")
-      beamline_support.setPvValFromDescriptor("detCoverOpen",1)
+      setPvDesc("detCoverOpen",1)
   logMe = 1
   reqObj = currentRequest["request_obj"]
   data_directory_name = str(reqObj["directory"])
@@ -578,8 +579,8 @@ def collectData(currentRequest):
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
   # now that the detector is in the correct position, get the beam center
-  currentRequest['request_obj']['xbeam'] = beamline_support.getPvValFromDescriptor('beamCenterX')
-  currentRequest['request_obj']['ybeam'] = beamline_support.getPvValFromDescriptor('beamCenterY')
+  currentRequest['request_obj']['xbeam'] = getPvDesc('beamCenterX')
+  currentRequest['request_obj']['ybeam'] = getPvDesc('beamCenterY')
   db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
     logger.info('entering raster')
@@ -815,7 +816,7 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   detector_set_filepath(data_directory_name)
   detector_set_fileprefix(file_prefix_minus_directory)
   detector_set_filenumber(file_number)
-  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),beamline_lib.motorPosFromDescriptor("wavelength"),0.0,exposure_period,beamline_support.getPvValFromDescriptor("beamCenterX"),beamline_support.getPvValFromDescriptor("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
+  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),beamline_lib.motorPosFromDescriptor("wavelength"),0.0,exposure_period,getPvDesc("beamCenterX"),getPvDesc("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
   
   detector_start() #but you need wired or manual trigger
   startArm = time.time()
@@ -826,13 +827,13 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   return
 
 def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of an x-move in C2C
-  scalePixX = beamline_support.getPvValFromDescriptor("image_X_scalePix")
-  centerPixX = beamline_support.getPvValFromDescriptor("image_Y_centerPix")
+  scalePixX = getPvDesc("image_X_scalePix")
+  centerPixX = getPvDesc("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
   logger.info('checkC2C_X target: %s' % target)
-  xlimLow = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountLowLim")
-  xlimHi = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountHiLim")
+  xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
+  xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
   if (target<xlimLow or target>xlimHi):
     gui_message("Click to Center out of bounds on X move. Please mount next sample.")
     return 0
@@ -842,36 +843,36 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
 def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')): #so that we don't move things when robot moving?
-    robotGovState = (beamline_support.getPvValFromDescriptor("robotSaActive") or beamline_support.getPvValFromDescriptor("humanSaActive"))
+    robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
       return
     if not (checkC2C_X(x,fovx)):
       return
   if (source == "screen"):
     waitGovNoSleep()
-    beamline_support.setPvValFromDescriptor("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui
-    beamline_support.setPvValFromDescriptor("image_Y_scalePix",daq_utils.screenPixY)
-    beamline_support.setPvValFromDescriptor("image_X_centerPix",daq_utils.screenPixX/2)
-    beamline_support.setPvValFromDescriptor("image_Y_centerPix",daq_utils.screenPixY/2)
-    beamline_support.setPvValFromDescriptor("image_X_scaleMM",float(fovx))
-    beamline_support.setPvValFromDescriptor("image_Y_scaleMM",float(fovy))
+    setPvDesc("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui
+    setPvDesc("image_Y_scalePix",daq_utils.screenPixY)
+    setPvDesc("image_X_centerPix",daq_utils.screenPixX/2)
+    setPvDesc("image_Y_centerPix",daq_utils.screenPixY/2)
+    setPvDesc("image_X_scaleMM",float(fovx))
+    setPvDesc("image_Y_scaleMM",float(fovy))
     
   else:
     if (int(maglevel)==0): #I think hardcoded to not use maglevel anymore, replaced with more flexible fov
-      beamline_support.setPvValFromDescriptor("image_X_scalePix",daq_utils.lowMagPixX)
-      beamline_support.setPvValFromDescriptor("image_Y_scalePix",daq_utils.lowMagPixY)
-      beamline_support.setPvValFromDescriptor("image_X_centerPix",daq_utils.lowMagPixX/2)
-      beamline_support.setPvValFromDescriptor("image_Y_centerPix",daq_utils.lowMagPixY/2)
-      beamline_support.setPvValFromDescriptor("image_X_scaleMM",float(fovx))
-      beamline_support.setPvValFromDescriptor("image_Y_scaleMM",float(fovy))
+      setPvDesc("image_X_scalePix",daq_utils.lowMagPixX)
+      setPvDesc("image_Y_scalePix",daq_utils.lowMagPixY)
+      setPvDesc("image_X_centerPix",daq_utils.lowMagPixX/2)
+      setPvDesc("image_Y_centerPix",daq_utils.lowMagPixY/2)
+      setPvDesc("image_X_scaleMM",float(fovx))
+      setPvDesc("image_Y_scaleMM",float(fovy))
       
     else:
-      beamline_support.setPvValFromDescriptor("image_X_scalePix",daq_utils.lowMagPixX)
-      beamline_support.setPvValFromDescriptor("image_Y_scalePix",daq_utils.lowMagPixY)
-      beamline_support.setPvValFromDescriptor("image_X_centerPix",daq_utils.highMagPixX/2)
-      beamline_support.setPvValFromDescriptor("image_Y_centerPix",daq_utils.highMagPixY/2)
-      beamline_support.setPvValFromDescriptor("image_X_scaleMM",float(fovx))
-      beamline_support.setPvValFromDescriptor("image_Y_scaleMM",float(fovy))
+      setPvDesc("image_X_scalePix",daq_utils.lowMagPixX)
+      setPvDesc("image_Y_scalePix",daq_utils.lowMagPixY)
+      setPvDesc("image_X_centerPix",daq_utils.highMagPixX/2)
+      setPvDesc("image_Y_centerPix",daq_utils.highMagPixY/2)
+      setPvDesc("image_X_scaleMM",float(fovx))
+      setPvDesc("image_Y_scaleMM",float(fovy))
 
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
   lib_gon_center_xtal(x,y,omega_mod,0)

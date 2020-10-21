@@ -1,6 +1,7 @@
 import Gen_Commands
 import Gen_Traj_Square
 import beamline_support
+from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import beamline_lib #did this really screw me if I imported b/c of daq_utils import??
 import daq_lib
 import daq_utils
@@ -66,23 +67,23 @@ def abortBS():
 
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)
-  zoomMinXRBV = beamline_support.getPvValFromDescriptor("lowMagZoomMinXRBV")
-  zoomMinYRBV = beamline_support.getPvValFromDescriptor("lowMagZoomMinYRBV")
-  minXRBV = beamline_support.getPvValFromDescriptor("lowMagMinXRBV")
-  minYRBV = beamline_support.getPvValFromDescriptor("lowMagMinYRBV")
+  zoomMinXRBV = getPvDesc("lowMagZoomMinXRBV")
+  zoomMinYRBV = getPvDesc("lowMagZoomMinYRBV")
+  minXRBV = getPvDesc("lowMagMinXRBV")
+  minYRBV = getPvDesc("lowMagMinYRBV")
   
-  sizeXRBV = beamline_support.getPvValFromDescriptor("lowMagZoomSizeXRBV")
-  sizeYRBV = beamline_support.getPvValFromDescriptor("lowMagZoomSizeYRBV")
+  sizeXRBV = getPvDesc("lowMagZoomSizeXRBV")
+  sizeYRBV = getPvDesc("lowMagZoomSizeYRBV")
   sizeXRBV = 640.0
   sizeYRBV = 512.0
-  roiSizeXRBV = beamline_support.getPvValFromDescriptor("lowMagROISizeXRBV")
-  roiSizeYRBV = beamline_support.getPvValFromDescriptor("lowMagROISizeYRBV")  
-  roiSizeZoomXRBV = beamline_support.getPvValFromDescriptor("lowMagZoomROISizeXRBV")
-  roiSizeZoomYRBV = beamline_support.getPvValFromDescriptor("lowMagZoomROISizeYRBV")
-  inputSizeZoomXRBV = beamline_support.getPvValFromDescriptor("lowMagZoomMaxSizeXRBV")
-  inputSizeZoomYRBV = beamline_support.getPvValFromDescriptor("lowMagZoomMaxSizeYRBV")      
-  inputSizeXRBV = beamline_support.getPvValFromDescriptor("lowMagMaxSizeXRBV")
-  inputSizeYRBV = beamline_support.getPvValFromDescriptor("lowMagMaxSizeYRBV")      
+  roiSizeXRBV = getPvDesc("lowMagROISizeXRBV")
+  roiSizeYRBV = getPvDesc("lowMagROISizeYRBV")  
+  roiSizeZoomXRBV = getPvDesc("lowMagZoomROISizeXRBV")
+  roiSizeZoomYRBV = getPvDesc("lowMagZoomROISizeYRBV")
+  inputSizeZoomXRBV = getPvDesc("lowMagZoomMaxSizeXRBV")
+  inputSizeZoomYRBV = getPvDesc("lowMagZoomMaxSizeYRBV")      
+  inputSizeXRBV = getPvDesc("lowMagMaxSizeXRBV")
+  inputSizeYRBV = getPvDesc("lowMagMaxSizeYRBV")      
   x_click = float(x)
   y_click = float(y)
   binningFactor = 2.0  
@@ -115,37 +116,37 @@ def changeImageCenterLowMag(x,y,czoom):
     new_minXZoom = inputSizeZoomXRBV-roiSizeZoomXRBV
   if (new_minXZoom < 0):
     new_minXZoom = 0
-  beamline_support.setPvValFromDescriptor("lowMagZoomMinX",new_minXZoom)    
+  setPvDesc("lowMagZoomMinX",new_minXZoom)    
   if (new_minYZoom+roiSizeZoomYRBV>inputSizeZoomYRBV):
     new_minYZoom = inputSizeZoomYRBV-roiSizeZoomYRBV
   if (new_minYZoom < 0):
     new_minYZoom = 0
-  beamline_support.setPvValFromDescriptor("lowMagZoomMinY",new_minYZoom)        
-  beamline_support.setPvValFromDescriptor("lowMagMinX",new_minX)
-  beamline_support.setPvValFromDescriptor("lowMagMinY",new_minY)    
-  beamline_support.setPvValFromDescriptor("lowMagCursorX",noZoomCenterX)
-  beamline_support.setPvValFromDescriptor("lowMagCursorY",noZoomCenterY)  
+  setPvDesc("lowMagZoomMinY",new_minYZoom)        
+  setPvDesc("lowMagMinX",new_minX)
+  setPvDesc("lowMagMinY",new_minY)    
+  setPvDesc("lowMagCursorX",noZoomCenterX)
+  setPvDesc("lowMagCursorY",noZoomCenterY)  
       
 
 def changeImageCenterHighMag(x,y,czoom):
   zoom = int(czoom)
-  zoomMinXRBV = beamline_support.getPvValFromDescriptor("highMagZoomMinXRBV")
-  zoomMinYRBV = beamline_support.getPvValFromDescriptor("highMagZoomMinYRBV")
-  minXRBV = beamline_support.getPvValFromDescriptor("highMagMinXRBV")
-  minYRBV = beamline_support.getPvValFromDescriptor("highMagMinYRBV")
+  zoomMinXRBV = getPvDesc("highMagZoomMinXRBV")
+  zoomMinYRBV = getPvDesc("highMagZoomMinYRBV")
+  minXRBV = getPvDesc("highMagMinXRBV")
+  minYRBV = getPvDesc("highMagMinYRBV")
   
-  sizeXRBV = beamline_support.getPvValFromDescriptor("highMagZoomSizeXRBV")
-  sizeYRBV = beamline_support.getPvValFromDescriptor("highMagZoomSizeYRBV")
+  sizeXRBV = getPvDesc("highMagZoomSizeXRBV")
+  sizeYRBV = getPvDesc("highMagZoomSizeYRBV")
   sizeXRBV = 640.0
   sizeYRBV = 512.0
-  roiSizeXRBV = beamline_support.getPvValFromDescriptor("highMagROISizeXRBV")
-  roiSizeYRBV = beamline_support.getPvValFromDescriptor("highMagROISizeYRBV")  
-  roiSizeZoomXRBV = beamline_support.getPvValFromDescriptor("highMagZoomROISizeXRBV")
-  roiSizeZoomYRBV = beamline_support.getPvValFromDescriptor("highMagZoomROISizeYRBV")
-  inputSizeZoomXRBV = beamline_support.getPvValFromDescriptor("highMagZoomMaxSizeXRBV")
-  inputSizeZoomYRBV = beamline_support.getPvValFromDescriptor("highMagZoomMaxSizeYRBV")      
-  inputSizeXRBV = beamline_support.getPvValFromDescriptor("highMagMaxSizeXRBV")
-  inputSizeYRBV = beamline_support.getPvValFromDescriptor("highMagMaxSizeYRBV")      
+  roiSizeXRBV = getPvDesc("highMagROISizeXRBV")
+  roiSizeYRBV = getPvDesc("highMagROISizeYRBV")  
+  roiSizeZoomXRBV = getPvDesc("highMagZoomROISizeXRBV")
+  roiSizeZoomYRBV = getPvDesc("highMagZoomROISizeYRBV")
+  inputSizeZoomXRBV = getPvDesc("highMagZoomMaxSizeXRBV")
+  inputSizeZoomYRBV = getPvDesc("highMagZoomMaxSizeYRBV")      
+  inputSizeXRBV = getPvDesc("highMagMaxSizeXRBV")
+  inputSizeYRBV = getPvDesc("highMagMaxSizeYRBV")      
   x_click = float(x)
   y_click = float(y)
   binningFactor = 2.0  
@@ -183,12 +184,12 @@ def changeImageCenterHighMag(x,y,czoom):
     new_minYZoom = inputSizeZoomYRBV-roiSizeZoomYRBV
   if (new_minYZoom < 0):
     new_minYZoom = 0
-  beamline_support.setPvValFromDescriptor("highMagZoomMinX",new_minXZoom)
-  beamline_support.setPvValFromDescriptor("highMagZoomMinY",new_minYZoom)
-  beamline_support.setPvValFromDescriptor("highMagMinX",new_minX)
-  beamline_support.setPvValFromDescriptor("highMagMinY",new_minY)    
-  beamline_support.setPvValFromDescriptor("highMagCursorX",noZoomCenterX)
-  beamline_support.setPvValFromDescriptor("highMagCursorY",noZoomCenterY)
+  setPvDesc("highMagZoomMinX",new_minXZoom)
+  setPvDesc("highMagZoomMinY",new_minYZoom)
+  setPvDesc("highMagMinX",new_minX)
+  setPvDesc("highMagMinY",new_minY)    
+  setPvDesc("highMagCursorX",noZoomCenterX)
+  setPvDesc("highMagCursorY",noZoomCenterY)
   
 
 def autoRasterLoop(currentRequest):
@@ -411,8 +412,8 @@ def loop_center_xrec_slow():
   if (reliability < 70 or check_result == 0): #bail if xrec couldn't align loop
     return 0
   beamline_lib.mvaDescriptor("omega",target_angle)
-  x_center = beamline_support.getPvValFromDescriptor("lowMagCursorX")
-  y_center = beamline_support.getPvValFromDescriptor("lowMagCursorY")
+  x_center = getPvDesc("lowMagCursorX")
+  y_center = getPvDesc("lowMagCursorY")
   logger.info("center on click " + str(x_center) + " " + str(y_center-radius))
   logger.info("center on click " + str((x_center*2) - y_centre_xrec) + " " + str(x_centre_xrec))
   fovx = daq_utils.lowMagFOVx
@@ -584,29 +585,29 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
 
 def rasterWait():
   time.sleep(0.2)
-  while (beamline_support.getPvValFromDescriptor("RasterActive")):
+  while (getPvDesc("RasterActive")):
     time.sleep(0.2)
 
 def vectorWait():
   time.sleep(0.15)
-  while (beamline_support.getPvValFromDescriptor("VectorActive")):
+  while (getPvDesc("VectorActive")):
     time.sleep(0.05)
 
 def vectorActiveWait():
   time.sleep(0.15)
-  while (beamline_support.getPvValFromDescriptor("VectorActive")!=1):
+  while (getPvDesc("VectorActive")!=1):
     time.sleep(0.05)
 
 def vectorHoldWait():
   time.sleep(0.15)
-  while (beamline_support.getPvValFromDescriptor("VectorState")!=2):
+  while (getPvDesc("VectorState")!=2):
     time.sleep(0.05)
 
 def vectorProceed():
-  beamline_support.setPvValFromDescriptor("vectorProceed",1)
+  setPvDesc("vectorProceed",1)
 
 def vectorSync():
-  beamline_support.setPvValFromDescriptor("vectorSync",1)
+  setPvDesc("vectorSync",1)
 
 def makeDozorRowDir(directory,rowIndex):
     """Makes separate directory for each row for dozor output,
@@ -1038,8 +1039,8 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   exptimePerCell = reqObj["exposure_time"]
   img_width_per_cell = reqObj["img_width"]
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX") * 0.075
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY") * 0.075
+  xbeam = getPvDesc("beamCenterX") * 0.075
+  ybeam = getPvDesc("beamCenterY") * 0.075
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
   omega = float(rasterDef["omega"])
@@ -1085,15 +1086,15 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   generateRasterCoords4Traj(rasterRequest)
   total_exposure_time = exptimePerCell*totalImages    
     
-  beamline_support.setPvValFromDescriptor("zebraPulseMax",totalImages) 
+  setPvDesc("zebraPulseMax",totalImages) 
   vectorSync()    
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",omega)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",(img_width_per_cell*totalImages)+omega)
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",exptimePerCell*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",totalImages)
+  setPvDesc("vectorStartOmega",omega)
+  setPvDesc("vectorEndOmega",(img_width_per_cell*totalImages)+omega)
+  setPvDesc("vectorframeExptime",exptimePerCell*1000.0)
+  setPvDesc("vectorNumFrames",totalImages)
   rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
   Gen_Commands.go_all()
-  beamline_support.setPvValFromDescriptor("vectorGo",1)
+  setPvDesc("vectorGo",1)
   vectorActiveWait()    
   vectorWait()
   zebraWait()
@@ -1103,11 +1104,11 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   det_lib.detector_wait()
   beamline_lib.mvaDescriptor("fineX",0,"fineY",0,"fineZ",0)
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
   if (procFlag):
     if (daq_utils.beamline == "amx"):
-      rasterRowEncoderVals = {"x":beamline_support.getPvValFromDescriptor("zebraEncX"),"y":beamline_support.getPvValFromDescriptor("zebraEncY"),"z":beamline_support.getPvValFromDescriptor("zebraEncZ"),"omega":beamline_support.getPvValFromDescriptor("zebraEncOmega")}
+      rasterRowEncoderVals = {"x":getPvDesc("zebraEncX"),"y":getPvDesc("zebraEncY"),"z":getPvDesc("zebraEncZ"),"omega":getPvDesc("zebraEncOmega")}
       for j in range (0,numsteps):
         dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
         imIndexStr = str((i*numsteps)+j+1)
@@ -1172,8 +1173,8 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   file_number_start = reqObj["file_number_start"]  
   dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  xbeam = getPvDesc("beamCenterX")
+  ybeam = getPvDesc("beamCenterY")
   processedRasterRowCount = 0
   totalImages = 0
 #get the center of the raster, in screen view, mm, relative to center
@@ -1313,14 +1314,14 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,cellsPerSubraster,rasterFilePrefix,data_directory_name,file_number_start)
     total_exposure_time = exptimePerCell*cellsPerSubraster
-    beamline_support.setPvValFromDescriptor("zebraPulseMax",cellsPerSubraster) 
+    setPvDesc("zebraPulseMax",cellsPerSubraster) 
     vectorSync()    
-    beamline_support.setPvValFromDescriptor("vectorStartOmega",omega)
-    beamline_support.setPvValFromDescriptor("vectorEndOmega",(img_width_per_cell*cellsPerSubraster)+omega)
-    beamline_support.setPvValFromDescriptor("vectorframeExptime",exptimePerCell*1000.0)
-    beamline_support.setPvValFromDescriptor("vectorNumFrames",cellsPerSubraster)
+    setPvDesc("vectorStartOmega",omega)
+    setPvDesc("vectorEndOmega",(img_width_per_cell*cellsPerSubraster)+omega)
+    setPvDesc("vectorframeExptime",exptimePerCell*1000.0)
+    setPvDesc("vectorNumFrames",cellsPerSubraster)
     Gen_Commands.go_all()
-    beamline_support.setPvValFromDescriptor("vectorGo",1)
+    setPvDesc("vectorGo",1)
     vectorActiveWait()    
     vectorWait()
     zebraWait()
@@ -1332,7 +1333,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)        
+    setPvDesc("zebraReset",1)        
   beamline_lib.mvaDescriptor("fineX",0,"fineY",0,"fineZ",0)
   
   if not (procFlag):
@@ -1364,7 +1365,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   global rasterRowResultsList,processedRasterRowCount
 
   if (daq_utils.beamline == "fmx"):
-    beamline_support.setPvValFromDescriptor("sampleProtect",0)
+    setPvDesc("sampleProtect",0)
   daq_lib.setRobotGovState("DA")    
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
@@ -1387,8 +1388,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
   img_width_per_cell = reqObj["img_width"]
 #really should read these two from hardware  
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  xbeam = getPvDesc("beamCenterX")
+  ybeam = getPvDesc("beamCenterY")
   detDist = reqObj["detDist"]
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
@@ -1414,7 +1415,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
   if not (daq_lib.setGovRobot('DA')):
     if (daq_utils.beamline == "fmx"):
-      beamline_support.setPvValFromDescriptor("sampleProtect",1)    
+      setPvDesc("sampleProtect",1)    
     return      
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
   procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))    
@@ -1423,7 +1424,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     if (daq_lib.abort_flag == 1):
       daq_lib.setGovRobot('SA')
       if (daq_utils.beamline == "fmx"):
-        beamline_support.setPvValFromDescriptor("sampleProtect",1)    
+        setPvDesc("sampleProtect",1)    
       return 0
     numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
     startX = rasterDef["rowDefs"][i]["start"]["x"]
@@ -1467,23 +1468,23 @@ def snakeRasterNormal(rasterReqID,grain=""):
       xMotAbsoluteMove = xEndSave
       yMotAbsoluteMove = yEndSave
       zMotAbsoluteMove = zEndSave
-    beamline_support.setPvValFromDescriptor("zebraPulseMax",numsteps) #moved this      
-    beamline_support.setPvValFromDescriptor("vectorStartOmega",omega)
+    setPvDesc("zebraPulseMax",numsteps) #moved this      
+    setPvDesc("vectorStartOmega",omega)
     if (img_width_per_cell != 0):
-      beamline_support.setPvValFromDescriptor("vectorEndOmega",(img_width_per_cell*numsteps)+omega)
+      setPvDesc("vectorEndOmega",(img_width_per_cell*numsteps)+omega)
     else:
-      beamline_support.setPvValFromDescriptor("vectorEndOmega",omega)      
-    beamline_support.setPvValFromDescriptor("vectorStartX",xMotAbsoluteMove)
-    beamline_support.setPvValFromDescriptor("vectorStartY",yMotAbsoluteMove)  
-    beamline_support.setPvValFromDescriptor("vectorStartZ",zMotAbsoluteMove)
-    beamline_support.setPvValFromDescriptor("vectorEndX",xEnd)
-    beamline_support.setPvValFromDescriptor("vectorEndY",yEnd)  
-    beamline_support.setPvValFromDescriptor("vectorEndZ",zEnd)  
-    beamline_support.setPvValFromDescriptor("vectorframeExptime",exptimePerCell*1000.0)
-    beamline_support.setPvValFromDescriptor("vectorNumFrames",numsteps)
+      setPvDesc("vectorEndOmega",omega)      
+    setPvDesc("vectorStartX",xMotAbsoluteMove)
+    setPvDesc("vectorStartY",yMotAbsoluteMove)  
+    setPvDesc("vectorStartZ",zMotAbsoluteMove)
+    setPvDesc("vectorEndX",xEnd)
+    setPvDesc("vectorEndY",yEnd)  
+    setPvDesc("vectorEndZ",zEnd)  
+    setPvDesc("vectorframeExptime",exptimePerCell*1000.0)
+    setPvDesc("vectorNumFrames",numsteps)
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
-    beamline_support.setPvValFromDescriptor("vectorGo",1)
+    setPvDesc("vectorGo",1)
     logger.info('raster done setting up')
     vectorActiveWait()    
     vectorWait()
@@ -1505,7 +1506,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
       
 #I guess this starts the gather loop
@@ -1550,7 +1551,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     time.sleep(2.0)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   if (daq_utils.beamline == "fmx"):
-    beamline_support.setPvValFromDescriptor("sampleProtect",1)        
+    setPvDesc("sampleProtect",1)        
   return 1
 
 
@@ -1566,8 +1567,8 @@ def reprocessRaster(rasterReqID):
   exptimePerCell = reqObj["exposure_time"]
   img_width_per_cell = reqObj["img_width"]
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  xbeam = getPvDesc("beamCenterX")
+  ybeam = getPvDesc("beamCenterY")
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
   omega = float(rasterDef["omega"])
@@ -1692,8 +1693,8 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
   img_width_per_cell = reqObj["img_width"]
 #really should read these two from hardware  
   wave = reqObj["wavelength"]
-  xbeam = beamline_support.getPvValFromDescriptor("beamCenterX")
-  ybeam = beamline_support.getPvValFromDescriptor("beamCenterY")
+  xbeam = getPvDesc("beamCenterX")
+  ybeam = getPvDesc("beamCenterY")
   rasterDef = reqObj["rasterDef"]
   stepsize = float(rasterDef["stepsize"])
   omega = float(rasterDef["omega"])
@@ -1780,19 +1781,19 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
         angle_start = sweep_start_angle
         scanWidth = range_degrees
         angle_end = angle_start+scanWidth        
-        beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)
-        beamline_support.setPvValFromDescriptor("vectorEndOmega",angle_end)
+        setPvDesc("vectorStartOmega",angle_start)
+        setPvDesc("vectorEndOmega",angle_end)
         
-        beamline_support.setPvValFromDescriptor("vectorGo",1)
+        setPvDesc("vectorGo",1)
         vectorActiveWait()  
         vectorWait()
         zebraWait()
-        beamline_support.setPvValFromDescriptor("vectorBufferTime",3)      
+        setPvDesc("vectorBufferTime",3)      
 
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
   db_lib.updatePriority(rasterReqID,-1)  
   if (lastOnSample()):  
@@ -2232,12 +2233,12 @@ def collectSpec(filename,gotoSA=True):
   """collectSpec(filenamePrefix) : collect a spectrum, save to file"""  
   daq_lib.setGovRobot('XF')
   daq_lib.open_shutter()
-  beamline_support.setPvValFromDescriptor("mercuryEraseStart",1)
+  setPvDesc("mercuryEraseStart",1)
   while (1):
-    if (beamline_support.getPvValFromDescriptor("mercuryReadStat") == 0):
+    if (getPvDesc("mercuryReadStat") == 0):
       break
     time.sleep(0.05)
-  specArray = beamline_support.getPvValFromDescriptor("mercurySpectrum")
+  specArray = getPvDesc("mercurySpectrum")
   plt.plot(specArray)
   plt.show(block=False)
   nowtime_s = str(int(time.time()))
@@ -2267,8 +2268,8 @@ def eScan(energyScanRequest):
   right = (steps*stepsize)/2
   mcaRoiLo = reqObj['mcaRoiLo']
   mcaRoiHi = reqObj['mcaRoiHi']
-  beamline_support.setPvValFromDescriptor("mcaRoiLo",mcaRoiLo)
-  beamline_support.setPvValFromDescriptor("mcaRoiHi",mcaRoiHi)      
+  setPvDesc("mcaRoiLo",mcaRoiLo)
+  setPvDesc("mcaRoiHi",mcaRoiHi)      
   
   logger.info("energy scan for " + str(targetEnergy))
   scan_element = reqObj['element']
@@ -2427,35 +2428,35 @@ def vectorZebraScanFine(vecRequest):
   yRelativeMoveFine = yRelStart
   zRelativeMoveFine = zRelStart
   beamline_lib.mvaDescriptor("fineX",xRelativeMoveFine,"fineY",yRelativeMoveFine,"fineZ",zRelativeMoveFine)      
-  beamline_support.setPvValFromDescriptor("fineXPoints",trajPoints)
-  beamline_support.setPvValFromDescriptor("fineYPoints",trajPoints)
-  beamline_support.setPvValFromDescriptor("fineZPoints",trajPoints)
-  beamline_support.setPvValFromDescriptor("fineXAmp",totalScanWidthX)
-  beamline_support.setPvValFromDescriptor("fineYAmp",totalScanWidthY)
-  beamline_support.setPvValFromDescriptor("fineZAmp",totalScanWidthZ)
-  beamline_support.setPvValFromDescriptor("fineXOffset",xRelativeMoveFine)
-  beamline_support.setPvValFromDescriptor("fineYOffset",yRelativeMoveFine)
-  beamline_support.setPvValFromDescriptor("fineZOffset",zRelativeMoveFine)
-  beamline_support.setPvValFromDescriptor("fineXSendWave",1)
+  setPvDesc("fineXPoints",trajPoints)
+  setPvDesc("fineYPoints",trajPoints)
+  setPvDesc("fineZPoints",trajPoints)
+  setPvDesc("fineXAmp",totalScanWidthX)
+  setPvDesc("fineYAmp",totalScanWidthY)
+  setPvDesc("fineZAmp",totalScanWidthZ)
+  setPvDesc("fineXOffset",xRelativeMoveFine)
+  setPvDesc("fineYOffset",yRelativeMoveFine)
+  setPvDesc("fineZOffset",zRelativeMoveFine)
+  setPvDesc("fineXSendWave",1)
   time.sleep(0.1)    
-  beamline_support.setPvValFromDescriptor("fineYSendWave",1)
+  setPvDesc("fineYSendWave",1)
   time.sleep(0.1)    
-  beamline_support.setPvValFromDescriptor("fineZSendWave",1)
+  setPvDesc("fineZSendWave",1)
   time.sleep(0.1)    
   #move xyz fine mots to relative from centered raster
-  beamline_support.setPvValFromDescriptor("fineXVecGo",1)
+  setPvDesc("fineXVecGo",1)
   time.sleep(0.1)            
-  beamline_support.setPvValFromDescriptor("fineYVecGo",1)
+  setPvDesc("fineYVecGo",1)
   time.sleep(0.1)            
-  beamline_support.setPvValFromDescriptor("fineZVecGo",1)    
+  setPvDesc("fineZVecGo",1)    
   time.sleep(0.1)        
-  beamline_support.setPvValFromDescriptor("zebraPulseMax",numImages) #moved this
+  setPvDesc("zebraPulseMax",numImages) #moved this
   vectorSync()
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",sweep_start_angle)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",sweep_end_angle)
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",expTime*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)
-  beamline_support.setPvValFromDescriptor("vectorGo",1)
+  setPvDesc("vectorStartOmega",sweep_start_angle)
+  setPvDesc("vectorEndOmega",sweep_end_angle)
+  setPvDesc("vectorframeExptime",expTime*1000.0)
+  setPvDesc("vectorNumFrames",numImages)
+  setPvDesc("vectorGo",1)
   vectorActiveWait()    
   vectorWait()
   zebraWait()
@@ -2464,7 +2465,7 @@ def vectorZebraScanFine(vecRequest):
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
   #raster centered, now zero motors
   beamline_lib.mvaDescriptor("fineX",0,"fineY",0,"fineZ",0)  
@@ -2490,16 +2491,16 @@ def vectorZebraScanNormal(vecRequest):
   x_vec_end=reqObj["vectorParams"]["vecEnd"]["x"]
   y_vec_end=reqObj["vectorParams"]["vecEnd"]["y"]
   z_vec_end=reqObj["vectorParams"]["vecEnd"]["z"]
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",sweep_start_angle)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",sweep_end_angle)  
-  beamline_support.setPvValFromDescriptor("vectorStartX",x_vec_start)
-  beamline_support.setPvValFromDescriptor("vectorStartY",y_vec_start)  
-  beamline_support.setPvValFromDescriptor("vectorStartZ",z_vec_start)  
-  beamline_support.setPvValFromDescriptor("vectorEndX",x_vec_end)
-  beamline_support.setPvValFromDescriptor("vectorEndY",y_vec_end)  
-  beamline_support.setPvValFromDescriptor("vectorEndZ",z_vec_end)  
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",expTime*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)
+  setPvDesc("vectorStartOmega",sweep_start_angle)
+  setPvDesc("vectorEndOmega",sweep_end_angle)  
+  setPvDesc("vectorStartX",x_vec_start)
+  setPvDesc("vectorStartY",y_vec_start)  
+  setPvDesc("vectorStartZ",z_vec_start)  
+  setPvDesc("vectorEndX",x_vec_end)
+  setPvDesc("vectorEndY",y_vec_end)  
+  setPvDesc("vectorEndZ",z_vec_end)  
+  setPvDesc("vectorframeExptime",expTime*1000.0)
+  setPvDesc("vectorNumFrames",numImages)
   scanWidth = float(numImages)*imgWidth
   zebraDaq(sweep_start_angle,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
   if (lastOnSample()):  
@@ -2542,25 +2543,25 @@ def vectorZebraStepScan(vecRequest):
   det_lib.detector_setImagesPerFile(500)
   daq_lib.detectorArm(sweep_start_angle,imgWidth,numImages,expTime,file_prefix,data_directory_name,file_number_start) #this waits  
   for i in range (0,numVecSteps):
-    beamline_support.setPvValFromDescriptor("vectorStartOmega",sweep_start_angle+(i*scanWidthPerStep))
-    beamline_support.setPvValFromDescriptor("vectorEndOmega",sweep_end_angle+(i*scanWidthPerStep)+scanWidthPerStep)  
-    beamline_support.setPvValFromDescriptor("vectorStartX",x_vec_start+(i*xvecStep)+(xvecStep/2.0))
-    beamline_support.setPvValFromDescriptor("vectorStartY",y_vec_start+(i*yvecStep)+(yvecStep/2.0))  
-    beamline_support.setPvValFromDescriptor("vectorStartZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
-    beamline_support.setPvValFromDescriptor("vectorEndX",x_vec_start+(i*xvecStep)+(xvecStep/2.0))
-    beamline_support.setPvValFromDescriptor("vectorEndY",y_vec_start+(i*yvecStep)+(yvecStep/2.0))  
-    beamline_support.setPvValFromDescriptor("vectorEndZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
-    beamline_support.setPvValFromDescriptor("vectorframeExptime",expTime*1000.0)
-    beamline_support.setPvValFromDescriptor("vectorNumFrames",numImagesPerStep)
+    setPvDesc("vectorStartOmega",sweep_start_angle+(i*scanWidthPerStep))
+    setPvDesc("vectorEndOmega",sweep_end_angle+(i*scanWidthPerStep)+scanWidthPerStep)  
+    setPvDesc("vectorStartX",x_vec_start+(i*xvecStep)+(xvecStep/2.0))
+    setPvDesc("vectorStartY",y_vec_start+(i*yvecStep)+(yvecStep/2.0))  
+    setPvDesc("vectorStartZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
+    setPvDesc("vectorEndX",x_vec_start+(i*xvecStep)+(xvecStep/2.0))
+    setPvDesc("vectorEndY",y_vec_start+(i*yvecStep)+(yvecStep/2.0))  
+    setPvDesc("vectorEndZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
+    setPvDesc("vectorframeExptime",expTime*1000.0)
+    setPvDesc("vectorNumFrames",numImagesPerStep)
     zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
   if (lastOnSample()):  
     daq_lib.setGovRobot('SA')
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
-  beamline_support.setPvValFromDescriptor("vectorBufferTime",3)      
+  setPvDesc("vectorBufferTime",3)      
 
 
 
@@ -2635,7 +2636,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     time.sleep(1.0)
     if (timeout_check > 10):
       break
-  flux = beamline_support.getPvValFromDescriptor("sampleFlux")    
+  flux = getPvDesc("sampleFlux")    
 
 
   cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
@@ -2652,7 +2653,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)
-  comm_s = "ssh -q xf17id2-ws10 \"source " + os.environ["PROJDIR"] + "wrappers/ednaWrap;cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(beamline_support.getPvValFromDescriptor("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
+  comm_s = "ssh -q xf17id2-ws10 \"source " + os.environ["PROJDIR"] + "wrappers/ednaWrap;cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(getPvDesc("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")
@@ -2775,19 +2776,19 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
 def setTrans(transmission): #where transmission = 0.0-1.0
   if (daq_utils.beamline == "fmx"):  
     if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"attenType") == "RI"):
-      beamline_support.setPvValFromDescriptor("RIattenEnergySP",beamline_lib.motorPosFromDescriptor("energy"))
-      beamline_support.setPvValFromDescriptor("RI_Atten_SP",transmission)      
-      beamline_support.setPvValFromDescriptor("RI_Atten_SET",1)
+      setPvDesc("RIattenEnergySP",beamline_lib.motorPosFromDescriptor("energy"))
+      setPvDesc("RI_Atten_SP",transmission)      
+      setPvDesc("RI_Atten_SET",1)
       
     else:
-      beamline_support.setPvValFromDescriptor("transmissionSet",transmission)
-      beamline_support.setPvValFromDescriptor("transmissionGo",1)
+      setPvDesc("transmissionSet",transmission)
+      setPvDesc("transmissionGo",1)
       
   else:
-    beamline_support.setPvValFromDescriptor("transmissionSet",transmission)
-    beamline_support.setPvValFromDescriptor("transmissionGo",1)
+    setPvDesc("transmissionSet",transmission)
+    setPvDesc("transmissionGo",1)
   time.sleep(0.5)
-  while (not beamline_support.getPvValFromDescriptor("transmissionDone")):
+  while (not getPvDesc("transmissionDone")):
     time.sleep(0.1)
   
   
@@ -2799,7 +2800,7 @@ def setAttens(transmission): #where transmission = 0.0-1.0
   for i in range (0,len(attenValList)):
     pvVal = attenValList[i]
     pvKeyName = "Atten%02d-%d" % (i+1,pvVal)    
-    beamline_support.setPvValFromDescriptor(pvKeyName,1)
+    setPvDesc(pvKeyName,1)
     logger.info(pvKeyName)
 
 def importSpreadsheet(fname):
@@ -2808,27 +2809,27 @@ def importSpreadsheet(fname):
 
 def zebraDaqPrep():
 
-  beamline_support.setPvValFromDescriptor("zebraReset",1)
+  setPvDesc("zebraReset",1)
   time.sleep(2.0)      
-  beamline_support.setPvValFromDescriptor("zebraTTlSel",31)
+  setPvDesc("zebraTTlSel",31)
 
-  beamline_support.setPvValFromDescriptor("zebraM1SetPosProc",1)
-  beamline_support.setPvValFromDescriptor("zebraM2SetPosProc",1)
-  beamline_support.setPvValFromDescriptor("zebraM3SetPosProc",1)
-  beamline_support.setPvValFromDescriptor("zebraArmTrigSource",1)
+  setPvDesc("zebraM1SetPosProc",1)
+  setPvDesc("zebraM2SetPosProc",1)
+  setPvDesc("zebraM3SetPosProc",1)
+  setPvDesc("zebraArmTrigSource",1)
 
 
 def zebraArm():
-  beamline_support.setPvValFromDescriptor("zebraArm",1)
+  setPvDesc("zebraArm",1)
   while(1):
     time.sleep(.1)
-    if (beamline_support.getPvValFromDescriptor("zebraArmOut") == 1):
+    if (getPvDesc("zebraArmOut") == 1):
       break
 
 def zebraWaitOld():
   while(1):
     time.sleep(.1)
-    if (beamline_support.getPvValFromDescriptor("zebraDownloading") == 0):
+    if (getPvDesc("zebraDownloading") == 0):
       break
 
 def zebraWait(timeoutCheck=True):
@@ -2837,12 +2838,12 @@ def zebraWait(timeoutCheck=True):
   while(1):
     now = time.time()
     if (now > (downloadStart+timeoutLimit) and timeoutCheck):
-      beamline_support.setPvValFromDescriptor("zebraReset",1)
+      setPvDesc("zebraReset",1)
       logger.error("timeout in zebra wait!")
       daq_lib.gui_message("Timeout in Trigger Wait! Call Staff!!")
       break
     time.sleep(.1)
-    if (beamline_support.getPvValFromDescriptor("zebraDownloading") == 0):
+    if (getPvDesc("zebraDownloading") == 0):
       break
 
 def zebraWaitDownload(numsteps):
@@ -2852,11 +2853,11 @@ def zebraWaitDownload(numsteps):
   while(1):
     now = time.time()
     if (now > (downloadStart+timeoutLimit)):
-      beamline_support.setPvValFromDescriptor("zebraReset",1)
+      setPvDesc("zebraReset",1)
       logger.error("timeout in zebra wait download!")
       break
     time.sleep(.1)
-    if (beamline_support.getPvValFromDescriptor("zebraDownloadCount") == numsteps):
+    if (getPvDesc("zebraDownloadCount") == numsteps):
       break
     
 def loop_center_mask():
@@ -2950,8 +2951,8 @@ def loop_center_xrec():
   if (reliability < 70 or check_result == 0): #bail if xrec couldn't align loop
     return 0
   beamline_lib.mvaDescriptor("omega",target_angle)
-  x_center = beamline_support.getPvValFromDescriptor("lowMagCursorX")
-  y_center = beamline_support.getPvValFromDescriptor("lowMagCursorY")
+  x_center = getPvDesc("lowMagCursorX")
+  y_center = getPvDesc("lowMagCursorY")
   
   logger.info("center on click " + str(x_center) + " " + str(y_center-radius))
   logger.info("center on click " + str((x_center*2) - y_centre_xrec) + " " + str(x_centre_xrec))
@@ -2971,65 +2972,65 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
 
 #imgWidth will be something like 40 for xtalCenter
   vectorSync()
-  beamline_support.setPvValFromDescriptor("vectorExpose",0)  
+  setPvDesc("vectorExpose",0)  
   angle_end = angle_start+scanWidth
   numImages = int(round(scanWidth/imgWidth))
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",angle_end)
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)    
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",exposurePeriodPerImage*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorHold",0)
+  setPvDesc("vectorStartOmega",angle_start)
+  setPvDesc("vectorEndOmega",angle_end)
+  setPvDesc("vectorNumFrames",numImages)    
+  setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
+  setPvDesc("vectorHold",0)
   zebraDaqPrep()
-  beamline_support.setPvValFromDescriptor("zebraEncoder",scanEncoder)
-  beamline_support.setPvValFromDescriptor("zebraDirection",0)  #direction 0 = positive
-  beamline_support.setPvValFromDescriptor("zebraGateSelect",0)
-  beamline_support.setPvValFromDescriptor("zebraGateStart",angle_start) #this will change for motors other than omega
-  beamline_support.setPvValFromDescriptor("zebraGateWidth",imgWidth/2) #why divide by 2 here and not elsewhere?
-  beamline_support.setPvValFromDescriptor("zebraGateStep",imgWidth)
-  beamline_support.setPvValFromDescriptor("zebraGateNumGates",numImages)  
+  setPvDesc("zebraEncoder",scanEncoder)
+  setPvDesc("zebraDirection",0)  #direction 0 = positive
+  setPvDesc("zebraGateSelect",0)
+  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
+  setPvDesc("zebraGateWidth",imgWidth/2) #why divide by 2 here and not elsewhere?
+  setPvDesc("zebraGateStep",imgWidth)
+  setPvDesc("zebraGateNumGates",numImages)  
 
-  beamline_support.setPvValFromDescriptor("lowMagAcquire",0,wait=False)
+  setPvDesc("lowMagAcquire",0,wait=False)
   time.sleep(1.0) #this sleep definitely needed
-  beamline_support.setPvValFromDescriptor("lowMagTrigMode",1)
-  beamline_support.setPvValFromDescriptor("lowMagJpegNumImages",numImages)
-  beamline_support.setPvValFromDescriptor("lowMagJpegFilePath",data_directory_name)
-  beamline_support.setPvValFromDescriptor("lowMagJpegFileName",filePrefix)
-  beamline_support.setPvValFromDescriptor("lowMagJpegFileNumber",1)
-  beamline_support.setPvValFromDescriptor("lowMagJpegCapture",1,wait=False)
-  beamline_support.setPvValFromDescriptor("lowMagAcquire",1,wait=False)
+  setPvDesc("lowMagTrigMode",1)
+  setPvDesc("lowMagJpegNumImages",numImages)
+  setPvDesc("lowMagJpegFilePath",data_directory_name)
+  setPvDesc("lowMagJpegFileName",filePrefix)
+  setPvDesc("lowMagJpegFileNumber",1)
+  setPvDesc("lowMagJpegCapture",1,wait=False)
+  setPvDesc("lowMagAcquire",1,wait=False)
   time.sleep(0.5)
-  beamline_support.setPvValFromDescriptor("vectorGo",1)
+  setPvDesc("vectorGo",1)
   vectorActiveWait()    
   vectorWait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
-  beamline_support.setPvValFromDescriptor("lowMagTrigMode",0)
+  setPvDesc("lowMagTrigMode",0)
 
 def topViewSnap(filePrefix,data_directory_name,file_number_start,acquire=1): #if we don't need to stream, then this requires few steps
   os.system("mkdir -p " + data_directory_name)  
   os.system("chmod 777 " + data_directory_name)  
-  beamline_support.setPvValFromDescriptor("topViewAcquire",0,wait=False)
+  setPvDesc("topViewAcquire",0,wait=False)
   time.sleep(1.0) #this sleep definitely needed
-  beamline_support.setPvValFromDescriptor("topViewTrigMode",5)
-  beamline_support.setPvValFromDescriptor("topViewImMode",0)
-  beamline_support.setPvValFromDescriptor("topViewDataType",0)    
-  beamline_support.setPvValFromDescriptor("topViewJpegFilePath",data_directory_name)
-  beamline_support.setPvValFromDescriptor("topViewJpegFileName",filePrefix)
-  beamline_support.setPvValFromDescriptor("topViewJpegFileNumber",file_number_start)
+  setPvDesc("topViewTrigMode",5)
+  setPvDesc("topViewImMode",0)
+  setPvDesc("topViewDataType",0)    
+  setPvDesc("topViewJpegFilePath",data_directory_name)
+  setPvDesc("topViewJpegFileName",filePrefix)
+  setPvDesc("topViewJpegFileNumber",file_number_start)
   if (acquire):
-    beamline_support.setPvValFromDescriptor("topViewAcquire",1)
-    beamline_support.setPvValFromDescriptor("topViewWriteFile",1)
-    beamline_support.setPvValFromDescriptor("topViewTrigMode",0)    
-    beamline_support.setPvValFromDescriptor("topViewImMode",2)
-    beamline_support.setPvValFromDescriptor("topViewDataType",1)
-    beamline_support.setPvValFromDescriptor("topViewAcquire",1,wait=False)    
+    setPvDesc("topViewAcquire",1)
+    setPvDesc("topViewWriteFile",1)
+    setPvDesc("topViewTrigMode",0)    
+    setPvDesc("topViewImMode",2)
+    setPvDesc("topViewDataType",1)
+    setPvDesc("topViewAcquire",1,wait=False)    
 
 def topViewWrite():  
-  beamline_support.setPvValFromDescriptor("topViewWriteFile",1)
-  beamline_support.setPvValFromDescriptor("topViewTrigMode",0)    
-  beamline_support.setPvValFromDescriptor("topViewImMode",2)
-  beamline_support.setPvValFromDescriptor("topViewDataType",1)
+  setPvDesc("topViewWriteFile",1)
+  setPvDesc("topViewTrigMode",0)    
+  setPvDesc("topViewImMode",2)
+  setPvDesc("topViewDataType",1)
   
   
   
@@ -3040,7 +3041,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("in Zebra Daq #1 " + str(time.time()))      
   det_lib.detector_setImagesPerFile(500)
   daq_lib.setRobotGovState("DA")  
-  beamline_support.setPvValFromDescriptor("vectorExpose",1)
+  setPvDesc("vectorExpose",1)
 
   if (imgWidth == 0):
     angle_end = angle_start
@@ -3050,37 +3051,37 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     numImages = int(round(scanWidth/imgWidth))
   total_exposure_time = exposurePeriodPerImage*numImages
   if (total_exposure_time < 1.0):
-    beamline_support.setPvValFromDescriptor("vectorBufferTime",1000)
+    setPvDesc("vectorBufferTime",1000)
   else:
-    beamline_support.setPvValFromDescriptor("vectorBufferTime",3)
+    setPvDesc("vectorBufferTime",3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
   det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
   det_lib.detector_set_period(exposurePeriodPerImage)
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)  
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",angle_end)
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",exposurePeriodPerImage*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorHold",0)
+  setPvDesc("vectorNumFrames",numImages)  
+  setPvDesc("vectorStartOmega",angle_start)
+  setPvDesc("vectorEndOmega",angle_end)
+  setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
+  setPvDesc("vectorHold",0)
   logger.info("zebraDaqPrep " + str(time.time()))        
   zebraDaqPrep()
   logger.info("done zebraDaqPrep " + str(time.time()))        
   time.sleep(1.0)
-  beamline_support.setPvValFromDescriptor("zebraGateStart",angle_start) #this will change for motors other than omega
+  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
   PW=(exposurePeriodPerImage-detector_dead_time)*1000.0
   PS=(exposurePeriodPerImage)*1000.0
   if (imgWidth != 0):  
     GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
-    beamline_support.setPvValFromDescriptor("zebraGateWidth",GW)
-    beamline_support.setPvValFromDescriptor("zebraGateStep",scanWidth)
-  beamline_support.setPvValFromDescriptor("zebraGateNumGates",1)
-  beamline_support.setPvValFromDescriptor("zebraPulseStart",0)
-  beamline_support.setPvValFromDescriptor("zebraPulseWidth",PW)
-  beamline_support.setPvValFromDescriptor("zebraPulseStep",PS)
-  beamline_support.setPvValFromDescriptor("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
-  beamline_support.setPvValFromDescriptor("zebraPulseMax",numImages)
+    setPvDesc("zebraGateWidth",GW)
+    setPvDesc("zebraGateStep",scanWidth)
+  setPvDesc("zebraGateNumGates",1)
+  setPvDesc("zebraPulseStart",0)
+  setPvDesc("zebraPulseWidth",PW)
+  setPvDesc("zebraPulseStep",PS)
+  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
+  setPvDesc("zebraPulseMax",numImages)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
   det_lib.detector_set_num_triggers(1)  
   det_lib.detector_set_trigger_mode(2)
@@ -3096,20 +3097,20 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  beamline_support.setPvValFromDescriptor("vectorGo",1)
+  setPvDesc("vectorGo",1)
   vectorActiveWait()  
   vectorWait()
   zebraWait()
   logger.info("vector Done " + str(time.time()))          
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
   if (lastOnSample() and changeState):
     daq_lib.setGovRobotSA_nowait()    
   logger.info("stop det acquire")
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
-  beamline_support.setPvValFromDescriptor("vectorBufferTime",3)
+  setPvDesc("vectorBufferTime",3)
   logger.info("zebraDaq Done " + str(time.time()))            
 
 
@@ -3117,7 +3118,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
 #careful - there's total exposure time, exposure period, exposure time
 
 
-  beamline_support.setPvValFromDescriptor("vectorExpose",1)
+  setPvDesc("vectorExpose",1)
   if (imgWidth == 0):
     angle_end = angle_start
     numImages = scanWidth
@@ -3126,55 +3127,55 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
     numImages = int(round(scanWidth/imgWidth))
   total_exposure_time = exposurePeriodPerImage*numImages
   if (total_exposure_time < 1.0):
-    beamline_support.setPvValFromDescriptor("vectorBufferTime",1000)
+    setPvDesc("vectorBufferTime",1000)
   else:
-    beamline_support.setPvValFromDescriptor("vectorBufferTime",3)    
+    setPvDesc("vectorBufferTime",3)    
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  beamline_support.setPvValFromDescriptor("vectorNumFrames",numImages)  
-  beamline_support.setPvValFromDescriptor("vectorStartOmega",angle_start)
-  beamline_support.setPvValFromDescriptor("vectorEndOmega",angle_end)
-  beamline_support.setPvValFromDescriptor("vectorframeExptime",exposurePeriodPerImage*1000.0)
-  beamline_support.setPvValFromDescriptor("vectorHold",0)
+  setPvDesc("vectorNumFrames",numImages)  
+  setPvDesc("vectorStartOmega",angle_start)
+  setPvDesc("vectorEndOmega",angle_end)
+  setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
+  setPvDesc("vectorHold",0)
   zebraDaqPrep()
-  beamline_support.setPvValFromDescriptor("zebraEncoder",scanEncoder)
+  setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
-  beamline_support.setPvValFromDescriptor("zebraDirection",0)  #direction 0 = positive
-  beamline_support.setPvValFromDescriptor("zebraGateSelect",0)
-  beamline_support.setPvValFromDescriptor("zebraGateStart",angle_start) #this will change for motors other than omega
+  setPvDesc("zebraDirection",0)  #direction 0 = positive
+  setPvDesc("zebraGateSelect",0)
+  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
   if (imgWidth != 0):    
-    beamline_support.setPvValFromDescriptor("zebraGateWidth",scanWidth)
-    beamline_support.setPvValFromDescriptor("zebraGateStep",scanWidth+.01)
-  beamline_support.setPvValFromDescriptor("zebraGateNumGates",1)
-  beamline_support.setPvValFromDescriptor("zebraPulseTriggerSource",1)
-  beamline_support.setPvValFromDescriptor("zebraPulseStart",0)
-  beamline_support.setPvValFromDescriptor("zebraPulseWidth",(exposurePeriodPerImage-detector_dead_time)*1000.0)      
-  beamline_support.setPvValFromDescriptor("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
-  beamline_support.setPvValFromDescriptor("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
-  beamline_support.setPvValFromDescriptor("zebraPulseMax",numImages)
-  beamline_support.setPvValFromDescriptor("vectorGo",1)
+    setPvDesc("zebraGateWidth",scanWidth)
+    setPvDesc("zebraGateStep",scanWidth+.01)
+  setPvDesc("zebraGateNumGates",1)
+  setPvDesc("zebraPulseTriggerSource",1)
+  setPvDesc("zebraPulseStart",0)
+  setPvDesc("zebraPulseWidth",(exposurePeriodPerImage-detector_dead_time)*1000.0)      
+  setPvDesc("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
+  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
+  setPvDesc("zebraPulseMax",numImages)
+  setPvDesc("vectorGo",1)
   vectorActiveWait()  
   vectorWait()
   zebraWait()
   if (daq_utils.beamline == "amxz"):  
-    beamline_support.setPvValFromDescriptor("zebraReset",1)      
+    setPvDesc("zebraReset",1)      
   
-  beamline_support.setPvValFromDescriptor("vectorBufferTime",3)      
+  setPvDesc("vectorBufferTime",3)      
   
 
 def setAttenBCU():
   """setAttenBCU() : set attenuators to BCU (fmx only)"""
   db_lib.setBeamlineConfigParam(daq_utils.beamline,"attenType","BCU")
-  beamline_support.setPvValFromDescriptor("RI_Atten_SP",1.0)      
-  beamline_support.setPvValFromDescriptor("RI_Atten_SET",1)
+  setPvDesc("RI_Atten_SP",1.0)      
+  setPvDesc("RI_Atten_SET",1)
   daq_lib.gui_message("Attenuators set to BCU. Restart LSDC GUI!")  
   
 
 def setAttenRI():
   """setAttenRI() : set attenuators to RI (fmx only)"""
   db_lib.setBeamlineConfigParam(daq_utils.beamline,"attenType","RI")
-  beamline_support.setPvValFromDescriptor("transmissionSet",1.0)
-  beamline_support.setPvValFromDescriptor("transmissionGo",1)
+  setPvDesc("transmissionSet",1.0)
+  setPvDesc("transmissionGo",1)
   daq_lib.gui_message("Attenuators set to RI. Restart LSDC GUI!")    
   
 
@@ -3193,28 +3194,28 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
 #careful - there's total exposure time, exposure period, exposure time
 #this is called in raster before the row processing loop
 
-  beamline_support.setPvValFromDescriptor("vectorExpose",1)
+  setPvDesc("vectorExpose",1)
   detector_dead_time = det_lib.detector_get_deadtime()
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
   zebraDaqPrep()
-  beamline_support.setPvValFromDescriptor("zebraEncoder",scanEncoder)
+  setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
-  beamline_support.setPvValFromDescriptor("zebraDirection",0)  #direction 0 = positive
-  beamline_support.setPvValFromDescriptor("zebraGateSelect",0)
-  beamline_support.setPvValFromDescriptor("zebraGateStart",angle_start) #this will change for motors other than omega
+  setPvDesc("zebraDirection",0)  #direction 0 = positive
+  setPvDesc("zebraGateSelect",0)
+  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
   if (imgWidth != 0):  
-    beamline_support.setPvValFromDescriptor("zebraGateWidth",numImages*imgWidth)
-    beamline_support.setPvValFromDescriptor("zebraGateStep",(numImages*imgWidth)+.001)
-  beamline_support.setPvValFromDescriptor("zebraGateNumGates",1) #moved from loop
-  beamline_support.setPvValFromDescriptor("zebraPulseTriggerSource",1)
-  beamline_support.setPvValFromDescriptor("zebraPulseStart",0)
-  beamline_support.setPvValFromDescriptor("zebraPulseWidth",(exposureTimePerImage-detector_dead_time)*1000.0)
-  beamline_support.setPvValFromDescriptor("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
-  beamline_support.setPvValFromDescriptor("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
+    setPvDesc("zebraGateWidth",numImages*imgWidth)
+    setPvDesc("zebraGateStep",(numImages*imgWidth)+.001)
+  setPvDesc("zebraGateNumGates",1) #moved from loop
+  setPvDesc("zebraPulseTriggerSource",1)
+  setPvDesc("zebraPulseStart",0)
+  setPvDesc("zebraPulseWidth",(exposureTimePerImage-detector_dead_time)*1000.0)
+  setPvDesc("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
+  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
   logger.info("exp tim = " + str(exposureTimePerImage))  
 
-  beamline_support.setPvValFromDescriptor("vectorHold",0)  
+  setPvDesc("vectorHold",0)  
 
   
 def setProcRam():
@@ -3274,11 +3275,11 @@ def lastOnSample():
   return True
 
 def homePins():
-  beamline_support.setPvValFromDescriptor("homePinY",1)
-  beamline_support.setPvValFromDescriptor("homePinZ",1)
+  setPvDesc("homePinY",1)
+  setPvDesc("homePinZ",1)
   time.sleep(2)  
-  beamline_support.setPvValFromDescriptor("syncPinY",1)
-  beamline_support.setPvValFromDescriptor("syncPinZ",1)    
+  setPvDesc("syncPinY",1)
+  setPvDesc("syncPinZ",1)    
   
 def restartEMBL():
   if (daq_utils.beamline == "amx"):      
@@ -3362,27 +3363,27 @@ def enableMount():
 
 def set_beamsize(sizeV, sizeH):
   if (sizeV == 'V0'):
-    beamline_support.setPvValFromDescriptor("CRL_V2A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_V1A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_V1B_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_VS_OUT",1)        
+    setPvDesc("CRL_V2A_OUT",1)
+    setPvDesc("CRL_V1A_OUT",1)
+    setPvDesc("CRL_V1B_OUT",1)
+    setPvDesc("CRL_VS_OUT",1)        
   elif (sizeV == 'V1'):
-    beamline_support.setPvValFromDescriptor("CRL_VS_IN",1)    
-    beamline_support.setPvValFromDescriptor("CRL_V2A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_V1A_IN",1)
-    beamline_support.setPvValFromDescriptor("CRL_V1B_OUT",1)
+    setPvDesc("CRL_VS_IN",1)    
+    setPvDesc("CRL_V2A_OUT",1)
+    setPvDesc("CRL_V1A_IN",1)
+    setPvDesc("CRL_V1B_OUT",1)
   else:
     logger.error("Error: Vertical size argument has to be \'V0\' or  \'V1\'")
   if (sizeH == 'H0'):  
-    beamline_support.setPvValFromDescriptor("CRL_H4A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_H2A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_H1A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_H1B_OUT",1)
+    setPvDesc("CRL_H4A_OUT",1)
+    setPvDesc("CRL_H2A_OUT",1)
+    setPvDesc("CRL_H1A_OUT",1)
+    setPvDesc("CRL_H1B_OUT",1)
   elif (sizeH == 'H1'):  
-    beamline_support.setPvValFromDescriptor("CRL_H4A_OUT",1)
-    beamline_support.setPvValFromDescriptor("CRL_H2A_IN",1)
-    beamline_support.setPvValFromDescriptor("CRL_H1A_IN",1)
-    beamline_support.setPvValFromDescriptor("CRL_H1B_IN",1)
+    setPvDesc("CRL_H4A_OUT",1)
+    setPvDesc("CRL_H2A_IN",1)
+    setPvDesc("CRL_H1A_IN",1)
+    setPvDesc("CRL_H1B_IN",1)
   else:
     logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
   if (sizeV == 'V0' and sizeH == 'H0'):
@@ -3414,13 +3415,13 @@ def newVisit():
 def logMe():
   """logMe() : Edwin asked for this"""
   print(time.ctime())
-  print("governor: " + str(beamline_support.getPvValFromDescriptor("governorMessage")))
+  print("governor: " + str(getPvDesc("governorMessage")))
   print("SampleX: " + str(beamline_lib.motorPosFromDescriptor("sampleX")) + " SampleY: " + str(beamline_lib.motorPosFromDescriptor("sampleY")) + "SampleZ: " + str(beamline_lib.motorPosFromDescriptor("sampleZ")))
   print("CryoXY: " + str(beamline_lib.motorPosFromDescriptor("cryoXY")))
-  print("Gripper Temp: " + str(beamline_support.getPvValFromDescriptor("gripTemp")))
+  print("Gripper Temp: " + str(getPvDesc("gripTemp")))
   print("Dewar Position: " + str(beamline_lib.motorPosFromDescriptor("dewarRot")))
-  print("Force Torque Sensor Status: " + str(beamline_support.getPvValFromDescriptor("robotFTSensorStat")))
-  print("Force Torque X " + str(beamline_support.getPvValFromDescriptor("robotForceX")) + " Y: " + str(beamline_support.getPvValFromDescriptor("robotForceY")) + " Z: " + str(beamline_support.getPvValFromDescriptor("robotForceZ")))
+  print("Force Torque Sensor Status: " + str(getPvDesc("robotFTSensorStat")))
+  print("Force Torque X " + str(getPvDesc("robotForceX")) + " Y: " + str(getPvDesc("robotForceY")) + " Z: " + str(getPvDesc("robotForceZ")))
   
 
 def setSlit1X(mval):
@@ -3452,13 +3453,13 @@ def topViewCheckOn():
   db_lib.setBeamlineConfigParam(daq_utils.beamline,"topViewCheck",1)
 
 def anneal(annealTime):
-  robotGovState = (beamline_support.getPvValFromDescriptor("robotSaActive") or beamline_support.getPvValFromDescriptor("humanSaActive"))
+  robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
   if (robotGovState):
-    beamline_support.setPvValFromDescriptor("annealIn",1)
-    while (beamline_support.getPvValFromDescriptor("annealStatus") != 1):
+    setPvDesc("annealIn",1)
+    while (getPvDesc("annealStatus") != 1):
       time.sleep(0.01)      
     time.sleep(float(annealTime))
-    beamline_support.setPvValFromDescriptor("annealIn",0)
+    setPvDesc("annealIn",0)
   else:
     daq_lib.gui_message("Anneal only in SA state!!")    
 

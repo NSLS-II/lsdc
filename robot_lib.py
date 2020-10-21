@@ -10,6 +10,7 @@ import beamline_lib
 import time
 import daq_macros
 import beamline_support
+from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import os
 import filecmp
 import _thread
@@ -41,7 +42,7 @@ def finish():
 
 def warmupGripperRecoverThread(savedThreshold,junk):
   time.sleep(120.0)
-  beamline_support.setPvValFromDescriptor("warmupThreshold",savedThreshold)      
+  setPvDesc("warmupThreshold",savedThreshold)      
 
 def wait90TopviewThread(prefix1,prefix90):
   global sampXadjust, sampYadjust, sampZadjust
@@ -50,7 +51,7 @@ def wait90TopviewThread(prefix1,prefix90):
   sampYadjust = 0
   sampZadjust = 0
   startTime = time.time()
-  if (beamline_support.getPvValFromDescriptor("gripTemp")>-170):
+  if (getPvDesc("gripTemp")>-170):
     threadTimeout = 130.0
   else:
     threadTimeout = 30.0    
@@ -61,10 +62,10 @@ def wait90TopviewThread(prefix1,prefix90):
       break
     if (time.time()-startTime > threadTimeout):
       logger.info("leaving topview thread for " + str(threadTimeout))
-      beamline_support.setPvValFromDescriptor("topViewTrigMode",0)    
-      beamline_support.setPvValFromDescriptor("topViewImMode",2)
-      beamline_support.setPvValFromDescriptor("topViewDataType",1)
-      beamline_support.setPvValFromDescriptor("topViewAcquire",1,wait=False)    
+      setPvDesc("topViewTrigMode",0)    
+      setPvDesc("topViewImMode",2)
+      setPvDesc("topViewDataType",1)
+      setPvDesc("topViewAcquire",1,wait=False)    
       return
     time.sleep(0.10)
   try:
@@ -82,8 +83,8 @@ def wait90TopviewThread(prefix1,prefix90):
       if (lines[0].find("CANNOT CENTER") == -1):
         offsetTokens = lines[0].split()
         logger.info(offsetTokens[0] + " " + offsetTokens[1] + " " + offsetTokens[2])
-        xlimLow = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountLowLim")
-        xlimHi = beamline_support.getPvValFromDescriptor("robotXMountPos") + beamline_support.getPvValFromDescriptor("robotXMountHiLim")
+        xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
+        xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
         xpos = beamline_lib.motorPosFromDescriptor("sampleX")          
         target = xpos + float(offsetTokens[0])*1000.0
         if (target<xlimLow or target>xlimHi):
@@ -99,9 +100,9 @@ def wait90TopviewThread(prefix1,prefix90):
           sampXAbsolute = sampXCP+sampXadjust          
           sampYAbsolute = sampYCP+sampYadjust          
           sampZAbsolute = sampZCP+sampZadjust
-          beamline_support.setPvValFromDescriptor("robotXWorkPos",sampXAbsolute)
-          beamline_support.setPvValFromDescriptor("robotYWorkPos",sampYAbsolute)
-          beamline_support.setPvValFromDescriptor("robotZWorkPos",sampZAbsolute)          
+          setPvDesc("robotXWorkPos",sampXAbsolute)
+          setPvDesc("robotYWorkPos",sampYAbsolute)
+          setPvDesc("robotZWorkPos",sampZAbsolute)          
       else:
         logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
@@ -127,14 +128,14 @@ def recoverRobot():
 
 def dryGripper():
   try:
-    saveThreshold = beamline_support.getPvValFromDescriptor("warmupThresholdRBV")
-    beamline_support.setPvValFromDescriptor("warmupThreshold",50)
+    saveThreshold = getPvDesc("warmupThresholdRBV")
+    setPvDesc("warmupThreshold",50)
     _thread.start_new_thread(warmupGripperRecoverThread,(saveThreshold,0))
     warmupGripperForDry()
   except Exception as e:
     e_s = str(e)
     daq_lib.gui_message("Dry gripper failed! " + e_s)
-    beamline_support.setPvValFromDescriptor("warmupThreshold",saveThreshold)          
+    setPvDesc("warmupThreshold",saveThreshold)          
     
 def DewarAutoFillOn():
   RobotControlLib.runCmd("turnOnAutoFill")
@@ -194,14 +195,14 @@ def parkGripper():
 
 def setWorkposThread(init,junk):
   logger.info("setting work pos in thread")
-  beamline_support.setPvValFromDescriptor("robotGovActive",1)
-  beamline_support.setPvValFromDescriptor("robotXWorkPos",beamline_support.getPvValFromDescriptor("robotXMountPos"))
-  beamline_support.setPvValFromDescriptor("robotYWorkPos",beamline_support.getPvValFromDescriptor("robotYMountPos"))
-  beamline_support.setPvValFromDescriptor("robotZWorkPos",beamline_support.getPvValFromDescriptor("robotZMountPos"))
-  beamline_support.setPvValFromDescriptor("robotOmegaWorkPos",90.0)
+  setPvDesc("robotGovActive",1)
+  setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
+  setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
+  setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
+  setPvDesc("robotOmegaWorkPos",90.0)
   if (init):
     time.sleep(20)
-    beamline_support.setPvValFromDescriptor("robotGovActive",0)      
+    setPvDesc("robotGovActive",0)      
 
 def testRobot():
   try:
@@ -268,9 +269,9 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
       if (init):
-        beamline_support.setPvValFromDescriptor("boostSelect",0)
-        if (beamline_support.getPvValFromDescriptor("sampleDetected") == 0): #reverse logic, 0 = true
-          beamline_support.setPvValFromDescriptor("boostSelect",1)
+        setPvDesc("boostSelect",0)
+        if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
+          setPvDesc("boostSelect",1)
         else:
           robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
           if (robotStatus != "Ready"):
@@ -286,8 +287,8 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           logger.info("calling thread")                        
           _thread.start_new_thread(wait90TopviewThread,(prefix1,prefix90))
           logger.info("called thread")
-        beamline_support.setPvValFromDescriptor("boostSelect",0)                    
-        if (beamline_support.getPvValFromDescriptor("gripTemp")>-170):
+        setPvDesc("boostSelect",0)                    
+        if (getPvDesc("gripTemp")>-170):
           try:
             RobotControlLib.mount(absPos)
           except Exception as e:
@@ -298,13 +299,13 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             return 0
         else:
           time.sleep(0.5)
-          if (beamline_support.getPvValFromDescriptor("sampleDetected") == 0):
+          if (getPvDesc("sampleDetected") == 0):
             logger.info("full mount")
             RobotControlLib.mount(absPos)
           else:
             RobotControlLib.initialize()
             RobotControlLib._mount(absPos)
-        beamline_support.setPvValFromDescriptor("boostSelect",1)                                
+        setPvDesc("boostSelect",1)                                
       else:
         if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
@@ -364,8 +365,8 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
   if (robotOnline):
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    
     if (detDist<200.0):
-      beamline_support.setPvValFromDescriptor("govRobotDetDistOut",200.0)
-      beamline_support.setPvValFromDescriptor("govHumanDetDistOut",200.0)          
+      setPvDesc("govRobotDetDistOut",200.0)
+      setPvDesc("govHumanDetDistOut",200.0)          
     daq_lib.setRobotGovState("SE")    
     logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
     logger.info("absPos = " + str(absPos))
@@ -387,7 +388,7 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
       par_init=(beamline_support.get_any_epics_pv("SW:RobotState","VAL")!="Ready")
-      par_cool=(beamline_support.getPvValFromDescriptor("gripTemp")>-170)
+      par_cool=(getPvDesc("gripTemp")>-170)
       RobotControlLib.unmount1(init=par_init,cooldown=par_cool)
     except Exception as e:
       e_s = str(e)

@@ -651,23 +651,39 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
         describes experimental metadata for raster request used to
         set detector distance and beam center for dozor input file
     """
-
+    
+    #detector metadata from raster request
     orgX = rasterReqObj["xbeam"]
     orgY = rasterReqObj["ybeam"]
+    wavelength = rasterReqObj["wavelength"]
     detectorDistance = rasterReqObj["detDist"]
+    #detector metadata from epics PVs
+    roiMode = beamline_support.getPvValFromDescriptor("detectorROIMode")
+    if roiMode == 1:
+        detector = "eiger4m"
+    else:
+        detector = beamline_support.getPvValFromDescriptor("detectorDescription")
+        detector = ''.join(detector.split()[1::]).lower() #format for dozor
+    nx = beamline_support.getPvValFromDescriptor("detectorNx")
+    ny = beamline_support.getPvValFromDescriptor("detectorNy")
+    
     firstImageNumber = int(rowIndex)*int(rowCellCount) + 1
     hdf5TemplateImage = "../../{}_{}_??????.h5".format(prefix,seqNum,rowIndex)
     inputTemplate = open("/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/lsdc_amx/h5_template.dat")
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
-    f = open(dozorRowDir + "h5_row_{}.dat".format(rowIndex),"w")
-    templateDict = {"orgx": orgX,
+    templateDict = {"detector": detector,
+                    "nx": nx,
+                    "ny": ny,
+                    "wavelength": wavelength,
+                    "orgx": orgX,
                     "orgy": orgY,
                     "detector_distance": detectorDistance,
                     "first_image_number": firstImageNumber,
                     "number_images": rowCellCount,
                     "name_template_image": hdf5TemplateImage,}
-    f.write(src.substitute(templateDict))
+    with open("".join([dozorRowDir,f"h5_row_{rowIndex}.dat"]),"w") as f:
+        f.write(src.substitute(templateDict))
     return dozorRowDir
 
 def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
@@ -692,30 +708,28 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
     dozorDat = str(os.path.join(dozorRowDir,"dozor_average.dat"))
     if os.path.isfile(dozorDat):
         dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
-
-        keys = ["image",
-                "spot_count",
-                "spot_count_no_ice",
-                "d_min",
-                "d_min_method_1",
-                "d_min_method_2",
-                "total_intensity"]
-
-        localList = []
-
-        for cell in range(0,dozorData.shape[0]):
-            seriesIndex = int(rowCellCount*rowIndex + dozorData[cell,:][0])
-            values = [(pathToMasterH5,seriesIndex),
-                      dozorData[cell,:][1],
-                      dozorData[cell,:][1],
-                      dozorData[cell,:][3],
-                      dozorData[cell,:][3],
-                      dozorData[cell,:][3],
-                      dozorData[cell,:][1]*dozorData[cell,:][2]]
-            localList.append(OrderedDict(zip(keys,values)))
     else:
-        raise Exception("Did not find dozor_average.dat file")
+        dozorData = np.zeros((rowCellCount,4))
+        raise Exception("dozor_avg.dat file not found")
+    keys = ["image",
+            "spot_count",
+            "spot_count_no_ice",
+            "d_min",
+            "d_min_method_1",
+            "d_min_method_2",
+            "total_intensity"]
+    localList = []
 
+    for cell in range(0,dozorData.shape[0]):
+        seriesIndex = int(rowCellCount*rowIndex + dozorData[cell,:][0])
+        values = [(pathToMasterH5,seriesIndex),
+                  dozorData[cell,:][1],
+                  dozorData[cell,:][1],
+                  dozorData[cell,:][3],
+                  dozorData[cell,:][3],
+                  dozorData[cell,:][3],
+                  dozorData[cell,:][1]*dozorData[cell,:][2]]
+        localList.append(OrderedDict(zip(keys,values)))
     return localList
 
 def runDozorThread(directory,

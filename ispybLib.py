@@ -6,6 +6,7 @@ from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
 import daq_utils
 from epics import PV
 import db_lib
+from daq_utils import getBlConfig
 import time
 import mysql.connector
 import logging
@@ -27,7 +28,7 @@ mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREEN
 cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev',database='ispyb')
 cursor = cnx.cursor()
 beamline = os.environ["BEAMLINE_ID"]
-detSeqNumPVNAME = db_lib.getBeamlineConfigParam(beamline,"detSeqNumPVNAME") #careful - this pvname is stored in DB and in detControl.
+detSeqNumPVNAME = getBlConfig("detSeqNumPVNAME") #careful - this pvname is stored in DB and in detControl.
 detSeqNumPV = PV(detSeqNumPVNAME)
 
   # Find the id for a particular
@@ -192,7 +193,7 @@ def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,
 def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None): #xmlfilename for fastDP
 #keep in mind that request type can be standard and result type be fastDP - multiple results per req.
 
- cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
+ cbfComm = getBlConfig("cbfComm")
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
@@ -223,7 +224,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      daq_utils.take_crystal_picture(filename=jpegImagePrefix)
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
-     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
+     node = getBlConfig("adxvNode")
      comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
      logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
@@ -235,8 +236,8 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      cbfDir = directory
      CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"
      JPEG_conversion_pattern = fullJpegDirectory + "/" + filePrefix+"_"
-     node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvNode")
-     adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
+     node = getBlConfig("adxvNode")
+     adxvComm = os.environ["PROJDIR"] + getBlConfig("adxvComm")
      comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
      logger.info('diffraction thumbnail image: %s' % comm_s)
      os.system(comm_s)

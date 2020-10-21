@@ -3,6 +3,7 @@ import time
 import os
 import sys
 import db_lib
+from daq_utils import getBlConfig
 import xmltodict
 import ispybLib
 
@@ -15,7 +16,7 @@ filePrefix = sys.argv[2]
 request_id = sys.argv[3]
 seqNum = int(sys.argv[4])
 beamline = os.environ["BEAMLINE_ID"]
-node = db_lib.getBeamlineConfigParam(beamline,"SynchWebSpotNode")
+node = getBlConfig("SynchWebSpotNode")
 ispybDCID = int(sys.argv[5])
 
 request=db_lib.getRequestByID(request_id)
@@ -27,13 +28,13 @@ range_degrees = abs(sweep_end-sweep_start)
 numimages = round(range_degrees/img_width)
 numstart = reqObj["file_number_start"]
 
-cbfComm = db_lib.getBeamlineConfigParam(beamline,"cbfComm")
-dialsComm = db_lib.getBeamlineConfigParam(beamline,"dialsComm")
-dialsTuneLowRes = db_lib.getBeamlineConfigParam(beamline,"rasterTuneLowRes")
-dialsTuneHighRes = db_lib.getBeamlineConfigParam(beamline,"rasterTuneHighRes")
-dialsTuneIceRingFlag = db_lib.getBeamlineConfigParam(beamline,"rasterTuneIceRingFlag")
-dialsTuneResoFlag = db_lib.getBeamlineConfigParam(beamline,"rasterTuneResoFlag")  
-dialsTuneIceRingWidth = db_lib.getBeamlineConfigParam(beamline,"rasterTuneIceRingWidth")
+cbfComm = getBlConfig("cbfComm")
+dialsComm = getBlConfig("dialsComm")
+dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
+dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
+dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
+dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")  
+dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
 if (dialsTuneIceRingFlag):
   iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
 else:

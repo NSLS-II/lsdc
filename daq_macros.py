@@ -6,6 +6,7 @@ import beamline_lib #did this really screw me if I imported b/c of daq_utils imp
 import daq_lib
 import daq_utils
 import db_lib
+from daq_utils import getBlConfig, setBlConfig
 import det_lib
 import math
 import time
@@ -198,8 +199,8 @@ def autoRasterLoop(currentRequest):
   
   if not (daq_lib.setGovRobot('SA')):
     return 0
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
-    delayTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"autoRasterDelay")
+  if (getBlConfig("queueCollect") == 1):
+    delayTime = getBlConfig("autoRasterDelay")
     time.sleep(delayTime)
     
   reqObj = currentRequest["request_obj"]
@@ -215,7 +216,7 @@ def autoRasterLoop(currentRequest):
       time.sleep(2.0)
       status = loop_center_xrec()              
       return status
-  setTrans(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans"))
+  setTrans(getBlConfig("rasterDefaultTrans"))
   daq_lib.set_field("xrecRasterFlag","100")        
   sampleID = currentRequest["sample"]
   logger.info("auto raster " + str(sampleID))
@@ -508,7 +509,7 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
     deltaX = abs(endX-startX)
     deltaY = abs(endY-startY)
 
-    if ((deltaX != 0) and (deltaX>deltaY or not db_lib.getBeamlineConfigParam(daq_utils.beamline,"vertRasterOn"))): #horizontal raster
+    if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
       if (i%2 == 0): #left to right if even, else right to left - a snake attempt
         startX = rasterDef["rowDefs"][i]["start"]["x"]+(stepsize/2.0) #this is relative to center, so signs are reversed from motor movements.
       else:
@@ -749,21 +750,21 @@ def runDozorThread(directory,
     dozorComm = "/usr/local/crys-local/dozor-10Aug2020/dozor"
      
     if ((rowIndex % 8) == 1):
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")
+        node = getBlConfig("spotNode1")
     elif ((rowIndex % 8) == 2):
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode2")
+        node = getBlConfig("spotNode2")
     elif ((rowIndex % 8) == 3):
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode3")
+        node = getBlConfig("spotNode3")
     elif ((rowIndex % 8) == 4):
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode4")
+        node = getBlConfig("spotNode4")
     elif ((rowIndex % 8) == 5): 
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode5")
+        node = getBlConfig("spotNode5")
     elif ((rowIndex % 8) == 6): 
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode6")
+        node = getBlConfig("spotNode6")
     elif ((rowIndex % 8) == 7): 
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode7")
+        node = getBlConfig("spotNode7")
     else:
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode8")
+        node = getBlConfig("spotNode8")
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -796,18 +797,18 @@ def runDozorThread(directory,
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount
   time.sleep(1.0)
-  cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
-  dialsComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"dialsComm")
-  dialsTuneLowRes = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneLowRes")
-  dialsTuneHighRes = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneHighRes")
-  dialsTuneIceRingFlag = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingFlag")
-  dialsTuneResoFlag = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneResoFlag")
-  dialsTuneThreshFlag = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshFlag")    
-  dialsTuneIceRingWidth = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterTuneIceRingWidth")
-  dialsTuneMinSpotSize = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultMinSpotSize")
-  dialsTuneThreshKern =  db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshKernSize")
-  dialsTuneThreshSigBck =  db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigBckrnd")
-  dialsTuneThreshSigStrong =  db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterThreshSigStrong")    
+  cbfComm = getBlConfig("cbfComm")
+  dialsComm = getBlConfig("dialsComm")
+  dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
+  dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
+  dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
+  dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")
+  dialsTuneThreshFlag = getBlConfig("rasterThreshFlag")    
+  dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
+  dialsTuneMinSpotSize = getBlConfig("rasterDefaultMinSpotSize")
+  dialsTuneThreshKern =  getBlConfig("rasterThreshKernSize")
+  dialsTuneThreshSigBck =  getBlConfig("rasterThreshSigBckrnd")
+  dialsTuneThreshSigStrong =  getBlConfig("rasterThreshSigStrong")    
   if (dialsTuneIceRingFlag):
     iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
   else:
@@ -826,21 +827,21 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams
   logger.info('dials spotfinder command: %s' % dialsCommWithParams)
   if (rowIndex%8 == 0):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")
+    node = getBlConfig("spotNode1")
   elif (rowIndex%8 == 1):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode2")
+    node = getBlConfig("spotNode2")
   elif (rowIndex%8 == 2):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode3")
+    node = getBlConfig("spotNode3")
   elif (rowIndex%8 == 3):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode4")
+    node = getBlConfig("spotNode4")
   elif (rowIndex%8 == 4):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode5")
+    node = getBlConfig("spotNode5")
   elif (rowIndex%8 == 5):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode6")
+    node = getBlConfig("spotNode6")
   elif (rowIndex%8 == 6):
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode7")
+    node = getBlConfig("spotNode7")
   else:
-    node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode8")  
+    node = getBlConfig("spotNode8")  
   if (seqNum>-1): #eiger
     cbfDir = directory+"/cbf"
     comm_s = "mkdir -p " + cbfDir
@@ -1008,7 +1009,7 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
 
 
 def snakeRaster(rasterReqID,grain=""):
-  scannerType = db_lib.getBeamlineConfigParam(daq_utils.beamline,"scannerType")
+  scannerType = getBlConfig("scannerType")
   if (scannerType == "PI"):
     snakeRasterFine(rasterReqID,grain)
   else:
@@ -1082,7 +1083,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
 
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,totalImages,rasterFilePrefix,data_directory_name,file_number_start)
-  procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))  
+  procFlag = int(getBlConfig("rasterProcessFlag"))  
   generateRasterCoords4Traj(rasterRequest)
   total_exposure_time = exptimePerCell*totalImages    
     
@@ -1280,7 +1281,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
 
 #this could be tricky, b/c omega is angle start that ends up in header, so if you want to arm once, this won't be right
   daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
-  procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))  
+  procFlag = int(getBlConfig("rasterProcessFlag"))  
   
   subrasters = []
 
@@ -1418,7 +1419,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
       setPvDesc("sampleProtect",1)    
     return      
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
-  procFlag = int(db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag"))    
+  procFlag = int(getBlConfig("rasterProcessFlag"))    
   
   for i in range(len(rasterDef["rowDefs"])):
     if (daq_lib.abort_flag == 1):
@@ -1433,7 +1434,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     endY = rasterDef["rowDefs"][i]["end"]["y"]
     deltaX = abs(endX-startX)
     deltaY = abs(endY-startY)
-    if ((deltaX != 0) and (deltaX>deltaY or not db_lib.getBeamlineConfigParam(daq_utils.beamline,"vertRasterOn"))): #horizontal raster
+    if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
       startY = startY + (stepsize/2.0)
       endY = startY
     else: #vertical raster
@@ -1597,7 +1598,7 @@ def reprocessRaster(rasterReqID):
     endY = rasterDef["rowDefs"][i]["end"]["y"]
     deltaX = abs(endX-startX)
     deltaY = abs(endY-startY)
-    if ((deltaX != 0) and (deltaX>deltaY or not db_lib.getBeamlineConfigParam(daq_utils.beamline,"vertRasterOn"))): #horizontal raster
+    if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
       startY = startY + (stepsize/2.0)
       endY = startY
     else: #vertical raster
@@ -2207,9 +2208,9 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   tempnewRasterRequest = daq_utils.createDefaultRequest(sampleID)
   reqObj = tempnewRasterRequest["request_obj"]
   reqObj["protocol"] = "raster"
-  reqObj["exposure_time"] = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTime")
-  reqObj["img_width"] = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultWidth")
-  reqObj["attenuation"] = db_lib.getBeamlineConfigParam(daq_utils.beamline,"rasterDefaultTrans")
+  reqObj["exposure_time"] = getBlConfig("rasterDefaultTime")
+  reqObj["img_width"] = getBlConfig("rasterDefaultWidth")
+  reqObj["attenuation"] = getBlConfig("rasterDefaultTrans")
   reqObj["directory"] = reqObj["directory"]+"/rasterImages/"
   if (numsteps_h == 1): #column raster
     reqObj["file_prefix"] = reqObj["file_prefix"]+"_l"
@@ -2369,7 +2370,7 @@ def eScan(energyScanRequest):
     daq_lib.set_field("choochResultFlag",choochResultID)
 
 def vectorZebraScan(vecRequest):
-  scannerType = db_lib.getBeamlineConfigParam(daq_utils.beamline,"scannerType")
+  scannerType = getBlConfig("scannerType")
   if (scannerType == "PI"):
     vectorZebraScanFine(vecRequest)
   else:
@@ -2639,8 +2640,8 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   flux = getPvDesc("sampleFlux")    
 
 
-  cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
-  node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")          
+  cbfComm = getBlConfig("cbfComm")
+  node = getBlConfig("spotNode1")          
   cbfList = []
   logger.info(dna_filename_list)
   for i in range (0,len(dna_filename_list)):
@@ -2775,7 +2776,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
 
 def setTrans(transmission): #where transmission = 0.0-1.0
   if (daq_utils.beamline == "fmx"):  
-    if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"attenType") == "RI"):
+    if (getBlConfig("attenType") == "RI"):
       setPvDesc("RIattenEnergySP",beamline_lib.motorPosFromDescriptor("energy"))
       setPvDesc("RI_Atten_SP",transmission)      
       setPvDesc("RI_Atten_SET",1)
@@ -3165,7 +3166,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
 
 def setAttenBCU():
   """setAttenBCU() : set attenuators to BCU (fmx only)"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"attenType","BCU")
+  setBlConfig("attenType","BCU")
   setPvDesc("RI_Atten_SP",1.0)      
   setPvDesc("RI_Atten_SET",1)
   daq_lib.gui_message("Attenuators set to BCU. Restart LSDC GUI!")  
@@ -3173,7 +3174,7 @@ def setAttenBCU():
 
 def setAttenRI():
   """setAttenRI() : set attenuators to RI (fmx only)"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"attenType","RI")
+  setBlConfig("attenType","RI")
   setPvDesc("transmissionSet",1.0)
   setPvDesc("transmissionGo",1)
   daq_lib.gui_message("Attenuators set to RI. Restart LSDC GUI!")    
@@ -3182,12 +3183,12 @@ def setAttenRI():
   
 def robotOn():
   """robotOn() : use the robot to mount samples"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"robot_online",1)
+  setBlConfig("robot_online",1)
 
 
 def robotOff():
   """robotOff() : fake mounting samples"""  
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"robot_online",0)
+  setBlConfig("robot_online",0)
 
 
 def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
@@ -3255,13 +3256,13 @@ def setProcGPFS():
 
 
 def setFastDPNode(nodeName):
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"fastDPNode",nodeName)
+  setBlConfig("fastDPNode",nodeName)
 
 def setDimpleNode(nodeName):
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"dimpleNode",nodeName)
+  setBlConfig("dimpleNode",nodeName)
 
 def setDimpleCommand(commName):
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"dimpleComm",commName)
+  setBlConfig("dimpleComm",commName)
   
 
     
@@ -3290,19 +3291,19 @@ def restartEMBL():
 
 def queueCollectOn():
   """queueCollectOn() : allow for creating requests for samples that are not mounted"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"queueCollect",1)
+  setBlConfig("queueCollect",1)
 
 def queueCollectOff():
   """queueCollectOff() : do not allow creating requests for samples that are not mounted"""  
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"queueCollect",0)
+  setBlConfig("queueCollect",0)
 
 def guiLocal(): #monitor omega RBV
   """guiLocal() : show the readback of the Omega motor as it's moving. Can lead to lags when operating remotely with reduced bandwidth."""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV","RBV")
+  setBlConfig("omegaMonitorPV","RBV")
 
 def guiRemote(): #monitor omega VAL
   """guiRemote() : show the setpoint of the Omega motor, instead of the constant readback. This can be used to reduce video lags when operating remotely with reduced bandwidth"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"omegaMonitorPV","VAL")
+  setBlConfig("omegaMonitorPV","VAL")
 
 def spotNodes(*args):
   """spotNodes(*args) : Set the dials spotfinding nodes. You must give 8 nodes. Example: spotNodes(4,5,7,8,12,13,14,15)"""
@@ -3310,7 +3311,7 @@ def spotNodes(*args):
     logger.error("C'mon, I need 8 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"spotNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("spotNode"+str(i+1),"cpu-%03d" % args[i])
 
 def fastDPNodes(*args):
   """fastDPNodes(*args) : Set the fastDP nodes. You must give 4 nodes. Example: fastDPNodes(4,5,7,8)"""  
@@ -3318,14 +3319,14 @@ def fastDPNodes(*args):
     logger.error("C'mon, I need 4 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      db_lib.setBeamlineConfigParam(daq_utils.beamline,"fastDPNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("fastDPNode"+str(i+1),"cpu-%03d" % args[i])
 
 def setVisitName(vname):
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"visitName",str(vname))
+  setBlConfig("visitName",str(vname))
 
 def setScannerType(s_type): #either "PI" or "Normal"
   """setScannerType(s_type): #either PI or Normal"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"scannerType",str(s_type))
+  setBlConfig("scannerType",str(s_type))
 
 def getVisitName(beamline):
   return db_lib.getBeamlineConfigParam(beamline,"visitName")
@@ -3333,19 +3334,19 @@ def getVisitName(beamline):
 
 def setWarmupInterval(interval):
   """setWarmupInterval(interval) : set the number of mounts between automatic robot warmups"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"robotWarmupInterval",int(interval))
+  setBlConfig("robotWarmupInterval",int(interval))
 
 def setAutoRasterDelay(interval):
   """setAutoRasterDelay(delayTime) : set delay time before autoRaster in Q-collect"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"autoRasterDelay",float(interval))
+  setBlConfig("autoRasterDelay",float(interval))
   
 def procOn():
   """procOn() : Turns on raster heatmap generation"""  
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag",1)
+  setBlConfig("rasterProcessFlag",1)
 
 def procOff():
   """procOff() : Turns off raster heatmap generation"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"rasterProcessFlag",0)
+  setBlConfig("rasterProcessFlag",0)
 
 def backoffDetector():
   if (daq_utils.beamline == "amx"):
@@ -3355,11 +3356,11 @@ def backoffDetector():
 
 def disableMount():
   """disableMount() : turn off robot mounting. Usually done in an error situation where we want staff intervention before resuming."""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"mountEnabled",0)
+  setBlConfig("mountEnabled",0)
 
 def enableMount():
   """enableMount() : allow robot mounting"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"mountEnabled",1)
+  setBlConfig("mountEnabled",1)
 
 def set_beamsize(sizeV, sizeH):
   if (sizeV == 'V0'):
@@ -3401,15 +3402,15 @@ def set_beamsize(sizeV, sizeH):
   
 def vertRasterOn():
   """vertRasterOn() : raster vertically when rasters are taller than they are wide"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"vertRasterOn",1)
+  setBlConfig("vertRasterOn",1)
 
 def vertRasterOff():
   """vertRasterOff() : only raster vertically for single-column (line) rasters"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"vertRasterOn",0)
+  setBlConfig("vertRasterOn",0)
 
 def newVisit():
   """newVisit() : Trick LSDC into creating a new visit on the next request creation"""
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"proposal",987654) #a kludge to cause the next collection to generate a new visit
+  setBlConfig("proposal",987654) #a kludge to cause the next collection to generate a new visit
 
 
 def logMe():
@@ -3450,7 +3451,7 @@ def createProposal(propNum,PI_login="boaty"):
   
 
 def topViewCheckOn():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"topViewCheck",1)
+  setBlConfig("topViewCheck",1)
 
 def anneal(annealTime):
   robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
@@ -3465,7 +3466,7 @@ def anneal(annealTime):
 
   
 def topViewCheckOff():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"topViewCheck",0)
+  setBlConfig("topViewCheck",0)
 
 def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy = 12.7, wedge = 180, flux = 1e12, verbose = True):
   if (not os.path.exists("2vb1.pdb")):
@@ -3485,16 +3486,16 @@ def lockGUI():
   daq_lib.lockGUI()
   
 def beamCheckOn():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"beamCheck",1)
+  setBlConfig("beamCheck",1)
 
 def beamCheckOff():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"beamCheck",0)
+  setBlConfig("beamCheck",0)
 
 def HePathOff():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"HePath",0)
+  setBlConfig("HePath",0)
 
 def HePathOn():
-  db_lib.setBeamlineConfigParam(daq_utils.beamline,"HePath",1)
+  setBlConfig("HePath",1)
   
 
 def lsdcHelp():

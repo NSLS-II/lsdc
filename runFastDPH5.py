@@ -2,6 +2,7 @@
 import os
 import sys
 import db_lib
+from daq_utils import getBlConfig
 import xmltodict
 import logging
 logger = logging.getLogger()
@@ -41,8 +42,8 @@ timeoutLimit = 600 #for now
 prefix_long = directory+"/"+filePrefix+"_"+str(numstart)
 hdfFilepattern = prefix_long+"_master.h5"
 CBF_conversion_pattern = cbfDir + "/"+filePrefix + "_"
-fastdpComm = ";source " + os.environ["PROJDIR"] + "wrappers/fastDPWrap2;" + db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"fastdpComm")
-dimpleComm = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"dimpleComm")  
+fastdpComm = ";source " + os.environ["PROJDIR"] + "wrappers/fastDPWrap2;" + getBlConfig("fastdpComm")
+dimpleComm = getBlConfig("dimpleComm")  
 comm_s = "ssh  -q " + node + " \"cd " + runningDir + fastdpComm + hdfFilepattern  + "\""
 logger.info(comm_s)
 os.system(comm_s)
@@ -53,7 +54,7 @@ logger.info("finished fast_dp")
 logger.info(resultObj)
 resultID = db_lib.addResultforRequest("fastDP",request_id,owner,resultObj,beamline=os.environ["BEAMLINE_ID"])
 newResult = db_lib.getResult(resultID)
-visitName = db_lib.getBeamlineConfigParam(os.environ["BEAMLINE_ID"],"visitName")
+visitName = getBlConfig("visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
 except:

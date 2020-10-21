@@ -5,6 +5,7 @@
 import RobotControlLib
 import daq_utils
 import db_lib
+from daq_utils import getBlConfig
 import daq_lib
 import beamline_lib
 import time
@@ -29,7 +30,7 @@ global retryMountCount
 retryMountCount = 0
 
 def finish():
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')):  
+  if (getBlConfig('robot_online')):  
     try:
       RobotControlLib.runCmd("finish")
       return 1    
@@ -229,10 +230,10 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   global sampXadjust, sampYadjust, sampZadjust  
 
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')):
+  if (getBlConfig('robot_online')):
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.setGovRobot('SE')
-    if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+    if (getBlConfig("topViewCheck") == 1):
       try:
         if (daq_utils.beamline == "fmx"):                  
           _thread.start_new_thread(setWorkposThread,(init,0))        
@@ -280,7 +281,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
               time.sleep(3.0)
             if (not daq_lib.setGovRobot('SE')):
               return
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+        if (getBlConfig("topViewCheck") == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -307,7 +308,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)                                
       else:
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+        if (getBlConfig("topViewCheck") == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -318,7 +319,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
-      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+      if (getBlConfig("topViewCheck") == 1):
         daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
         if (sampYadjust != 0):
           pass
@@ -337,7 +338,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
         return 0                    
       if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
-        if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):          
+        if (getBlConfig("queueCollect") == 0):          
           daq_lib.gui_message(e_s + ". Try mounting again")
           return 0            
         else:
@@ -360,7 +361,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
 def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came from
 
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
-  robotOnline = db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')
+  robotOnline = getBlConfig('robot_online')
   logger.info("robot online = " + str(robotOnline))
   if (robotOnline):
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    

@@ -12,6 +12,7 @@ import beamline_lib
 import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import db_lib
+from daq_utils import getBlConfig
 import logging
 logger = logging.getLogger(__name__)
 
@@ -229,11 +230,11 @@ def setRobotGovState(stateString):
 def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
-    lowMagExpTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"lowMagExptimeDA")    
+    lowMagExpTime = getBlConfig("lowMagExptimeDA")    
     setPvDesc("lowMagGain",25)
     setPvDesc("lowMagAcquireTime",lowMagExpTime)
   else:
-    lowMagExpTime = db_lib.getBeamlineConfigParam(daq_utils.beamline,"lowMagExptime")
+    lowMagExpTime = getBlConfig("lowMagExptime")
     if (daq_utils.beamline == "amx"):                              
       setPvDesc("lowMagGain",0.1)
     else:
@@ -332,13 +333,13 @@ def mountSample(sampID):
 
   saveDetDist = beamline_lib.motorPosFromDescriptor("detectorDist")  
   warmUpNeeded = 0
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1):
+  if (getBlConfig("queueCollect") == 1):
     mountCounter+=1
-    if (mountCounter > db_lib.getBeamlineConfigParam(daq_utils.beamline,"robotWarmupInterval")):
+    if (mountCounter > getBlConfig("robotWarmupInterval")):
       warmUpNeeded = 1
   mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
   currentMountedSampleID = mountedSampleDict["sampleID"]
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"topViewCheck") == 1):
+  if (getBlConfig("topViewCheck") == 1):
     logger.info("setting work pos")
     if (daq_utils.beamline == "amx"):                          
       setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
@@ -365,7 +366,7 @@ def mountSample(sampID):
           set_field("mounted_pin",sampID)
           detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
           if (detDist != saveDetDist):
-            if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 0):
+            if (getBlConfig("HePath") == 0):
               beamline_lib.mvaDescriptor("detectorDist",saveDetDist)
         elif(mountStat == 2):
           return 2
@@ -431,7 +432,7 @@ def unmountCold():
 def waitBeam():
   waiting = 0
   while (1):
-    if (getPvDesc("beamAvailable") or db_lib.getBeamlineConfigParam(daq_utils.beamline,"beamCheck") == 0):
+    if (getPvDesc("beamAvailable") or getBlConfig("beamCheck") == 0):
       if (waiting):
         waiting = 0
         destroy_gui_message()          
@@ -448,7 +449,7 @@ def runDCQueue(): #maybe don't run rasters from here???
   autoMounted = 0 #this means the mount was performed from a runQueue, as opposed to a manual mount button push
   logger.info("running queue in daq server")
   while (1):
-    if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 1 and db_lib.getBeamlineConfigParam(daq_utils.beamline,"beamCheck") == 1):
+    if (getBlConfig("queueCollect") == 1 and getBlConfig("beamCheck") == 1):
       waitBeam()
     if (abort_flag):
       abort_flag =  0 #careful about when to reset this
@@ -460,14 +461,14 @@ def runDCQueue(): #maybe don't run rasters from here???
     reqObj = currentRequest["request_obj"]
     setPvDesc("govRobotDetDist",reqObj["detDist"])
     setPvDesc("govHumanDetDist",reqObj["detDist"])
-    if (reqObj["detDist"] >= 200.0 and db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 0):
+    if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
       setPvDesc("govRobotDetDistOut",reqObj["detDist"])
       setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]
     if (currentMountedSampleID != sampleID):
-      if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"queueCollect") == 0):
+      if (getBlConfig("queueCollect") == 0):
         gui_message("You can only run requests on the currently mounted sample. Remove offending request and continue.")
         return
       mountStat = mountSample(sampleID)
@@ -639,7 +640,7 @@ def collectData(currentRequest):
         else:
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
         seqNum = int(detector_get_seqnum())         
-        cbfComm = db_lib.getBeamlineConfigParam(daq_utils.beamline,"cbfComm")
+        cbfComm = getBlConfig("cbfComm")
         cbfDir = data_directory_name+"/cbf"
         comm_s = "mkdir -p " + cbfDir
         os.system(comm_s)
@@ -649,7 +650,7 @@ def collectData(currentRequest):
         comm_s = "eiger2cbf-linux " + hdfRowFilepattern
         startIndex=1
         endIndex = 1
-        node = db_lib.getBeamlineConfigParam(daq_utils.beamline,"spotNode1")        
+        node = getBlConfig("spotNode1")        
         comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\"&" 
         logger.info(comm_s)
         os.system(comm_s)
@@ -729,8 +730,8 @@ def collectData(currentRequest):
         dimpleFlag = 0        
       nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
       fastDPNodeCounter+=1
-      node = db_lib.getBeamlineConfigParam(daq_utils.beamline,nodeName)      
-      dimpleNode = db_lib.getBeamlineConfigParam(daq_utils.beamline,"dimpleNode")      
+      node = getBlConfig(nodeName)      
+      dimpleNode = getBlConfig("dimpleNode")      
       if (daq_utils.detector_id == "EIGER-16"):
         seqNum = int(detector_get_seqnum())
         comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + file_prefix + " " + str(seqNum) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
@@ -842,7 +843,7 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
 
 def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
-  if (db_lib.getBeamlineConfigParam(daq_utils.beamline,'robot_online')): #so that we don't move things when robot moving?
+  if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
       return

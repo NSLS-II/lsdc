@@ -11,7 +11,6 @@ except Exception as e:
   logger.error("daq_utils: ISPYB import error, %s" %e)
 
 import db_lib
-from daq_utils import getBlConfig, setBlConfig
 
 global beamline
 beamline = os.environ["BEAMLINE_ID"]
@@ -28,6 +27,12 @@ scan_list = []
 soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
+
+def getBlConfig(param):
+        return db_lib.getBeamlineConfigParam(beamline, param)
+
+def setBlConfig(param, value):
+        db_lib.setBeamlineConfigParam(beamline, param, value)
 
 def init_environment():
   global beamline,detector_id,mono_mot_code,has_beamline,has_xtalview,xtal_url,xtal_url_small,xtalview_user,xtalview_pass,det_type,has_dna,beamstop_x_pvname,beamstop_y_pvname,camera_offset,det_radius,lowMagFOVx,lowMagFOVy,highMagFOVx,highMagFOVy,lowMagPixX,lowMagPixY,highMagPixX,highMagPixY,screenPixX,screenPixY,screenPixCenterX,screenPixCenterY,screenProtocol,screenPhist,screenPhiend,screenWidth,screenDist,screenExptime,screenWave,screenReso,gonioPvPrefix,searchParams,screenEnergy,detectorOffline,imgsrv_host,imgsrv_port,beamlineComm,primaryDewarName,lowMagCamURL,highMagZoomCamURL,lowMagZoomCamURL,highMagCamURL,owner,dewarPlateMap
@@ -307,9 +312,3 @@ def getVisitName():
 
 def setVisitName(visitName):
   return db_lib.setBeamlineConfigParam(beamline,"visitName",visitName)
-
-def getBlConfig(param):
-	return getBlConfig( param)
-
-def setBlConfig(param, value):
-	db_lib.setBeamlineConfigParam(beamline, param, value)

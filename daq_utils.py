@@ -307,3 +307,8 @@ def getVisitName():
 def setVisitName(visitName):
   return db_lib.setBeamlineConfigParam(beamline,"visitName",visitName)
 
+def getBlConfig(param):
+	return db_lib.getBeamlineConfigParam(beamline, param)
+
+def setBlConfig(param, value):
+	db_lib.setBeamlineConfigParam(beamline, param, value)

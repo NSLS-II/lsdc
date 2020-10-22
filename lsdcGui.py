@@ -3141,8 +3141,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.choochResultFlag_pv.put("0")
         self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
         self.protoComboActivatedCB("standard")
-      except TypeError:
-        logger.error('Chooch plotting failed - check whether scan had a strong signal or not')
+      except TypeError as e:
+        logger.error('Chooch plotting failed - check whether scan had a strong signal or not: %s' % (e))
       
 
 

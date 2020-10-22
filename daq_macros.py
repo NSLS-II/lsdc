@@ -528,12 +528,9 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
           xMotCellAbsoluteMove = xMotAbsoluteMove+(j*stepsize)
         else:
           xMotCellAbsoluteMove = xMotAbsoluteMove-(j*stepsize)
-        if (daq_utils.detector_id == "EIGER-16"):
-          dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
-        else:
-          dataFileName = daq_utils.create_filename(filePrefix+"_Raster_"+str(i),(i*numsteps)+j+1)
+        cellMapKey = "cellMap_{}".format(imIndexStr)
         rasterCellCoords = {"x":xMotCellAbsoluteMove,"y":yMotAbsoluteMove,"z":zMotAbsoluteMove}
-        rasterCellMap[dataFileName[:-4]] = rasterCellCoords
+        rasterCellMap[cellMapKey] = rasterCellCoords
     else: #vertical raster
       if (i%2 == 0): #top to bottom if even, else bottom to top - a snake attempt
         startY = rasterDef["rowDefs"][i]["start"]["y"]+(stepsize/2.0) #this is relative to center, so signs are reversed from motor movements.
@@ -720,7 +717,8 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
             "d_min",
             "d_min_method_1",
             "d_min_method_2",
-            "total_intensity"]
+            "total_intensity",
+            "cellMapKey"]
     localList = []
 
     for cell in range(0,dozorData.shape[0]):
@@ -731,7 +729,8 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
                   dozorData[cell,:][3],
                   dozorData[cell,:][3],
                   dozorData[cell,:][3],
-                  dozorData[cell,:][1]*dozorData[cell,:][2]]
+                  dozorData[cell,:][1]*dozorData[cell,:][2],
+                  "cellMap_{}".format(seriesIndex)]
         localList.append(OrderedDict(zip(keys,values)))
     return localList
 
@@ -882,6 +881,8 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   while(1):
     resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
     localDialsResultDict = xmltodict.parse(resultString)
+    for kk in range(0,rowCellCount):
+      localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk)
     if (localDialsResultDict["data"] == None and retry>0):
       logger.error("ERROR \n" + resultString + " retry = " + str(retry))
       retry = retry - 1
@@ -2004,8 +2005,8 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     if (multiColThreshold>-1):
       logger.info("doing multicol")
       if (scoreVal >= multiColThreshold):
-        hitFile = cellResults[i]["image"]
-        hitCoords = rasterMap[hitFile[:-4]]
+        hitFile = cellResults[i]["cellMapKey"]
+        hitCoords = rasterMap[hitFile]
         parentReqID = rasterResult['result_obj']["parentReqID"]
         if (parentReqID == -1):
           addMultiRequestLocation(requestID,hitCoords,i)
@@ -2014,14 +2015,14 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     if (scoreOption == "d_min"):
       if (scoreVal < floor and scoreVal != -1):
         floor = scoreVal
-        hotFile = cellResults[i]["image"]        
+        hotFile = cellResults[i]["cellMapKey"]        
     else:
       if (scoreVal > ceiling):
         ceiling = scoreVal
-        hotFile = cellResults[i]["image"]        
+        hotFile = cellResults[i]["cellMapKey"]        
   if (hotFile != ""):
     logger.info('raster score ceiling: %s floor: %s hotfile: %s' % (ceiling, floor, hotFile))
-    hotCoords = rasterMap[hotFile[:-4]]     
+    hotCoords = rasterMap[hotFile]     
     x = hotCoords["x"]
     y = hotCoords["y"]
     z = hotCoords["z"]
@@ -2043,16 +2044,16 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
         except TypeError:
           scoreVal = 0.0
         if (scoreVal > vectorThreshold):
-          hotFile = cellResults[i]["image"]
-          hotCoords = rasterMap[hotFile[:-4]]             
+          hotFile = cellResults[i]["cellMapKey"]
+          hotCoords = rasterMap[hotFile]             
           x = hotCoords["x"]
           if (x<xmin):
             xmin = x
           if (x>xmax):
             xmax = x
       for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
-        fileKey = cellResults[i]["image"]
-        coords = rasterMap[fileKey[:-4]]
+        fileKey = cellResults[i]["cellMapKey"]
+        coords = rasterMap[fileKey]
         x = coords["x"]
         if (x == xmin): #cell is in left column
           xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}

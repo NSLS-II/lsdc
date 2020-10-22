@@ -1,8 +1,8 @@
-detector eiger9m
-nx 3110
-ny 3269
+detector $detector
+nx $nx
+ny $ny
 pixel 0.075
-X-ray_wavelength 0.92
+X-ray_wavelength $wavelength
 detector_distance $detector_distance
 orgx $orgx
 orgy $orgy

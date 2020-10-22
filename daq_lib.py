@@ -482,6 +482,7 @@ def runDCQueue(): #maybe don't run rasters from here???
       else:
         return 0
     db_lib.updatePriority(currentRequest["uid"],99999)
+    currentRequest['priority'] = 99999 #TODO have updatePriority return an updated request?
     refreshGuiTree() #just tells the GUI to repopulate the tree from the DB
     logger.info("calling collect data " + str(time.time()))    
     colStatus = collectData(currentRequest)

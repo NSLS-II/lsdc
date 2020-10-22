@@ -2443,7 +2443,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxEScan.addWidget(verticalLine)
         hBoxEScan.addWidget(self.EScanGraph)
         vBoxEScanFull.addLayout(hBoxEScan)
-        self.choochGraph = McaWindow(self.energyFrame) #TODO should be another type? need to be able to add curves
+        self.choochGraph = ScanWindow(self.energyFrame) #TODO should be another type? need to be able to add curves
         vBoxEScanFull.addWidget(self.choochGraph)
         self.energyFrame.setLayout(vBoxEScanFull)
         splitter11.addWidget(self.VidFrame)

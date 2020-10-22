@@ -236,6 +236,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"
      JPEG_conversion_pattern = fullJpegDirectory + "/" + filePrefix+"_"
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
+     adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
      comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
      logger.info('diffraction thumbnail image: %s' % comm_s)
      os.system(comm_s)

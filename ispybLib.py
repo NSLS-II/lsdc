@@ -205,10 +205,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
-     params = mxprocessing.get_program_params()
-     params['id'] = app_id
-     params['status'] = 1
-     mxprocessing.upsert_program(list(params.values()))
+     mxprocessing.upsert_program_ex(program_id=app_id,status=1)
          
    elif resultType == 'mxExpParams':
      result_obj = result['result_obj']

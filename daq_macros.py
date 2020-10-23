@@ -553,7 +553,7 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
           yMotCellAbsoluteMove = yMotAbsoluteMove+(math.cos(omegaRad)*(j*stepsize))
           zMotCellAbsoluteMove = zMotAbsoluteMove+(math.sin(omegaRad)*(j*stepsize))          
         cellMapKey = 'cellMap_{}'.format(imIndexStr)
-        rasterCellCoords = {"x":xMotAbsoluteMove,"y":yMotAbsoluteMove,"z":zMotAbsoluteMove}
+        rasterCellCoords = {"x":xMotAbsoluteMove,"y":yMotCellAbsoluteMove,"z":zMotCellAbsoluteMove}
         rasterCellMap[cellMapKey] = rasterCellCoords
 
 #commented out all of the processing, as this should have been done by the thread

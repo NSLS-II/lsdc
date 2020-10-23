@@ -1528,7 +1528,7 @@ class ControlMain(QtWidgets.QMainWindow):
     fastShutterSignal = QtCore.Signal(float)
     gripTempSignal = QtCore.Signal(float)
     ringCurrentSignal = QtCore.Signal(float)
-    beamAvailableSignal = QtCore.Signal(str)
+    beamAvailableSignal = QtCore.Signal(float)
     sampleExposedSignal = QtCore.Signal(str)
     sampMoveSignal = QtCore.Signal(int, str)
     roiChangeSignal = QtCore.Signal(str)

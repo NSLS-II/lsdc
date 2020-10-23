@@ -528,7 +528,7 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
           xMotCellAbsoluteMove = xMotAbsoluteMove+(j*stepsize)
         else:
           xMotCellAbsoluteMove = xMotAbsoluteMove-(j*stepsize)
-        cellMapKey = "cellMap_{}".format(imIndexStr)
+        cellMapKey = 'cellMap_{}'.format(imIndexStr)
         rasterCellCoords = {"x":xMotCellAbsoluteMove,"y":yMotAbsoluteMove,"z":zMotAbsoluteMove}
         rasterCellMap[cellMapKey] = rasterCellCoords
     else: #vertical raster
@@ -552,12 +552,9 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
         else:
           yMotCellAbsoluteMove = yMotAbsoluteMove+(math.cos(omegaRad)*(j*stepsize))
           zMotCellAbsoluteMove = zMotAbsoluteMove+(math.sin(omegaRad)*(j*stepsize))          
-        if (daq_utils.detector_id == "EIGER-16"):
-          dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
-        else:
-          dataFileName = daq_utils.create_filename(filePrefix+"_Raster_"+str(i),j+1)
-        rasterCellCoords = {"x":xMotAbsoluteMove,"y":yMotCellAbsoluteMove,"z":zMotCellAbsoluteMove}
-        rasterCellMap[dataFileName[:-4]] = rasterCellCoords
+        cellMapKey = 'cellMap_{}'.format(imIndexStr)
+        rasterCellCoords = {"x":xMotCellAbsoluteMove,"y":yMotAbsoluteMove,"z":zMotAbsoluteMove}
+        rasterCellMap[cellMapKey] = rasterCellCoords
 
 #commented out all of the processing, as this should have been done by the thread
   if (rasterEncoderMap!= None):
@@ -882,15 +879,22 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
     localDialsResultDict = xmltodict.parse(resultString)
     for kk in range(0,rowCellCount):
-      localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk)
+      localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk + 1)
     if (localDialsResultDict["data"] == None and retry>0):
       logger.error("ERROR \n" + resultString + " retry = " + str(retry))
       retry = retry - 1
       if (retry==0):
         localDialsResultDict["data"]={}
         localDialsResultDict["data"]["response"]=[]
-        for jj in range (0,rowCellCount):
-          localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
+        for jj in range (0,rowCellCount): 
+          localDialsResultDict["data"]["response"].append({'d_min': '-1.00',
+                                                           'd_min_method_1': '-1.00',
+                                                           'd_min_method_2': '-1.00',
+                                                           'image': '',
+                                                           'spot_count': '0',
+                                                           'spot_count_no_ice': '0',
+                                                           'total_intensity': '0',
+                                                           'cellMapKey': 'cellMap_{}'.format(rowIndex*rowCellCount + jj + 1)})
         break
                                       
     else:

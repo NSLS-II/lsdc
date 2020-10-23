@@ -1529,7 +1529,7 @@ class ControlMain(QtWidgets.QMainWindow):
     gripTempSignal = QtCore.Signal(float)
     ringCurrentSignal = QtCore.Signal(float)
     beamAvailableSignal = QtCore.Signal(float)
-    sampleExposedSignal = QtCore.Signal(str)
+    sampleExposedSignal = QtCore.Signal(float)
     sampMoveSignal = QtCore.Signal(int, str)
     roiChangeSignal = QtCore.Signal(str)
     highMagCursorChangeSignal = QtCore.Signal(str)

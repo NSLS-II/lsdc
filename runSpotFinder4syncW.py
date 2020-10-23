@@ -70,8 +70,7 @@ while(1):
     if (retry==0):
       localDialsResultDict["data"]={}
       localDialsResultDict["data"]["response"]=[]
-      for jj in range (0,rowCellCount):
-        localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
+      localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
       break
   else:
     break

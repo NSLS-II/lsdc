@@ -6,6 +6,7 @@ X-ray_wavelength $wavelength
 detector_distance $detector_distance
 orgx $orgx
 orgy $orgy
+pixel_min 4
 first_image_number $first_image_number
 number_images $number_images
 name_template_image $name_template_image

@@ -3662,6 +3662,7 @@ class ControlMain(QtWidgets.QMainWindow):
         currentRasterGroup = self.rasterList[rasterListIndex]["graphicsItem"]
       except IndexError as e:
         logger.error('IndexError while getting raster group: %s' % e) 
+        return
       self.currentRasterCellList = currentRasterGroup.childItems()
       cellResults = rasterResult["result_obj"]["rasterCellResults"]['resultObj']
       numLines = len(cellResults)

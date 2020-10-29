@@ -788,10 +788,10 @@ def runDozorThread(directory,
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q {} \"cd {};{} -w h5_row_{}.dat\"".format(node,
-                                                              dozorRowDir,
-                                                              dozorComm,
-                                                              rowIndex)
+    comm_s = "ssh -q {} \"cd {};{} -w -bin 2 h5_row_{}.dat\"".format(node,
+                                                                     dozorRowDir,
+                                                                     dozorComm,
+                                                                     rowIndex)
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")

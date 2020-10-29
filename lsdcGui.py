@@ -4218,7 +4218,11 @@ class ControlMain(QtWidgets.QMainWindow):
       selmod = self.dewarTree.selectionModel()
       selection = selmod.selection()
       indexes = selection.indexes()
-      progressInc = 100.0/float(len(indexes))
+      try:
+        progressInc = 100.0/float(len(indexes))
+      except ZeroDivisionError:
+        self.popupServerMessage("Select a sample to perform the request on!")
+        return
       self.progressDialog.setWindowTitle("Creating Requests")
       self.progressDialog.show()
       for i in range(len(indexes)):

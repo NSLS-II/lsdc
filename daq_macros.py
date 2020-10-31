@@ -878,8 +878,6 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   while(1):
     resultString = "<data>\n"+os.popen(comm_s).read()+"</data>\n"
     localDialsResultDict = xmltodict.parse(resultString)
-    for kk in range(0,rowCellCount):
-      localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk + 1)
     if (localDialsResultDict["data"] == None and retry>0):
       logger.error("ERROR \n" + resultString + " retry = " + str(retry))
       retry = retry - 1
@@ -898,7 +896,9 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
         break
                                       
     else:
-      break
+      break 
+  for kk in range(0,rowCellCount):
+    localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk + 1)
   rasterRowResultsList[rowIndex] = localDialsResultDict["data"]["response"]
   processedRasterRowCount+=1
   logger.info("leaving thread")

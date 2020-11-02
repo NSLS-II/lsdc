@@ -24,7 +24,7 @@ import os #for runDozorThread
 import numpy as np # for runDozorThread
 from string import Template
 from collections import OrderedDict
-
+from threading import Thread
 try:
   import ispybLib
 except Exception as e:
@@ -1440,7 +1440,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
     return      
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
   procFlag = int(getBlConfig("rasterProcessFlag"))    
-  
+ 
+  spotFindThreadList = [] 
   for i in range(len(rasterDef["rowDefs"])):
     if (daq_lib.abort_flag == 1):
       daq_lib.setGovRobot('SA')
@@ -1517,12 +1518,17 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
-      _thread.start_new_thread(runDozorThread,(data_directory_name,
-                                               filePrefix+"_Raster",
-                                               i,
-                                               numsteps,
-                                               seqNum,
-                                               reqObj))
+      spotFindThread = Thread(target=runDozorThread,args=(data_directory_name,
+                                                          ''.join([filePrefix,"_Raster"]),
+                                                          i,
+                                                          numsteps,
+                                                          seqNum,
+                                                          reqObj))
+      spotFindThread.start()
+      spotFindThreadList.append(spotFindThread)
+  [thread.join() for thread in spotFindThreadList]
+
+
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')

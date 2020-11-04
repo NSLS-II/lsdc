@@ -53,7 +53,7 @@ from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
-handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=10)
+handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=100)
 #TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')

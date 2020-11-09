@@ -231,14 +231,14 @@ def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
     lowMagExpTime = getBlConfig("lowMagExptimeDA")    
-    setPvDesc("lowMagGain",25)
+    if daq_utils.beamline == 'amx':
+      setPvDesc("lowMagGain",32)
+    else:
+      setPvDesc("lowMagGain",25)
     setPvDesc("lowMagAcquireTime",lowMagExpTime)
   else:
     lowMagExpTime = getBlConfig("lowMagExptime")
-    if (daq_utils.beamline == "amx"):                              
-      setPvDesc("lowMagGain",0.1)
-    else:
-      setPvDesc("lowMagGain",1)      
+    setPvDesc("lowMagGain",1)      
     setPvDesc("lowMagAcquireTime",lowMagExpTime)                    
 
     

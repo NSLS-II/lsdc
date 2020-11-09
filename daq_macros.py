@@ -2251,6 +2251,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   reqObj["parentReqID"] = currentRequest["uid"]
   reqObj["xbeam"] = currentRequest['request_obj']["xbeam"]
   reqObj["ybeam"] = currentRequest['request_obj']["ybeam"]
+  reqObj["wavelength"] = currentRequest['request_obj']["wavelength"]
   newRasterRequestUID = db_lib.addRequesttoSample(sampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=propNum)
   daq_lib.set_field("xrecRasterFlag",newRasterRequestUID)
   time.sleep(1)

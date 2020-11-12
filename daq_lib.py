@@ -720,34 +720,35 @@ def collectData(currentRequest):
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
     logger.info(comm_s)
     os.system(comm_s)    
-    if (reqObj["fastDP"]):
-      if (reqObj["fastEP"]):
-        fastEPFlag = 1
-      else:
-        fastEPFlag = 0
-      if (reqObj["dimple"]):
-        dimpleFlag = 1
-      else:
-        dimpleFlag = 0        
-      nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
-      fastDPNodeCounter+=1
-      node = getBlConfig(nodeName)      
-      dimpleNode = getBlConfig("dimpleNode")      
-      if (daq_utils.detector_id == "EIGER-16"):
-        seqNum = int(detector_get_seqnum())
-        comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + file_prefix + " " + str(seqNum) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
-      else:
-        comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-      logger.info(comm_s)
-      if (daq_utils.beamline == "amx"):                                            
-        visitName = daq_utils.getVisitName()
-        if (not os.path.exists(visitName + "/fast_dp_dir")):
-          os.system("killall -KILL loop-fdp-dple-populate")
-          os.system("cd " + visitName + ";/GPFS/CENTRAL/xf17id2/jjakoncic/Scripts/loop-fdp-dple-populate.sh&")
-      os.system(comm_s)
-    if (reqObj["xia2"]):
-      comm_s = "ssh -q xf17id1-srv1 \"" + os.environ["LSDCHOME"] + "/runXia2.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + "\"&"
-      os.system(comm_s)
+    if img_width > 0: #no dataset processing in stills mode
+      if (reqObj["fastDP"]):
+        if (reqObj["fastEP"]):
+          fastEPFlag = 1
+        else:
+          fastEPFlag = 0
+        if (reqObj["dimple"]):
+          dimpleFlag = 1
+        else:
+          dimpleFlag = 0        
+        nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
+        fastDPNodeCounter+=1
+        node = getBlConfig(nodeName)      
+        dimpleNode = getBlConfig("dimpleNode")      
+        if (daq_utils.detector_id == "EIGER-16"):
+          seqNum = int(detector_get_seqnum())
+          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + file_prefix + " " + str(seqNum) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
+        else:
+          comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
+        logger.info(comm_s)
+        if (daq_utils.beamline == "amx"):                                            
+          visitName = daq_utils.getVisitName()
+          if (not os.path.exists(visitName + "/fast_dp_dir")):
+            os.system("killall -KILL loop-fdp-dple-populate")
+            os.system("cd " + visitName + ";/GPFS/CENTRAL/xf17id2/jjakoncic/Scripts/loop-fdp-dple-populate.sh&")
+        os.system(comm_s)
+      if (reqObj["xia2"]):
+        comm_s = "ssh -q xf17id1-srv1 \"" + os.environ["LSDCHOME"] + "/runXia2.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + "\"&"
+        os.system(comm_s)
   
   logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)

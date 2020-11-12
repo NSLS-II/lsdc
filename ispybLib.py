@@ -347,7 +347,10 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     params['run_status'] = 'DataCollection Successful'  # assume success / not aborted
     params['datacollection_number'] = request_obj['runNum']
-    params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    if request_obj['img_width'] > 0:
+      params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    else:
+      params['n_images'] = 1 # stills mode
     params['exp_time'] = request_obj['exposure_time']
     params['start_image_number'] = request_obj['file_number_start']
     params['axis_start'] = request_obj['sweep_start']

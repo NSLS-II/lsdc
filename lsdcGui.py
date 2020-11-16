@@ -77,6 +77,8 @@ cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
 HUTCH_TIMER_DELAY = 1000
 
+VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
+
 class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
         QtWidgets.QDialog.__init__(self,parent)
@@ -699,6 +701,9 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.exp_time_ledit = QtWidgets.QLineEdit()
         self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
         self.exp_time_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
+        self.exp_time_ledit.setValidator(QtGui.QDoubleValidator(VALID_EXP_TIMES[daq_utils.beamline]['min'], VALID_EXP_TIMES[daq_utils.beamline]['max'], VALID_EXP_TIMES[daq_utils.beamline]['digits']))
+        self.exp_time_ledit.textChanged.connect(self.checkEntryState)
+
         colTransLabel = QtWidgets.QLabel('Transmission (0.0-1.0):')
         colTransLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.trans_ledit = QtWidgets.QLineEdit()
@@ -1767,6 +1772,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.exp_time_ledit = QtWidgets.QLineEdit()
         self.exp_time_ledit.setFixedWidth(60)
         self.exp_time_ledit.textChanged[str].connect(self.totalExpChanged)                
+        self.exp_time_ledit.setValidator(QtGui.QDoubleValidator(VALID_EXP_TIMES[daq_utils.beamline]['min'], VALID_EXP_TIMES[daq_utils.beamline]['max'], VALID_EXP_TIMES[daq_utils.beamline]['digits']))
+        self.exp_time_ledit.textChanged.connect(self.checkEntryState)
         hBoxColParams2.addWidget(colRangeLabel)
         hBoxColParams2.addWidget(self.osc_range_ledit)
 
@@ -3292,6 +3299,18 @@ class ControlMain(QtWidgets.QMainWindow):
       dist_s = "%.2f" % (daq_utils.distance_from_reso(daq_utils.det_radius,float(self.resolution_ledit.text()),float(text),0))
       self.detDistMotorEntry.getEntry().setText(dist_s)
 
+    def checkEntryState(self, *args, **kwargs):
+      sender = self.sender()
+      validator = sender.validator()
+      state = validator.validate(sender.text(), 0)[0]
+      if state == QtGui.QValidator.Acceptable:
+          color = '#c4df9b' # green
+      elif state == QtGui.QValidator.Intermediate:
+          color = '#fff79a' # yellow
+      else:
+          color = '#f6989d' # red
+      sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
+
     def protoRadioToggledCB(self, text):
       if (self.protoStandardRadio.isChecked()):
         self.protoComboBox.setCurrentIndex(self.protoComboBox.findText("standard"))
@@ -4182,6 +4201,8 @@ class ControlMain(QtWidgets.QMainWindow):
     def editSampleRequestCB(self,singleRequest):
       colRequest=self.selectedSampleRequest
       reqObj = colRequest["request_obj"]
+      if not self.validateFields():
+        return
       reqObj["sweep_start"] = float(self.osc_start_ledit.text())
       reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
       reqObj["img_width"] = float(self.osc_range_ledit.text())
@@ -4210,6 +4231,12 @@ class ControlMain(QtWidgets.QMainWindow):
       db_lib.updateRequest(colRequest)
       self.treeChanged_pv.put(1)
 
+    def validateFields(self):
+      print('value, isaceptable %s %s' % (self.exp_time_ledit.text(), self.exp_time_ledit.validator() == QtGui.QValidator.Acceptable))
+      if self.exp_time_ledit.validator() != QtGui.QValidator.Acceptable:
+        self.popupServerMessage('Invalid value for exposure time! must be between %s and %s' % (VALID_EXP_TIMES[daq_utils.beamline]['min'], VALID_EXP_TIMES[daq_utils.beamline]['max']))
+        return False
+      return True
 
 
     def addRequestsToAllSelectedCB(self):
@@ -4237,7 +4264,7 @@ class ControlMain(QtWidgets.QMainWindow):
               self.popupServerMessage("You can only add requests to a mounted sample, for now.")
               self.progressDialog.close()              
               return
-          
+
         try:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
         except KeyError:
@@ -4275,6 +4302,8 @@ class ControlMain(QtWidgets.QMainWindow):
           self.popupServerMessage("You can only add requests to a mounted sample, for now.")
           return
         
+      if not self.validateFields():
+        return
 #skinner, not pretty below the way stuff is duplicated.
       if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
         self.popupServerMessage("Osc range less than Osc width")

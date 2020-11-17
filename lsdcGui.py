@@ -3299,6 +3299,7 @@ class ControlMain(QtWidgets.QMainWindow):
       dist_s = "%.2f" % (daq_utils.distance_from_reso(daq_utils.det_radius,float(self.resolution_ledit.text()),float(text),0))
       self.detDistMotorEntry.getEntry().setText(dist_s)
 
+    #code below and its application from: https://snorfalorpagus.net/blog/2014/08/09/validating-user-input-in-pyqt4-using-qvalidator/
     def checkEntryState(self, *args, **kwargs):
       sender = self.sender()
       validator = sender.validator()
@@ -3310,6 +3311,19 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
           color = '#f6989d' # red
       sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
+
+    def validateAllFields(self):
+        fields_dict = {self.exp_time_ledit: {'name': 'exposure time', 'minmax': VALID_EXP_TIMES} }
+        return self.validateFields(fields_dict)
+
+    def validateFields(self, field_values_dict):
+      for field, value in field_values_dict.items():
+        values = value['minmax']
+        field_name = value['name']
+        if field.validator().validate(field.text(),0)[0] != QtGui.QValidator.Acceptable:
+          self.popupServerMessage('Invalid value for field %s! must be between %s and %s' % (field_name, values[daq_utils.beamline]["min"], values[daq_utils.beamline]["max"]))
+          return False
+      return True
 
     def protoRadioToggledCB(self, text):
       if (self.protoStandardRadio.isChecked()):
@@ -4231,14 +4245,6 @@ class ControlMain(QtWidgets.QMainWindow):
       db_lib.updateRequest(colRequest)
       self.treeChanged_pv.put(1)
 
-    def validateFields(self):
-      print('value, isaceptable %s %s' % (self.exp_time_ledit.text(), self.exp_time_ledit.validator() == QtGui.QValidator.Acceptable))
-      if self.exp_time_ledit.validator() != QtGui.QValidator.Acceptable:
-        self.popupServerMessage('Invalid value for exposure time! must be between %s and %s' % (VALID_EXP_TIMES[daq_utils.beamline]['min'], VALID_EXP_TIMES[daq_utils.beamline]['max']))
-        return False
-      return True
-
-
     def addRequestsToAllSelectedCB(self):
       if (self.protoComboBox.currentText() == "raster" or self.protoComboBox.currentText() == "stepRaster" or self.protoComboBox.currentText() == "specRaster"): #it confused people when they didn't need to add rasters explicitly
         return
@@ -4301,8 +4307,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if (self.mountedPin_pv.get() != self.selectedSampleID):                    
           self.popupServerMessage("You can only add requests to a mounted sample, for now.")
           return
-        
-      if not self.validateFields():
+      
+      if not self.validateAllFields():
         return
 #skinner, not pretty below the way stuff is duplicated.
       if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):

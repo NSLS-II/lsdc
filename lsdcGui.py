@@ -3315,12 +3315,12 @@ class ControlMain(QtWidgets.QMainWindow):
       sender = self.sender()
       validator = sender.validator()
       state = validator.validate(sender.text(), 0)[0]
-      if state == QtGui.QValidator.Acceptable:
-          color = '#c4df9b' # green
-      elif state == QtGui.QValidator.Intermediate:
+      if state == QtGui.QValidator.Intermediate:
           color = '#fff79a' # yellow
-      else:
+      elif state == QtGui.QValidator.Invalid:
           color = '#f6989d' # red
+      else:
+          color = '#ffffff' # white
       sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
 
     def validateAllFields(self):

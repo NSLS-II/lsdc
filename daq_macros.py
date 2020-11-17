@@ -589,7 +589,6 @@ def vectorWait():
     time.sleep(0.05)
 
 def vectorActiveWait():
-  time.sleep(0.15)
   while (getPvDesc("VectorActive")!=1):
     time.sleep(0.05)
 

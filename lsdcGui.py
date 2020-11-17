@@ -79,6 +79,7 @@ HUTCH_TIMER_DELAY = 1000
 
 VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
 VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
+VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}}
 
 class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
@@ -1785,8 +1786,14 @@ class ControlMain(QtWidgets.QMainWindow):
         totalExptimeLabel = QtWidgets.QLabel('Total Exposure Time (s):')
         totalExptimeLabel.setFixedWidth(155)
         totalExptimeLabel.setAlignment(QtCore.Qt.AlignCenter) 
-        self.totalExptime_ledit = QtWidgets.QLabel()        
+        self.totalExptime_ledit = QtWidgets.QLineEdit()        
+        self.totalExptime_ledit.setReadOnly(True)
+        self.totalExptime_ledit.setFrame(False)
         self.totalExptime_ledit.setFixedWidth(60)
+        self.totalExptime_ledit.setValidator(QtGui.QDoubleValidator(VALID_TOTAL_EXP_TIMES[daq_utils.beamline]['min'],
+            VALID_TOTAL_EXP_TIMES[daq_utils.beamline]['max'], VALID_TOTAL_EXP_TIMES[daq_utils.beamline]['digits']))
+        self.totalExptime_ledit.textChanged.connect(self.checkEntryState)
+
         sampleLifetimeLabel = QtWidgets.QLabel('Estimated Sample Lifetime (s): ')        
         if (daq_utils.beamline == "amx"):                                      
           self.sampleLifetimeReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["sampleLifetime"],self,70,2)

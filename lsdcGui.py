@@ -78,6 +78,7 @@ cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 HUTCH_TIMER_DELAY = 1000
 
 VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
+VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
 
 class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
@@ -1884,7 +1885,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.detDistRBVLabel = QtEpicsPVLabel(daq_utils.motor_dict["detectorDist"] + ".RBV",self,70) 
         detDistSPLabel = QtWidgets.QLabel("SetPoint:")
         self.detDistMotorEntry = QtEpicsPVEntry(daq_utils.motor_dict["detectorDist"] + ".VAL",self,70,2)
+        self.detDistMotorEntry.getEntry().setValidator(QtGui.QDoubleValidator(VALID_DET_DIST[daq_utils.beamline]['min'],
+            VALID_DET_DIST[daq_utils.beamline]['max'], VALID_DET_DIST[daq_utils.beamline]['digits']))
         self.detDistMotorEntry.getEntry().textChanged[str].connect(self.detDistTextChanged)
+        self.detDistMotorEntry.getEntry().textChanged[str].connect(self.checkEntryState)
         self.detDistMotorEntry.getEntry().returnPressed.connect(self.moveDetDistCB)        
         self.moveDetDistButton = QtWidgets.QPushButton("Move Detector")
         self.moveDetDistButton.clicked.connect(self.moveDetDistCB)
@@ -3313,7 +3317,9 @@ class ControlMain(QtWidgets.QMainWindow):
       sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
 
     def validateAllFields(self):
-        fields_dict = {self.exp_time_ledit: {'name': 'exposure time', 'minmax': VALID_EXP_TIMES} }
+        fields_dict = {self.exp_time_ledit: {'name': 'exposure time', 'minmax': VALID_EXP_TIMES},
+                        self.detDistMotorEntry.getEntry(): {'name': 'detector distance', 'minmax': VALID_DET_DIST}}
+
         return self.validateFields(fields_dict)
 
     def validateFields(self, field_values_dict):

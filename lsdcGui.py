@@ -3318,7 +3318,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def validateAllFields(self):
         fields_dict = {self.exp_time_ledit: {'name': 'exposure time', 'minmax': VALID_EXP_TIMES},
-                        self.detDistMotorEntry.getEntry(): {'name': 'detector distance', 'minmax': VALID_DET_DIST}}
+                        self.detDistMotorEntry.getEntry(): {'name': 'detector distance', 'minmax': VALID_DET_DIST},
+                        self.totalExptime_ledit: {'name': 'total exposure time', 'minmax': VALID_TOTAL_EXP_TIMES}}
 
         return self.validateFields(fields_dict)
 
@@ -4221,7 +4222,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def editSampleRequestCB(self,singleRequest):
       colRequest=self.selectedSampleRequest
       reqObj = colRequest["request_obj"]
-      if not self.validateFields():
+      if not self.validateAllFields():
         return
       reqObj["sweep_start"] = float(self.osc_start_ledit.text())
       reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())

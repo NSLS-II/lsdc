@@ -704,10 +704,14 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
 
     dozorDat = str(os.path.join(dozorRowDir,"dozor_average.dat"))
     if os.path.isfile(dozorDat):
-        dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
+        try:
+            dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
+        except IndexError:
+            dozorData = np.zeros((1,4))
     else:
         dozorData = np.zeros((rowCellCount,4))
-        raise Exception("dozor_avg.dat file not found")
+        dozorData[:,0] = np.arange(start=1,stop=dozorData.shape[0]+1)
+        logger.info(f"dozor_avg.dat file not found, empty result returned for row {rowIndex}")
     keys = ["image",
             "spot_count",
             "spot_count_no_ice",

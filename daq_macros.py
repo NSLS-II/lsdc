@@ -707,7 +707,8 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
         try:
             dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
         except IndexError:
-            dozorData = np.zeros((1,4))
+            #in event of single cell raster
+            dozorData = np.genfromtxt(dozorDat,skip_header=3)[0:4] 
     else:
         dozorData = np.zeros((rowCellCount,4))
         dozorData[:,0] = np.arange(start=1,stop=dozorData.shape[0]+1)

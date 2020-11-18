@@ -1392,6 +1392,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
 
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",0)
+  setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
   daq_lib.setRobotGovState("DA")    
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
@@ -1511,6 +1512,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     setPvDesc("vectorNumFrames",numsteps)
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
+    time.sleep(0.5) #testing whether Zebra arming is causing vectorGo to not run occasionally
     setPvDesc("vectorGo",1)
     logger.info('raster done setting up')
     vectorActiveWait()    

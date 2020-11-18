@@ -3334,6 +3334,8 @@ class ControlMain(QtWidgets.QMainWindow):
       for field, value in field_values_dict.items():
         values = value['minmax']
         field_name = value['name']
+        if field.text() == '----': #special case: total exp time not calculated for non-standard, non-vector experiments
+            return True
         if field.validator().validate(field.text(),0)[0] != QtGui.QValidator.Acceptable:
           self.popupServerMessage('Invalid value for field %s! must be between %s and %s' % (field_name, values[daq_utils.beamline]["min"], values[daq_utils.beamline]["max"]))
           return False

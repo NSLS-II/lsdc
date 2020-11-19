@@ -4770,8 +4770,9 @@ class ControlMain(QtWidgets.QMainWindow):
       
       self.osc_start_ledit.setText(str(reqObj["sweep_start"]))
       self.osc_end_ledit.setText(str(reqObj["sweep_end"]-reqObj["sweep_start"]))
-      self.osc_range_ledit.setText(str(reqObj["img_width"]))
-      self.exp_time_ledit.setText(str(reqObj["exposure_time"]))
+      logger.info('osc range')
+      self.osc_range_ledit.setText('%.3f' % reqObj["img_width"])
+      self.exp_time_ledit.setText('%.3f' % reqObj["exposure_time"])
       self.resolution_ledit.setText(str(reqObj["resolution"]))
       self.dataPathGB.setFileNumstart_ledit(str(reqObj["file_number_start"]))
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))

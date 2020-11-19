@@ -869,6 +869,19 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.rasterThreshSigBckrnd.setEnabled(False)
         self.rasterThreshSigStrong.setEnabled(False)                        
 
+    #code below and its application from: https://snorfalorpagus.net/blog/2014/08/09/validating-user-input-in-pyqt4-using-qvalidator/
+    def checkEntryState(self, *args, **kwargs):
+      sender = self.sender()
+      validator = sender.validator()
+      state = validator.validate(sender.text(), 0)[0]
+      if state == QtGui.QValidator.Intermediate:
+          color = '#fff79a' # yellow
+      elif state == QtGui.QValidator.Invalid:
+          color = '#f6989d' # red
+      else:
+          color = '#ffffff' # white
+      sender.setStyleSheet('QLineEdit { background-color: %s }' % color)
+
 
 class PuckDialog(QtWidgets.QDialog):
     def __init__(self, parent = None):
@@ -3335,6 +3348,11 @@ class ControlMain(QtWidgets.QMainWindow):
         values = value['minmax']
         field_name = value['name']
         logger.info('validateFields: %s %s %s' % (field_name, field.text(), values))
+        try:
+          val = float(field.text())
+          logger.info('>= min: %s <= max: %s' % (val >= values['fmx']['min'], val <= values['fmx']['max']))
+        except: #total exposure time is '----' for rasters, so just ignore
+          pass
         if field.text() == '----': #special case: total exp time not calculated for non-standard, non-vector experiments
             continue
         if field.validator().validate(field.text(),0)[0] != QtGui.QValidator.Acceptable:

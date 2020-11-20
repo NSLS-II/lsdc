@@ -649,7 +649,7 @@ class UserScreenDialog(QFrame):
       
     def stopDetCB(self):
       logger.info('stopping detector')
-      self.parent.stopDet_pv.put(1)
+      self.parent.stopDet_pv.put(0)
 
     def rebootDetIocCB(self):
       logger.info('rebooting detector IOC')

@@ -793,7 +793,7 @@ def runDozorThread(directory,
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q {} \"cd {};{} -w -bin 2 h5_row_{}.dat\"".format(node,
+    comm_s = "ssh -q {} \"cd {};{} -w -bin 1 h5_row_{}.dat\"".format(node,
                                                                      dozorRowDir,
                                                                      dozorComm,
                                                                      rowIndex)

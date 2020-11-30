@@ -3856,27 +3856,29 @@ class ControlMain(QtWidgets.QMainWindow):
           for i in range (0,len(currentRasterCellList)): #first loop is to get floor and ceiling
             cellIndex = i
             if (rasterEvalOption == "Spot Count"):
-              spotcount = currentRasterCellList[i].data(0).toInt()[0]
+              spotcount = currentRasterCellList[i].data(0)
+              if not isinstance(spotcount, int):
+                spotcount = int(spotcount)
               my_array[cellIndex] = spotcount 
             elif (rasterEvalOption == "Intensity"):
-              total_intensity  = currentRasterCellList[i].data(3).toInt()[0]
+              total_intensity  = currentRasterCellList[i].data(3)
+              if not isinstance(total_intensity, int):
+                total_intensity = int(total_intensity)
               my_array[cellIndex] = total_intensity
             else:
-              d_min = currentRasterCellList[i].data(2).toDouble()[0]
+              d_min = currentRasterCellList[i].data(2)
+              if not isinstance(d_min, float):
+                d_min = float(d_min)
               if (d_min == -1):
                 d_min = 50.0 #trying to handle frames with no spots
               my_array[cellIndex] = d_min
           floor = np.amin(my_array)
           ceiling = np.amax(my_array)
           for i in range (0,len(currentRasterCellList)):
-            if (rasterEvalOption == "Spot Count"):
-              spotcount = currentRasterCellList[i].data(0).toInt()[0]
-              param = spotcount 
-            elif (rasterEvalOption == "Intensity"):
-              total_intensity  = currentRasterCellList[i].data(3).toInt()[0]
-              param = total_intensity
+            if (rasterEvalOption == "Spot Count") or (rasterEvalOption == "Intensity"):
+              param = my_array[i] 
             else:
-              d_min = currentRasterCellList[i].data(2).toDouble()[0]
+              d_min = my_array[i]
               if (d_min == -1):
                 d_min = 50.0 #trying to handle frames with no spots
               param = d_min

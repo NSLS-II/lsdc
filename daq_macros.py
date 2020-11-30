@@ -589,7 +589,10 @@ def vectorWait():
     time.sleep(0.05)
 
 def vectorActiveWait():
+  start_time = time.time()
   while (getPvDesc("VectorActive")!=1):
+    if time.time() - start_time > 3: #if we have waited long enough, just throw an exception
+      raise TimeoutError()
     time.sleep(0.05)
 
 def vectorHoldWait():
@@ -1512,10 +1515,20 @@ def snakeRasterNormal(rasterReqID,grain=""):
     setPvDesc("vectorNumFrames",numsteps)
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
-    time.sleep(0.5) #testing whether Zebra arming is causing vectorGo to not run occasionally
-    setPvDesc("vectorGo",1)
     logger.info('raster done setting up')
-    vectorActiveWait()    
+    timeout_trials = 3
+    while 1:
+      try:
+        setPvDesc("vectorGo",1)
+        vectorActiveWait()    
+        break
+      except TimeoutError:
+        timeout_trials -= 1
+        logger.info('timeout_trials is down to: %s' % timeout_trials)
+        if not timeout_trials:
+          message = 'too many errors during raster vectorGo checks'
+          logger.error(message)
+          raise Exception(message)
     vectorWait()
     zebraWait()
     zebraWaitDownload(numsteps)

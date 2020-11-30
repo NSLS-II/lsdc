@@ -3812,14 +3812,15 @@ class ControlMain(QtWidgets.QMainWindow):
             param = d_min
           if (ceiling == 0):
             color_id = 255
-          else:
-            if (rasterEvalOption == "Resolution"):
-              try:
-                color_id = int(255.0*(float(param-floor)/float(ceiling-floor)))
-              except ZeroDivisionError:
-                color_id = 0
+          elif ceiling == floor:
+            if rasterEvalOption == "Resolution":
+              color_id = 0
             else:
-              color_id = int(255-(255.0*(float(param-floor)/float(ceiling-floor))))
+              color_id = 255
+          elif (rasterEvalOption == "Resolution"):
+            color_id = int(255.0*(float(param-floor)/float(ceiling-floor)))
+          else:
+            color_id = int(255-(255.0*(float(param-floor)/float(ceiling-floor))))
           self.currentRasterCellList[cellCounter].setBrush(QtGui.QBrush(QtGui.QColor(0,255-color_id,0,127)))
           self.currentRasterCellList[cellCounter].setData(0,spotcount)
           self.currentRasterCellList[cellCounter].setData(1,cellFilename)
@@ -3881,7 +3882,12 @@ class ControlMain(QtWidgets.QMainWindow):
               param = d_min
             if (ceiling == 0):
               color_id = 255
-            if (rasterEvalOption == "Resolution"):
+            elif ceiling == floor:
+              if rasterEvalOption == "Resolution":
+                color_id = 0
+              else:
+                color_id = 255
+            elif (rasterEvalOption == "Resolution"):
               color_id = int(255.0*(float(param-floor)/float(ceiling-floor)))
             else:
               color_id = int(255-(255.0*(float(param-floor)/float(ceiling-floor))))

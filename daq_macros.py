@@ -716,6 +716,7 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
         dozorData = np.zeros((rowCellCount,4))
         dozorData[:,0] = np.arange(start=1,stop=dozorData.shape[0]+1)
         logger.info(f"dozor_avg.dat file not found, empty result returned for row {rowIndex}")
+    dozorData[:,3][dozorData[:,3]==0] = 50 #required for scaling/visualizing res. results
     keys = ["image",
             "spot_count",
             "spot_count_no_ice",

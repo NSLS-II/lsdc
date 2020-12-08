@@ -26,6 +26,7 @@ from PIL import Image
 from PIL import ImageQt
 import daq_utils
 from daq_utils import getBlConfig, setBlConfig
+from config_params import *
 import albulaUtils
 import functools
 from QPeriodicTable import *
@@ -753,13 +754,13 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.rasterResoCheckBox.stateChanged.connect(self.rasterResoCheckCB)
         rasterLowResLabel  = QtWidgets.QLabel('LowRes:')
         self.rasterLowRes = QtWidgets.QLineEdit()
-        self.rasterLowRes.setText(str(getBlConfig("rasterTuneLowRes")))
+        self.rasterLowRes.setText(str(getBlConfig(RASTER_TUNE_LOW_RES)))
         self.rasterLowRes.returnPressed.connect(self.screenDefaultsOKCB)                
         rasterHighResLabel  = QtWidgets.QLabel('HighRes:')
         self.rasterHighRes = QtWidgets.QLineEdit()
-        self.rasterHighRes.setText(str(getBlConfig("rasterTuneHighRes")))
+        self.rasterHighRes.setText(str(getBlConfig(RASTER_TUNE_HIGH_RES)))
         self.rasterHighRes.returnPressed.connect(self.screenDefaultsOKCB)                
-        if (getBlConfig("rasterTuneResoFlag") == 1):
+        if (getBlConfig(RASTER_TUNE_RESO_FLAG) == 1):
           resoFlag = True
         else:
           resoFlag = False
@@ -770,10 +771,10 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.rasterIceRingCheckBox.setChecked(False)
         self.rasterIceRingCheckBox.stateChanged.connect(self.rasterIceRingCheckCB)        
         self.rasterIceRingWidth = QtWidgets.QLineEdit()
-        self.rasterIceRingWidth.setText(str(getBlConfig("rasterTuneIceRingWidth")))
+        self.rasterIceRingWidth.setText(str(getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)))
         self.rasterIceRingWidth.returnPressed.connect(self.screenDefaultsOKCB)                
         self.rasterIceRingWidth.setEnabled(False)
-        if (getBlConfig("rasterTuneIceRingFlag") == 1):
+        if (getBlConfig(RASTER_TUNE_ICE_RING_FLAG) == 1):
           iceRingFlag = True
         else:
           iceRingFlag = False            
@@ -858,20 +859,20 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
       setBlConfig("rasterDefaultTime",float(self.exp_time_ledit.text()))
       setBlConfig("rasterDefaultTrans",float(self.trans_ledit.text()))
       setBlConfig("rasterDefaultMinSpotSize",float(self.minSpot_ledit.text()))            
-      setBlConfig("rasterTuneLowRes",float(self.rasterLowRes.text()))
-      setBlConfig("rasterTuneHighRes",float(self.rasterHighRes.text()))
-      setBlConfig("rasterTuneIceRingWidth",float(self.rasterIceRingWidth.text()))
+      setBlConfig(RASTER_TUNE_LOW_RES,float(self.rasterLowRes.text()))
+      setBlConfig(RASTER_TUNE_HIGH_RES,float(self.rasterHighRes.text()))
+      setBlConfig(RASTER_TUNE_ICE_RING_WIDTH,float(self.rasterIceRingWidth.text()))
       setBlConfig("rasterThreshKernSize",float(self.rasterThreshKernSize.text()))
       setBlConfig("rasterThreshSigBckrnd",float(self.rasterThreshSigBckrnd.text()))
       setBlConfig("rasterThreshSigStrong",float(self.rasterThreshSigStrong.text()))                  
       if (self.rasterIceRingCheckBox.isChecked()):
-        setBlConfig("rasterTuneIceRingFlag",1)
+        setBlConfig(RASTER_TUNE_ICE_RING_FLAG,1)
       else:
-        setBlConfig("rasterTuneIceRingFlag",0)          
+        setBlConfig(RASTER_TUNE_ICE_RING_FLAG,0)          
       if (self.rasterResoCheckBox.isChecked()):
-        setBlConfig("rasterTuneResoFlag",1)
+        setBlConfig(RASTER_TUNE_RESO_FLAG,1)
       else:
-        setBlConfig("rasterTuneResoFlag",0)          
+        setBlConfig(RASTER_TUNE_RESO_FLAG,0)          
     
     def rasterIceRingCheckCB(self,state):
       if state == QtCore.Qt.Checked:
@@ -881,11 +882,11 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
 
     def rasterResoCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        setBlConfig("rasterTuneResoFlag",1)        
+        setBlConfig(RASTER_TUNE_RESO_FLAG,1)        
         self.rasterLowRes.setEnabled(True)
         self.rasterHighRes.setEnabled(True)                
       else:
-        setBlConfig("rasterTuneResoFlag",0)                
+        setBlConfig(RASTER_TUNE_RESO_FLAG,0)                
         self.rasterLowRes.setEnabled(False)
         self.rasterHighRes.setEnabled(False)                
 

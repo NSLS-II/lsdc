@@ -6,6 +6,7 @@ import db_lib
 from daq_utils import getBlConfig
 import xmltodict
 import ispybLib
+from config_params import *
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
@@ -30,11 +31,11 @@ numstart = reqObj["file_number_start"]
 
 cbfComm = getBlConfig("cbfComm")
 dialsComm = getBlConfig("dialsComm")
-dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
-dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
-dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
-dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")  
-dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
+dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
+dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
+dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
+dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)  
+dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
 if (dialsTuneIceRingFlag):
   iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
 else:

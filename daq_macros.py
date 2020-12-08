@@ -25,6 +25,7 @@ import numpy as np # for runDozorThread
 from string import Template
 from collections import OrderedDict
 from threading import Thread
+from config_params import *
 try:
   import ispybLib
 except Exception as e:
@@ -821,12 +822,12 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   time.sleep(1.0)
   cbfComm = getBlConfig("cbfComm")
   dialsComm = getBlConfig("dialsComm")
-  dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
-  dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
-  dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
-  dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")
+  dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
+  dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
+  dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
+  dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)
   dialsTuneThreshFlag = getBlConfig("rasterThreshFlag")    
-  dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
+  dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
   dialsTuneMinSpotSize = getBlConfig("rasterDefaultMinSpotSize")
   dialsTuneThreshKern =  getBlConfig("rasterThreshKernSize")
   dialsTuneThreshSigBck =  getBlConfig("rasterThreshSigBckrnd")

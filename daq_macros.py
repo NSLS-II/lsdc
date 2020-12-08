@@ -671,6 +671,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     inputTemplate = open(os.path.join(daqMacrosPath,"h5_template.dat"))
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
+    dozorSpotLevel = getBlConfig('rasterDozorSpotLevel')
     templateDict = {"detector": detector,
                     "nx": nx,
                     "ny": ny,
@@ -680,6 +681,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
                     "detector_distance": detectorDistance,
                     "first_image_number": firstImageNumber,
                     "number_images": rowCellCount,
+                    "spot_level": dozorSpotLevel,
                     "name_template_image": hdf5TemplateImage,}
     with open("".join([dozorRowDir,f"h5_row_{rowIndex}.dat"]),"w") as f:
         f.write(src.substitute(templateDict))

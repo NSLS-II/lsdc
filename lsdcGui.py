@@ -711,11 +711,33 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.trans_ledit = QtWidgets.QLineEdit()
         self.trans_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
         self.trans_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
+        hBoxColParams2.addWidget(colRangeLabel)
+        hBoxColParams2.addWidget(self.osc_range_ledit)
+        hBoxColParams2.addWidget(colExptimeLabel)
+        hBoxColParams2.addWidget(self.exp_time_ledit)
+        hBoxColParams2.addWidget(colTransLabel)
+        hBoxColParams2.addWidget(self.trans_ledit)
+
+        hBoxColParams2a = QtWidgets.QHBoxLayout()
+        dozorLabel = QtWidgets.QLabel('Dozor Parameters')
+        dozorSpotLevelLabel = QtWidgets.QLabel('Dozor Spot Level')
+        dozorSpotLevel = QComboBox()
+        dozorSpotLevel.addItems(['5', '6', '7'])
+        dozorSpotLevel.currentIndexChanged.connect(self.dozorSpotLevelChangedCB)
+        hBoxColParams2a.addWidget(dozorLabel)
+        hBoxColParams2a.addWidget(dozorSpotLevel)
+
+        hBoxColParams2b = QtWidgets.QHBoxLayout()
+        dialsParamsLabel = QtWidgets.QLabel('Dials Parameters')
         colMinSpotLabel = QtWidgets.QLabel('Min Spot Size:')
         colMinSpotLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.minSpot_ledit = QtWidgets.QLineEdit()
         self.minSpot_ledit.setText(str(getBlConfig("rasterDefaultMinSpotSize")))
         self.minSpot_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
+        hBoxColParams2b.addWidget(dialsParamsLabel)
+        hBoxColParams2b.addWidget(colMinSpotLabel)
+        hBoxColParams2b.addWidget(self.minSpot_ledit)
+
         hBoxColParams2.addWidget(colRangeLabel)
         hBoxColParams2.addWidget(self.osc_range_ledit)
         hBoxColParams2.addWidget(colExptimeLabel)
@@ -724,6 +746,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         hBoxColParams2.addWidget(self.trans_ledit)
         hBoxColParams2.addWidget(colMinSpotLabel)
         hBoxColParams2.addWidget(self.minSpot_ledit)
+
         self.hBoxRasterLayout2 = QtWidgets.QHBoxLayout()
         rasterTuneLabel = QtWidgets.QLabel('Raster\nTuning')
         self.rasterResoCheckBox = QCheckBox("Constrain Resolution")
@@ -820,6 +843,9 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         
     def screenDefaultsCancelCB(self):
       self.done(QDialog.Rejected)
+
+    def dozorSpotLevelChangedCB(self, i):
+      setBlConfig('dozorSpotLevel', int(self.dozorSpotLevel.itemText(i)))
 
     def screenDefaultsOKCB(self):
       setBlConfig("rasterDefaultWidth",float(self.osc_range_ledit.text()))

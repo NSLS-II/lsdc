@@ -851,7 +851,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
       self.done(QDialog.Rejected)
 
     def dozorSpotLevelChangedCB(self, i):
-      setBlConfig('dozorSpotLevel', int(self.dozorSpotLevel.itemText(i)))
+      setBlConfig('rasterDozorSpotLevel', int(self.dozorSpotLevel.itemText(i)))
 
     def screenDefaultsOKCB(self):
       setBlConfig("rasterDefaultWidth",float(self.osc_range_ledit.text()))

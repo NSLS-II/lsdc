@@ -13,6 +13,7 @@ import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import db_lib
 from daq_utils import getBlConfig
+from config_params import *
 import logging
 logger = logging.getLogger(__name__)
 
@@ -339,7 +340,7 @@ def mountSample(sampID):
       warmUpNeeded = 1
   mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
   currentMountedSampleID = mountedSampleDict["sampleID"]
-  if (getBlConfig("topViewCheck") == 1):
+  if (getBlConfig(TOP_VIEW_CHECK) == 1):
     logger.info("setting work pos")
     if (daq_utils.beamline == "amx"):                          
       setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))

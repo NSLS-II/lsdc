@@ -3504,7 +3504,7 @@ def createProposal(propNum,PI_login="boaty"):
   
 
 def topViewCheckOn():
-  setBlConfig("topViewCheck",1)
+  setBlConfig(TOP_VIEW_CHECK,1)
 
 def anneal(annealTime):
   robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
@@ -3519,7 +3519,7 @@ def anneal(annealTime):
 
   
 def topViewCheckOff():
-  setBlConfig("topViewCheck",0)
+  setBlConfig(TOP_VIEW_CHECK,0)
 
 def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy = 12.7, wedge = 180, flux = 1e12, verbose = True):
   if (not os.path.exists("2vb1.pdb")):

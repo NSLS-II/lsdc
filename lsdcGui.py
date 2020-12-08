@@ -201,7 +201,7 @@ class StaffScreenDialog(QFrame):
           self.robotOnCheckBox.setChecked(False)            
         self.robotOnCheckBox.stateChanged.connect(self.robotOnCheckCB)
         self.topViewCheckOnCheckBox = QCheckBox("TopViewCheck (On)")
-        if (getBlConfig("topViewCheck") == 1):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
           self.topViewCheckOnCheckBox.setChecked(True)
         else:
           self.topViewCheckOnCheckBox.setChecked(False)            
@@ -422,9 +422,9 @@ class StaffScreenDialog(QFrame):
 
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        setBlConfig("topViewCheck",1)
+        setBlConfig(TOP_VIEW_CHECK,1)
       else:
-        setBlConfig("topViewCheck",0)
+        setBlConfig(TOP_VIEW_CHECK,0)
         
     def vertRasterOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:

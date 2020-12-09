@@ -730,7 +730,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         hBoxColParams2a = QtWidgets.QHBoxLayout()
         dozorSpotLevelLabel = QtWidgets.QLabel('Dozor Spot Level\n(Applies immediately)')
         self.dozorSpotLevel = QComboBox()
-        self.dozorSpotLevel.addItems(['5', '6', '7'])
+        self.dozorSpotLevel.addItems(['5', '6', '7', '8'])
         self.dozorSpotLevel.currentIndexChanged.connect(self.dozorSpotLevelChangedCB)
         hBoxColParams2a.addWidget(dozorSpotLevelLabel)
         hBoxColParams2a.addWidget(self.dozorSpotLevel)

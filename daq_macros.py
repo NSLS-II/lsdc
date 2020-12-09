@@ -672,7 +672,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     inputTemplate = open(os.path.join(daqMacrosPath,"h5_template.dat"))
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
-    dozorSpotLevel = getBlConfig('rasterDozorSpotLevel')
+    dozorSpotLevel = getBlConfig(RASTER_DOZOR_SPOT_LEVEL)
     templateDict = {"detector": detector,
                     "nx": nx,
                     "ny": ny,

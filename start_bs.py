@@ -85,26 +85,51 @@ class VerticalDCM(Device):
     e = Cpt(EpicsMotor, '-Ax:E}Mtr')
     w = Cpt(EpicsMotor, '-Ax:W}Mtr')
 
-                    
+class VectorProgram(Device):
+    vector_buffer_time = Cpt(EpicsSignal, 'Val:BufferTime-SP')
+    vector_hold = Cpt(EpicsSignal, 'Hold-Sel')
+    vector_expose = Cpt(EpicsSignal, 'Expose-Sel')
+    vector_go = Cpt(EpicsSignal, 'Cmd:Go-Cmd')
+    vector_proceed = Cpt(EpicsSignal, 'Cmd:Proceed-Cmd')
+    vector_abort = Cpt(EpicsSignal, 'Cmd:Abort-Cmd')
+    vector_sync = Cpt(EpicsSignal, 'Cmd:Sync-Cmd')
+    vector_start_x = Cpt(EpicsSignal, 'Pos:XStart-SP')
+    vector_start_y = Cpt(EpicsSignal, 'Pos:YStart-SP')
+    vector_start_z = Cpt(EpicsSignal, 'Pos:ZStart-SP')
+    vector_end_x = Cpt(EpicsSignal, 'Pos:XEnd-SP')
+    vector_end_y = Cpt(EpicsSignal, 'Pos:YEnd-SP')
+    vector_end_z = Cpt(EpicsSignal, 'Pos:ZEnd-SP')
+    vector_start_omega = Cpt(EpicsSignal, 'Pos:OStart-SP')
+    vector_end_omega = Cpt(EpicsSignal, 'Pos:OEnd-SP')
+    vector_frame_exptime = Cpt(EpicsSignal, 'Val:Exposure-SP')
+    vector_num_frames = Cpt(EpicsSignal, 'Val:NumSamples-SP')
+    vector_active = Cpt(EpicsSignalRO, 'Sts:Running-Sts')
+    vector_state = Cpt(EpicsSignalRO, 'Sts:State-Sts')
+
+
 class StandardProsilica(SingleTrigger, ProsilicaDetector):
     image = Cpt(ImagePlugin, 'image1:')
     roi1 = Cpt(ROIPlugin, 'ROI1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
+
 def filter_camera_data(camera):
     camera.read_attrs = ['stats1', 'stats5']
     camera.stats1.read_attrs = ['total', 'centroid']
     camera.stats5.read_attrs = ['total', 'centroid']
+
 
 if (beamline=="amx"):
     mercury = ABBIXMercury('XF:17IDB-ES:AMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
-else:  
+    vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
+else:
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
+    vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
 

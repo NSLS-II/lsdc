@@ -2,7 +2,7 @@
 # import asyncio
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
-from ophyd import Device, EpicsMotor
+from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 import os
 #12/19 - author unknown. DAMA can help
 """

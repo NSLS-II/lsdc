@@ -85,26 +85,39 @@ class VerticalDCM(Device):
     e = Cpt(EpicsMotor, '-Ax:E}Mtr')
     w = Cpt(EpicsMotor, '-Ax:W}Mtr')
 
+
+class VectorProgramStart(Device):
+    omega = Cpt(EpicsSignal, 'Pos:OStart-SP')
+    x = Cpt(EpicsSignal, 'Pos:XStart-SP')
+    y = Cpt(EpicsSignal, 'Pos:YStart-SP')
+    z = Cpt(EpicsSignal, 'Pos:ZStart-SP')
+
+
+class VectorProgramEnd(Device):
+    omega = Cpt(EpicsSignal, 'Pos:OEnd-SP')
+    x = Cpt(EpicsSignal, 'Pos:XEnd-SP')
+    y = Cpt(EpicsSignal, 'Pos:YEnd-SP')
+    z = Cpt(EpicsSignal, 'Pos:ZEnd-SP')
+
+
 class VectorProgram(Device):
-    vector_buffer_time = Cpt(EpicsSignal, 'Val:BufferTime-SP')
-    vector_hold = Cpt(EpicsSignal, 'Hold-Sel')
-    vector_expose = Cpt(EpicsSignal, 'Expose-Sel')
-    vector_go = Cpt(EpicsSignal, 'Cmd:Go-Cmd')
-    vector_proceed = Cpt(EpicsSignal, 'Cmd:Proceed-Cmd')
-    vector_abort = Cpt(EpicsSignal, 'Cmd:Abort-Cmd')
-    vector_sync = Cpt(EpicsSignal, 'Cmd:Sync-Cmd')
-    vector_start_x = Cpt(EpicsSignal, 'Pos:XStart-SP')
-    vector_start_y = Cpt(EpicsSignal, 'Pos:YStart-SP')
-    vector_start_z = Cpt(EpicsSignal, 'Pos:ZStart-SP')
-    vector_end_x = Cpt(EpicsSignal, 'Pos:XEnd-SP')
-    vector_end_y = Cpt(EpicsSignal, 'Pos:YEnd-SP')
-    vector_end_z = Cpt(EpicsSignal, 'Pos:ZEnd-SP')
-    vector_start_omega = Cpt(EpicsSignal, 'Pos:OStart-SP')
-    vector_end_omega = Cpt(EpicsSignal, 'Pos:OEnd-SP')
-    vector_frame_exptime = Cpt(EpicsSignal, 'Val:Exposure-SP')
-    vector_num_frames = Cpt(EpicsSignal, 'Val:NumSamples-SP')
-    vector_active = Cpt(EpicsSignalRO, 'Sts:Running-Sts')
-    vector_state = Cpt(EpicsSignalRO, 'Sts:State-Sts')
+    start = Cpt(VectorProgramStart, '')
+    end = Cpt(VectorProgramEnd, '')
+
+    abort = Cpt(EpicsSignal, 'Cmd:Abort-Cmd', kind='omitted')
+    go = Cpt(EpicsSignal, 'Cmd:Go-Cmd', kind='omitted')
+    proceed = Cpt(EpicsSignal, 'Cmd:Proceed-Cmd', kind='omitted')
+    sync = Cpt(EpicsSignal, 'Cmd:Sync-Cmd', kind='omitted')
+
+    expose = Cpt(EpicsSignal, 'Expose-Sel')
+    hold = Cpt(EpicsSignal, 'Hold-Sel')
+
+    buffer_time = Cpt(EpicsSignal, 'Val:BufferTime-SP')
+    frame_exptime = Cpt(EpicsSignal, 'Val:Exposure-SP')
+    num_frames = Cpt(EpicsSignal, 'Val:NumSamples-SP')
+
+    active = Cpt(EpicsSignalRO, 'Sts:Running-Sts')
+    state = Cpt(EpicsSignalRO, 'Sts:State-Sts')
 
 
 class StandardProsilica(SingleTrigger, ProsilicaDetector):

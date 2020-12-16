@@ -33,7 +33,7 @@ class ZebraPositionCompare(Device):
 class ZebraAnd(Device):
     inp1 = Cpt(EpicsSignal, 'INP1:STA')
     inp2 = Cpt(EpicsSignal, 'INP2:STA')
-    out1 = Cpt(EpicsSignal, 'OUT1_TTL') #out type?
+    out1 = Cpt(EpicsSignal, 'OUT1_TTL')
 
 class Zebra(Device):
     downloading = Cpt(EpicsSignal, 'ARRAY_ARQ')

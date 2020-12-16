@@ -1,20 +1,22 @@
 from ophyd import (Component as Cpt, EpicsSignal, EpicsSignalRO, Device)
 
-class ZebraPCGate(Device):
+
+class ZebraPCBase(Device):
     sel = Cpt(EpicsSignal, 'SEL')
     start = Cpt(EpicsSignal, 'START')
     width = Cpt(EpicsSignal, 'WID')
     step = Cpt(EpicsSignal, 'STEP')
+
+
+class ZebraPCGate(ZebraPCBase):
     num_gates = Cpt(EpicsSignal, 'NGATE')
 
-class ZebraPCPulse(Device):
-    sel = Cpt(EpicsSignal, 'SEL')
-    start = Cpt(EpicsSignal, 'START')
-    width = Cpt(EpicsSignal, 'WID')
-    step = Cpt(EpicsSignal, 'STEP')
+
+class ZebraPCPulse(ZebraPCBase):
     max = Cpt(EpicsSignal, 'MAX')
     delay = Cpt(EpicsSignal, 'DLY')
     status = Cpt(EpicsSignalRO, 'INP.STA')
+
 
 class ZebraPositionCompare(Device):
     arm_status = Cpt(EpicsSignalRO, 'ARM_INP.STA')
@@ -30,10 +32,12 @@ class ZebraPositionCompare(Device):
     gate = Cpt(ZebraPCGate, 'GATE_')
     pulse = Cpt(ZebraPCPulse, 'PULSE_')
 
+
 class ZebraAnd(Device):
     inp1 = Cpt(EpicsSignal, 'INP1:STA')
     inp2 = Cpt(EpicsSignal, 'INP2:STA')
     out1 = Cpt(EpicsSignal, 'OUT1_TTL')
+
 
 class Zebra(Device):
     downloading = Cpt(EpicsSignal, 'ARRAY_ARQ')

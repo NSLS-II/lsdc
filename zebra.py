@@ -26,7 +26,7 @@ class ZebraPositionCompare(Device):
     enc_x = Cpt(EpicsSignal, 'ENC1')
     enc_y = Cpt(EpicsSignal, 'ENC2')
     enc_z = Cpt(EpicsSignal, 'ENC3')
-    enz_o = Cpt(EpicsSignal, 'ENC4')
+    enc_omega = Cpt(EpicsSignal, 'ENC4')
     encoder = Cpt(EpicsSignal, 'ENC')
     direction = Cpt(EpicsSignal, 'DIR')
     gate = Cpt(ZebraPCGate, 'GATE_')

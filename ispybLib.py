@@ -205,10 +205,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
-     params = mxprocessing.get_program_params()
-     params['id'] = app_id
-     params['status'] = 1
-     mxprocessing.upsert_program(list(params.values()))
+     mxprocessing.upsert_program_ex(program_id=app_id,status=1)
          
    elif resultType == 'mxExpParams':
      result_obj = result['result_obj']
@@ -350,7 +347,10 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     params['run_status'] = 'DataCollection Successful'  # assume success / not aborted
     params['datacollection_number'] = request_obj['runNum']
-    params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    if request_obj['img_width'] > 0:
+      params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    else:
+      params['n_images'] = 1 # stills mode
     params['exp_time'] = request_obj['exposure_time']
     params['start_image_number'] = request_obj['file_number_start']
     params['axis_start'] = request_obj['sweep_start']

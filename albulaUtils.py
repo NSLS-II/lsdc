@@ -8,6 +8,7 @@ global albulaFrame, albulaSubFrame, currentMasterH5
 albulaFrame = None
 albulaSubframeFrame = None
 currentMasterH5 = None
+imgSeries = None
 global seriesDict
 seriesDict = {}
 
@@ -72,7 +73,7 @@ def _albulaDispFile(filename):
 @albulaDispFile.register(tuple)    
 @albulaDispFile.register(list)
 def _albulaDispFile(filename):
-    global albulaFrame,albulaSubFrame,currentMasterH5
+    global albulaFrame,albulaSubFrame,currentMasterH5,imgSeries
 
     if (albulaFrame == None or albulaSubFrame == None):
         albulaFrame = dectris.albula.openMainFrame()
@@ -82,13 +83,13 @@ def _albulaDispFile(filename):
     try:
         if not (currentMasterH5 == filename[0]):
             albulaSubFrame.loadFile(filename[0])
-            sleep(1.2)
+            imgSeries = dectris.albula.DImageSeries(filename[0])
             currentMasterH5 = filename[0]
-        albulaSubFrame.goTo(filename[1])
+        albulaSubFrame.loadImage(imgSeries[filename[1]])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
-        albulaSubFrame.loadFile(filename[0])
-        sleep(1.2)
-        albulaSubFrame.goTo(filename[1])
+        imgSeries = dectris.albula.DimageSeries(filename[0])
+        albulaSubFrame.loadImage(imgSeries[filename[1]])
+        currentMasterH5 = filename[0]
 

@@ -30,7 +30,7 @@ filePrefix = sys.argv[2]
 numstart = int(float(sys.argv[3]))
 numimages = int(sys.argv[4])
 request_id = sys.argv[5]
-request=db_lib.getRequestByID(request_id)
+request=db_lib.getRequestByID(request_id) #add another argument false to allow finished requests to be retrieved for testing
 owner=request["owner"]
 runFastEP = int(sys.argv[6])
 node = sys.argv[7]
@@ -57,8 +57,8 @@ newResult = db_lib.getResult(resultID)
 visitName = getBlConfig("visitName")
 try:
   ispybLib.insertResult(newResult,"fastDP",request,visitName,ispybDCID,fastDPResultFile)
-except:
-  logger.error("runfastdph5 insert result ispyb error")
+except Exception as e:
+  logger.error("runfastdph5 insert result ispyb error: %s" % e)
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):

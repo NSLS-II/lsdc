@@ -24,7 +24,8 @@ import os #for runDozorThread
 import numpy as np # for runDozorThread
 from string import Template
 from collections import OrderedDict
-
+from threading import Thread
+from config_params import *
 try:
   import ispybLib
 except Exception as e:
@@ -528,12 +529,9 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
           xMotCellAbsoluteMove = xMotAbsoluteMove+(j*stepsize)
         else:
           xMotCellAbsoluteMove = xMotAbsoluteMove-(j*stepsize)
-        if (daq_utils.detector_id == "EIGER-16"):
-          dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
-        else:
-          dataFileName = daq_utils.create_filename(filePrefix+"_Raster_"+str(i),(i*numsteps)+j+1)
+        cellMapKey = 'cellMap_{}'.format(imIndexStr)
         rasterCellCoords = {"x":xMotCellAbsoluteMove,"y":yMotAbsoluteMove,"z":zMotAbsoluteMove}
-        rasterCellMap[dataFileName[:-4]] = rasterCellCoords
+        rasterCellMap[cellMapKey] = rasterCellCoords
     else: #vertical raster
       if (i%2 == 0): #top to bottom if even, else bottom to top - a snake attempt
         startY = rasterDef["rowDefs"][i]["start"]["y"]+(stepsize/2.0) #this is relative to center, so signs are reversed from motor movements.
@@ -555,12 +553,9 @@ def generateGridMap(rasterRequest,rasterEncoderMap=None): #12/19 - there's some 
         else:
           yMotCellAbsoluteMove = yMotAbsoluteMove+(math.cos(omegaRad)*(j*stepsize))
           zMotCellAbsoluteMove = zMotAbsoluteMove+(math.sin(omegaRad)*(j*stepsize))          
-        if (daq_utils.detector_id == "EIGER-16"):
-          dataFileName = "%s_%06d.cbf" % (reqObj["directory"]+"/cbf/"+reqObj["file_prefix"]+"_Raster_"+str(i),(i*numsteps)+j+1)
-        else:
-          dataFileName = daq_utils.create_filename(filePrefix+"_Raster_"+str(i),j+1)
+        cellMapKey = 'cellMap_{}'.format(imIndexStr)
         rasterCellCoords = {"x":xMotAbsoluteMove,"y":yMotCellAbsoluteMove,"z":zMotCellAbsoluteMove}
-        rasterCellMap[dataFileName[:-4]] = rasterCellCoords
+        rasterCellMap[cellMapKey] = rasterCellCoords
 
 #commented out all of the processing, as this should have been done by the thread
   if (rasterEncoderMap!= None):
@@ -595,8 +590,10 @@ def vectorWait():
     time.sleep(0.05)
 
 def vectorActiveWait():
-  time.sleep(0.15)
+  start_time = time.time()
   while (getPvDesc("VectorActive")!=1):
+    if time.time() - start_time > 3: #if we have waited long enough, just throw an exception
+      raise TimeoutError()
     time.sleep(0.05)
 
 def vectorHoldWait():
@@ -675,6 +672,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     inputTemplate = open(os.path.join(daqMacrosPath,"h5_template.dat"))
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
+    dozorSpotLevel = getBlConfig(RASTER_DOZOR_SPOT_LEVEL)
     templateDict = {"detector": detector,
                     "nx": nx,
                     "ny": ny,
@@ -684,6 +682,7 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
                     "detector_distance": detectorDistance,
                     "first_image_number": firstImageNumber,
                     "number_images": rowCellCount,
+                    "spot_level": dozorSpotLevel,
                     "name_template_image": hdf5TemplateImage,}
     with open("".join([dozorRowDir,f"h5_row_{rowIndex}.dat"]),"w") as f:
         f.write(src.substitute(templateDict))
@@ -710,17 +709,25 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
 
     dozorDat = str(os.path.join(dozorRowDir,"dozor_average.dat"))
     if os.path.isfile(dozorDat):
-        dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
+        try:
+            dozorData = np.genfromtxt(dozorDat,skip_header=3)[:,0:4]
+        except IndexError:
+            #in event of single cell raster, 1d array needs 2 dimensions
+            dozorData = np.genfromtxt(dozorDat,skip_header=3)[0:4]
+            dozorData = np.reshape(dozorData,(1,4))
     else:
         dozorData = np.zeros((rowCellCount,4))
-        raise Exception("dozor_avg.dat file not found")
+        dozorData[:,0] = np.arange(start=1,stop=dozorData.shape[0]+1)
+        logger.info(f"dozor_avg.dat file not found, empty result returned for row {rowIndex}")
+    dozorData[:,3][dozorData[:,3]==0] = 50 #required for scaling/visualizing res. results
     keys = ["image",
             "spot_count",
             "spot_count_no_ice",
             "d_min",
             "d_min_method_1",
             "d_min_method_2",
-            "total_intensity"]
+            "total_intensity",
+            "cellMapKey"]
     localList = []
 
     for cell in range(0,dozorData.shape[0]):
@@ -731,7 +738,8 @@ def dozorOutputToList(dozorRowDir,rowIndex,rowCellCount,pathToMasterH5):
                   dozorData[cell,:][3],
                   dozorData[cell,:][3],
                   dozorData[cell,:][3],
-                  dozorData[cell,:][1]*dozorData[cell,:][2]]
+                  dozorData[cell,:][1]*dozorData[cell,:][2],
+                  "cellMap_{}".format(seriesIndex)]
         localList.append(OrderedDict(zip(keys,values)))
     return localList
 
@@ -792,10 +800,10 @@ def runDozorThread(directory,
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q {} \"cd {};{} -w h5_row_{}.dat\"".format(node,
-                                                              dozorRowDir,
-                                                              dozorComm,
-                                                              rowIndex)
+    comm_s = "ssh -q {} \"cd {};{} -w -bin 1 h5_row_{}.dat\"".format(node,
+                                                                     dozorRowDir,
+                                                                     dozorComm,
+                                                                     rowIndex)
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
@@ -814,12 +822,12 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   time.sleep(1.0)
   cbfComm = getBlConfig("cbfComm")
   dialsComm = getBlConfig("dialsComm")
-  dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
-  dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
-  dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
-  dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")
+  dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
+  dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
+  dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
+  dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)
   dialsTuneThreshFlag = getBlConfig("rasterThreshFlag")    
-  dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
+  dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
   dialsTuneMinSpotSize = getBlConfig("rasterDefaultMinSpotSize")
   dialsTuneThreshKern =  getBlConfig("rasterThreshKernSize")
   dialsTuneThreshSigBck =  getBlConfig("rasterThreshSigBckrnd")
@@ -888,12 +896,21 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
       if (retry==0):
         localDialsResultDict["data"]={}
         localDialsResultDict["data"]["response"]=[]
-        for jj in range (0,rowCellCount):
-          localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
+        for jj in range (0,rowCellCount): 
+          localDialsResultDict["data"]["response"].append({'d_min': '-1.00',
+                                                           'd_min_method_1': '-1.00',
+                                                           'd_min_method_2': '-1.00',
+                                                           'image': '',
+                                                           'spot_count': '0',
+                                                           'spot_count_no_ice': '0',
+                                                           'total_intensity': '0',
+                                                           'cellMapKey': 'cellMap_{}'.format(rowIndex*rowCellCount + jj + 1)})
         break
                                       
     else:
-      break
+      break 
+  for kk in range(0,rowCellCount):
+    localDialsResultDict["data"]["response"][kk]["cellMapKey"] = 'cellMap_{}'.format(rowIndex*rowCellCount + kk + 1)
   rasterRowResultsList[rowIndex] = localDialsResultDict["data"]["response"]
   processedRasterRowCount+=1
   logger.info("leaving thread")
@@ -1382,6 +1399,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
 
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",0)
+  setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
   daq_lib.setRobotGovState("DA")    
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
@@ -1435,7 +1453,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
     return      
   zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
   procFlag = int(getBlConfig("rasterProcessFlag"))    
-  
+ 
+  spotFindThreadList = [] 
   for i in range(len(rasterDef["rowDefs"])):
     if (daq_lib.abort_flag == 1):
       daq_lib.setGovRobot('SA')
@@ -1500,9 +1519,20 @@ def snakeRasterNormal(rasterReqID,grain=""):
     setPvDesc("vectorNumFrames",numsteps)
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
-    setPvDesc("vectorGo",1)
     logger.info('raster done setting up')
-    vectorActiveWait()    
+    timeout_trials = 3
+    while 1:
+      try:
+        setPvDesc("vectorGo",1)
+        vectorActiveWait()    
+        break
+      except TimeoutError:
+        timeout_trials -= 1
+        logger.info('timeout_trials is down to: %s' % timeout_trials)
+        if not timeout_trials:
+          message = 'too many errors during raster vectorGo checks'
+          logger.error(message)
+          raise Exception(message)
     vectorWait()
     zebraWait()
     zebraWaitDownload(numsteps)
@@ -1512,12 +1542,19 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
-      _thread.start_new_thread(runDozorThread,(data_directory_name,
-                                               filePrefix+"_Raster",
-                                               i,
-                                               numsteps,
-                                               seqNum,
-                                               reqObj))
+      logger.info('beginning raster processing with dozor spot_level at %s'
+                   % getBlConfig(RASTER_DOZOR_SPOT_LEVEL))
+      spotFindThread = Thread(target=runDozorThread,args=(data_directory_name,
+                                                          ''.join([filePrefix,"_Raster"]),
+                                                          i,
+                                                          numsteps,
+                                                          seqNum,
+                                                          reqObj))
+      spotFindThread.start()
+      spotFindThreadList.append(spotFindThread)
+  [thread.join() for thread in spotFindThreadList]
+
+
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
@@ -2004,8 +2041,8 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     if (multiColThreshold>-1):
       logger.info("doing multicol")
       if (scoreVal >= multiColThreshold):
-        hitFile = cellResults[i]["image"]
-        hitCoords = rasterMap[hitFile[:-4]]
+        hitFile = cellResults[i]["cellMapKey"]
+        hitCoords = rasterMap[hitFile]
         parentReqID = rasterResult['result_obj']["parentReqID"]
         if (parentReqID == -1):
           addMultiRequestLocation(requestID,hitCoords,i)
@@ -2014,14 +2051,14 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     if (scoreOption == "d_min"):
       if (scoreVal < floor and scoreVal != -1):
         floor = scoreVal
-        hotFile = cellResults[i]["image"]        
+        hotFile = cellResults[i]["cellMapKey"]        
     else:
       if (scoreVal > ceiling):
         ceiling = scoreVal
-        hotFile = cellResults[i]["image"]        
+        hotFile = cellResults[i]["cellMapKey"]        
   if (hotFile != ""):
     logger.info('raster score ceiling: %s floor: %s hotfile: %s' % (ceiling, floor, hotFile))
-    hotCoords = rasterMap[hotFile[:-4]]     
+    hotCoords = rasterMap[hotFile]     
     x = hotCoords["x"]
     y = hotCoords["y"]
     z = hotCoords["z"]
@@ -2043,16 +2080,16 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
         except TypeError:
           scoreVal = 0.0
         if (scoreVal > vectorThreshold):
-          hotFile = cellResults[i]["image"]
-          hotCoords = rasterMap[hotFile[:-4]]             
+          hotFile = cellResults[i]["cellMapKey"]
+          hotCoords = rasterMap[hotFile]             
           x = hotCoords["x"]
           if (x<xmin):
             xmin = x
           if (x>xmax):
             xmax = x
       for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
-        fileKey = cellResults[i]["image"]
-        coords = rasterMap[fileKey[:-4]]
+        fileKey = cellResults[i]["cellMapKey"]
+        coords = rasterMap[fileKey]
         x = coords["x"]
         if (x == xmin): #cell is in left column
           xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
@@ -2238,6 +2275,9 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   runNum = db_lib.incrementSampleRequestCount(sampleID)
   reqObj["runNum"] = runNum
   reqObj["parentReqID"] = currentRequest["uid"]
+  reqObj["xbeam"] = currentRequest['request_obj']["xbeam"]
+  reqObj["ybeam"] = currentRequest['request_obj']["ybeam"]
+  reqObj["wavelength"] = currentRequest['request_obj']["wavelength"]
   newRasterRequestUID = db_lib.addRequesttoSample(sampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=propNum)
   daq_lib.set_field("xrecRasterFlag",newRasterRequestUID)
   time.sleep(1)
@@ -3466,7 +3506,7 @@ def createProposal(propNum,PI_login="boaty"):
   
 
 def topViewCheckOn():
-  setBlConfig("topViewCheck",1)
+  setBlConfig(TOP_VIEW_CHECK,1)
 
 def anneal(annealTime):
   robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
@@ -3481,7 +3521,7 @@ def anneal(annealTime):
 
   
 def topViewCheckOff():
-  setBlConfig("topViewCheck",0)
+  setBlConfig(TOP_VIEW_CHECK,0)
 
 def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy = 12.7, wedge = 180, flux = 1e12, verbose = True):
   if (not os.path.exists("2vb1.pdb")):

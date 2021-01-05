@@ -16,6 +16,7 @@ import os
 import filecmp
 import _thread
 import logging
+from config_params import TOP_VIEW_CHECK
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
@@ -233,7 +234,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   if (getBlConfig('robot_online')):
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.setGovRobot('SE')
-    if (getBlConfig("topViewCheck") == 1):
+    if (getBlConfig(TOP_VIEW_CHECK) == 1):
       try:
         if (daq_utils.beamline == "fmx"):                  
           _thread.start_new_thread(setWorkposThread,(init,0))        
@@ -281,7 +282,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
               time.sleep(3.0)
             if (not daq_lib.setGovRobot('SE')):
               return
-        if (getBlConfig("topViewCheck") == 1):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -308,7 +309,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)                                
       else:
-        if (getBlConfig("topViewCheck") == 1):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -319,7 +320,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
-      if (getBlConfig("topViewCheck") == 1):
+      if (getBlConfig(TOP_VIEW_CHECK) == 1):
         daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
         if (sampYadjust != 0):
           pass

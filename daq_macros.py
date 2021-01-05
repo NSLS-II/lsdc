@@ -1542,6 +1542,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
         seqNum = int(det_lib.detector_get_seqnum())
       else:
         seqNum = -1
+      logger.info('beginning raster processing with dozor spot_level at %s'
+                   % getBlConfig(RASTER_DOZOR_SPOT_LEVEL))
       spotFindThread = Thread(target=runDozorThread,args=(data_directory_name,
                                                           ''.join([filePrefix,"_Raster"]),
                                                           i,

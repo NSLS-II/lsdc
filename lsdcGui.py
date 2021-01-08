@@ -3286,7 +3286,7 @@ class ControlMain(QtWidgets.QMainWindow):
               totalExptime = 0.0
             except ZeroDivisionError:
               totalExptime = 0.0
-            self.totalExptime_ledit.setText(str(totalExptime))
+            self.totalExptime_ledit.setText('%.3f' % totalExptime)
           return
         else:
           if (text == "oscRange"):          
@@ -3307,7 +3307,7 @@ class ControlMain(QtWidgets.QMainWindow):
           totalExptime = 0.0
         except ZeroDivisionError:
           totalExptime = 0.0
-        self.totalExptime_ledit.setText(str(totalExptime))
+        self.totalExptime_ledit.setText('%.3f' % totalExptime)
         if (str(self.protoComboBox.currentText()) == "vector"):
           try:
             x_vec_end = self.vectorEnd["coords"]["x"]

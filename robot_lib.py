@@ -18,6 +18,8 @@ import traceback
 import filecmp
 import _thread
 import logging
+import epics.ca
+
 from config_params import TOP_VIEW_CHECK
 logger = logging.getLogger(__name__)
 
@@ -127,8 +129,6 @@ def recoverRobot():
     RobotControlLib.runCmd("recover")
   except Exception as e:
     e_s = str(e)
-    exc_type, exc_value, exc_tb = sys.exc_info()
-    logger.error('recoverRobot exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
 
 
@@ -180,7 +180,17 @@ def closePorts():
   RobotControlLib.runCmd("closePorts")
   
 def rebootEMBL():
-  RobotControlLib.rebootEMBL()
+  try:
+    RobotControlLib.rebootEMBL()
+  except Exception as e:
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    if exc_type == epics.ca.ChannelAccessGetFailure and str(exc_value) == "Get failed; status code: 192":
+      logger.info('continuing')
+    else:
+      # channel access exception with error 192 seems "normal". only raise for other exceptions
+      logger.error('rebootEMBL exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
+      raise(e)
+
   
 def cooldownGripper():
   try:

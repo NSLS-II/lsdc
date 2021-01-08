@@ -13,6 +13,8 @@ import daq_macros
 import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import os
+import sys
+import traceback
 import filecmp
 import _thread
 import logging
@@ -125,6 +127,8 @@ def recoverRobot():
     RobotControlLib.runCmd("recover")
   except Exception as e:
     e_s = str(e)
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    logger.error('recoverRobot exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
 
 

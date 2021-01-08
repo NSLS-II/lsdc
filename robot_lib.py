@@ -185,7 +185,7 @@ def rebootEMBL():
   except Exception as e:
     exc_type, exc_value, exc_tb = sys.exc_info()
     if exc_type == epics.ca.ChannelAccessGetFailure and str(exc_value) == "Get failed; status code: 192":
-      logger.info('continuing')
+      logger.info('channel access failure detected but error 192 is expected, so continuing')
     else:
       # channel access exception with error 192 seems "normal". only raise for other exceptions
       logger.error('rebootEMBL exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))

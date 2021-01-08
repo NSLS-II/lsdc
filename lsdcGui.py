@@ -2549,7 +2549,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.sampleExposedLabel = QtWidgets.QLabel("Sample Not Exposed")
           self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")              
         gripperLabel = QtWidgets.QLabel('Gripper Temp:')
-        self.gripperTempLabel = QtWidgets.QLabel(str(self.gripTemp_pv.get()))
+        self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel('Cryostream Temp:')
         self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
 
@@ -3052,7 +3052,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.shutterStateLabel.setStyleSheet("background-color: #99FF66;")        
 
     def processGripTemp(self,gripVal):
-      self.gripperTempLabel.setText(str(gripVal))
+      self.gripperTempLabel.setText('%.1f' % gripVal)
       if (int(gripVal) > -170):
         self.gripperTempLabel.setStyleSheet("background-color: red;")        
       else:

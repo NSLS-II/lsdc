@@ -4806,7 +4806,7 @@ class ControlMain(QtWidgets.QMainWindow):
       logger.info('osc range')
       self.osc_range_ledit.setText('%.3f' % reqObj["img_width"])
       self.exp_time_ledit.setText('%.3f' % reqObj["exposure_time"])
-      self.resolution_ledit.setText(str(reqObj["resolution"]))
+      self.resolution_ledit.setText('%.2f' % reqObj["resolution"])
       self.dataPathGB.setFileNumstart_ledit(str(reqObj["file_number_start"]))
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
       self.beamHeight_ledit.setText(str(reqObj["slit_height"]))

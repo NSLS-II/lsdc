@@ -607,6 +607,21 @@ def vectorProceed():
 def vectorSync():
   setPvDesc("vectorSync",1)
 
+def vectorWaitForGo(source="raster"):
+  timeout_trials = 3
+  while 1:
+    try:
+      setPvDesc("vectorGo",1)
+      vectorActiveWait()
+      break
+    except TimeoutError:
+      timeout_trials -= 1
+      logger.info('timeout_trials is down to: %s' % timeout_trials)
+      if not timeout_trials:
+        message = 'too many errors during %s vectorGo checks' % source
+        logger.error(message)
+        raise Exception(message)
+
 def makeDozorRowDir(directory,rowIndex):
     """Makes separate directory for each row for dozor output,
     necessary to prevent file overwriting with mult. threads.
@@ -1520,19 +1535,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
     logger.info('raster done setting up')
-    timeout_trials = 3
-    while 1:
-      try:
-        setPvDesc("vectorGo",1)
-        vectorActiveWait()    
-        break
-      except TimeoutError:
-        timeout_trials -= 1
-        logger.info('timeout_trials is down to: %s' % timeout_trials)
-        if not timeout_trials:
-          message = 'too many errors during raster vectorGo checks'
-          logger.error(message)
-          raise Exception(message)
+    vectorWaitForGo(source="snakeRasterNormal")
     vectorWait()
     zebraWait()
     zebraWaitDownload(numsteps)
@@ -3153,8 +3156,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  setPvDesc("vectorGo",1)
-  vectorActiveWait()  
+  vectorWaitForGo(source="zebraDaq")
   vectorWait()
   zebraWait()
   logger.info("vector Done " + str(time.time()))          

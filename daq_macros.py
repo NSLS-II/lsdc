@@ -1563,9 +1563,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
   logger.info('detector finished waiting')
 
 #I guess this starts the gather loop
-  logger.info("moving to raster start")
-  beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
-  logger.info("done moving to raster start")  
   if (procFlag):
     rasterTimeout = 300
     timerCount = 0

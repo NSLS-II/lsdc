@@ -1561,10 +1561,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
-  if (daq_utils.beamline == "amxz"):  
-    setPvDesc("zebraReset",1)      
-  
-      
+
 #I guess this starts the gather loop
   logger.info("moving to raster start")
   beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)

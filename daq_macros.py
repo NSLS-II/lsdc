@@ -1556,6 +1556,10 @@ def snakeRasterNormal(rasterReqID,grain=""):
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
 
+
+  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobot('SA')
+  else: daq_lib.setGovRobot('DI')
+
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
@@ -1595,10 +1599,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
-  if (lastOnSample() and not autoRasterFlag):  
-    daq_lib.setGovRobot('SA')
-  elif (autoRasterFlag):
-    daq_lib.setGovRobot('DI')
   if (procFlag):
     time.sleep(2.0)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])

@@ -1555,29 +1555,23 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                                           reqObj))
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
-  [thread.join() for thread in spotFindThreadList]
-
 
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
 
 #I guess this starts the gather loop
+  if not procFlag: 
+    logger.info("moving to raster start")
+    beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
+    logger.info("done moving to raster start")
+
   if (procFlag):
-    rasterTimeout = 300
-    timerCount = 0
-    while (1):
-      timerCount +=1
-      if (daq_lib.abort_flag == 1):
-        logger.error("caught abort waiting for raster!")
-        break
-      if (timerCount>rasterTimeout):
-        logger.error("Raster timeout!")
-        break
-      time.sleep(1)
-      logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
-      if (processedRasterRowCount == rowCount):
-        break
+    if daq_lib.abort_flag != 1:
+      [thread.join() for thread in spotFindThreadList]
+    else:
+      logger.info("raster aborted, do not wait for spotfind threads")
+    logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
     rasterResult = generateGridMap(rasterRequest)     
     rasterRequest["request_obj"]["rasterDef"]["status"] = 2
     protocol = reqObj["protocol"]

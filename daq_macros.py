@@ -1600,7 +1600,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
   if (procFlag):
-    time.sleep(2.0)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",1)        

@@ -1589,7 +1589,15 @@ def snakeRasterNormal(rasterReqID,grain=""):
         multiColThreshold  = reqObj["diffCutoff"]         
       gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
     else:
-      gotoMaxRaster(rasterResult)
+      try:
+        gotoMaxRaster(rasterResult)
+      except ValueError:
+        """gonio still must go to a known xyz to account for windup distance,
+        otherwise heat map will be off"""
+        logger.info("moving to raster start")
+        beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
+        logger.info("done moving to raster start")
+
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
@@ -2015,6 +2023,7 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
+    raise ValueError("raster result object is None")
     return
   ceiling = 0.0
   floor = 100000000.0 #for resolution where small number means high score
@@ -2127,7 +2136,9 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
           
       autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
 
-      
+  else:
+    raise ValueError("No max position found for gonio move")
+    
 def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of what to pass here for details like how to organize data
   parentRequest = db_lib.getRequestByID(parentReqID)
   sampleID = parentRequest["sample"]

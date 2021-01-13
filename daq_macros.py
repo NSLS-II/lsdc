@@ -1556,16 +1556,13 @@ def snakeRasterNormal(rasterReqID,grain=""):
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
 
-
-  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
-  else: daq_lib.setGovRobot('DI')
-
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
 
-#I guess this starts the gather loop
-  if not procFlag: 
+  #data acquisition is finished, now processing and sample positioning
+  if not procFlag:
+    #must go to known position to account for windup dist. 
     logger.info("moving to raster start")
     beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
     logger.info("done moving to raster start")
@@ -1576,11 +1573,16 @@ def snakeRasterNormal(rasterReqID,grain=""):
     else:
       logger.info("raster aborted, do not wait for spotfind threads")
     logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
-    rasterResult = generateGridMap(rasterRequest)     
+    rasterResult = generateGridMap(rasterRequest)
+  
+    """change request status so that GUI only fills heat map when
+    xrecRasterFlag PV is set"""
     rasterRequest["request_obj"]["rasterDef"]["status"] = 2
-    protocol = reqObj["protocol"]
-    logger.info("protocol = " + protocol)
-    if (protocol == "multiCol" or parentReqProtocol == "multiColQ"):
+    db_lib.updateRequest(rasterRequest)
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+
+    logger.info(f'protocol = {reqObj["protocol"]}')
+    if (reqObj["protocol"] == "multiCol" or parentReqProtocol == "multiColQ"):
       if (parentReqProtocol == "multiColQ"):    
         multiColThreshold  = parentReqObj["diffCutoff"]
       else:
@@ -1590,16 +1592,29 @@ def snakeRasterNormal(rasterReqID,grain=""):
       try:
         gotoMaxRaster(rasterResult)
       except ValueError:
-        """gonio still must go to a known xyz to account for windup distance,
-        otherwise heat map will be off"""
+        #must go to known position to account for windup dist.
         logger.info("moving to raster start")
         beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
         logger.info("done moving to raster start")
 
+  """change request status so that GUI only takes a snapshot of
+  sample plus heat map for ispyb when xrecRasterFlag PV is set"""
   rasterRequestID = rasterRequest["uid"]
+  rasterRequest["request_obj"]["rasterDef"]["status"] = 3
   db_lib.updateRequest(rasterRequest)
+  
   db_lib.updatePriority(rasterRequestID,-1)
+
+  """governor transitions:
+  putting transitions here allows for GUI sample/heat map image to update
+  after moving to known position"""
+  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
+  else: daq_lib.setGovRobot('DI')
+
   if (procFlag):
+    """if sleep <2 than black ispyb image, timing affected by speed
+    of governor transition, i.e. wait versus nowait functions"""
+    time.sleep(2)
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",1)        

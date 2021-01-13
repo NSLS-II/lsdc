@@ -2681,7 +2681,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.rasterYmicrons = rasterYPixels * (fov["y"]/daq_utils.screenPixY)
             if (not self.hideRastersCheckBox.isChecked()):
               self.drawPolyRaster(db_lib.getRequestByID(saveRasterList[i]["uid"]),saveRasterList[i]["coords"]["x"],saveRasterList[i]["coords"]["y"],saveRasterList[i]["coords"]["z"])
-              self.fillPolyRaster(db_lib.getRequestByID(saveRasterList[i]["uid"]),takeSnapshot=False)
+              self.fillPolyRaster(db_lib.getRequestByID(saveRasterList[i]["uid"]))
             self.processSampMove(self.sampx_pv.get(),"x")
             self.processSampMove(self.sampy_pv.get(),"y")
             self.processSampMove(self.sampz_pv.get(),"z")
@@ -3017,8 +3017,7 @@ class ControlMain(QtWidgets.QMainWindow):
           if (self.rasterList[i] != None):
             self.scene.removeItem(self.rasterList[i]["graphicsItem"])
       else:
-        logger.info("xrecrasterflag = ")
-        logger.info(xrecRasterFlag)
+        logger.info("xrecrasterflag = %s" % xrecRasterFlag)
         try:
           rasterReq = db_lib.getRequestByID(xrecRasterFlag)
         except IndexError:
@@ -3028,10 +3027,12 @@ class ControlMain(QtWidgets.QMainWindow):
         if (rasterDef["status"] == 1):
           self.drawPolyRaster(rasterReq)
         elif (rasterDef["status"] == 2):
+          self.fillPolyRaster(rasterReq)
+          logger.info("polyraster filled by displayXrecRaster")
+        elif (rasterDef["status"] == 3):
           if (self.controlEnabled()):          
-            self.fillPolyRaster(rasterReq,takeSnapshot=True)
-          else:
-            self.fillPolyRaster(rasterReq,takeSnapshot=False)            
+            self.takeRasterSnapshot(rasterReq)
+            logger.info("raster snapshot taken")
           self.vidActionRasterExploreRadio.setChecked(True)                    
           self.selectedSampleID = rasterReq["sample"]
           self.treeChanged_pv.put(1) #not sure about this
@@ -3736,7 +3737,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.send_to_server("mvaDescriptor(\"omega\",0)")
       
 
-    def fillPolyRaster(self,rasterReq,takeSnapshot=False): #at this point I should have a drawn polyRaster
+    def fillPolyRaster(self,rasterReq): #at this point I should have a drawn polyRaster
       time.sleep(1)
       logger.info("filling poly for " + str(rasterReq["uid"]))
       resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
@@ -3860,22 +3861,24 @@ class ControlMain(QtWidgets.QMainWindow):
           self.currentRasterCellList[cellCounter].setData(2,d_min)
           self.currentRasterCellList[cellCounter].setData(3,total_intensity)
           cellCounter+=1
-      if (takeSnapshot):
-        request_obj = rasterReq["request_obj"]        
-        directory = request_obj["directory"]
-        filePrefix = request_obj['file_prefix']
-        basePath = request_obj["basePath"]
-        visitName = daq_utils.getVisitName()
-        jpegDirectory = visitName + "/jpegs/" + directory[directory.find(visitName)+len(visitName):len(directory)]        
-        fullJpegDirectory = basePath + "/" + jpegDirectory
-        if (not os.path.exists(fullJpegDirectory)):
-          os.system("mkdir -p " + fullJpegDirectory)
-        jpegImagePrefix = fullJpegDirectory+"/"+filePrefix     
-        jpegImageFilename = jpegImagePrefix+".jpg"
-        jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
-        logger.info("saving raster snapshot")
-        self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
-        ispybLib.insertRasterResult(rasterResult,rasterReq,visitName)
+    
+    def takeRasterSnapshot(self,rasterReq):
+      request_obj = rasterReq["request_obj"]        
+      directory = request_obj["directory"]
+      filePrefix = request_obj['file_prefix']
+      basePath = request_obj["basePath"]
+      visitName = daq_utils.getVisitName()
+      jpegDirectory = visitName + "/jpegs/" + directory[directory.find(visitName)+len(visitName):len(directory)]        
+      fullJpegDirectory = basePath + "/" + jpegDirectory
+      if (not os.path.exists(fullJpegDirectory)):
+        os.system("mkdir -p " + fullJpegDirectory)
+      jpegImagePrefix = fullJpegDirectory+"/"+filePrefix     
+      jpegImageFilename = jpegImagePrefix+".jpg"
+      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
+      logger.info("saving raster snapshot")
+      self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
+      self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
+      ispybLib.insertRasterResult(rasterReq,visitName)
 
 
 
@@ -4851,7 +4854,7 @@ class ControlMain(QtWidgets.QMainWindow):
       if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster" or str(reqObj["protocol"])== "specRaster")):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
-          self.fillPolyRaster(selectedSampleRequest,takeSnapshot=False)
+          self.fillPolyRaster(selectedSampleRequest)
         self.processSampMove(self.sampx_pv.get(),"x")
         self.processSampMove(self.sampy_pv.get(),"y")
         self.processSampMove(self.sampz_pv.get(),"z")

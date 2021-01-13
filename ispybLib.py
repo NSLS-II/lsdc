@@ -382,7 +382,7 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
 #         if request_type == 'screening':
 #           params['overlap'] = 89.0
                  
-def insertRasterResult(result,request,visitName): 
+def insertRasterResult(request,visitName): 
 
  try:
    sessionid = core.retrieve_visit_id(visitName)
@@ -390,7 +390,7 @@ def insertRasterResult(result,request,visitName):
    logger.error("caught ISPyBNoResultException, make sure visit name is in the format mx999999-1234. bye: %s" % e)
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
- result_obj = result['result_obj']
+ #result_obj = result['result_obj'] this doesn't appear to be used -DK
  request_obj = request['request_obj']
  directory = request_obj["directory"]
  filePrefix = request_obj['file_prefix']

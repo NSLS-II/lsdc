@@ -1572,7 +1572,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
 
   if (procFlag):
     if daq_lib.abort_flag != 1:
-      [thread.join() for thread in spotFindThreadList]
+      [thread.join(timeout=120) for thread in spotFindThreadList]
     else:
       logger.info("raster aborted, do not wait for spotfind threads")
     logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      

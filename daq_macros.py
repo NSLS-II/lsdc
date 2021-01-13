@@ -1557,7 +1557,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
       spotFindThreadList.append(spotFindThread)
 
 
-  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobot('SA')
+  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
   else: daq_lib.setGovRobot('DI')
 
   det_lib.detector_stop_acquire()

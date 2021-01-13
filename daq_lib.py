@@ -292,10 +292,17 @@ def govBusy():
   return (getPvDesc("robotGovStatus") == 1 or getPvDesc("humanGovStatus") == 1)
 
 def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
-  logger.info("setGovRobotSA")  
+  logger.info("setGovRobotSA")
+  toggleLowMagCameraSettings("SA")  
   setRobotGovState("SA")
   toggleLowMagCameraSettings("SA")    
   return 1
+
+def setGovRobotDI_nowait():
+  logger.info("setGovRobotDI")
+  toggleLowMagCameraSettings("DI")
+  setRobotGovState("DI")
+  
 
 
 def waitGov():

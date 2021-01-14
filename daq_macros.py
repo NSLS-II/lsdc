@@ -1714,7 +1714,11 @@ def reprocessRaster(rasterReqID):
     rasterRequest["request_obj"]["rasterDef"]["status"] = 2
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
-    gotoMaxRaster(rasterResult)
+    try:
+      gotoMaxRaster(rasterResult)
+    except ValueError:
+      logger.info("reprocessRaster: no max raster found, did not move gonio")
+      
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)

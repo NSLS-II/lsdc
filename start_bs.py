@@ -67,7 +67,7 @@ stop = RE.stop
 # loop = asyncio.get_event_loop()
 # loop.set_debug(False)
 
-
+from fmx_beamline.utility import *
 
 from ophyd import (SingleTrigger, ProsilicaDetector,
                    ImagePlugin, StatsPlugin, ROIPlugin)

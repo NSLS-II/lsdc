@@ -1726,7 +1726,7 @@ def reprocessRaster(rasterReqID):
       if (processedRasterRowCount == rowCount):
         break
     rasterResult = generateGridMap(rasterRequest)     
-    rasterRequest["request_obj"]["rasterDef"]["status"] = 2
+    rasterRequest["request_obj"]["rasterDef"]["status"] = 4
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
     try:
@@ -1737,8 +1737,11 @@ def reprocessRaster(rasterReqID):
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
+
   if (procFlag):
-    time.sleep(2.0)    
+    """sleep allows for map update after gonio move, slightly longer
+    than 2 sec sleep for normal raster because no gov transition here"""
+    time.sleep(2.5)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   return 1
 

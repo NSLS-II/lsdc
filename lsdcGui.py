@@ -3036,6 +3036,15 @@ class ControlMain(QtWidgets.QMainWindow):
           self.vidActionRasterExploreRadio.setChecked(True)                    
           self.selectedSampleID = rasterReq["sample"]
           self.treeChanged_pv.put(1) #not sure about this
+        elif (rasterDef["status"] == 4):
+          self.fillPolyRaster(rasterReq)
+          logger.info("reprocessed polyraster filled by displayXrecraster")
+          if (self.controlEnabled()):
+            self.takeRasterSnapshot(rasterReq)
+            logger.info("reprocessed raster snapshot taken")  
+          self.vidActionRasterExploreRadio.setChecked(True)                    
+          self.selectedSampleID = rasterReq["sample"]
+          self.treeChanged_pv.put(1) #not sure about this
         else:
           pass
 

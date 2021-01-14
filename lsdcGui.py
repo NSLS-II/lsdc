@@ -1660,6 +1660,26 @@ class ControlMain(QtWidgets.QMainWindow):
         self.XRFInfoDict = self.parseXRFTable() #I don't like this
 
 
+    def setGuiValues(self, values):
+      if values.get('osc_start'):
+        logger.info('resetting osc_start to %s' % values['osc_start'])
+        self.osc_start_ledit.setText('%.3f'% values['osc_start'])
+      if values.get('osc_range'):
+        logger.info('resetting osc_range to %s' % values['osc_range'])
+        self.osc_range_ledit.setText('%.3f' % values['osc_range'])
+      if values.get('img_width'):
+        logger.info('resetting img_width to %s' % values['img_width'])
+        self.img_width_ledit.setText('%.3f' % values['img_width'])
+      if values.get('exp_time'):
+        logger.info('resetting exp_time to %s' % values['exp_time'])
+        self.exp_time_ledit.setText('%.3f' % values['exp_time'])
+      if values.get('transmission'):
+        logger.info('resetting transmission to %s' % values['transmission'])
+        self.transmission_ledit.setText('%.3f' % values['transmission'])
+      if values.get('resolution'):
+        logger.info('resetting resolution to %s' % values['resolution'])
+        self.resolution_ledit.setText('%.2f' % values['resolution'])
+
     def parseXRFTable(self):
       XRFFile = open(os.environ["CONFIGDIR"] + "/XRF-AMX_simple.txt")
       XRFInfoDict = {}
@@ -3432,42 +3452,27 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoRasterRadio.setChecked(True)
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
-        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
-        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
-        self.transmission_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
+        self.setGuiValues({'osc_range':getBlConfig("rasterDefaultWidth"), 'exp_time':getBlConfig("rasterDefaultTime"), 'transmission':getBlConfig("rasterDefaultTrans")})
       elif (protocol == "rasterScreen"):
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
-        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
-        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
-        self.transmission_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
+        self.setGuiValues({'osc_range':getBlConfig("rasterDefaultWidth"), 'exp_time':getBlConfig("rasterDefaultTime"), 'transmission':getBlConfig("rasterDefaultTrans")})
         self.protoOtherRadio.setChecked(True)        
       elif (protocol == "standard"):
         self.protoStandardRadio.setChecked(True)
-        screenWidth = float(getBlConfig("screen_default_width"))
-        screenExptime = float(getBlConfig("screen_default_time"))
-        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))
-        self.osc_range_ledit.setText(str(screenWidth))
-        self.exp_time_ledit.setText(str(screenExptime))
+        self.setGuiValues({'osc_range':getBlConfig("screen_default_width"), 'exp_time':getBlConfig("screen_default_time"), 'transmission':getBlConfig("stdTrans")})
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
       elif (protocol == "burn"):
         self.fastDPCheckBox.setChecked(False)        
+        self.setGuiValues({'osc_range':"0.0", 'exp_time':getBlConfig("burnDefaultTime"), 'transmission':getBlConfig("burnDefaultTrans")})
         screenWidth = float(getBlConfig("burnDefaultNumFrames"))
-        screenExptime = float(getBlConfig("burnDefaultTime"))
-        self.transmission_ledit.setText(str(getBlConfig("burnDefaultTrans")))
         self.osc_end_ledit.setText(str(screenWidth))
-        self.exp_time_ledit.setText(str(screenExptime))
-        self.osc_range_ledit.setText("0.0")
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
         
       elif (protocol == "vector"):
-        screenWidth = float(getBlConfig("screen_default_width"))
-        screenExptime = float(getBlConfig("screen_default_time"))
-        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))        
-        self.osc_range_ledit.setText(str(screenWidth))
-        self.exp_time_ledit.setText(str(screenExptime))
+        self.setGuiValues({'osc_range':getBlConfig("screen_default_width"), 'exp_time':getBlConfig("screen_default_time"), 'transmission':getBlConfig("stdTrans")})
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
         self.protoVectorRadio.setChecked(True)

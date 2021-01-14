@@ -1609,7 +1609,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   putting transitions here allows for GUI sample/heat map image to update
   after moving to known position"""
   if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
-  else: daq_lib.setGovRobot('DI')
+  else: daq_lib.setGovRobotDI_nowait()
 
   if (procFlag):
     """if sleep <2 than black ispyb image, timing affected by speed

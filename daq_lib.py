@@ -538,7 +538,9 @@ def logMxRequestParams(currentRequest):
   logfile.close()
   visitName = daq_utils.getVisitName()
   try: #I'm worried about unforseen ispyb db errors
-    time.sleep(5) #this sleep fixes black xtal picture in ispyb - see Edwin! 
+    """this sleep fixes black xtal picture in ispyb - see Edwin!
+    reduced from 5->2 sec, ispyb images are OK -DFK"""
+    time.sleep(2) #this sleep fixes black xtal picture in ispyb - see Edwin! 
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
   except Exception as e:
     currentIspybDCID = 999999

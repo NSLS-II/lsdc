@@ -1829,7 +1829,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.stillModeCheckBox.setEnabled(False)
         if (self.stillModeStatePV.get()):
           self.stillModeCheckBox.setChecked(True)
-          self.osc_range_ledit.setText("0.0")
+          self.setGuiValues({'osc_range':"0.0"})
         else:
           self.stillModeCheckBox.setChecked(False)          
         colExptimeLabel = QtWidgets.QLabel('ExposureTime:')
@@ -1897,7 +1897,7 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
-        self.transmission_ledit.setText(str(getBlConfig("stdTrans")))
+        self.setGuiValues({'transmission':getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)        
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
@@ -2628,7 +2628,7 @@ class ControlMain(QtWidgets.QMainWindow):
       if (self.controlEnabled()):
         if (state):
           self.stillMode_pv.put(1)
-          self.osc_range_ledit.setText("0.0")
+          self.setGuiValues({'osc_range':"0.0"})
         else:
           self.standardMode_pv.put(1)
       else:
@@ -3380,7 +3380,7 @@ class ControlMain(QtWidgets.QMainWindow):
         reso_s = "50.0"
       except TypeError:
         reso_s = "50.0"
-      self.resolution_ledit.setText(reso_s)
+      self.setGuiValues({'resolution':reso_s})
       
     def energyTextChanged(self,text):
       dist_s = "%.2f" % (daq_utils.distance_from_reso(daq_utils.det_radius,float(self.resolution_ledit.text()),float(text),0))
@@ -3635,7 +3635,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def setDCStartCB(self):
       currentPos = float(self.sampleOmegaRBVLedit.getEntry().text())%360.0
-      self.osc_start_ledit.setText(str(currentPos))
+      self.setGuiValues({'osc_start':currentPos})
       
       
     def moveDetDistCB(self):
@@ -4818,16 +4818,12 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.protoOtherRadio.setChecked(True)
       
-      self.osc_start_ledit.setText(str(reqObj["sweep_start"]))
       self.osc_end_ledit.setText(str(reqObj["sweep_end"]-reqObj["sweep_start"]))
       logger.info('osc range')
-      self.osc_range_ledit.setText('%.3f' % reqObj["img_width"])
-      self.exp_time_ledit.setText('%.3f' % reqObj["exposure_time"])
-      self.resolution_ledit.setText('%.2f' % reqObj["resolution"])
+      self.setGuiValues({'osc_start':reqObj["sweep_start"], 'osc_range':reqObj["img_width"], 'exp_time':reqObj["exposure_time"], 'resolution':reqObj["resolution"], 'transmission':reqObj{"attenuation"]})
       self.dataPathGB.setFileNumstart_ledit(str(reqObj["file_number_start"]))
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
       self.beamHeight_ledit.setText(str(reqObj["slit_height"]))
-      self.transmission_ledit.setText(str(reqObj["attenuation"]))
       if ("fastDP" in reqObj):
         self.fastDPCheckBox.setChecked((reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"]))
       if ("fastEP" in reqObj):
@@ -4931,7 +4927,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           self.refreshCollectionParams(self.selectedSampleRequest)
           if (self.stillModeStatePV.get()):
-            self.osc_range_ledit.setText("0.0")
+            self.setGuiValues({'osc_range':"0.0"})
           reqObj = self.selectedSampleRequest["request_obj"]
           self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
           self.dataPathGB.setBasePath_ledit(reqObj["basePath"])
@@ -4951,7 +4947,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           self.refreshCollectionParams(self.selectedSampleRequest)
           if (self.stillModeStatePV.get()):
-            self.osc_range_ledit.setText("0.0")
+            self.setGuiValue({'osc_range':"0.0"})
         else:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           reqObj = self.selectedSampleRequest["request_obj"]

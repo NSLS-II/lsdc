@@ -1812,7 +1812,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.colEndLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.colEndLabel.setFixedWidth(140)
         self.osc_end_ledit = QtWidgets.QLineEdit()
-        self.osc_end_ledit.setText("180.0")
+        self.setGuiValues({'osc_end':"180.0"})
         self.osc_end_ledit.setFixedWidth(60)
         self.osc_end_ledit.textChanged[str].connect(functools.partial(self.totalExpChanged,"oscEnd"))        
         hBoxColParams1.addWidget(colStartLabel)
@@ -3467,7 +3467,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.fastDPCheckBox.setChecked(False)        
         self.setGuiValues({'osc_range':"0.0", 'exp_time':getBlConfig("burnDefaultTime"), 'transmission':getBlConfig("burnDefaultTrans")})
         screenWidth = float(getBlConfig("burnDefaultNumFrames"))
-        self.osc_end_ledit.setText(str(screenWidth))
+        self.setGuiValues({'osc_end':screenWidth})
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
         
@@ -4818,9 +4818,8 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.protoOtherRadio.setChecked(True)
       
-      self.osc_end_ledit.setText(str(reqObj["sweep_end"]-reqObj["sweep_start"]))
       logger.info('osc range')
-      self.setGuiValues({'osc_start':reqObj["sweep_start"], 'osc_range':reqObj["img_width"], 'exp_time':reqObj["exposure_time"], 'resolution':reqObj["resolution"], 'transmission':reqObj["attenuation"]})
+      self.setGuiValues({'osc_start':reqObj["sweep_start"], 'osc_end':reqObj["sweep_end"]-reqObj["sweep_start"], 'osc_range':reqObj["img_width"], 'exp_time':reqObj["exposure_time"], 'resolution':reqObj["resolution"], 'transmission':reqObj["attenuation"]})
       self.dataPathGB.setFileNumstart_ledit(str(reqObj["file_number_start"]))
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
       self.beamHeight_ledit.setText(str(reqObj["slit_height"]))

@@ -1560,6 +1560,11 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_wait()  
   logger.info('detector finished waiting')
 
+  # priorities:
+  # 1. make heat map visible to users correctly aligned with sample
+  # 2. take snapshot for ISPyB with heat map and sample visible (governor moved to
+  #    a position with backlight in) and aligned
+
   #data acquisition is finished, now processing and sample positioning
   if not procFlag:
     #must go to known position to account for windup dist. 

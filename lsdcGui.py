@@ -1661,24 +1661,24 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def setGuiValues(self, values):
-      if values.get('osc_start'):
-        logger.info('resetting osc_start to %s' % values['osc_start'])
-        self.osc_start_ledit.setText('%.3f'% float(values['osc_start']))
-      if values.get('osc_range'):
-        logger.info('resetting osc_range to %s' % values['osc_range'])
-        self.osc_range_ledit.setText('%.3f' % float(values['osc_range']))
-      if values.get('img_width'):
-        logger.info('resetting img_width to %s' % values['img_width'])
-        self.img_width_ledit.setText('%.3f' % float(values['img_width']))
-      if values.get('exp_time'):
-        logger.info('resetting exp_time to %s' % values['exp_time'])
-        self.exp_time_ledit.setText('%.3f' % float(values['exp_time']))
-      if values.get('transmission'):
-        logger.info('resetting transmission to %s' % values['transmission'])
-        self.transmission_ledit.setText('%.3f' % float(values['transmission']))
-      if values.get('resolution'):
-        logger.info('resetting resolution to %s' % values['resolution'])
-        self.resolution_ledit.setText('%.2f' % float(values['resolution']))
+      for item, value in values.items():
+        logger.info('resetting %s to %s' % (item, value))
+        if item == 'osc_start':
+          self.osc_start_ledit.setText('%.3f'% float(value))
+        elif item == 'osc_end':
+          self.osc_end_ledit.setText('%.3f' % float(value))
+        elif item == 'osc_range':
+          self.osc_range_ledit.setText('%.3f' % float(value))
+        elif item == 'img_width':
+          self.img_width_ledit.setText('%.3f' % float(value))
+        elif item == 'exp_time':
+          self.exp_time_ledit.setText('%.3f' % float(value))
+        elif item == 'transmission':
+          self.transmission_ledit.setText('%.3f' % float(value))
+        elif item == 'resolution':
+          self.resolution_ledit.setText('%.2f' % float(value))
+        else:
+          logger.error('setGuiValues unknown item: %s value: %s' % (item, value))
 
     def parseXRFTable(self):
       XRFFile = open(os.environ["CONFIGDIR"] + "/XRF-AMX_simple.txt")

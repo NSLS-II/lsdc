@@ -1582,7 +1582,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   
     """change request status so that GUI only fills heat map when
     xrecRasterFlag PV is set"""
-    rasterRequest["request_obj"]["rasterDef"]["status"] = 2
+    rasterRequest["request_obj"]["rasterDef"]["status"] = "FILL_READY"
     db_lib.updateRequest(rasterRequest)
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
 
@@ -1605,7 +1605,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   """change request status so that GUI only takes a snapshot of
   sample plus heat map for ispyb when xrecRasterFlag PV is set"""
   rasterRequestID = rasterRequest["uid"]
-  rasterRequest["request_obj"]["rasterDef"]["status"] = 3
+  rasterRequest["request_obj"]["rasterDef"]["status"] = "SNAPSHOT_READY"
   db_lib.updateRequest(rasterRequest)
   
   db_lib.updatePriority(rasterRequestID,-1)
@@ -1731,7 +1731,7 @@ def reprocessRaster(rasterReqID):
       if (processedRasterRowCount == rowCount):
         break
     rasterResult = generateGridMap(rasterRequest)     
-    rasterRequest["request_obj"]["rasterDef"]["status"] = 4
+    rasterRequest["request_obj"]["rasterDef"]["status"] = "REPROCESS_READY"
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
     try:
@@ -2263,7 +2263,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   stepsize = float(stepsizeMicrons_s)
   beamWidth = stepsize
   beamHeight = stepsize
-  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":0,"x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
+  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":"EMPTY","x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
   numsteps_h = int(raster_w/stepsize)
   numsteps_v = int(raster_h/stepsize) #the numsteps is decided in code, so is already odd
   point_offset_x = -(numsteps_h*stepsize)/2.0
@@ -2299,7 +2299,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
     reqObj["file_prefix"] = reqObj["file_prefix"]+"_r"
     rasterDef["rasterType"] = "normal"
   reqObj["rasterDef"] = rasterDef #should this be something like self.currentRasterDef?
-  reqObj["rasterDef"]["status"] = 1 # this will tell clients that the raster should be displayed.
+  reqObj["rasterDef"]["status"] = "DRAW_READY" # this will tell clients that the raster should be displayed.
   runNum = db_lib.incrementSampleRequestCount(sampleID)
   reqObj["runNum"] = runNum
   reqObj["parentReqID"] = currentRequest["uid"]

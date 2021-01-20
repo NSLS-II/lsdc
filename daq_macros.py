@@ -1582,7 +1582,9 @@ def snakeRasterNormal(rasterReqID,grain=""):
   
     """change request status so that GUI only fills heat map when
     xrecRasterFlag PV is set"""
-    rasterRequest["request_obj"]["rasterDef"]["status"] = "FILL_READY"
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_FILL.value
+    )
     db_lib.updateRequest(rasterRequest)
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
 
@@ -1605,7 +1607,9 @@ def snakeRasterNormal(rasterReqID,grain=""):
   """change request status so that GUI only takes a snapshot of
   sample plus heat map for ispyb when xrecRasterFlag PV is set"""
   rasterRequestID = rasterRequest["uid"]
-  rasterRequest["request_obj"]["rasterDef"]["status"] = "SNAPSHOT_READY"
+  rasterRequest["request_obj"]["rasterDef"]["status"] = (
+      RasterStatus.READY_FOR_SNAPSHOT.value
+  )
   db_lib.updateRequest(rasterRequest)
   
   db_lib.updatePriority(rasterRequestID,-1)
@@ -1731,7 +1735,9 @@ def reprocessRaster(rasterReqID):
       if (processedRasterRowCount == rowCount):
         break
     rasterResult = generateGridMap(rasterRequest)     
-    rasterRequest["request_obj"]["rasterDef"]["status"] = "REPROCESS_READY"
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_REPROCESS.value
+    )
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
     try:
@@ -2247,7 +2253,7 @@ def defineTiledRaster(rasterDef,numsteps_h,numsteps_v,origRasterCenterScreenX,or
       vectorEndY = vectorStartY
       newRowDef = {"start":{"x": vectorStartX,"y":vectorStartY},"end":{"x":vectorEndX,"y":vectorEndY},"numsteps":numsteps_h}
       rasterDef["rowDefs"].append(newRowDef)
-  rasterDef["status"] = 1 # this will tell clients that the raster should be displayed.      
+  rasterDef["status"] = RasterStatus.DRAWN.value # this will tell clients that the raster should be displayed.      
   return rasterDef
 
 def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff=0.0,yoff=0.0,zoff=0.0): #maybe point_x and point_y are image center? #everything can come as microns, make this a horz vector scan, note this never deals with pixels.
@@ -2263,7 +2269,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   stepsize = float(stepsizeMicrons_s)
   beamWidth = stepsize
   beamHeight = stepsize
-  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":"EMPTY","x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
+  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":RasterStatus.NEW.value,"x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
   numsteps_h = int(raster_w/stepsize)
   numsteps_v = int(raster_h/stepsize) #the numsteps is decided in code, so is already odd
   point_offset_x = -(numsteps_h*stepsize)/2.0
@@ -2299,7 +2305,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
     reqObj["file_prefix"] = reqObj["file_prefix"]+"_r"
     rasterDef["rasterType"] = "normal"
   reqObj["rasterDef"] = rasterDef #should this be something like self.currentRasterDef?
-  reqObj["rasterDef"]["status"] = "DRAW_READY" # this will tell clients that the raster should be displayed.
+  reqObj["rasterDef"]["status"] = RasterStatus.DRAWN.value # this will tell clients that the raster should be displayed.
   runNum = db_lib.incrementSampleRequestCount(sampleID)
   reqObj["runNum"] = runNum
   reqObj["parentReqID"] = currentRequest["uid"]

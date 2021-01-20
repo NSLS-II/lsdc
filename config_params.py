@@ -1,3 +1,5 @@
+from enum import Enum
+
 # BlConfig parameters
 
 # rastering parameters
@@ -10,3 +12,16 @@ RASTER_DOZOR_SPOT_LEVEL = 'rasterDozorSpotLevel'
 
 # top view
 TOP_VIEW_CHECK = 'topViewCheck'
+
+# raster request status updates
+class RasterStatus(Enum):
+    """The lsdc server can keep GUI clients updated on the status of
+    of raster macros by updating raster request objects in the request
+    database. The GUI can process raster data, e.g. filling heat maps,
+    in parallel to the server moving motors and adjusting low mag cam.
+    """
+    NEW = 0
+    DRAWN = 1
+    READY_FOR_FILL = 2
+    READY_FOR_SNAPSHOT = 3
+    READY_FOR_REPROCESS = 4

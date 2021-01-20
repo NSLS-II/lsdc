@@ -3044,19 +3044,19 @@ class ControlMain(QtWidgets.QMainWindow):
           logger.error('bad xrecRasterFlag: %s' % xrecRasterFlag)
           return
         rasterDef = rasterReq["request_obj"]["rasterDef"]
-        if (rasterDef["status"] == "DRAW_READY"):
+        if (rasterDef["status"] == RasterStatus.DRAWN.value):
           self.drawPolyRaster(rasterReq)
-        elif (rasterDef["status"] == "FILL_READY"):
+        elif (rasterDef["status"] == RasterStatus.READY_FOR_FILL.value):
           self.fillPolyRaster(rasterReq)
           logger.info("polyraster filled by displayXrecRaster")
-        elif (rasterDef["status"] == "SNAPSHOT_READY"):
+        elif (rasterDef["status"] == RasterStatus.READY_FOR_SNAPSHOT.value):
           if (self.controlEnabled()):          
             self.takeRasterSnapshot(rasterReq)
             logger.info("raster snapshot taken")
           self.vidActionRasterExploreRadio.setChecked(True)                    
           self.selectedSampleID = rasterReq["sample"]
           self.treeChanged_pv.put(1) #not sure about this
-        elif (rasterDef["status"] == "REPROCESS_READY"):
+        elif (rasterDef["status"] == RasterStatus.READY_FOR_REPROCESS.value):
           self.fillPolyRaster(rasterReq)
           logger.info("reprocessed polyraster filled by displayXrecraster")
           if (self.controlEnabled()):
@@ -4069,9 +4069,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage('bad value for beam width or beam height')
         return
       if (self.scannerType == "PI"):
-        rasterDef = {"rasterType":"normal","beamWidth":beamWidth,"beamHeight":beamHeight,"status":"EMPTY","x":self.sampx_pv.get()+self.sampFineX_pv.get(),"y":self.sampy_pv.get()+self.sampFineY_pv.get(),"z":self.sampz_pv.get()+self.sampFineZ_pv.get(),"omega":self.omega_pv.get(),"stepsize":stepsize,"rowDefs":[]} #just storing step as microns, not using her
+        rasterDef = {"rasterType":"normal","beamWidth":beamWidth,"beamHeight":beamHeight,"status":RasterStatus.NEW.value,"x":self.sampx_pv.get()+self.sampFineX_pv.get(),"y":self.sampy_pv.get()+self.sampFineY_pv.get(),"z":self.sampz_pv.get()+self.sampFineZ_pv.get(),"omega":self.omega_pv.get(),"stepsize":stepsize,"rowDefs":[]} #just storing step as microns, not using her
       else:
-        rasterDef = {"rasterType":"normal","beamWidth":beamWidth,"beamHeight":beamHeight,"status":"EMPTY","x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get(),"stepsize":stepsize,"rowDefs":[]} #just storing step as microns, not using here      
+        rasterDef = {"rasterType":"normal","beamWidth":beamWidth,"beamHeight":beamHeight,"status":RasterStatus.NEW.value,"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get(),"stepsize":stepsize,"rowDefs":[]} #just storing step as microns, not using here      
       numsteps_h = int(raster_w/stepsizeXPix) #raster_w = width,goes to numsteps horizonatl
       numsteps_v = int(raster_h/stepsizeYPix)
       if (numsteps_h == 2):

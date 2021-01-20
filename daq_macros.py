@@ -1569,7 +1569,10 @@ def snakeRasterNormal(rasterReqID,grain=""):
   if not procFlag:
     #must go to known position to account for windup dist. 
     logger.info("moving to raster start")
-    beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
+    beamline_lib.mvaDescriptor("sampleX",rasterStartX,
+                               "sampleY",rasterStartY,
+                               "sampleZ",rasterStartZ,
+                               "omega",omega)
     logger.info("done moving to raster start")
 
   if (procFlag):
@@ -1597,11 +1600,15 @@ def snakeRasterNormal(rasterReqID,grain=""):
       gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
     else:
       try:
-        gotoMaxRaster(rasterResult)
+        # go to start omega for faster heat map display
+        gotoMaxRaster(rasterResult,omega=omega)
       except ValueError:
         #must go to known position to account for windup dist.
         logger.info("moving to raster start")
-        beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
+        beamline_lib.mvaDescriptor("sampleX",rasterStartX,
+                                   "sampleY",rasterStartY,
+                                   "sampleZ",rasterStartZ,
+                                   "omega",omega)
         logger.info("done moving to raster start")
 
   """change request status so that GUI only takes a snapshot of
@@ -2044,8 +2051,9 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
     time.sleep(1) #I think I really need this, not sure why
     snakeRaster(rasterReqID)
 
-def gotoMaxRaster(rasterResult,multiColThreshold=-1):
+def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag
+  
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
@@ -2095,7 +2103,14 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     y = hotCoords["y"]
     z = hotCoords["z"]
     logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
-    beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
+
+    if 'omega' in kwargs:
+      beamline_lib.mvaDescriptor("sampleX",x,
+                                 "sampleY",y,
+                                 "sampleZ",z,
+                                 "omega",kwargs['omega'])
+    else: beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
+
     if (autoVectorFlag): #if we found a hotspot, then look again at cellResults for coarse vector start and end
       xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
       xmaxColumn = []

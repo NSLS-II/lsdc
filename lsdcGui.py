@@ -4142,7 +4142,6 @@ class ControlMain(QtWidgets.QMainWindow):
       beamSize = self.screenXmicrons2pixels(rasterDef["beamWidth"])
       stepsizeX = self.screenXmicrons2pixels(rasterDef["stepsize"])
       stepsizeY = self.screenYmicrons2pixels(rasterDef["stepsize"])      
-      pen = QtGui.QPen(QtCore.Qt.green)
       pen = QtGui.QPen(QtCore.Qt.red)
       newRasterCellList = []
       try:

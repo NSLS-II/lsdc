@@ -4080,6 +4080,7 @@ class ControlMain(QtWidgets.QMainWindow):
         numsteps_h = numsteps_h + 1
       if (numsteps_v%2 == 0):
         numsteps_v = numsteps_v + 1
+      rasterDef["numCells"] = numsteps_h * numsteps_v
       point_offset_x = -(numsteps_h*stepsizeXPix)/2
       point_offset_y = -(numsteps_v*stepsizeYPix)/2
       if ((numsteps_h == 1) or (numsteps_v > numsteps_h and getBlConfig("vertRasterOn"))): #vertical raster

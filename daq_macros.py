@@ -1630,7 +1630,11 @@ def snakeRasterNormal(rasterReqID,grain=""):
   if (procFlag):
     """if sleep <2 than black ispyb image, timing affected by speed
     of governor transition, i.e. wait versus nowait functions"""
-    time.sleep(2)
+    if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
+        > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
+      time.sleep(5) #larger rasters delay GUI scene update
+    else:
+      time.sleep(2)
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",1)        
@@ -2287,6 +2291,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":RasterStatus.NEW.value,"x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
   numsteps_h = int(raster_w/stepsize)
   numsteps_v = int(raster_h/stepsize) #the numsteps is decided in code, so is already odd
+  rasterDef["numCells"] = numsteps_h * numsteps_v
   point_offset_x = -(numsteps_h*stepsize)/2.0
   point_offset_y = -(numsteps_v*stepsize)/2.0
   if (numsteps_v > numsteps_h): #vertical raster

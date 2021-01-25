@@ -295,7 +295,6 @@ def setGovRobotSA_nowait(): #called at end of a data collection. The idea is thi
   logger.info("setGovRobotSA")
   toggleLowMagCameraSettings("SA")  
   setRobotGovState("SA")
-  toggleLowMagCameraSettings("SA")    
   return 1
 
 def setGovRobotDI_nowait():

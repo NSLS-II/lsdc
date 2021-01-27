@@ -13,8 +13,10 @@ comm_s = pinAlignRootEnvVar + "/pin_align_" + beamline + ".sh " + \
     fname1 + " " + fname2
 lines = os.popen(comm_s).readlines()
 tilted = False
+
+##### TODO add check for high values
 for outputline in lines:
-    if (outputline.find("TILTED") != -1 or outputline.find('MISSING') != -1):
+    if (outputline.find("TILTED") != -1 or outputline.find('MISSING') != -1 or outputline.find('VIOLATION') != -1):
         print(outputline)
         tilted = True
 if (not tilted):

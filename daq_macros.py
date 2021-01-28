@@ -607,8 +607,7 @@ def vectorProceed():
 def vectorSync():
   setPvDesc("vectorSync",1)
 
-def vectorWaitForGo(source="raster"):
-  timeout_trials = 3
+def vectorWaitForGo(source="raster",timeout_trials=3):
   while 1:
     try:
       setPvDesc("vectorGo",1)
@@ -620,7 +619,7 @@ def vectorWaitForGo(source="raster"):
       if not timeout_trials:
         message = 'too many errors during %s vectorGo checks' % source
         logger.error(message)
-        raise Exception(message)
+        raise TimeoutError(message)
 
 def makeDozorRowDir(directory,rowIndex):
     """Makes separate directory for each row for dozor output,
@@ -3207,7 +3206,10 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  vectorWaitForGo(source="zebraDaq")
+  try:
+    vectorWaitForGo(source="zebraDaq",timeout_trials=1)
+  except TimeoutError:
+    logger.info("caught TimeoutError in zebraDaq, proceeded with collection")
   vectorWait()
   zebraWait()
   logger.info("vector Done " + str(time.time()))          

@@ -1631,10 +1631,12 @@ def snakeRasterNormal(rasterReqID,grain=""):
     of governor transition, i.e. wait versus nowait functions"""
     if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
         > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
-      time.sleep(5) #larger rasters delay GUI scene update
+      #larger rasters can delay GUI scene update
+      time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
     else:
-      time.sleep(2)
+      time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+    time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",1)        
   return 1

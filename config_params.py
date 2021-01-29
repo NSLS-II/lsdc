@@ -10,6 +10,13 @@ RASTER_TUNE_RESO_FLAG = 'rasterTuneResoFlag'
 RASTER_TUNE_ICE_RING_WIDTH = 'rasterTuneIceRingWidth'
 RASTER_DOZOR_SPOT_LEVEL = 'rasterDozorSpotLevel'
 RASTER_NUM_CELLS_DELAY_THRESHOLD = 'rasterNumCellsThresholdDelay'
+
+# timing delays
+ISPYB_RESULT_ENTRY_DELAY = 'ispybResultEntryDelay'
+RASTER_LONG_SNAPSHOT_DELAY = 'rasterLongSnapshotDelay'
+RASTER_SHORT_SNAPSHOT_DELAY = 'rasterShortSnapshotDelay'
+RASTER_POST_SNAPSHOT_DELAY = 'rasterPostSnapshotDelay'
+
 # top view
 TOP_VIEW_CHECK = 'topViewCheck'
 

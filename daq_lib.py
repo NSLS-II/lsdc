@@ -241,8 +241,6 @@ def toggleLowMagCameraSettings(stateCode):
     setPvDesc("lowMagGain", param_dict[daq_utils.beamline]['gain'])      
     setPvDesc("lowMagAcquireTime",param_dict[daq_utils.beamline]['acquireTime'])                    
 
-    
-
 def waitGovRobotSE():
   waitGovNoSleep()    
   robotGovState = (getPvDesc("robotSeActive") or getPvDesc("humanSeActive"))

@@ -17,6 +17,12 @@ RASTER_LONG_SNAPSHOT_DELAY = 'rasterLongSnapshotDelay'
 RASTER_SHORT_SNAPSHOT_DELAY = 'rasterShortSnapshotDelay'
 RASTER_POST_SNAPSHOT_DELAY = 'rasterPostSnapshotDelay'
 
+# governor transition gain/exposure times
+LOW_MAG_GAIN_DA = 'lowMagGainDA'
+LOW_MAG_GAIN = 'lowMagGain'
+LOW_MAG_EXP_TIME_DA = 'lowMagExptimeDA'
+LOW_MAG_EXP_TIME = 'lowMagExptime'
+
 # top view
 TOP_VIEW_CHECK = 'topViewCheck'
 

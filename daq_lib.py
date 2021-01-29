@@ -231,11 +231,11 @@ def setRobotGovState(stateString):
 def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
-    setPvDesc("lowMagGain", getBlConfig("lowMagGainDA"))
-    setPvDesc("lowMagAcquireTime",getBlConfig("lowMagExptimeDA"))
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
   else:
-    setPvDesc("lowMagGain", getBlConfig("lowMagGain")      
-    setPvDesc("lowMagAcquireTime",getBlConfig("lowMagExptime"))                    
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN)      
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))                    
 
 def waitGovRobotSE():
   waitGovNoSleep()    

@@ -236,9 +236,10 @@ def toggleLowMagCameraSettings(stateCode):
     setPvDesc("lowMagGain", param_dict[daq_utils.beamline]['gain'])
     setPvDesc("lowMagAcquireTime",param_dict[daq_utils.beamline]['acquireTime'])
   else:
-    lowMagExpTime = getBlConfig("lowMagExptime")
-    setPvDesc("lowMagGain",1)      
-    setPvDesc("lowMagAcquireTime",lowMagExpTime)                    
+    param_dict = {'amx':{'gain': 0.1, 'acquireTime':getBlConfig("lowMagExpTime")},
+                  'fmx':{'gain': 1,   'acquireTime':getBlConfig("lowMagExpTime")}}
+    setPvDesc("lowMagGain", param_dict[daq_utils.beamline]['gain'])      
+    setPvDesc("lowMagAcquireTime",param_dict[daq_utils.beamline]['acquireTime'])                    
 
     
 

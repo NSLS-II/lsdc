@@ -4693,31 +4693,30 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerHutch.start(HUTCH_TIMER_DELAY)            
       
 
+    def getVectorObject(self):
+      pen = QtGui.QPen(QtCore.Qt.blue)
+      brush = QtGui.QBrush(QtCore.Qt.blue)
+      markWidth = 10
+      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
+      vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
+      return {"coords":vectorCoords,"graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
+ 
     def setVectorStartCB(self): #save sample x,y,z
       if (self.vectorStart != None):
         self.scene.removeItem(self.vectorStart["graphicsitem"])
         self.vectorStart = None
+      self.vectorStart = self.getVectorObject()
+
+      if self.vectorStart and self.vectorEnd:
+        self.drawVector()
+
+    def drawVector(self, vectorCurrent): #TODO the calculation of speed should be refactored
       pen = QtGui.QPen(QtCore.Qt.blue)
       brush = QtGui.QBrush(QtCore.Qt.blue)
-      markWidth = 10      
-      vecStartMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
-      vectorStartcoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      self.vectorStart = {"coords":vectorStartcoords,"graphicsitem":vecStartMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
-
-
-
-    def setVectorEndCB(self): #save sample x,y,z
-      if (self.vectorEnd != None):
-        self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        self.scene.removeItem(self.vecLine)
-        self.vectorEnd = None
-        
-      pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
-      markWidth = 10            
+      markWidth = 10
       vecEndMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
       vectorEndcoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      self.vectorEnd = {"coords":vectorEndcoords,"graphicsitem":vecEndMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
+      # use vectorCurrent below - and derive values from it instead of recalculating everything inside here
       try:
         x_vec_end = self.vectorEnd["coords"]["x"]
         y_vec_end = self.vectorEnd["coords"]["y"]
@@ -4736,8 +4735,18 @@ class ControlMain(QtWidgets.QMainWindow):
       except:
         pass
       self.protoVectorRadio.setChecked(True)
-      self.vecLine = self.scene.addLine(self.centerMarker.x()+self.vectorStart["graphicsitem"].x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+self.vectorStart["graphicsitem"].y()+self.centerMarkerCharOffsetY,self.centerMarker.x()+vecEndMarker.x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+vecEndMarker.y()+self.centerMarkerCharOffsetY, pen)
+      self.vecLine = self.scene.addLine(self.centerMarker.x()+vectorCurrent["graphicsitem"].x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+self.vectorStart["graphicsitem"].y()+self.centerMarkerCharOffsetY,self.centerMarker.x()+vecEndMarker.x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+vecEndMarker.y()+self.centerMarkerCharOffsetY, pen) #TODO clean up to use vectorCurrent
       self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
+
+    def setVectorEndCB(self): #save sample x,y,z
+      if (self.vectorEnd != None):
+        self.scene.removeItem(self.vectorEnd["graphicsitem"])
+        self.scene.removeItem(self.vecLine)#TODO do we need this? or part of check below?
+        self.vectorEnd = None
+      self.vectorEnd = self.getVectorObject()
+
+      if self.vectorStart and self.vectorEnd:
+        self.drawVector()        
 
     def clearVectorCB(self):
       if (self.vectorStart != None):
@@ -4745,10 +4754,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vectorStart = None
       if (self.vectorEnd != None):
         self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        self.scene.removeItem(self.vecLine)
         self.vectorEnd = None
         self.vecLenLabelOutput.setText("---")
         self.vecSpeedLabelOutput.setText("---")        
+      try:
+        if self.vecLine != None:
+          self.scene.removeItem(self.vecLine)
+      except AttributeError: # likely due to self.vecLine not defined yet
+        pass
 
     def puckToDewarCB(self):
       while (1):

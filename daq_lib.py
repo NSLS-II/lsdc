@@ -234,8 +234,8 @@ def toggleLowMagCameraSettings(stateCode):
     setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
     setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
   else:
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN)      
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))                    
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
 
 def waitGovRobotSE():
   waitGovNoSleep()    

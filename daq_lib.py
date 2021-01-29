@@ -231,15 +231,11 @@ def setRobotGovState(stateString):
 def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
-    param_dict = {'amx':{'gain': 32, 'acquireTime':getBlConfig("lowMagExptimeDA")},
-                  'fmx':{'gain': 25, 'acquireTime':getBlConfig("lowMagExptimeDA")}}
-    setPvDesc("lowMagGain", param_dict[daq_utils.beamline]['gain'])
-    setPvDesc("lowMagAcquireTime",param_dict[daq_utils.beamline]['acquireTime'])
+    setPvDesc("lowMagGain", getBlConfig("lowMagGainDA"))
+    setPvDesc("lowMagAcquireTime",getBlConfig("lowMagExptimeDA"))
   else:
-    param_dict = {'amx':{'gain': 0.1, 'acquireTime':getBlConfig("lowMagExptime")},
-                  'fmx':{'gain': 1,   'acquireTime':getBlConfig("lowMagExptime")}}
-    setPvDesc("lowMagGain", param_dict[daq_utils.beamline]['gain'])      
-    setPvDesc("lowMagAcquireTime",param_dict[daq_utils.beamline]['acquireTime'])                    
+    setPvDesc("lowMagGain", getBlConfig("lowMagGain")      
+    setPvDesc("lowMagAcquireTime",getBlConfig("lowMagExptime"))                    
 
 def waitGovRobotSE():
   waitGovNoSleep()    

@@ -4704,19 +4704,19 @@ class ControlMain(QtWidgets.QMainWindow):
     def setVectorStartCB(self): #save sample x,y,z
       if (self.vectorStart != None):
         self.scene.removeItem(self.vectorStart["graphicsitem"])
+        try:
+          self.scene.removeItem(self.vecLine)
+        except AttributeError: # liekly due to vecLine not being defined yet
+          pass
         self.vectorStart = None
       self.vectorStart = self.getVectorObject()
 
       if self.vectorStart and self.vectorEnd:
-        self.drawVector()
+        self.drawVector('start')
 
-    def drawVector(self, vectorCurrent): #TODO the calculation of speed should be refactored
+    def drawVector(self): #TODO the calculation of speed should be refactored
       pen = QtGui.QPen(QtCore.Qt.blue)
       brush = QtGui.QBrush(QtCore.Qt.blue)
-      markWidth = 10
-      vecEndMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
-      vectorEndcoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      # use vectorCurrent below - and derive values from it instead of recalculating everything inside here
       try:
         x_vec_end = self.vectorEnd["coords"]["x"]
         y_vec_end = self.vectorEnd["coords"]["y"]
@@ -4735,18 +4735,24 @@ class ControlMain(QtWidgets.QMainWindow):
       except:
         pass
       self.protoVectorRadio.setChecked(True)
-      self.vecLine = self.scene.addLine(self.centerMarker.x()+vectorCurrent["graphicsitem"].x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+self.vectorStart["graphicsitem"].y()+self.centerMarkerCharOffsetY,self.centerMarker.x()+vecEndMarker.x()+self.centerMarkerCharOffsetX,self.centerMarker.y()+vecEndMarker.y()+self.centerMarkerCharOffsetY, pen) #TODO clean up to use vectorCurrent
+      self.vecLine = self.scene.addLine(self.centerMarker.x()+self.vectorStart["graphicsitem"].x()+self.centerMarkerCharOffsetX,
+                                        self.centerMarker.y()+self.vectorStart["graphicsitem"].y()+self.centerMarkerCharOffsetY,
+                                        self.centerMarker.x()+self.vectorEnd["graphicsitem"].x()+self.centerMarkerCharOffsetX,
+                                        self.centerMarker.y()+self.vectorEnd["graphicsitem"].y()+self.centerMarkerCharOffsetY, pen)
       self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
 
     def setVectorEndCB(self): #save sample x,y,z
       if (self.vectorEnd != None):
         self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        self.scene.removeItem(self.vecLine)#TODO do we need this? or part of check below?
+        try:
+          self.scene.removeItem(self.vecLine)
+        except AttributeError: # likely due to self.vecLine not being defined yet
+          pass
         self.vectorEnd = None
       self.vectorEnd = self.getVectorObject()
 
       if self.vectorStart and self.vectorEnd:
-        self.drawVector()        
+        self.drawVector('end')        
 
     def clearVectorCB(self):
       if (self.vectorStart != None):

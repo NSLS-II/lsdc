@@ -3295,6 +3295,21 @@ class ControlMain(QtWidgets.QMainWindow):
       self.beamHeight_ledit.setText(text)
 
 
+    def updateVectorLengthAndSpeed(self):
+      x_vec_end = self.vectorEnd["coords"]["x"]
+      y_vec_end = self.vectorEnd["coords"]["y"]
+      z_vec_end = self.vectorEnd["coords"]["z"]
+      x_vec_start = self.vectorStart["coords"]["x"]
+      y_vec_start = self.vectorStart["coords"]["y"]
+      z_vec_start = self.vectorStart["coords"]["z"]
+      x_vec = x_vec_end - x_vec_start
+      y_vec = y_vec_end - y_vec_start
+      z_vec = z_vec_end - z_vec_start
+      trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
+      self.vecLenLabelOutput.setText(str(int(trans_total)))
+      totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
+      speed = trans_total/totalExpTime
+      self.vecSpeedLabelOutput.setText(str(int(speed)))
 
     def totalExpChanged(self,text):
       if (text == "oscEnd" and daq_utils.beamline == "fmx"):
@@ -3340,20 +3355,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.totalExptime_ledit.setText('%.3f' % totalExptime)
         if (str(self.protoComboBox.currentText()) == "vector"):
           try:
-            x_vec_end = self.vectorEnd["coords"]["x"]
-            y_vec_end = self.vectorEnd["coords"]["y"]
-            z_vec_end = self.vectorEnd["coords"]["z"]
-            x_vec_start = self.vectorStart["coords"]["x"]
-            y_vec_start = self.vectorStart["coords"]["y"]
-            z_vec_start = self.vectorStart["coords"]["z"]
-            x_vec = x_vec_end - x_vec_start
-            y_vec = y_vec_end - y_vec_start
-            z_vec = z_vec_end - z_vec_start
-            trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
-            self.vecLenLabelOutput.setText(str(int(trans_total)))
-            totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
-            speed = trans_total/totalExpTime
-            self.vecSpeedLabelOutput.setText(str(int(speed)))
+            self.updateVectorLengthAndSpeed()
           except:
             pass
             
@@ -4592,21 +4594,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("Vector oscillation must be at least 5.0 degrees.")
             return
           selectedCenteringFound = 1            
-          x_vec_end = self.vectorEnd["coords"]["x"]
-          y_vec_end = self.vectorEnd["coords"]["y"]
-          z_vec_end = self.vectorEnd["coords"]["z"]
-          x_vec_start = self.vectorStart["coords"]["x"]
-          y_vec_start = self.vectorStart["coords"]["y"]
-          z_vec_start = self.vectorStart["coords"]["z"]
-          x_vec = x_vec_end - x_vec_start
-          y_vec = y_vec_end - y_vec_start
-          z_vec = z_vec_end - z_vec_start
-          trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
-          self.vecLenLabelOutput.setText(str(int(trans_total)))
           try:
-            totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
-            speed = trans_total/totalExpTime
-            self.vecSpeedLabelOutput.setText(str(int(speed)))
+            self.updateVectorLengthAndSpeed()
           except:
             pass
           framesPerPoint = int(self.vectorFPP_ledit.text())
@@ -4718,20 +4707,7 @@ class ControlMain(QtWidgets.QMainWindow):
       pen = QtGui.QPen(QtCore.Qt.blue)
       brush = QtGui.QBrush(QtCore.Qt.blue)
       try:
-        x_vec_end = self.vectorEnd["coords"]["x"]
-        y_vec_end = self.vectorEnd["coords"]["y"]
-        z_vec_end = self.vectorEnd["coords"]["z"]
-        x_vec_start = self.vectorStart["coords"]["x"]
-        y_vec_start = self.vectorStart["coords"]["y"]
-        z_vec_start = self.vectorStart["coords"]["z"]
-        x_vec = x_vec_end - x_vec_start
-        y_vec = y_vec_end - y_vec_start
-        z_vec = z_vec_end - z_vec_start
-        trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
-        self.vecLenLabelOutput.setText(str(int(trans_total)))
-        totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
-        speed = trans_total/totalExpTime
-        self.vecSpeedLabelOutput.setText(str(int(speed)))
+        self.updateVectorLengthAndSpeed()
       except:
         pass
       self.protoVectorRadio.setChecked(True)

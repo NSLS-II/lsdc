@@ -196,7 +196,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("caught ISPyBNoResultException: %s. make sure visit name is in the format mx999999-1234" % e)
+   logger.error("insert result - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
    propNum = visitName.split('-')[0]
    sessionid = createVisit(propNum)
  request_type = request['request_type']
@@ -387,7 +387,7 @@ def insertRasterResult(request,visitName):
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("caught ISPyBNoResultException, make sure visit name is in the format mx999999-1234. bye: %s" % e)
+   logger.error("insertRasterResult - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
  #result_obj = result['result_obj'] this doesn't appear to be used -DK

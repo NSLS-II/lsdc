@@ -3316,6 +3316,7 @@ class ControlMain(QtWidgets.QMainWindow):
       totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
       speed = trans_total/totalExpTime
       self.vecSpeedLabelOutput.setText(str(int(speed)))
+      return x_vec, y_vec, z_vec, trans_total
 
     def totalExpChanged(self,text):
       if (text == "oscEnd" and daq_utils.beamline == "fmx"):
@@ -4601,12 +4602,19 @@ class ControlMain(QtWidgets.QMainWindow):
             return
           selectedCenteringFound = 1            
           try:
-            self.updateVectorLengthAndSpeed()
-          except:
+            x_vec, y_vec, z_vec, trans_total = self.updateVectorLengthAndSpeed()
+            framesPerPoint = int(self.vectorFPP_ledit.text())
+            vectorParams={"vecStart":self.vectorStart["coords"],"vecEnd":self.vectorEnd["coords"],"x_vec":x_vec,"y_vec":y_vec,"z_vec":z_vec,"trans_total":trans_total,"fpp":framesPerPoint}
+            reqObj["vectorParams"] = vectorParams
+          except Exception as e:
+            if self.vectorStart == None:
+              self.popupServerMessage("Vector start must be defined.")
+              return
+            elif self.vectorEnd == None:
+              self.popupServerMessage("Vector end must be defined.")
+              return
+            logger.error('Exception while getting vector parameters: %s' % e)
             pass
-          framesPerPoint = int(self.vectorFPP_ledit.text())
-          vectorParams={"vecStart":self.vectorStart["coords"],"vecEnd":self.vectorEnd["coords"],"x_vec":x_vec,"y_vec":y_vec,"z_vec":z_vec,"trans_total":trans_total,"fpp":framesPerPoint}
-          reqObj["vectorParams"] = vectorParams
         colRequest["request_obj"] = reqObj
         newSampleRequestID = db_lib.addRequesttoSample(self.selectedSampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=daq_utils.getProposalID())
 #attempt here to select a newly created request.        

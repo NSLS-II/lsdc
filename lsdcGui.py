@@ -4701,9 +4701,9 @@ class ControlMain(QtWidgets.QMainWindow):
       self.vectorStart = self.getVectorObject()
 
       if self.vectorStart and self.vectorEnd:
-        self.drawVector('start')
+        self.drawVector()
 
-    def drawVector(self): #TODO the calculation of speed should be refactored
+    def drawVector(self):
       pen = QtGui.QPen(QtCore.Qt.blue)
       brush = QtGui.QBrush(QtCore.Qt.blue)
       try:
@@ -4728,7 +4728,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.vectorEnd = self.getVectorObject()
 
       if self.vectorStart and self.vectorEnd:
-        self.drawVector('end')        
+        self.drawVector()        
 
     def clearVectorCB(self):
       if (self.vectorStart != None):

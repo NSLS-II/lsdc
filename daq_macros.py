@@ -1555,10 +1555,12 @@ def snakeRasterNormal(rasterReqID,grain=""):
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
 
-  det_lib.detector_stop_acquire()
-  det_lib.detector_wait()  
-  logger.info('detector finished waiting')
 
+  """governor transitions:
+  putting transitions here allows for GUI sample/heat map image to update
+  after moving to known position"""
+  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
+  else: daq_lib.setGovRobot('DI')
   # priorities:
   # 1. make heat map visible to users correctly aligned with sample
   # 2. take snapshot for ISPyB with heat map and sample visible (governor moved to
@@ -1582,14 +1584,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
     logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
     rasterResult = generateGridMap(rasterRequest)
   
-    """change request status so that GUI only fills heat map when
-    xrecRasterFlag PV is set"""
-    rasterRequest["request_obj"]["rasterDef"]["status"] = (
-        RasterStatus.READY_FOR_FILL.value
-    )
-    db_lib.updateRequest(rasterRequest)
-    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
-
     logger.info(f'protocol = {reqObj["protocol"]}')
     if (reqObj["protocol"] == "multiCol" or parentReqProtocol == "multiColQ"):
       if (parentReqProtocol == "multiColQ"):    
@@ -1610,25 +1604,33 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                    "omega",omega)
         logger.info("done moving to raster start")
 
+    """change request status so that GUI only fills heat map when
+    xrecRasterFlag PV is set"""
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_FILL.value
+    )
+    db_lib.updateRequest(rasterRequest)
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+  
+  #use this required pause to allow GUI time to fill map and for db update
+  det_lib.detector_stop_acquire()
+  det_lib.detector_wait()  
+  logger.info('detector finished waiting')
+
   """change request status so that GUI only takes a snapshot of
   sample plus heat map for ispyb when xrecRasterFlag PV is set"""
   rasterRequestID = rasterRequest["uid"]
   rasterRequest["request_obj"]["rasterDef"]["status"] = (
       RasterStatus.READY_FOR_SNAPSHOT.value
   )
-  db_lib.updateRequest(rasterRequest)
-  
+  db_lib.updateRequest(rasterRequest)  
   db_lib.updatePriority(rasterRequestID,-1)
-
-  """governor transitions:
-  putting transitions here allows for GUI sample/heat map image to update
-  after moving to known position"""
-  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
-  else: daq_lib.setGovRobot('DI')
 
   if (procFlag):
     """if sleep <2 than black ispyb image, timing affected by speed
-    of governor transition, i.e. wait versus nowait functions"""
+    of governor transition, i.e. wait versus nowait functions. Sleep
+    constraint can be relaxed if gov transitions and concomitant GUI
+    scene updates are moved to an earlier stage."""
     if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
         > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
       #larger rasters can delay GUI scene update

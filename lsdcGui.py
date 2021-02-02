@@ -2993,33 +2993,39 @@ class ControlMain(QtWidgets.QMainWindow):
           startYX = self.vectorStart["coords"]["y"]
           newY = self.calculateNewYCoordPos(startYX,startYY)
           self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-          if (self.vectorEnd != None):
-            startYX = self.vectorEnd["coords"]["y"]
-            startYY = self.vectorEnd["coords"]["z"]
-            newY = self.calculateNewYCoordPos(startYX,startYY)
-            self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
         if (motID == "x"):
           startX = self.vectorStart["coords"]["x"]
           delta = startX-posRBV
           newX = float(self.screenXmicrons2pixels(delta))
           self.vectorStart["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorStart["graphicsitem"].y())
-          if (self.vectorEnd != None):
-            startX = self.vectorEnd["coords"]["x"]
-            delta = startX-posRBV
-            newX = float(self.screenXmicrons2pixels(delta))
-            self.vectorEnd["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorEnd["graphicsitem"].y())
         if (motID == "y" or motID == "z"):
           startYX = self.vectorStart["coords"]["y"]
           startYY = self.vectorStart["coords"]["z"]
           newY = self.calculateNewYCoordPos(startYX,startYY)
           self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-          if (self.vectorEnd != None):
-            startYX = self.vectorEnd["coords"]["y"]
-            startYY = self.vectorEnd["coords"]["z"]
-            newY = self.calculateNewYCoordPos(startYX,startYY)
-            self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
-        if (self.vectorEnd != None):
-          self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
+      if (self.vectorEnd != None):
+        centerMarkerOffsetX = self.vectorEnd["centerCursorX"]-self.centerMarker.x()
+        centerMarkerOffsetY = self.vectorEnd["centerCursorY"]-self.centerMarker.y()
+
+        if (motID == "omega"):
+          startYX = self.vectorEnd["coords"]["y"]
+          startYY = self.vectorEnd["coords"]["z"]
+          newY = self.calculateNewYCoordPos(startYX,startYY)
+          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
+        if (motID == "x"):
+          startX = self.vectorEnd["coords"]["x"]
+          delta = startX-posRBV
+          newX = float(self.screenXmicrons2pixels(delta))
+          self.vectorEnd["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorEnd["graphicsitem"].y())
+        if (motID == "y" or motID == "z"):
+          startYX = self.vectorEnd["coords"]["y"]
+          startYY = self.vectorEnd["coords"]["z"]
+          newY = self.calculateNewYCoordPos(startYX,startYY)
+          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
+
+
+      if (self.vectorStart != None and self.vectorEnd != None):
+        self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
 
     def queueEnScanCB(self):
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))      

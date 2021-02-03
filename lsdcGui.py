@@ -3053,7 +3053,10 @@ class ControlMain(QtWidgets.QMainWindow):
         if (rasterDef["status"] == RasterStatus.DRAWN.value):
           self.drawPolyRaster(rasterReq)
         elif (rasterDef["status"] == RasterStatus.READY_FOR_FILL.value):
-          self.fillPolyRaster(rasterReq)
+          self.fillPolyRaster(
+            rasterReq,
+            waitTime=getBlConfig(RASTER_GUI_XREC_FILL_DELAY)
+          )
           logger.info("polyraster filled by displayXrecRaster")
         elif (rasterDef["status"] == RasterStatus.READY_FOR_SNAPSHOT.value):
           if (self.controlEnabled()):          
@@ -3760,8 +3763,8 @@ class ControlMain(QtWidgets.QMainWindow):
       self.send_to_server("mvaDescriptor(\"omega\",0)")
       
 
-    def fillPolyRaster(self,rasterReq): #at this point I should have a drawn polyRaster
-      time.sleep(1)
+    def fillPolyRaster(self,rasterReq,waitTime=1): #at this point I should have a drawn polyRaster
+      time.sleep(waitTime)
       logger.info("filling poly for " + str(rasterReq["uid"]))
       resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
       rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])

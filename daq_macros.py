@@ -24,7 +24,7 @@ import os #for runDozorThread
 import numpy as np # for runDozorThread
 from string import Template
 from collections import OrderedDict
-from scans import zebraDaqPrep, setupZebraVectorScan
+from scans import zebraDaqPrep, setupZebraVectorScan, setupZebraVectorScanForRaster
 
 try:
   import ispybLib
@@ -3197,20 +3197,8 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
   zebraDaqPrep()
-  setPvDesc("zebraEncoder",scanEncoder)
-  time.sleep(1.0)
-  setPvDesc("zebraDirection",0)  #direction 0 = positive
-  setPvDesc("zebraGateSelect",0)
-  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
-  if (imgWidth != 0):  
-    setPvDesc("zebraGateWidth",numImages*imgWidth)
-    setPvDesc("zebraGateStep",(numImages*imgWidth)+.001)
-  setPvDesc("zebraGateNumGates",1) #moved from loop
-  setPvDesc("zebraPulseTriggerSource",1)
-  setPvDesc("zebraPulseStart",0)
-  setPvDesc("zebraPulseWidth",(exposureTimePerImage-detector_dead_time)*1000.0)
-  setPvDesc("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
-  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
+
+  setupZebraVectorScanForRaster(angle_start, imgWidth, exposureTimePerImage, exposurePeriodPerImage, detector_dead_time, numImages, scan_encoder, imgWidth==0)
   logger.info("exp tim = " + str(exposureTimePerImage))  
 
   setPvDesc("vectorHold",0)  

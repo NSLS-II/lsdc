@@ -29,7 +29,7 @@ class ZebraPositionCompare(Device):
     enc_z = Cpt(EpicsSignal, 'ENC3', kind="omitted")
     enc_omega = Cpt(EpicsSignal, 'ENC4', kind="omitted")
     direction = Cpt(EpicsSignal, 'DIR', kind="config", auto_monitor=True)
-    gate = Cpt(ZebraPCGate, 'GATE_', kind="config", auto_monitor=True)
+    gate = Cpt(ZebraPCGate, 'GATE_', kind="config")
     pulse = Cpt(ZebraPCPulse, 'PULSE_')
 
 

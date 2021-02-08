@@ -3073,20 +3073,14 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   zebraDaqPrep()
   logger.info("done zebraDaqPrep " + str(time.time()))        
   time.sleep(1.0)
-  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
+
+
   PW=(exposurePeriodPerImage-detector_dead_time)*1000.0
   PS=(exposurePeriodPerImage)*1000.0
-  if (imgWidth != 0):  
-    GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
-    setPvDesc("zebraGateWidth",GW)
-    setPvDesc("zebraGateStep",scanWidth)
-  setPvDesc("zebraGateNumGates",1)
-  setPvDesc("zebraPulseStart",0)
-  setPvDesc("zebraPulseWidth",PW)
-  setPvDesc("zebraPulseStep",PS)
-  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
-  setPvDesc("zebraPulseMax",numImages)
+  GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
+  setupZebraVectorScan(angle_start, GW, scanWidth, PW, PS, PS/2.0, numImages, imgWidth==0)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
+
   det_lib.detector_set_num_triggers(1)  
   det_lib.detector_set_trigger_mode(2)
   det_lib.detector_set_trigger_exposure(exposureTimePerImage)

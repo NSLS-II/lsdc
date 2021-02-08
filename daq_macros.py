@@ -1557,10 +1557,15 @@ def snakeRasterNormal(rasterReqID,grain=""):
 
 
   """governor transitions:
-  putting transitions here allows for GUI sample/heat map image to update
+  initiate transitions here allows for GUI sample/heat map image to update
   after moving to known position"""
-  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
-  else: daq_lib.setGovRobot('DI')
+  if (lastOnSample() and not autoRasterFlag):
+    daq_lib.setGovRobotSA_nowait()
+    targetGovState = 'SA'
+  else:
+    daq_lib.setGovRobot('DI')
+    targetGovState = 'DI'
+
   # priorities:
   # 1. make heat map visible to users correctly aligned with sample
   # 2. take snapshot for ISPyB with heat map and sample visible (governor moved to
@@ -1626,11 +1631,28 @@ def snakeRasterNormal(rasterReqID,grain=""):
   db_lib.updateRequest(rasterRequest)  
   db_lib.updatePriority(rasterRequestID,-1)
 
+  def govStatusCheck(statusPvName,waitTime=20):
+    startTime = time.time()
+    while (time.time() - startTime) < waitTime:
+      status = getPvDesc(statusPvName)
+      if status:
+        logger.info(f"{statusPvName} = {status}")
+        return
+      logger.info(f"{statusPvName} = {status}")
+      time.sleep(0.1)
+    logger.error(f"gov status failed, did not achieve {statusPvName}")
+    raise ValueError
+  
+  #ensure gov transitions have completed successfully
+  if targetGovState == 'SA':
+    govStatusCheck("robotSaActive")
+  elif targetGovState == 'DI':
+    govStatusCheck("robotDiActive")
+
   if (procFlag):
-    """if sleep <2 than black ispyb image, timing affected by speed
-    of governor transition, i.e. wait versus nowait functions. Sleep
-    constraint can be relaxed if gov transitions and concomitant GUI
-    scene updates are moved to an earlier stage."""
+    """if sleep too short then black ispyb image, timing affected by speed
+    of governor transition. Sleep constraint can be relaxed with gov
+    transitions and concomitant GUI moved to an earlier stage."""
     if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
         > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
       #larger rasters can delay GUI scene update
@@ -1640,9 +1662,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
     time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
   if (daq_utils.beamline == "fmx"):
-    setPvDesc("sampleProtect",1)        
+    setPvDesc("sampleProtect",1)
   return 1
-
 
 def reprocessRaster(rasterReqID):
   global rasterRowResultsList,processedRasterRowCount

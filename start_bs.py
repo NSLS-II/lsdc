@@ -3,6 +3,7 @@
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
+from zebra import Zebra
 import os
 #12/19 - author unknown. DAMA can help
 """

@@ -1,12 +1,13 @@
 #objects available should be zebra, vector, eiger
-from bluesky.plan_stubs import mv
-import time
+import bluesky.plan_stubs as bps
 
 def zebraDaqPrep():
-       yield from mv(zebra.reset, 1)
-       time.sleep(2.0)
-       #yield from mv(zebra.ttlSel, 31)
-       yield from mv(zebra.m1_set_pos, 1)
-       yield from mv(zebra.m2_set_pos, 1)
-       yield from mv(zebra.m3_set_pos, 1)
-       #yield from mv(zebra.armTrigSource, 1)
+       RESET_GROUP = 'reset'
+       yield from bps.abs_set(zebra.reset, 1, group=RESET_GROUP)
+       yield from bps.wait(RESET_GROUP)
+       yield from bps.sleep(2.0)
+       yield from bps.mv(zebra.out1, 31)
+       yield from bps.mv(zebra.m1_set_pos, 1)
+       yield from bps.mv(zebra.m2_set_pos, 1)
+       yield from bps.mv(zebra.m3_set_pos, 1)
+       yield from bps.mv(zebra.pc.arm_sel, 1)

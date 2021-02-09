@@ -3,7 +3,9 @@ import sys
 
 import ophyd
 from ophyd import EpicsMotor
-from ophyd import EpicsScaler
+from ophyd import (Component as Cpt, EpicsSignal, Device, EpicsScaler)
+from ophyd.device import create_device_from_components
+from bluesky.plan_stubs import mv
 import time
 import epics
 import os
@@ -50,7 +52,10 @@ def pvPut(pv,val):
 def pvClose(pv):
   del pv
 
-
+def create_device(pvname):
+    values_dict = dict(value=Cpt(EpicsSignal, pvname))
+    Abc = create_device_from_components('abc', **values_dict)
+    return Abc(name=pvname)
 
 #convenience to set a pv value given the name
 def set_any_epics_pv(pv_prefix,field_name,value,wait=True): #this does not use beamline designation
@@ -59,9 +64,9 @@ def set_any_epics_pv(pv_prefix,field_name,value,wait=True): #this does not use b
   else:
     pvname = "%s.%s" % (pv_prefix,field_name)  
   if (pvname not in pvChannelDict):
-    pvChannelDict[pvname] = epics.PV(pvname)
+    pvChannelDict[pvname] = create_device(pvname)
   if (pvChannelDict[pvname] != None):
-    pvChannelDict[pvname].put(value,wait=wait)
+    yield from mv(pvChannelDict[pvname].value, value)
 
 
 #convenience to set a pv value given the name
@@ -71,12 +76,12 @@ def get_any_epics_pv(pv_prefix,field_name,as_string=False): #this does not use b
   else:
     pvname = "%s.%s" % (pv_prefix,field_name)  
   if (pvname not in pvChannelDict):
-    pvChannelDict[pvname] = PVchannel = epics.PV(pvname)
+    pvChannelDict[pvname] = PVchannel = create_device(pvname)
   if (pvChannelDict[pvname] != None):
-    pv_val = pvChannelDict[pvname].get(as_string=as_string)
+    pv_val = pvChannelDict[pvname].value
   else:
-    pv_val = None
-  return pv_val
+    return None
+  return pv_val.get()
 
 #initializes epics motors and counter based on the file pointed to by $EPICS_BEAMLINE_INFO
 #Below this line is an example beamline info file, (remove one '#' off the front of each line)
@@ -328,7 +333,7 @@ def initControlPVs():
   global pvChannelDict
 
   for key in list(pvLookupDict.keys()):
-    pvChannelDict[pvLookupDict[key]] = epics.PV(pvLookupDict[key])
+    pvChannelDict[pvLookupDict[key]] = create_device(pvLookupDict[key])
 
       
 
@@ -361,7 +366,7 @@ def getPvValFromDescriptor(descriptor,as_string=False):
   return get_any_epics_pv(pvNameFromDescriptor(descriptor),"VAL",as_string=as_string)
 
 def setPvValFromDescriptor(descriptor,setval,wait=True):
-  set_any_epics_pv(pvNameFromDescriptor(descriptor),"VAL",setval,wait)
+  yield from set_any_epics_pv(pvNameFromDescriptor(descriptor),"VAL",setval,wait)
   
 
   

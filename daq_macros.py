@@ -1555,9 +1555,16 @@ def snakeRasterNormal(rasterReqID,grain=""):
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
 
-  det_lib.detector_stop_acquire()
-  det_lib.detector_wait()  
-  logger.info('detector finished waiting')
+
+  """governor transitions:
+  initiate transitions here allows for GUI sample/heat map image to update
+  after moving to known position"""
+  if (lastOnSample() and not autoRasterFlag):
+    daq_lib.setGovRobotSA_nowait()
+    targetGovState = 'SA'
+  else:
+    daq_lib.setGovRobot('DI')
+    targetGovState = 'DI'
 
   # priorities:
   # 1. make heat map visible to users correctly aligned with sample
@@ -1582,14 +1589,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
     logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
     rasterResult = generateGridMap(rasterRequest)
   
-    """change request status so that GUI only fills heat map when
-    xrecRasterFlag PV is set"""
-    rasterRequest["request_obj"]["rasterDef"]["status"] = (
-        RasterStatus.READY_FOR_FILL.value
-    )
-    db_lib.updateRequest(rasterRequest)
-    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
-
     logger.info(f'protocol = {reqObj["protocol"]}')
     if (reqObj["protocol"] == "multiCol" or parentReqProtocol == "multiColQ"):
       if (parentReqProtocol == "multiColQ"):    
@@ -1610,25 +1609,50 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                    "omega",omega)
         logger.info("done moving to raster start")
 
+    """change request status so that GUI only fills heat map when
+    xrecRasterFlag PV is set"""
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_FILL.value
+    )
+    db_lib.updateRequest(rasterRequest)
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+  
+  #use this required pause to allow GUI time to fill map and for db update
+  det_lib.detector_stop_acquire()
+  det_lib.detector_wait()  
+  logger.info('detector finished waiting')
+
   """change request status so that GUI only takes a snapshot of
   sample plus heat map for ispyb when xrecRasterFlag PV is set"""
   rasterRequestID = rasterRequest["uid"]
   rasterRequest["request_obj"]["rasterDef"]["status"] = (
       RasterStatus.READY_FOR_SNAPSHOT.value
   )
-  db_lib.updateRequest(rasterRequest)
-  
+  db_lib.updateRequest(rasterRequest)  
   db_lib.updatePriority(rasterRequestID,-1)
 
-  """governor transitions:
-  putting transitions here allows for GUI sample/heat map image to update
-  after moving to known position"""
-  if (lastOnSample() and not autoRasterFlag): daq_lib.setGovRobotSA_nowait()
-  else: daq_lib.setGovRobot('DI')
+  def govStatusCheck(statusPvName,waitTime=20):
+    startTime = time.time()
+    while (time.time() - startTime) < waitTime:
+      status = getPvDesc(statusPvName)
+      if status:
+        logger.info(f"{statusPvName} = {status}")
+        return
+      logger.info(f"{statusPvName} = {status}")
+      time.sleep(0.1)
+    logger.error(f"gov status failed, did not achieve {statusPvName}")
+    raise ValueError
+  
+  #ensure gov transitions have completed successfully
+  if targetGovState == 'SA':
+    govStatusCheck("robotSaActive")
+  elif targetGovState == 'DI':
+    govStatusCheck("robotDiActive")
 
   if (procFlag):
-    """if sleep <2 than black ispyb image, timing affected by speed
-    of governor transition, i.e. wait versus nowait functions"""
+    """if sleep too short then black ispyb image, timing affected by speed
+    of governor transition. Sleep constraint can be relaxed with gov
+    transitions and concomitant GUI moved to an earlier stage."""
     if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
         > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
       #larger rasters can delay GUI scene update
@@ -1638,9 +1662,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
     time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
   if (daq_utils.beamline == "fmx"):
-    setPvDesc("sampleProtect",1)        
+    setPvDesc("sampleProtect",1)
   return 1
-
 
 def reprocessRaster(rasterReqID):
   global rasterRowResultsList,processedRasterRowCount

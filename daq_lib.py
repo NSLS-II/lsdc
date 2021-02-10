@@ -531,7 +531,8 @@ def logMxRequestParams(currentRequest,wait=True):
   visitName = daq_utils.getVisitName()
   try: #I'm worried about unforseen ispyb db errors
     #rasters results are entered in ispyb by the GUI, no need to wait
-    if wait: time.sleep(getBlConfig(ISPYB_RESULT_ENTRY_DELAY))
+    if wait:
+      time.sleep(getBlConfig(ISPYB_RESULT_ENTRY_DELAY))
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
   except Exception as e:
     currentIspybDCID = 999999
@@ -709,7 +710,6 @@ def collectData(currentRequest):
       imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':
-      
       logMxRequestParams(currentRequest,wait=False)
     elif (logMe):
       logMxRequestParams(currentRequest)

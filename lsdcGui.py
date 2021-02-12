@@ -81,6 +81,8 @@ HUTCH_TIMER_DELAY = 1000
 VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
 VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
 VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}}
+VALID_PREFIX_LENGTH = 40 #TODO centralize with spreadsheet validation?
+VALID_PREFIX_NAME = '[0-9a-zA-Z-_]{0,%s}' % VALID_PREFIX_LENGTH
 
 class SnapCommentDialog(QtWidgets.QDialog):
     def __init__(self,parent = None):
@@ -1409,9 +1411,10 @@ class DataLocInfo(QtWidgets.QGroupBox):
         self.hBoxDPathParams1.addWidget(self.base_path_ledit)
         self.hBoxDPathParams1.addWidget(self.browseBasePathButton)
         self.hBoxDPathParams2 = QtWidgets.QHBoxLayout()
-        self.dataPrefixLabel = QtWidgets.QLabel('Data Prefix:\n(40 Char Limit)')
+        self.dataPrefixLabel = QtWidgets.QLabel('Data Prefix:\n(%s Char Limit)' % VALID_PREFIX_LENGTH)
         self.prefix_ledit = QtWidgets.QLineEdit()
         self.prefix_ledit.textChanged[str].connect(self.prefixTextChanged)
+        self.prefix_ledit.setValidator(QRegExpValidator(QRegExp(VALID_PREFIX_NAME), self.prefix_ledit))
         self.hBoxDPathParams2.addWidget(self.dataPrefixLabel)
         self.hBoxDPathParams2.addWidget(self.prefix_ledit)
         self.dataNumstartLabel = QtWidgets.QLabel('File Number Start:')

@@ -5,6 +5,7 @@ import epics
 import time
 
 import socket
+
 def blStrGet():
     """
     Return beamline string
@@ -23,6 +24,29 @@ def blStrGet():
         blStr = -1
        
     return blStr
+
+def govMsgGet(configStr = 'Robot'):
+    """
+    Returns Governor message
+
+
+
+    configStr: Governor configuration, 'Robot' or 'Human', default: 'Robot'
+
+    Examples:
+    govMsgGet()
+    govMsgGet(configStr = 'Human')
+    """
+    blStr = blStrGet()
+    if blStr == -1: return -1
+
+    sysStr = 'XF:17IDC-ES:' + blStr
+    devStr = '{Gov:' + configStr + '}'
+    stsStr = 'Sts:Msg-Sts'
+    pvStr = sysStr + devStr + stsStr
+    govMsg = epics.caget(pvStr)
+
+    return govMsg
 
 def govStatusGet(stateStr, configStr = 'Robot'):
     """

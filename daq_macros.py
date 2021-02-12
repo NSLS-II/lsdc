@@ -3602,11 +3602,15 @@ def anneal(annealTime):
     annealer.air.put(1)
 
     while not annealer.status.get():
-      print(annealer.status.get())
+      logger.info(f'anneal state before annealing: {annealer.status.get()}')
       time.sleep(0.1)
 
     time.sleep(annealTime)
     annealer.air.put(0)
+
+    while not annealer.status.get():
+      logger.info(f'anneal state after annealing: {annealer.status.get()}')
+      time.sleep(0.1)
 
     govStateSet('SA')
 

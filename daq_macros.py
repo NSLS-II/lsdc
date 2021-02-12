@@ -26,6 +26,9 @@ from string import Template
 from collections import OrderedDict
 from threading import Thread
 from config_params import *
+
+from fmx_annealer import govStatusGet, govStateSet, annealer # for using annealer specific to FMX
+
 try:
   import ispybLib
 except Exception as e:
@@ -3589,16 +3592,36 @@ def topViewCheckOn():
   setBlConfig(TOP_VIEW_CHECK,1)
 
 def anneal(annealTime):
-  robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
-  if (robotGovState):
-    setPvDesc("annealIn",1)
-    while (getPvDesc("annealStatus") != 1):
-      time.sleep(0.01)      
-    time.sleep(float(annealTime))
-    setPvDesc("annealIn",0)
-  else:
-    daq_lib.gui_message("Anneal only in SA state!!")    
+  if daq_utils.beamline == 'fmx':
+    if not govStatusGet('SA'):
+      daq_lib.gui_message('Not in Governor state SA, exiting')
+      return -1
 
+    govStateSet('CB')
+
+    annealer.air.put(1)
+
+    while not annealer.status.get():
+      print(annealer.status.get())
+      time.sleep(0.1)
+
+    time.sleep(annealTime)
+    annealer.air.put(0)
+
+    govStateSet('SA')
+
+  elif daq_utils.beamline == 'amx':
+    robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
+    if (robotGovState):
+      setPvDesc("annealIn",1)
+      while (getPvDesc("annealStatus") != 1):
+        time.sleep(0.01)
+      time.sleep(float(annealTime))
+      setPvDesc("annealIn",0)
+    else:
+      daq_lib.gui_message("Anneal only in SA state!!")
+  else:
+    daq_lib.gui_message(f'Anneal not implemented for beamline {daq_utils.beamline}! Doing nothing')
   
 def topViewCheckOff():
   setBlConfig(TOP_VIEW_CHECK,0)

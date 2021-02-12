@@ -2369,8 +2369,6 @@ class ControlMain(QtWidgets.QMainWindow):
         focusMinusButton.clicked.connect(functools.partial(self.focusTweakCB,-5))
         annealButton = QtWidgets.QPushButton("Anneal")
         annealButton.clicked.connect(self.annealButtonCB)
-        if (daq_utils.beamline == "fmx"):
-          annealButton.setEnabled(False)
         annealTimeLabel = QtWidgets.QLabel("Time")
         self.annealTime_ledit = QtWidgets.QLineEdit()
         self.annealTime_ledit.setFixedWidth(40)

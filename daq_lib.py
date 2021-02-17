@@ -66,6 +66,15 @@ def destroy_gui_message():
   beamline_support.pvPut(gui_popup_message_string_pv,"killMessage")
 
 
+def unlatchGov(): # Command needed for FloCos to recover robot
+  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  setPvDesc("robotGovActive",1)
+  time.sleep(0.2)
+  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+
+
 def set_field(param,val):
   var_list[param] = val
   beamline_support.pvPut(var_channel_list[param],val)

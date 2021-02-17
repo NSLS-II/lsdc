@@ -67,8 +67,12 @@ def destroy_gui_message():
 
 
 def unlatchGov(): # Command needed for FloCos to recover robot
+  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
   setPvDesc("robotGovActive",1)
-  logger.info(f"unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+
 
 def set_field(param,val):
   var_list[param] = val

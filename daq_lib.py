@@ -70,6 +70,7 @@ def unlatchGov(): # Command needed for FloCos to recover robot
   print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
   logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
   setPvDesc("robotGovActive",1)
+  time.sleep(0.2)
   print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
   logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
 

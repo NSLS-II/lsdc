@@ -24,7 +24,10 @@ import os #for runDozorThread
 import numpy as np # for runDozorThread
 from string import Template
 from collections import OrderedDict
-from scans import zebra_daq_prep, setup_zebra_vector_scan, setup_zebra_vector_scan_for_raster
+from scans import (zebra_daq_prep, setup_zebra_vector_scan,
+                   setup_zebra_vector_scan_for_raster,
+                   setup_vector_program)
+import bluseky.plan_stubs as bps
 
 try:
   import ispybLib
@@ -3045,7 +3048,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("in Zebra Daq #1 " + str(time.time()))      
   det_lib.detector_setImagesPerFile(500)
   daq_lib.setRobotGovState("DA")  
-  setPvDesc("vectorExpose",1)
+  yield from bps.mv(vector_program.expose, 1)
 
   if (imgWidth == 0):
     angle_end = angle_start
@@ -3055,20 +3058,19 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     numImages = int(round(scanWidth/imgWidth))
   total_exposure_time = exposurePeriodPerImage*numImages
   if (total_exposure_time < 1.0):
-    setPvDesc("vectorBufferTime",1000)
+    yield from bps.mv(vector_program.buffer_time, 1000)
   else:
-    setPvDesc("vectorBufferTime",3)
+    yield from bps.mv(vector_program.buffer_time, 3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
   det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
   det_lib.detector_set_period(exposurePeriodPerImage)
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  setPvDesc("vectorNumFrames",numImages)  
-  setPvDesc("vectorStartOmega",angle_start)
-  setPvDesc("vectorEndOmega",angle_end)
-  setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
-  setPvDesc("vectorHold",0)
+  yield from setup_vector_program(num_images=numImages,
+                                  angle_start=angle_start,
+                                  angle_end=angle_end,
+                                  exposure_period_per_image=exposurePeriodPerImage)
   logger.info("zebra_daq_prep " + str(time.time()))        
   yield from zebra_daq_prep()
   logger.info("done zebra_daq_prep " + str(time.time()))        
@@ -3096,7 +3098,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  setPvDesc("vectorGo",1)
+  yield from bps.mv(vector_program.go, 1)
   vectorActiveWait()  
   vectorWait()
   zebraWait()
@@ -3109,7 +3111,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("stop det acquire")
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
-  setPvDesc("vectorBufferTime",3)
+  yield from bps.mv(vector_program.buffer_time, 3)
   logger.info("zebraDaq Done " + str(time.time()))            
 
 

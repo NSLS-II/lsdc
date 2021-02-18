@@ -1,6 +1,6 @@
 #objects available should be zebra, vector, eiger
 import bluesky.plan_stubs as bps
-from start_bs import zebra
+from start_bs import zebra, vector_program
 
 def zebra_daq_prep():
        RESET_GROUP = 'reset'
@@ -42,3 +42,17 @@ def setup_zebra_vector_scan_for_raster(angle_start, image_width, exposure_time_p
                       zebra.pc.pulse.width, (exposure_time_per_image - detector_dead_time) * 1000,
                       zebra.pc.pulse.step, exposure_period_per_image * 1000,
                       zebra.pc.pulse.delay, exposure_period_per_image / 2 * 1000)
+
+
+def setup_vector_program(num_images, angle_start, angle_end,
+                         exposure_period_per_image):
+    yield from bps.mv(vector_program.num_frames,
+                      num_images,
+                      vector_program.start.omega,
+                      angle_start,
+                      vector_program.end.omega,
+                      angle_end,
+                      vector_program.frame_exptime,
+                      exposure_period_per_image*1000.0,
+                      vector_program.hold,
+                      0)

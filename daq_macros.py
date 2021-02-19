@@ -27,7 +27,7 @@ from collections import OrderedDict
 from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
                    setup_vector_program)
-import bluseky.plan_stubs as bps
+import bluesky.plan_stubs as bps
 
 try:
   import ispybLib

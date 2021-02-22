@@ -2802,7 +2802,11 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")
-  fEdnaLogFile = open(dna_directory+"/edna.log", "r" )
+  try:
+    fEdnaLogFile = open(dna_directory+"/edna.log", "r" )
+  except FileNotFoundError:
+    logger.error(f"File {dna_directory}/edna.log not found")
+    return 0
   ednaLogLines = fEdnaLogFile.readlines()
   fEdnaLogFile.close()
   collect_and_characterize_success = 0

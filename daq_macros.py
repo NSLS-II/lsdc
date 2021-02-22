@@ -2790,7 +2790,13 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)
-  comm_s = "ssh -q xf17id2-ws10 \"source " + os.environ["PROJDIR"] + "wrappers/ednaWrap;cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(getPvDesc("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
+  if daq_utils.beamline == 'amx':
+    ednaHost = 'xf17id2-ws10'
+  elif daq_utils.beamline == 'fmx':
+    ednaHost = 'xf17id1-ws10'
+  else:
+    raise Exception('Unknown EDNA host')
+  comm_s = "ssh -q " + ednaHost + " \"source " + os.environ["PROJDIR"] + "wrappers/ednaWrap;cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(getPvDesc("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")

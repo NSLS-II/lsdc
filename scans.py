@@ -22,7 +22,7 @@ def setup_zebra_vector_scan(angle_start, gate_width, scan_width, pulse_width, pu
                       zebra.pc.pulse.start, 0,
                       zebra.pc.pulse.width, pulse_width,
                       zebra.pc.pulse.step, pulse_step,
-                      zebra.pc.pulse.delay, exposure_period_per_image/2*1000,
+                      zebra.pc.pulse.delay, exposure_period_per_image / 2 * 1000,
                       zebra.pc.pulse.max, num_images)
 
 def setup_zebra_vector_scan_for_raster(angle_start, image_width, exposure_time_per_image, exposure_period_per_image, detector_dead_time, num_images, scan_encoder=3):

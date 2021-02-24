@@ -3,9 +3,7 @@ import bluesky.plan_stubs as bps
 from start_bs import zebra, vector_program
 
 def zebra_daq_prep():
-       RESET_GROUP = 'reset'
-       yield from bps.abs_set(zebra.reset, 1, group=RESET_GROUP)
-       yield from bps.wait(RESET_GROUP)
+       yield from bps.mv(zebra.reset, 1)
        yield from bps.sleep(2.0)
        yield from bps.mv(zebra.out1, 31,
                          zebra.m1_set_pos, 1,

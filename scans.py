@@ -24,9 +24,7 @@ def setup_zebra_vector_scan(angle_start, gate_width, scan_width, pulse_width, pu
                       zebra.pc.pulse.max, num_images)
 
 def setup_zebra_vector_scan_for_raster(angle_start, image_width, exposure_time_per_image, exposure_period_per_image, detector_dead_time, num_images, scan_encoder=3):
-    VECTOR_SCAN_GROUP = 'vector_scan'
-    yield from bps.abs_set(zebra.pc.encoder, scan_encoder, group=VECTOR_SCAN_GROUP)
-    yield from bps.wait(VECTOR_SCAN_GROUP)
+    yield from bps.mv(zebra.pc.encoder, scan_encoder)
     yield from bps.sleep(1.0)
     yield from bps.mv(zebra.pc.direction, 0, # 0 = positive
                       zebra.pc.gate.sel, 0)

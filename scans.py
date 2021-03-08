@@ -31,7 +31,7 @@ def setup_zebra_vector_scan_for_raster(angle_start, image_width, exposure_time_p
     yield from bps.mv(zebra.pc.gate.start, angle_start)
     if image_width != 0:
         yield from bps.mv(zebra.pc.gate.width, num_images * image_width,
-                          zebra.pc.gate.step, num_images * image_width + 0.001)
+                          zebra.pc.gate.step, num_images * image_width + 0.01)
     yield from bps.mv(zebra.pc.gate.num_gates, 1,
                       zebra.pc.pulse.sel, 1,
                       zebra.pc.pulse.start, 0,

@@ -126,7 +126,13 @@ def recoverRobot():
   try:
     rebootEMBL()
     time.sleep(8.0)    
-    RobotControlLib.runCmd("recover")
+    _,bLoaded,_ = RobotControlLib.recover()
+    if bLoaded:
+      daq_macros.robotOff()
+      daq_macros.disableMount()
+      daq_lib.gui_message("Found a sample in the gripper - CALL STAFF! disableMount() executed.")
+    else:
+      RobotControlLib.runCmd("goHome")
   except Exception as e:
     e_s = str(e)
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            

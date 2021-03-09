@@ -20,6 +20,7 @@ class ZebraPCPulse(ZebraPCBase):
 
 class ZebraPositionCompare(Device):
     arm_status = Cpt(EpicsSignalRO, 'ARM_INP.STA', kind="omitted")
+    arm_sel = Cpt(EpicsSignal, 'ARM_SEL', kind="omitted")
     download_count = Cpt(EpicsSignalRO, 'NUM_DOWN', kind="omitted")
     disarm = Cpt(EpicsSignal, 'DISARM', kind="omitted")
     encoder = Cpt(EpicsSignal, 'ENC', kind="config", auto_monitor=True)
@@ -28,15 +29,13 @@ class ZebraPositionCompare(Device):
     enc_z = Cpt(EpicsSignal, 'ENC3', kind="omitted")
     enc_omega = Cpt(EpicsSignal, 'ENC4', kind="omitted")
     direction = Cpt(EpicsSignal, 'DIR', kind="config", auto_monitor=True)
-    gate = Cpt(ZebraPCGate, 'GATE_', kind="config", auto_monitor=True)
+    gate = Cpt(ZebraPCGate, 'GATE_', kind="config")
     pulse = Cpt(ZebraPCPulse, 'PULSE_')
 
 
 class ZebraAnd(Device):
     inp1 = Cpt(EpicsSignal, 'INP1:STA', kind="omitted")
     inp2 = Cpt(EpicsSignal, 'INP2:STA', kind="omitted")
-    out1 = Cpt(EpicsSignal, 'OUT1_TTL', kind="config", auto_monitor=True)
-
 
 class Zebra(Device):
     downloading = Cpt(EpicsSignal, 'ARRAY_ACQ', kind="omitted")
@@ -45,5 +44,6 @@ class Zebra(Device):
     m2_set_pos = Cpt(EpicsSignal, 'M2:SETPOS.PROC', kind="omitted")
     m3_set_pos = Cpt(EpicsSignal, 'M3:SETPOS.PROC', kind="omitted")
     m4_set_pos = Cpt(EpicsSignal, 'M4:SETPOS.PROC', kind="omitted")
+    out1 = Cpt(EpicsSignal, 'OUT1_TTL', kind="config", auto_monitor=True)
     pc = Cpt(ZebraPositionCompare, 'PC_')
-    zebra_and = Cpt(ZebraAnd, 'AND1_')
+    and1 = Cpt(ZebraAnd, 'AND1_')

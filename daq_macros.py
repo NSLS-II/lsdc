@@ -3110,9 +3110,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("lowMagJpegFileNumber",1)
   setPvDesc("lowMagJpegCapture",1,wait=False)
   setPvDesc("lowMagAcquire",1,wait=False)
-  time.sleep(0.5)
-  setPvDesc("vectorGo",1)
-  vectorActiveWait()    
+  vectorWaitForGo(source="zebraCamDaq")
   vectorWait()
   if (daq_utils.beamline == "amxz"):  
     setPvDesc("zebraReset",1)      

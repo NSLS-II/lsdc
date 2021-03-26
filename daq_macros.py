@@ -2791,10 +2791,10 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     os.system(comm_s)
   time.sleep(2.0)
   if daq_utils.beamline == 'amx':
-    ednaHost = 'xf17id2-ws10'
+    ednaHost = 'xf17id1-ws10'
     ednaWrap = 'ednaWrap_amx'
   elif daq_utils.beamline == 'fmx':
-    ednaHost = 'xf17id1-ws10'
+    ednaHost = 'xf17id2-ws10'
     ednaWrap = 'ednaWrap_fmx'
   else:
     raise Exception('Unknown EDNA host')
@@ -3371,13 +3371,13 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   
 def setProcRam():
   if (daq_utils.beamline == "amx"):
-    db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id2-srv1")
-    db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id2-srv1")
+    db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id1-srv1")
+    db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id1-srv1")
     db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
     db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
   else:
-    db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws3")
-    db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws3")
+    db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws6")
+    db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws6")
     db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
     db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
     
@@ -3434,9 +3434,9 @@ def homePins():
   
 def restartEMBL():
   if (daq_utils.beamline == "amx"):      
-    os.system("ssh -q -X xf17id2-srv1 \"runEMBL\"&")
+    os.system("ssh -q -X xf17id1-srv1 \"runEMBL\"&")
   else:
-    os.system("ssh -q -X xf17id1-srv1 \"runEMBL\"&")    
+    os.system("ssh -q -X xf17id2-srv1 \"runEMBL\"&")    
 
 
 def queueCollectOn():

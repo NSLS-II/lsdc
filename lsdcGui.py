@@ -40,9 +40,10 @@ import lsdcOlog
 
 import socket
 hostname = socket.gethostname()
-if hostname == 'xf17id1-ws4' or hostname == 'xf17id2-ws2':
+ws_split = hostname.split('ws')
+if len(ws_split) > 2 and ws_split[1] == '1': #ws1 staff local
     logging_file = 'lsdcGuiLog.txt'
-elif hostname == 'xf17id1-ws2' or hostname == 'xf17id2-ws4':
+elif len(ws_split) > 2 and ws_split[1] == '3': #ws3 user remote
     user = os.environ['USER']
     logging_file = '/home/%s/lsdcGuiLog.txt' % user
 else:
@@ -4681,9 +4682,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
           if (daq_utils.beamline == "fmx"):  #TODO replace with directly getting hostname
-            os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
-          else:
             os.system("ssh -q -X xf17id2-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
+          else:
+            os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
       else:
         self.popupServerMessage("You don't have control")
           

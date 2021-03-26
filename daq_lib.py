@@ -66,6 +66,15 @@ def destroy_gui_message():
   beamline_support.pvPut(gui_popup_message_string_pv,"killMessage")
 
 
+def unlatchGov(): # Command needed for FloCos to recover robot
+  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  setPvDesc("robotGovActive",1)
+  time.sleep(0.2)
+  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+
+
 def set_field(param,val):
   var_list[param] = val
   beamline_support.pvPut(var_channel_list[param],val)
@@ -498,7 +507,7 @@ def stopDCQueue(flag):
 
 
 
-def logMxRequestParams(currentRequest):
+def logMxRequestParams(currentRequest,wait=True):
   global currentIspybDCID
   reqObj = currentRequest["request_obj"]
   transmissionReadback = getPvDesc("transmissionRBV")
@@ -530,7 +539,9 @@ def logMxRequestParams(currentRequest):
   logfile.close()
   visitName = daq_utils.getVisitName()
   try: #I'm worried about unforseen ispyb db errors
-    time.sleep(getBlConfig(ISPYB_RESULT_ENTRY_DELAY))
+    #rasters results are entered in ispyb by the GUI, no need to wait
+    if wait:
+      time.sleep(getBlConfig(ISPYB_RESULT_ENTRY_DELAY))
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
   except Exception as e:
     currentIspybDCID = 999999
@@ -707,7 +718,9 @@ def collectData(currentRequest):
       beamline_lib.mvaDescriptor("omega",sweep_start)
       imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
-    if (logMe):
+    if (logMe) and prot == 'raster':
+      logMxRequestParams(currentRequest,wait=False)
+    elif (logMe):
       logMxRequestParams(currentRequest)
   except TypeError:
     logger.error("caught type error in logging")

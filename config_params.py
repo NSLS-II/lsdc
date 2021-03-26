@@ -16,6 +16,7 @@ ISPYB_RESULT_ENTRY_DELAY = 'ispybResultEntryDelay'
 RASTER_LONG_SNAPSHOT_DELAY = 'rasterLongSnapshotDelay'
 RASTER_SHORT_SNAPSHOT_DELAY = 'rasterShortSnapshotDelay'
 RASTER_POST_SNAPSHOT_DELAY = 'rasterPostSnapshotDelay'
+RASTER_GUI_XREC_FILL_DELAY = 'rasterGuiXrecFillDelay'
 
 # governor transition gain/exposure times
 LOW_MAG_GAIN_DA = 'lowMagGainDA'

@@ -704,12 +704,12 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         colRangeLabel = QtWidgets.QLabel('Oscillation Width:')
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_range_ledit = QtWidgets.QLineEdit() # note, this is for rastering! same name used for data collections
-        self.osc_range_ledit.setText(str(getBlConfig("rasterDefaultWidth")))
+        self.setGuiValues({'osc_range':getBlConfig("rasterDefaultWidth")})
         self.osc_range_ledit.returnPressed.connect(self.screenDefaultsOKCB)                        
         colExptimeLabel = QtWidgets.QLabel('ExposureTime:')
         colExptimeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.exp_time_ledit = QtWidgets.QLineEdit()
-        self.exp_time_ledit.setText(str(getBlConfig("rasterDefaultTime")))
+        self.setGuiValues({'exp_time':getBlConfig("rasterDefaultTime")})
         self.exp_time_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
         self.exp_time_ledit.setValidator(QtGui.QDoubleValidator(VALID_EXP_TIMES[daq_utils.beamline]['min'], VALID_EXP_TIMES[daq_utils.beamline]['max'], VALID_EXP_TIMES[daq_utils.beamline]['digits']))
         self.exp_time_ledit.textChanged.connect(self.checkEntryState)
@@ -717,7 +717,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         colTransLabel = QtWidgets.QLabel('Transmission (0.0-1.0):')
         colTransLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.trans_ledit = QtWidgets.QLineEdit()
-        self.trans_ledit.setText(str(getBlConfig("rasterDefaultTrans")))
+        self.setGuiValues({'transmission':getBlConfig("rasterDefaultTrans")})
         self.trans_ledit.returnPressed.connect(self.screenDefaultsOKCB)                
         hBoxColParams2.addWidget(colRangeLabel)
         hBoxColParams2.addWidget(self.osc_range_ledit)
@@ -839,6 +839,18 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxColParams1.addWidget(reprocessRasterButton)                        
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
+
+    def setGuiValues(self, values):
+      for item, value in values.items():
+        logger.info('resetting %s to %s' % (item, value))
+        if item == 'osc_range':
+          self.osc_range_ledit.setText('%.3f' % float(value))
+        elif item == 'exp_time':
+          self.exp_time_ledit.setText('%.3f' % float(value))
+        elif item == 'transmission':
+          self.trans_ledit.setText('%.3f' % float(value))
+        else:
+          logger.error('setGuiValues unknown item: %s value: %s' % (item, value))
 
     def reprocessRasterRequestCB(self):
       self.parent.eraseCB()

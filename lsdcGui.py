@@ -4681,10 +4681,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerSample.start(0)            
         self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
-          if (daq_utils.beamline == "fmx"):  #TODO replace with directly getting hostname
-            os.system("ssh -q -X xf17id2-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
+          if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
+            os.system(f"ssh -q -X {getBlConfig('hostnameBase')}-lsdcserver \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
           else:
-            os.system("ssh -q -X xf17id1-ca1 \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
+            logger.error('Not restarting server - unknown beamline')
       else:
         self.popupServerMessage("You don't have control")
           

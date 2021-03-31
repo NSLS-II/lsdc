@@ -41,9 +41,9 @@ import lsdcOlog
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
-if len(ws_split) > 2 and ws_split[1] == '1': #ws1 staff local
+if len(ws_split) == 2 and ws_split[1] == '1': #ws1 staff local
     logging_file = 'lsdcGuiLog.txt'
-elif len(ws_split) > 2 and ws_split[1] == '3': #ws3 user remote
+elif len(ws_split) == 2 and ws_split[1] == '3': #ws3 user remote
     user = os.environ['USER']
     logging_file = '/home/%s/lsdcGuiLog.txt' % user
 else:

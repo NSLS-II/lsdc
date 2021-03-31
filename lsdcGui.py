@@ -4682,7 +4682,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
           if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
-            os.system(f"ssh -q -X {getBlConfig('hostnameBase')}-lsdcserver \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
+            os.system("ssh -q -X " + getBlConfig('hostnameBase') + "-lsdcserver \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
           else:
             logger.error('Not restarting server - unknown beamline')
       else:

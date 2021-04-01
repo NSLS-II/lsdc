@@ -1715,14 +1715,15 @@ class ControlMain(QtWidgets.QMainWindow):
       
     def initVideo2(self,frequency):
       self.captureHighMag=cv2.VideoCapture(daq_utils.highMagCamURL)
+      logger.debug('highMagCamURL: "' + daq_utils.highMagCamURL + '"')
 
     def initVideo4(self,frequency):
       self.captureHighMagZoom=cv2.VideoCapture(daq_utils.highMagZoomCamURL)
-      
+      logger.debug('highMagZoomCamURL: "' + daq_utils.highMagZoomCamURL + '"')
 
     def initVideo3(self,frequency):
       self.captureLowMagZoom=cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
-
+      logger.debug('lowMagZoomCamURL: "' + daq_utils.lowMagZoomCamURL + '"')
             
     def createSampleTab(self):
 
@@ -2252,6 +2253,7 @@ class ControlMain(QtWidgets.QMainWindow):
             _thread.start_new_thread(self.initVideo3,(.25,))          #this sets up lowMagDigiZoom
           if (self.zoom1FrameRatePV.get() != 0):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
+            logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         time.sleep(5) # is this needed????
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()

@@ -4,7 +4,8 @@ import os
 
 fname1 = sys.argv[1]
 fname2 = sys.argv[2]
-pinAlignRootEnvVar = "/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/pinAlign/pin_align-master"
+pinAlignDir = os.environ['PINALIGNDIR']
+pinAlignRootEnvVar = pinAlignDir+"/pin_align-master"
 baseDirectory = os.environ["PWD"]
 beamline = os.environ["BEAMLINE_ID"]
 runningDir = baseDirectory + "/pinAlign"

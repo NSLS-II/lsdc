@@ -4232,7 +4232,7 @@ class ControlMain(QtWidgets.QMainWindow):
         return 
       retval,self.readframe = self.capture.read()
       if self.readframe is None:
-        logger.warning('no frame read from stream URL - ensure the URL does not end with newline')
+        logger.warning('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
         return #maybe stop the timer also???
       self.currentFrame = cv2.cvtColor(self.readframe,cv2.COLOR_BGR2RGB)
       height,width=self.currentFrame.shape[:2]

@@ -4213,7 +4213,7 @@ class ControlMain(QtWidgets.QMainWindow):
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchCorner.setPixmap(pixmap_orig)        
       except Exception as e:
-        logger.error('Exception during hutch corner cam handling: %s' % e)
+        logger.error('Exception during hutch corner cam handling: %s URL: %s' % (e, getBlConfig('hutchCornerCamURL')))
       try:
         file = BytesIO(urllib.request.urlopen(getBlConfig("hutchTopCamURL")).read())
         img = Image.open(file)
@@ -4221,7 +4221,7 @@ class ControlMain(QtWidgets.QMainWindow):
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchTop.setPixmap(pixmap_orig)
       except Exception as e:
-        logger.error('Exception during hutch top cam handling: %s' % e)
+        logger.error('Exception during hutch top cam handling: %s URL: %s' % (e, getBlConfig('hutchTopCamURL')))
       
 
     def timerSampleRefresh(self):

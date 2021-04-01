@@ -5194,7 +5194,7 @@ class ControlMain(QtWidgets.QMainWindow):
         fileMenu.addAction(self.staffAction)                
         fileMenu.addAction(exitAction)
         self.setGeometry(300, 300, 1550, 1000) #width and height here. 
-        self.setWindowTitle('LSDC')    
+        self.setWindowTitle('LSDC on %s' % daq_utils.beamline)
         self.show()
 
     def popStaffDialogCB(self):

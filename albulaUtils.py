@@ -2,6 +2,9 @@ try:
   import dectris.albula
 except ImportError as e:
   print('albula library import error: %s' %e)
+import logging
+logger = logging.getLogger(__name__)
+logger.info('reading albulaUtils')
 from functools import singledispatch
 from time import sleep
 global albulaFrame, albulaSubFrame, currentMasterH5
@@ -63,6 +66,7 @@ def _albulaDispFile(filename):
         albulaFrame.disableClose()
         albulaSubFrame = albulaFrame.openSubFrame()
     try:
+        logger.info('loading file %s'% filename)
         albulaSubFrame.loadFile(filename)
         currentMasterH5 = ""
     except dectris.albula.DNoObject:
@@ -76,15 +80,18 @@ def _albulaDispFile(filename):
     global albulaFrame,albulaSubFrame,currentMasterH5,imgSeries
 
     if (albulaFrame == None or albulaSubFrame == None):
+        logger.debug('starting up albula')
         albulaFrame = dectris.albula.openMainFrame()
         albulaFrame.disableClose()
         albulaSubFrame = albulaFrame.openSubFrame()
 
     try:
         if not (currentMasterH5 == filename[0]):
+            logger.info('reading file: %s' % filename[0])
             albulaSubFrame.loadFile(filename[0])
             imgSeries = dectris.albula.DImageSeries(filename[0])
             currentMasterH5 = filename[0]
+        logger.debug('reading image number %s' % filename[1])
         albulaSubFrame.loadImage(imgSeries[filename[1]])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()

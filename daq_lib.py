@@ -581,6 +581,7 @@ def collectData(currentRequest):
     
   status = 1
   if not (os.path.isdir(data_directory_name)):
+    logger.debug(f'creating {data_directory_name}')
     comm_s = "mkdir -p " + data_directory_name
     os.system(comm_s)
     comm_s = "chmod 777 " + data_directory_name
@@ -589,8 +590,10 @@ def collectData(currentRequest):
     os.system(comm_s)
     comm_s = "chmod 777 " + jpegDirectory
     os.system(comm_s)
+  logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
+  logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
   currentRequest['request_obj']['xbeam'] = getPvDesc('beamCenterX')
   currentRequest['request_obj']['ybeam'] = getPvDesc('beamCenterY')
@@ -752,7 +755,7 @@ def collectData(currentRequest):
           comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + file_prefix + " " + str(seqNum) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
         else:
           comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-        logger.info(comm_s)
+        logger.info(f'Running fastdp command: {comm_s}')
         if (daq_utils.beamline == "amx"):                                            
           visitName = daq_utils.getVisitName()
           if (not os.path.exists(visitName + "/fast_dp_dir")):

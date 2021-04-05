@@ -2196,13 +2196,6 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxMainColLayout.addWidget(self.dataPathGB)
         vBoxMainColLayout.addLayout(hBoxDisplayOptionLayout)
         self.mainColFrame.setLayout(vBoxMainColLayout)
-        self.EScanToolFrame = QFrame()
-        vBoxEScanTool = QtWidgets.QVBoxLayout()
-        self.periodicTableTool = QPeriodicTable(butSize=20)
-        self.EScanDataPathGBTool = DataLocInfo(self)
-        vBoxEScanTool.addWidget(self.periodicTableTool)
-        vBoxEScanTool.addWidget(self.EScanDataPathGBTool)
-        self.EScanToolFrame.setLayout(vBoxEScanTool)
         self.mainToolBox.addItem(self.mainColFrame,"Collection Parameters")        
         editSampleButton = QtWidgets.QPushButton("Apply Changes") 
         editSampleButton.clicked.connect(self.editSelectedRequestsCB)
@@ -4403,8 +4396,6 @@ class ControlMain(QtWidgets.QMainWindow):
         if (len(indexes)>1):
           self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
           self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
-          self.EScanDataPathGBTool.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
-          self.EScanDataPathGBTool.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
           self.EScanDataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
           self.EScanDataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
         if (itemDataType != "container"):
@@ -4437,30 +4428,6 @@ class ControlMain(QtWidgets.QMainWindow):
       if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
         self.popupServerMessage("Osc range less than Osc width")
         return
-      if (self.periodicTableTool.isVisible()): #this one is for periodicTableTool, the other block is periodicTable, 6/17 - we don't use tool anymore
-        if (self.periodicTableTool.eltCurrent != None):
-          symbol = self.periodicTableTool.eltCurrent.symbol
-          targetEdge = element_info[symbol][2]
-          targetEnergy = Elements.Element[symbol]["binding"][targetEdge]
-          colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
-          sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
-          runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
-          (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])
-          reqObj = get_request_object_escan(colRequest["request_obj"], self.periodicTable.eltCurrent.symbol, runNum, self.EScanDataPathGBTool.prefix_ledit.text(),
-                                            self.EScanDataPathGBTool.base_path_ledit.text(), sampleName, containerID, samplePositionInContainer,
-                                            self.EScanDataPathGBTool.file_numstart_ledit.text(), self.exp_time_ledit.text(), targetEnergy, self.escan_steps_ledit.text(),
-                                            self.escan_stepsize_ledit.text())
-          colRequest["request_obj"] = reqObj
-          newSampleRequestID = db_lib.addRequesttoSample(self.selectedSampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=daq_utils.getProposalID())
-#attempt here to select a newly created request.        
-          self.SelectedItemData = newSampleRequestID
-          newSampleRequest = db_lib.getRequestByID(newSampleRequestID)
-          
-          if (selectedSampleID == None): #this is a temp kludge to see if this is called from addAll
-            self.treeChanged_pv.put(1)
-        else:
-          logger.info("choose an element and try again")
-        return          
 
       if (self.periodicTable.isVisible()):
         if (self.periodicTable.eltCurrent != None):
@@ -4961,10 +4928,6 @@ class ControlMain(QtWidgets.QMainWindow):
           self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
           self.dataPathGB.setBasePath_ledit(reqObj["basePath"])
           self.dataPathGB.setDataPath_ledit(reqObj["directory"])
-          self.EScanDataPathGBTool.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
-          self.EScanDataPathGBTool.setBasePath_ledit(reqObj["basePath"])
-          self.EScanDataPathGBTool.setDataPath_ledit(reqObj["directory"])
-          self.EScanDataPathGBTool.setFileNumstart_ledit(str(reqObj["file_number_start"]))          
           self.EScanDataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
           self.EScanDataPathGB.setBasePath_ledit(reqObj["basePath"])
           self.EScanDataPathGB.setDataPath_ledit(reqObj["directory"])
@@ -4983,10 +4946,6 @@ class ControlMain(QtWidgets.QMainWindow):
           self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
           self.dataPathGB.setBasePath_ledit(reqObj["basePath"])
           self.dataPathGB.setDataPath_ledit(reqObj["directory"])
-          self.EScanDataPathGBTool.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
-          self.EScanDataPathGBTool.setBasePath_ledit(reqObj["basePath"])
-          self.EScanDataPathGBTool.setDataPath_ledit(reqObj["directory"])
-          self.EScanDataPathGBTool.setFileNumstart_ledit(str(reqObj["file_number_start"]))          
           self.EScanDataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))          
           self.EScanDataPathGB.setBasePath_ledit(reqObj["basePath"])
           self.EScanDataPathGB.setDataPath_ledit(reqObj["directory"])

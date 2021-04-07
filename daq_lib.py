@@ -175,12 +175,6 @@ def close_shutter():
   lib_close_shutter()
   set_field("state","Idle")
   
-def open_shutter2():
-  lib_open_shutter2()
-
-def close_shutter2():
-  lib_close_shutter2()
-  
 def init_diffractometer():
   lib_init_diffractometer()
 

@@ -45,12 +45,12 @@ if len(ws_split) == 2 and ws_split[1] == '1': #ws1 staff local
     logging_file = 'lsdcGuiLog.txt'
 elif len(ws_split) == 2 and ws_split[1] == '3': #ws3 user remote
     user = os.environ['USER']
-    logging_file = '/home/%s/lsdcGuiLog.txt' % user
+    logging_file = '/nsls2/users/%s/lsdcGuiLog.txt' % user
     print('LSDC GUI log file is in the home directory %s' % logging_file)
 else:
     print('lsdcGui not being run on one of the "normal" workstations. log going into home directory of current user')
     user = os.environ['USER']
-    logging_file = '/home/%s/lsdcGuiLog.txt' % user
+    logging_file = '/nsls2/users/%s/lsdcGuiLog.txt' % user
 import logging
 from logging import handlers
 logger = logging.getLogger()

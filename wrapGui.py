@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc_dev/bin/python
+#!/opt/conda_envs/lsdcServer_2020-1.0/bin/python
 """
 If lsdcGui is stopped abnormally, restart it!
 """

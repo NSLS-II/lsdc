@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc_dev3/bin/ipython -i
+#!/opt/conda_envs/lsdcServer_2020-1.0/bin/ipython -i
 # import asyncio
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)

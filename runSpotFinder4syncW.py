@@ -29,7 +29,6 @@ range_degrees = abs(sweep_end-sweep_start)
 numimages = round(range_degrees/img_width)
 numstart = reqObj["file_number_start"]
 
-cbfComm = getBlConfig("cbfComm")
 dialsComm = getBlConfig("dialsComm")
 dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
 dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
@@ -46,19 +45,10 @@ else:
   resoParams = ""
 dialsCommWithParams = dialsComm + resoParams + iceRingParams
 print(dialsCommWithParams)
-hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
-hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"  
 for i in range (numstart,numimages,10):
-  comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(i) + ":" + str(i) + " " + CBF_conversion_pattern + ">>/dev/null 2>&1\""   
+  comm_s = f"ssh -q {node} eiger2cbf.sh {request_id} {i} {i} {seqNum}"   
   os.system(comm_s)
-CBFpattern = CBF_conversion_pattern + "*.cbf"
 
-time.sleep(1.0)
-comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
-lsOut = os.system(comm_s)
-comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + "|" + dialsCommWithParams + "\""
-print(comm_s)
 retry = 3
 localDialsResultDict = {}
 while(1):

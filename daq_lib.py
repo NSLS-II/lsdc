@@ -649,17 +649,8 @@ def collectData(currentRequest):
         else:
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
         seqNum = int(detector_get_seqnum())         
-        cbfComm = getBlConfig("cbfComm")
-        cbfDir = data_directory_name+"/cbf"
-        comm_s = "mkdir -p " + cbfDir
-        os.system(comm_s)
-        hdfSampleDataPattern = data_directory_name+"/"+file_prefix+"_" 
-        hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-        CBF_conversion_pattern = cbfDir + "/" + file_prefix+"_" + str(int(sweep_start))+".cbf"  
-        startIndex=1
-        endIndex = 1
-        node = getBlConfig("spotNode1")        
-        comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\"&" 
+        node = getBlConfig("spotNode1")
+        comm_s = f'ssh -q {node} eiger2cbf.sh {currentRequest["uid"]} 1 1 {seqNum}'
         logger.info(comm_s)
         os.system(comm_s)
           

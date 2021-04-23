@@ -656,7 +656,6 @@ def collectData(currentRequest):
         hdfSampleDataPattern = data_directory_name+"/"+file_prefix+"_" 
         hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
         CBF_conversion_pattern = cbfDir + "/" + file_prefix+"_" + str(int(sweep_start))+".cbf"  
-        comm_s = "eiger2cbf-linux " + hdfRowFilepattern
         startIndex=1
         endIndex = 1
         node = getBlConfig("spotNode1")        

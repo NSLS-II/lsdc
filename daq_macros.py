@@ -889,7 +889,6 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
     hdfSampleDataPattern = directory+"/"+prefix+"_" 
     hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
     CBF_conversion_pattern = cbfDir + "/" + prefix+"_" + str(rowIndex)+"_"  
-    comm_s = "eiger2cbf-linux " + hdfRowFilepattern
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
     comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only

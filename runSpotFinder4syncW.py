@@ -49,7 +49,6 @@ print(dialsCommWithParams)
 hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
 hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
 CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"  
-comm_s = "eiger2cbf-linux " + hdfRowFilepattern
 for i in range (numstart,numimages,10):
   comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(i) + ":" + str(i) + " " + CBF_conversion_pattern + ">>/dev/null 2>&1\""   
   os.system(comm_s)

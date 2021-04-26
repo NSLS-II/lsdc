@@ -192,7 +192,6 @@ def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,
 def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None): #xmlfilename for fastDP
 #keep in mind that request type can be standard and result type be fastDP - multiple results per req.
 
- cbfComm = db_lib.getBeamlineConfigParam(beamline,"cbfComm")
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
@@ -224,18 +223,15 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
      logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
-     seqNum = int(detSeqNumPV.get())          
-     hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
-     hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
      
-# keep in mind I could do the jpeg conversion here, but maybe best to allow synchWeb on demand.
-     cbfDir = directory
-     CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"
-     JPEG_conversion_pattern = fullJpegDirectory + "/" + filePrefix+"_"
+     seqNum = int(detSeqNumPV.get())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
-     adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
-     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
-     logger.info('diffraction thumbnail image: %s' % comm_s)
+     collection_id = result['uid']
+     comm_s = "ssh -q {node} eiger2cbf.sh {collection_id} 1 1 {seqNum}"
+     logger.info(f'diffraction thumbnail conversion to cbf: {comm_s}')
+     os.system(comm_s)
+     comm_s = "ssh -q {node} cbf2jpeg.sh {collection_id}"
+     logger.info(f'diffraction thumbnail conversion to jpeg: {comm_s}')
      os.system(comm_s)
      # Create a new data collection group entry:
      params = mxacquisition.get_data_collection_group_params()

@@ -2723,6 +2723,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
   logger.info("skinner about to take reference images.")
+  dna_image_info = {}
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
     logger.info("skinner prefix7 = " + prefix[0:7] +  " " + str(start_image_number) + "\n")
     if (len(prefix)> 8):
@@ -2743,6 +2744,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
     filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"
+    dna_image_info[seqNum] = {'uuid': charRequest["id"], 'seqNum': seqNum}
     
     dna_filename_list.append(filename)
     picture_taken = 1
@@ -2766,17 +2768,13 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   flux = getPvDesc("sampleFlux")    
 
 
-  cbfComm = getBlConfig("cbfComm")
   node = getBlConfig("spotNode1")          
   cbfList = []
   logger.info(dna_filename_list)
-  for i in range (0,len(dna_filename_list)):
-    hdfRowFilepattern = dna_filename_list[i]
-    CBF_conversion_pattern = dna_filename_list[i][0:len(dna_filename_list[i])-10]+"_"
-    cbfList.append(CBF_conversion_pattern+"000001.cbf")
-    startIndex=1
-    endIndex = 1
-    comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\"&" 
+  for info in dna_image_info.items():
+    seq_num = info['seq_num']
+    uuid = info['uuid']
+    comm_s = f"ssh -q {node} eiger2cbf.sh {uuid} 1 1 0 {seq_num}" 
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)

@@ -46,7 +46,7 @@ else:
 dialsCommWithParams = dialsComm + resoParams + iceRingParams
 print(dialsCommWithParams)
 for i in range (numstart,numimages,10):
-  comm_s = f"ssh -q {node} eiger2cbf.sh {request_id} {i} {i} {seqNum}"   
+  comm_s = f"ssh -q {node} eiger2cbf.sh {request_id} {i} {i} 0 {seqNum}"   
   os.system(comm_s)
 
 retry = 3

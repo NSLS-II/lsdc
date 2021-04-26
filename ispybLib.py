@@ -227,7 +227,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      seqNum = int(detSeqNumPV.get())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
      collection_id = result['uid']
-     comm_s = "ssh -q {node} eiger2cbf.sh {collection_id} 1 1 {seqNum}"
+     comm_s = "ssh -q {node} eiger2cbf.sh {collection_id} 1 1 0 {seqNum}"
      logger.info(f'diffraction thumbnail conversion to cbf: {comm_s}')
      os.system(comm_s)
      comm_s = "ssh -q {node} cbf2jpeg.sh {collection_id}"

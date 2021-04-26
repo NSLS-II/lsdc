@@ -650,7 +650,7 @@ def collectData(currentRequest):
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
         seqNum = int(detector_get_seqnum())         
         node = getBlConfig("spotNode1")
-        comm_s = f'ssh -q {node} eiger2cbf.sh {currentRequest["uid"]} 1 1 {seqNum}'
+        comm_s = f'ssh -q {node} eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}'
         logger.info(comm_s)
         os.system(comm_s)
           

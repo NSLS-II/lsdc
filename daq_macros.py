@@ -837,7 +837,6 @@ def runDozorThread(directory,
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount
   time.sleep(1.0)
-  cbfComm = getBlConfig("cbfComm")
   dialsComm = getBlConfig("dialsComm")
   dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
   dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
@@ -883,23 +882,15 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   else:
     node = getBlConfig("spotNode8")  
   if (seqNum>-1): #eiger
-    cbfDir = directory+"/cbf"
-    comm_s = "mkdir -p " + cbfDir
-    os.system(comm_s)
-    hdfSampleDataPattern = directory+"/"+prefix+"_" 
-    hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-    CBF_conversion_pattern = cbfDir + "/" + prefix+"_" + str(rowIndex)+"_"  
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
-    comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only
+    comm_s = f"ssh -q {node} eiger2cbf.sh {startIndex} {endIndex} {rowIndex} {seqNum}"
     logger.info('eiger2cbf command: %s' % comm_s)
     os.system(comm_s)
     CBFpattern = CBF_conversion_pattern + "*.cbf"
   else:
     CBFpattern = directory + "/cbf/" + prefix+"_" + str(rowIndex) + "_" + "*.cbf"
   time.sleep(1.0)
-  comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
-  lsOut = os.system(comm_s)
   comm_s = "ssh -q " + node + " \"ls " + CBFpattern + "|" + dialsCommWithParams + "\""  
   logger.info('checking for results on remote node: %s' % comm_s)
   retry = 3

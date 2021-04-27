@@ -23,7 +23,6 @@ runningDir = directory+"/fastDPOutput"
 comm_s = "mkdir -p " + runningDir
 os.system(comm_s)
 os.chdir(runningDir) #maybe not needed
-filePrefix = sys.argv[2]
 numstart = int(float(sys.argv[3]))
 request_id = sys.argv[5]
 request=db_lib.getRequestByID(request_id) #add another argument false to allow finished requests to be retrieved for testing
@@ -33,15 +32,11 @@ node = sys.argv[7]
 runDimple = int(sys.argv[8])
 dimpleNode = sys.argv[9]
 ispybDCID = int(sys.argv[10])
-expectedFilenameList = []
-timeoutLimit = 600 #for now
-prefix_long = directory+"/"+filePrefix+"_"+str(numstart)
-hdfFilepattern = prefix_long+"_master.h5"
-fastdpComm = ";source " + os.environ["PROJDIR"] + "wrappers/fastDPWrap2;" + getBlConfig("fastdpComm")
-dimpleComm = getBlConfig("dimpleComm")  
-comm_s = "ssh  -q " + node + " \"cd " + runningDir + fastdpComm + hdfFilepattern  + "\""
+
+comm_s = f"ssh -q {node} fast_dp.sh {request_id} {numstart}"
 logger.info(comm_s)
 os.system(comm_s)
+
 fastDPResultFile = runningDir+"/fast_dp.xml"
 fd = open(fastDPResultFile)
 resultObj = xmltodict.parse(fd.read())
@@ -72,6 +67,8 @@ if (runDimple):
   comm_s = "mkdir -p " + dimpleRunningDir
   os.system(comm_s)
   os.chdir(dimpleRunningDir)
+
+  dimpleComm = getBlConfig("dimpleComm")
   comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";" + dimpleComm + " " + runningDir + "/fast_dp.mtz " + baseDirectory + "/" + modelPDBname + " " + dimpleRunningDir + "\""  
   logger.info(comm_s)
   logger.info("running dimple")

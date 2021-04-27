@@ -884,7 +884,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   if (seqNum>-1): #eiger
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
-    comm_s = f"ssh -q {node} {os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {startIndex} {endIndex} {rowIndex} {seqNum}"
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {startIndex} {endIndex} {rowIndex} {seqNum}\""
     logger.info('eiger2cbf command: %s' % comm_s)
     os.system(comm_s)
     CBFpattern = CBF_conversion_pattern + "*.cbf"
@@ -2774,7 +2774,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   for info in dna_image_info.items():
     seq_num = info['seq_num']
     uuid = info['uuid']
-    comm_s = f"ssh -q {node} {os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {uuid} 1 1 0 {seq_num}" 
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {uuid} 1 1 0 {seq_num}\""
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)

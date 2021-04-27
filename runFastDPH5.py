@@ -33,7 +33,7 @@ runDimple = int(sys.argv[6])
 dimpleNode = sys.argv[7]
 ispybDCID = int(sys.argv[8])
 
-comm_s = f"ssh -q {node} {os.environ['MXPROCESSINGSCRIPTSDIR']}fast_dp.sh {request_id} {numstart}"
+comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}fast_dp.sh {request_id} {numstart}\""
 logger.info(comm_s)
 os.system(comm_s)
 

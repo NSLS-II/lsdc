@@ -52,29 +52,7 @@ except Exception as e:
 if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):
-  logger.info('run dimple selected')
-  sampleID = request["sample"]
-  sample = db_lib.getSampleByID(sampleID)
-  try:
-    modelFilename = sample["model"]
-    if (modelFilename == 'nan'):
-      modelPDBname = "model.pdb"
-    else:
-      modelPDBname = modelFilename + ".pdb"
-  except KeyError:
-      modelPDBname = "model.pdb"    
-  dimpleRunningDir = directory+"/dimpleOutput"
-  comm_s = "mkdir -p " + dimpleRunningDir
-  os.system(comm_s)
-  os.chdir(dimpleRunningDir)
-
   dimpleComm = getBlConfig("dimpleComm")
-  comm_s = "ssh  -q " + dimpleNode + " \"cd " + dimpleRunningDir +";" + dimpleComm + " " + runningDir + "/fast_dp.mtz " + baseDirectory + "/" + modelPDBname + " " + dimpleRunningDir + "\""  
-  logger.info(comm_s)
-  logger.info("running dimple")
+  comm_s = f"ssh -q {dimpleNode} \"dimple.sh {request_id} {numstart}\""  
+  logger.info(f"running dimple: {comm_s}")
   os.system(comm_s)
-
-
-
-
-

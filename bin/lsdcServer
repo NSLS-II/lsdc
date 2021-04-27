@@ -1,1 +1,1 @@
-script -a -c lsdcServerPI_Merge.cmd -f lsdcServerLog.txt
+script -a -c lsdcServer.cmd -f lsdcServerLog.txt

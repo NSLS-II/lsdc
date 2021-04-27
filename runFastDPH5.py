@@ -19,16 +19,12 @@ except Exception as e:
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
-cbfDir = directory+"/cbf"
-comm_s = "mkdir -p " + cbfDir
-os.system(comm_s)
 runningDir = directory+"/fastDPOutput"
 comm_s = "mkdir -p " + runningDir
 os.system(comm_s)
 os.chdir(runningDir) #maybe not needed
 filePrefix = sys.argv[2]
 numstart = int(float(sys.argv[3]))
-numimages = int(sys.argv[4])
 request_id = sys.argv[5]
 request=db_lib.getRequestByID(request_id) #add another argument false to allow finished requests to be retrieved for testing
 owner=request["owner"]
@@ -41,7 +37,6 @@ expectedFilenameList = []
 timeoutLimit = 600 #for now
 prefix_long = directory+"/"+filePrefix+"_"+str(numstart)
 hdfFilepattern = prefix_long+"_master.h5"
-CBF_conversion_pattern = cbfDir + "/"+filePrefix + "_"
 fastdpComm = ";source " + os.environ["PROJDIR"] + "wrappers/fastDPWrap2;" + getBlConfig("fastdpComm")
 dimpleComm = getBlConfig("dimpleComm")  
 comm_s = "ssh  -q " + node + " \"cd " + runningDir + fastdpComm + hdfFilepattern  + "\""

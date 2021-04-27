@@ -23,15 +23,15 @@ runningDir = directory+"/fastDPOutput"
 comm_s = "mkdir -p " + runningDir
 os.system(comm_s)
 os.chdir(runningDir) #maybe not needed
-numstart = int(float(sys.argv[3]))
-request_id = sys.argv[5]
+numstart = int(float(sys.argv[2]))
+request_id = sys.argv[3]
 request=db_lib.getRequestByID(request_id) #add another argument false to allow finished requests to be retrieved for testing
 owner=request["owner"]
-runFastEP = int(sys.argv[6])
-node = sys.argv[7]
-runDimple = int(sys.argv[8])
-dimpleNode = sys.argv[9]
-ispybDCID = int(sys.argv[10])
+runFastEP = int(sys.argv[4])
+node = sys.argv[5]
+runDimple = int(sys.argv[6])
+dimpleNode = sys.argv[7]
+ispybDCID = int(sys.argv[8])
 
 comm_s = f"ssh -q {node} fast_dp.sh {request_id} {numstart}"
 logger.info(comm_s)

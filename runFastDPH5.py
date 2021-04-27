@@ -33,7 +33,7 @@ runDimple = int(sys.argv[6])
 dimpleNode = sys.argv[7]
 ispybDCID = int(sys.argv[8])
 
-comm_s = f"ssh -q {node} fast_dp.sh {request_id} {numstart}"
+comm_s = f"ssh -q {node} {os.environ['MXPROCESSINGSCRIPTSDIR']}fast_dp.sh {request_id} {numstart}"
 logger.info(comm_s)
 os.system(comm_s)
 
@@ -53,6 +53,6 @@ if (runFastEP):
   os.system("fast_ep") #looks very bad! running on ca1!
 if (runDimple):
   dimpleComm = getBlConfig("dimpleComm")
-  comm_s = f"ssh -q {dimpleNode} \"dimple.sh {request_id} {numstart}\""  
+  comm_s = f"ssh -q {dimpleNode} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dimple.sh {request_id} {numstart}\""  
   logger.info(f"running dimple: {comm_s}")
   os.system(comm_s)

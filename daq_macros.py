@@ -765,7 +765,8 @@ def runDozorThread(directory,
                    rowIndex,
                    rowCellCount,
                    seqNum,
-                   rasterReqObj):
+                   rasterReqObj,
+                   rasterReqID):
     """Creates sub-directory that contains dozor input and output files
     that result from master.h5 file in directory. Dozor executed via
     ssh on remote node(s).
@@ -783,6 +784,8 @@ def runDozorThread(directory,
     rasterReqObj: dict
         contains experimental metadata, used for setting detector dist and
         beam center for dozor input files
+    rasterReqID: str
+        ID of raster collection
     """
     global rasterRowResultsList,processedRasterRowCount
 
@@ -802,10 +805,7 @@ def runDozorThread(directory,
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q {} \"cd {};{} -w -bin 1 h5_row_{}.dat\"".format(node,
-                                                                     dozorRowDir,
-                                                                     dozorComm,
-                                                                     rowIndex)
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dozor.sh {rasterReqID} {rowIndex}\""
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
@@ -1518,7 +1518,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                                           i,
                                                           numsteps,
                                                           seqNum,
-                                                          reqObj))
+                                                          reqObj,
+                                                          rasterReqID))
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
 

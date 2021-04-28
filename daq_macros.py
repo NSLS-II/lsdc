@@ -789,22 +789,7 @@ def runDozorThread(directory,
     time.sleep(0.5) #allow for file writing
     dozorComm = "/usr/local/crys-local/dozor-10Aug2020/dozor"
      
-    if ((rowIndex % 8) == 1):
-        node = getBlConfig("spotNode1")
-    elif ((rowIndex % 8) == 2):
-        node = getBlConfig("spotNode2")
-    elif ((rowIndex % 8) == 3):
-        node = getBlConfig("spotNode3")
-    elif ((rowIndex % 8) == 4):
-        node = getBlConfig("spotNode4")
-    elif ((rowIndex % 8) == 5): 
-        node = getBlConfig("spotNode5")
-    elif ((rowIndex % 8) == 6): 
-        node = getBlConfig("spotNode6")
-    elif ((rowIndex % 8) == 7): 
-        node = getBlConfig("spotNode7")
-    else:
-        node = getBlConfig("spotNode8")
+    node = getNodeName("spot", rowIndex, 8)
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -865,22 +850,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   else:
     dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams
   logger.info('dials spotfinder command: %s' % dialsCommWithParams)
-  if (rowIndex%8 == 0):
-    node = getBlConfig("spotNode1")
-  elif (rowIndex%8 == 1):
-    node = getBlConfig("spotNode2")
-  elif (rowIndex%8 == 2):
-    node = getBlConfig("spotNode3")
-  elif (rowIndex%8 == 3):
-    node = getBlConfig("spotNode4")
-  elif (rowIndex%8 == 4):
-    node = getBlConfig("spotNode5")
-  elif (rowIndex%8 == 5):
-    node = getBlConfig("spotNode6")
-  elif (rowIndex%8 == 6):
-    node = getBlConfig("spotNode7")
-  else:
-    node = getBlConfig("spotNode8")  
+  node = getNodeName("spot", rowIndex, 8)
   if (seqNum>-1): #eiger
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
@@ -1046,6 +1016,10 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
   rasterResult = db_lib.getResult(rasterResultID)
   return rasterResult
 
+def getNodeName(node_type, row_index, num_nodes=8): #calculate node name based on row index
+    node_number = row_index % num_nodes + 1
+    node_config_name = f'{node_type}Node{node_number}')
+    return getBlConfig(node_config_name)
 
 def snakeRaster(rasterReqID,grain=""):
   scannerType = getBlConfig("scannerType")

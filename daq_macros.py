@@ -2725,11 +2725,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     os.system(comm_s)
   time.sleep(2.0)
   ednaHost = f'{getBlConfig("hostnameBase")}-fastproc'
-  if daq_utils.beamline == 'fmx' or daq_utils.beamline == 'amx':
-    ednaWrap = f'ednaWrap_{daq_utils.beamline}'
-  else:
-    raise Exception('Unknown EDNA host')
-  comm_s = "ssh -q " + ednaHost + " \"source " + os.environ["WRAPPERSDIR"] + ednaWrap + ";cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(getPvDesc("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
+  comm_s = f"ssh -q {ednaHost} \"{os.environ['MXPROCESSINGSCRIPTSDIR']edna.sh {dna_directory} {charRequest['uid']} {cbfList[0]} {cbfList[1]} {getPvDesc('transmissionRBV')*100.0)} {flux} {xbeam_size} {ybeam_size}"\""    
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")

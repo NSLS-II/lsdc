@@ -790,7 +790,6 @@ def runDozorThread(directory,
     global rasterRowResultsList,processedRasterRowCount
 
     time.sleep(0.5) #allow for file writing
-    dozorComm = "/usr/local/crys-local/dozor-10Aug2020/dozor"
      
     node = getNodeName("spot", rowIndex, 8)
 
@@ -822,34 +821,6 @@ def runDozorThread(directory,
 def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount
   time.sleep(1.0)
-  dialsComm = getBlConfig("dialsComm")
-  dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
-  dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
-  dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
-  dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)
-  dialsTuneThreshFlag = getBlConfig("rasterThreshFlag")    
-  dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
-  dialsTuneMinSpotSize = getBlConfig("rasterDefaultMinSpotSize")
-  dialsTuneThreshKern =  getBlConfig("rasterThreshKernSize")
-  dialsTuneThreshSigBck =  getBlConfig("rasterThreshSigBckrnd")
-  dialsTuneThreshSigStrong =  getBlConfig("rasterThreshSigStrong")    
-  if (dialsTuneIceRingFlag):
-    iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
-  else:
-    iceRingParams = ""
-  if (dialsTuneThreshFlag):
-    threshParams = " spotfinder.threshold.xds.kernel_size=" + str(dialsTuneThreshKern) + "," + str(dialsTuneThreshKern) + " spotfinder.threshold.xds.sigma_background=" + str(dialsTuneThreshSigBck) + " spotfinder.threshold.xds.sigma_strong=" + str(dialsTuneThreshSigStrong)
-  else:
-    threshParams = ""
-  if (dialsTuneResoFlag):
-    resoParams = " spotfinder.filter.d_min=" + str(dialsTuneHighRes) + " spotfinder.filter.d_max=" + str(dialsTuneLowRes)
-  else:
-    resoParams = ""
-  if (daq_utils.beamline == "amx"):
-    dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams + " min_spot_size=" + str(dialsTuneMinSpotSize)
-  else:
-    dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams
-  logger.info('dials spotfinder command: %s' % dialsCommWithParams)
   node = getNodeName("spot", rowIndex, 8)
   if (seqNum>-1): #eiger
     startIndex=(rowIndex*rowCellCount) + 1
@@ -861,7 +832,7 @@ def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
   else:
     CBFpattern = directory + "/cbf/" + prefix+"_" + str(rowIndex) + "_" + "*.cbf"
   time.sleep(1.0)
-  comm_s = "ssh -q " + node + " \"ls " + CBFpattern + "|" + dialsCommWithParams + "\""  
+  comm_s = "ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dials_spotfind.sh {rasterReqID} {rowIndex} {seqNum}\""
   logger.info('checking for results on remote node: %s' % comm_s)
   retry = 3
   while(1):

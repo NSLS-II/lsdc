@@ -28,10 +28,10 @@ soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
 
-def getBlConfig(param):
+def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)
 
-def setBlConfig(param, value):
+def setBlConfig(param, value, beamline=beamline):
         db_lib.setBeamlineConfigParam(beamline, param, value)
 
 def init_environment():

@@ -747,7 +747,7 @@ def collectData(currentRequest):
             os.system("cd " + visitName + ";/GPFS/CENTRAL/xf17id2/jjakoncic/Scripts/loop-fdp-dple-populate.sh&")
         os.system(comm_s)
       if (reqObj["xia2"]):
-        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} "\"&"
+        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
         os.system(comm_s)
   
   logger.info('processing should be triggered')

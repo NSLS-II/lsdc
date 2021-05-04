@@ -989,7 +989,7 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
 
 def getNodeName(node_type, row_index, num_nodes=8): #calculate node name based on row index
     node_number = row_index % num_nodes + 1
-    node_config_name = f'{node_type}Node{node_number}')
+    node_config_name = f'{node_type}Node{node_number}'
     return getBlConfig(node_config_name)
 
 def snakeRaster(rasterReqID,grain=""):

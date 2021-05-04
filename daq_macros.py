@@ -2727,7 +2727,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     os.system(comm_s)
   time.sleep(2.0)
   ednaHost = f'{getBlConfig("hostnameBase")}-fastproc'
-  comm_s = f"ssh -q {ednaHost} \"{os.environ['MXPROCESSINGSCRIPTSDIR']edna.sh {dna_directory} {charRequest['uid']} {cbfList[0]} {cbfList[1]} {getPvDesc('transmissionRBV')*100.0)} {flux} {xbeam_size} {ybeam_size}"\""    
+  comm_s = f"ssh -q {ednaHost} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}edna.sh {dna_directory} {charRequest['uid']} {cbfList[0]} {cbfList[1]} {getPvDesc('transmissionRBV')*100.0} {flux} {xbeam_size} {ybeam_size}\""
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")

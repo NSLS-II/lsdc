@@ -220,7 +220,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
-     comm_s = f"ssh -q {node} '\ {os.environ['MXPROCESSINGSCRIPTSDIR']}resize.sh {jpegImageFilename} {jpegImageThumbFilename} 40% "\"&"
+     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}resize.sh {jpegImageFilename} {jpegImageThumbFilename} 40% \"&"
      logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
      

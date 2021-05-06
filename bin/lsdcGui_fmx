@@ -5,4 +5,4 @@ export LSDCHOME=${PROJDIR}lsdc
 export PATH=/usr/local/bin:/usr/bin:/bin
 export PYTHONPATH=".:${CONFIGDIR}:/opt/dectris/albula/4.0/python:/usr/local/crys/edna-mx/mxv1/src:/usr/local/crys/edna-mx/kernel/src:${LSDCHOME}"
 source ${CONFIGDIR}daq_env.txt
-/opt/conda_envs/lsdcGui_2021-1.0/bin/python $LSDCHOME/lsdcGui.py&
+/opt/conda_envs/lsdcGui_2021-1.1/bin/python $LSDCHOME/lsdcGui.py&

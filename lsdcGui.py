@@ -1781,8 +1781,6 @@ class ControlMain(QtWidgets.QMainWindow):
         emptyQueueButton.clicked.connect(functools.partial(self.dewarTree.deleteSelectedCB,1))
         warmupButton = QtWidgets.QPushButton("Warmup Gripper")        
         warmupButton.clicked.connect(self.warmupGripperCB)
-        restartServerButton = QtWidgets.QPushButton("Restart Server")        
-        restartServerButton.clicked.connect(self.restartServerCB)
         self.openShutterButton = QtWidgets.QPushButton("Open Photon Shutter")        
         self.openShutterButton.clicked.connect(self.openPhotonShutterCB)
         self.popUserScreen = QtWidgets.QPushButton("User Screen...")
@@ -1803,7 +1801,6 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)        
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
-        vBoxTreeButtsLayoutRight.addWidget(restartServerButton)        
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutLeft)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutRight)
         vBoxDFlayout.addLayout(hBoxTreeButtsLayout)
@@ -4643,23 +4640,6 @@ class ControlMain(QtWidgets.QMainWindow):
     def parkGripperCB(self):
       self.send_to_server("parkGripper()")      
       
-    def restartServerCB(self):
-      if (self.controlEnabled()):
-        msg = "Desperation move. Are you sure?"
-        self.timerHutch.stop()
-        self.timerSample.stop()      
-        reply = QtWidgets.QMessageBox.question(self, 'Message',msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        self.timerSample.start(0)            
-        self.timerHutch.start(HUTCH_TIMER_DELAY)      
-        if reply == QtWidgets.QMessageBox.Yes:
-          if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
-            os.system("ssh -q -X " + getBlConfig('hostnameBase') + "-lsdcserver \"cd " + os.getcwd() + ";xterm -e /usr/local/bin/lsdcServer\"&")
-          else:
-            logger.error('Not restarting server - unknown beamline')
-      else:
-        self.popupServerMessage("You don't have control")
-          
-
     def openPhotonShutterCB(self):
       self.photonShutterOpen_pv.put(1)
 

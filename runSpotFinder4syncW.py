@@ -71,7 +71,10 @@ for i in range (0,len(localDialsResultDict["data"]["response"])):
   method2Res = localDialsResultDict["data"]["response"][i]['d_min_method_2']
   totalIntegratedSignal = localDialsResultDict["data"]["response"][i]['total_intensity']
   logfile.write(str(i*10) + " " + str(goodBraggCandidates)+"\n")
-  ispybLib.insertPlotResult(ispybDCID,i*10,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal)
+  try:
+    ispybLib.insertPlotResult(ispybDCID,i*10,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal)
+  except Exception as e:
+    print(f'exception during insertPlotResult:{e}')
 logfile.close()
 os.system("rm " + cbfDir + "/*.cbf")
 

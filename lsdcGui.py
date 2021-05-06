@@ -3911,7 +3911,10 @@ class ControlMain(QtWidgets.QMainWindow):
       logger.info("saving raster snapshot")
       self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
       self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
-      ispybLib.insertRasterResult(rasterReq,visitName)
+      try:
+        ispybLib.insertRasterResult(rasterReq,visitName)
+      except Exception as e:
+        logger.error(f'Exception while writing raster result: {e}')
 
 
 

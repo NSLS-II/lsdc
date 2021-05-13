@@ -2681,7 +2681,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix
     image_number = start_image_number+i
-    dna_prefix_long = dna_directory+"/"+dna_prefix
+    dna_prefix_long = f'{dna_directory}/cbf/{dna_prefix}'
     beamline_lib.mvaDescriptor("omega",float(colstart))
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
@@ -2689,10 +2689,10 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     imagesAttempted = daq_lib.collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
-    filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"
+    filename = hdfSampleDataPattern + "_master.h5"
     dna_image_info[seqNum] = {'uuid': charRequest["uid"], 'seq_num': seqNum}
     
-    dna_filename_list.append(filename)
+    dna_filename_list.append(filename) #TODO actually contains directory structure for cbf, but filename of h5
     picture_taken = 1
   edna_energy_ev = (12.3985/wave) * 1000.0
   if (daq_utils.beamline == "fmx"):   # a kludge b/c edna wants a square beam, so where making a 4x4 micron beam be the sqrt(1*1.5) for x and y on fmx
@@ -2716,7 +2716,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
 
   node = getBlConfig("spotNode1")          
   cbfList = []
-  logger.info(dna_filename_list)
+  logger.info(f'filenames for edna: {dna_filename_list}')
   for key, info in dna_image_info.items():
     seq_num = info['seq_num']
     uuid = info['uuid']

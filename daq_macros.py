@@ -2690,7 +2690,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
     filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"
-    dna_image_info[seqNum] = {'uuid': charRequest["id"], 'seq_num': seqNum}
+    dna_image_info[seqNum] = {'uuid': charRequest["uid"], 'seq_num': seqNum}
     
     dna_filename_list.append(filename)
     picture_taken = 1
@@ -2717,7 +2717,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   node = getBlConfig("spotNode1")          
   cbfList = []
   logger.info(dna_filename_list)
-  for info in dna_image_info.items():
+  for key, info in dna_image_info.items():
     seq_num = info['seq_num']
     uuid = info['uuid']
     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {uuid} 1 1 0 {seq_num}\""

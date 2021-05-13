@@ -2681,7 +2681,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix
     image_number = start_image_number+i
-    dna_prefix_long = f'{dna_directory}/cbf/{dna_prefix}'
+    dna_prefix_long = os.path.join(dna_directory, 'cbf', dna_prefix)
     beamline_lib.mvaDescriptor("omega",float(colstart))
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
@@ -2722,7 +2722,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     uuid = info['uuid']
     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {uuid} 1 1 0 {seq_num}\""
     CBF_conversion_pattern = dna_filename_list[i][0:len(dna_filename_list[i])-10]+"_"
-    cbfList.append(CBF_conversion_pattern+"000001.cbf")
+    cbfList.append(f'{CBF_conversion_pattern}{seq_num}_000001.cbf')
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)

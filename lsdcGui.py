@@ -41,9 +41,9 @@ import lsdcOlog
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
-if len(ws_split) == 2 and ws_split[1] == '1': #ws1 staff local
+if len(ws_split) == 2 and (ws_split[1] == '1' ws_split[1] == '2'): #ws1 staff local # for 2021-2 cycle, AMX ws1 and FMX ws2 are staff local
     logging_file = 'lsdcGuiLog.txt'
-elif len(ws_split) == 2 and ws_split[1] == '3': #ws3 user remote
+elif len(ws_split) == 2 and ws_split[1] == '4': #ws4 user remote as of 2021-2 cycle
     user = os.environ['USER']
     logging_file = '/nsls2/users/%s/lsdcGuiLog.txt' % user
     print('LSDC GUI log file is in the home directory %s' % logging_file)

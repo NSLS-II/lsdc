@@ -818,21 +818,23 @@ def runDozorThread(directory,
                                                        pathToMasterH5)
     return
 
-def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
+def runDialsThread(requestID, directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount
   time.sleep(1.0)
   node = getNodeName("spot", rowIndex, 8)
   if (seqNum>-1): #eiger
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
-    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {startIndex} {endIndex} {rowIndex} {seqNum}\""
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {requestID} {startIndex} {endIndex} {rowIndex} {seqNum}\""
     logger.info('eiger2cbf command: %s' % comm_s)
     os.system(comm_s)
+    cbfDir = os.path.join(directory, "cbf")
+    CBF_conversion_pattern = os.path.join(cbfDir, f'{prefix}_{rowIndex}_')
     CBFpattern = CBF_conversion_pattern + "*.cbf"
   else:
     CBFpattern = directory + "/cbf/" + prefix+"_" + str(rowIndex) + "_" + "*.cbf"
   time.sleep(1.0)
-  comm_s = "ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dials_spotfind.sh {rasterReqID} {rowIndex} {seqNum}\""
+  comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dials_spotfind.sh {requestID} {rowIndex} {seqNum}\""
   logger.info('checking for results on remote node: %s' % comm_s)
   retry = 3
   while(1):
@@ -1100,7 +1102,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
         rasterEncoderMap[dataFileName[:-4]] = {"x":rasterRowEncoderVals["x"][j],"y":rasterRowEncoderVals["y"][j],"z":rasterRowEncoderVals["z"][j],"omega":rasterRowEncoderVals["omega"][j]}
     seqNum = int(det_lib.detector_get_seqnum())
     for i in range(len(rasterDef["rowDefs"])):  
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
+      _thread.start_new_thread(runDialsThread,(rasterRequest["uid"], data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
   else:
     rasterRequestID = rasterRequest["uid"]
     db_lib.updateRequest(rasterRequest)    
@@ -1312,7 +1314,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
     zebraWait()
     seqNum = int(det_lib.detector_get_seqnum())
     if (procFlag):    
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,cellsPerSubraster,seqNum))    
+      _thread.start_new_thread(runDialsThread,(rasterRequest["uid"], data_directory_name,filePrefix+"_Raster",i,cellsPerSubraster,seqNum))    
   #delete these
   time.sleep(2.0)
   det_lib.detector_stop_acquire()
@@ -1687,7 +1689,7 @@ def reprocessRaster(rasterReqID):
       #  seqNum = int(det_lib.detector_get_seqnum())
       #else:
       #  seqNum = -1
-      _thread.start_new_thread(runDialsThread,(data_directory_name,
+      _thread.start_new_thread(runDialsThread,(rasterReqID, data_directory_name,
                                                filePrefix+"_Raster",
                                                i,
                                                numsteps,

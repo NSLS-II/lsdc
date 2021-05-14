@@ -41,8 +41,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=fast_dp_dir/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name fast_dp.mtz)|tr " " "\n")
@@ -53,8 +53,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=fast_dp_dir/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name final.mtz)|tr " " "\n")
@@ -65,8 +65,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=dimple_dir/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name final.pdb)|tr " " "\n")
@@ -77,8 +77,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=dimple_dir/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name screen.log)|tr " " "\n")
@@ -89,8 +89,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=dimple_dir/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name XDS_ASCII.HKL)|tr " " "\n")
@@ -101,8 +101,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=fast_dp_dir/XDS/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'|sed 's/_ASCII\.HKL/\_ascii\.hkl/'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 found=$( (cd $projectdir; find . -name INTEGRATE.HKL)|tr " " "\n")
@@ -113,8 +113,8 @@ for fndfile  in ${foundarray[@]} ;  do
     abspath=${projectdir}/${fndfile}
     abspath=$( cd $(dirname $abspath); pwd)/$( basename $fndfile)
     targetfile=fast_dp_dir/XDS/`echo $fndfile|sed 's/\//-/g'|sed 's/^\.-//'|sed 's/INTEGRATE\.HKL/_is\.hkl/'`
-    echo cp -p "$abspath" "$targetfile"
-    cp -p "$abspath" "$targetfile"
+    echo cp -u -p "$abspath" "$targetfile"
+    cp -u -p "$abspath" "$targetfile"
 done
 
 exit

@@ -41,7 +41,7 @@ import lsdcOlog
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
-if len(ws_split) == 2 and (ws_split[1] == '1' ws_split[1] == '2'): #ws1 staff local # for 2021-2 cycle, AMX ws1 and FMX ws2 are staff local
+if len(ws_split) == 2 and (ws_split[1] in ('1','2')): #ws1 staff local # for 2021-2 cycle, AMX ws1 and FMX ws2 are staff local
     logging_file = 'lsdcGuiLog.txt'
 elif len(ws_split) == 2 and ws_split[1] == '4': #ws4 user remote as of 2021-2 cycle
     user = os.environ['USER']

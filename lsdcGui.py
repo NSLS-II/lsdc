@@ -78,8 +78,6 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
-HUTCH_TIMER_DELAY = 1000
-
 VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
 VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
 VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}}
@@ -1355,7 +1353,7 @@ class DewarTree(QtWidgets.QTreeView):
       self.parent.timerHutch.stop()
       self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-      self.parent.timerSample.start(0)            
+      self.parent.timerSample.start(SAMPLE_TIMER_DELAY)            
       self.parent.timerHutch.start(HUTCH_TIMER_DELAY)      
       if reply == QtWidgets.QMessageBox.Yes:
         return(1)
@@ -2252,7 +2250,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
-        self.timerSample.start(0)
+        self.timerSample.start(SAMPLE_TIMER_DELAY)
         self.centeringMarksList = []
         self.rasterList = []
         self.rasterDefList = []
@@ -3516,7 +3514,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerHutch.stop()
       self.timerSample.stop()            
       fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose Spreadsheet File', '',filter="*.xls *.xlsx",options=QtWidgets.QFileDialog.DontUseNativeDialog)
-      self.timerSample.start(0)            
+      self.timerSample.start(SAMPLE_TIMER_DELAY)            
       self.timerHutch.start(HUTCH_TIMER_DELAY)            
       if (fname != ""):
         logger.info(fname)
@@ -4663,7 +4661,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerHutch.stop()
       self.timerSample.stop()                    
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
-      self.timerSample.start(0)            
+      self.timerSample.start(SAMPLE_TIMER_DELAY)            
       self.timerHutch.start(HUTCH_TIMER_DELAY)            
       
 
@@ -4735,13 +4733,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerHutch.stop()
         self.timerSample.stop()      
         puckName, ok = PuckDialog.getPuckName()
-        self.timerSample.start(0)            
+        self.timerSample.start(SAMPLE_TIMER_DELAY)            
         self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if (ok):
           self.timerHutch.stop()
           self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
-          self.timerSample.start(0)            
+          self.timerSample.start(SAMPLE_TIMER_DELAY)            
           self.timerHutch.start(HUTCH_TIMER_DELAY)      
           ipos = int(dewarPos)+1
           if (ok):

@@ -744,7 +744,7 @@ def collectData(currentRequest):
           visitName = daq_utils.getVisitName()
           if (not os.path.exists(visitName + "/fast_dp_dir")):
             os.system("killall -KILL loop-fdp-dple-populate")
-            os.system("cd " + visitName + ";/GPFS/CENTRAL/xf17id2/jjakoncic/Scripts/loop-fdp-dple-populate.sh&")
+            os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
         os.system(comm_s)
       if (reqObj["xia2"]):
         comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"

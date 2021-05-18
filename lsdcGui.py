@@ -41,23 +41,14 @@ import lsdcOlog
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
-if len(ws_split) == 2 and (ws_split[1] in ('1','2')): #ws1 staff local # for 2021-2 cycle, AMX ws1 and FMX ws2 are staff local
-    logging_file = 'lsdcGuiLog.txt'
-elif len(ws_split) == 2 and ws_split[1] == '4': #ws4 user remote as of 2021-2 cycle
-    user = os.environ['USER']
-    logging_file = '/nsls2/users/%s/lsdcGuiLog.txt' % user
-    print('LSDC GUI log file is in the home directory %s' % logging_file)
-else:
-    print('lsdcGui not being run on one of the "normal" workstations. log going into home directory of current user')
-    user = os.environ['USER']
-    logging_file = '/nsls2/users/%s/lsdcGuiLog.txt' % user
+logging_file = 'lsdcGuiLog.txt'
+
 import logging
 from logging import handlers
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=100)
-#TODO find a place to put GUI log files - must work remotely and locally, ideally the same place for all instances
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
 handler1.setFormatter(myformat)

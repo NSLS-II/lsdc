@@ -4231,16 +4231,6 @@ class ControlMain(QtWidgets.QMainWindow):
       pixmap_orig = QtGui.QPixmap.fromImage(qimage)
       self.pixmap_item.setPixmap(pixmap_orig)
 
-    def timerEvent(self, event): #12/19 not used?
-      retval,self.readframe = self.capture.read()
-      if self.readframe is None:
-        return #maybe stop the timer also???
-      self.currentFrame = cv2.cvtColor(self.readframe,cv2.COLOR_BGR2RGB)
-      height,width=self.currentFrame.shape[:2]
-      qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
-      pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-      self.pixmap_item.setPixmap(pixmap_orig)
-
 
     def sceneKey(self, event):
         if (event.key() == QtCore.Qt.Key_Delete or event.key() == QtCore.Qt.Key_Backspace):

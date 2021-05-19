@@ -2233,7 +2233,6 @@ class ControlMain(QtWidgets.QMainWindow):
           if (self.zoom1FrameRatePV.get() != 0):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
-        time.sleep(5) # is this needed????
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()
         self.timerHutch.timeout.connect(self.timerHutchRefresh)

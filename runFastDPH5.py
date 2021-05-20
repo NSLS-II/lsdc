@@ -41,7 +41,6 @@ fastDPResultFile = runningDir+"/fast_dp.xml"
 fd = open(fastDPResultFile)
 resultObj = xmltodict.parse(fd.read())
 logger.info("finished fast_dp")
-logger.info(resultObj)
 resultID = db_lib.addResultforRequest("fastDP",request_id,owner,resultObj,beamline=os.environ["BEAMLINE_ID"])
 newResult = db_lib.getResult(resultID)
 visitName = getBlConfig("visitName")

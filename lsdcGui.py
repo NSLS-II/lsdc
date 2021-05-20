@@ -4211,13 +4211,13 @@ class ControlMain(QtWidgets.QMainWindow):
     def timerSampleRefresh(self):
       if self.capture is None:
         return 
-      retval,self.readframe = self.capture.read()
-      if self.readframe is None:
+      retval,self.currentFrame = self.capture.read()
+      if self.currentFrame is None:
         logger.warning('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
         return #maybe stop the timer also???
-      self.currentFrame = cv2.cvtColor(self.readframe,cv2.COLOR_BGR2RGB)
       height,width=self.currentFrame.shape[:2]
       qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
+      qimage = qimage.rgbSwapped()
       pixmap_orig = QtGui.QPixmap.fromImage(qimage)
       self.pixmap_item.setPixmap(pixmap_orig)
 

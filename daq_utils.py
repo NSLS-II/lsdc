@@ -208,7 +208,7 @@ def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):
 
 def create_filename(prefix,number):
   if (detector_id == "EIGER-16"):  
-   tmp_filename = findH5Master(prefix)
+   tmp_filename = findOneH5Master(prefix)
   else:
     tmp_filename = "%s_%05d.cbf" % (prefix,int(number))
   if (prefix[0] != "/"):
@@ -218,8 +218,8 @@ def create_filename(prefix,number):
     filename = tmp_filename
   return filename
 
-def findH5Master(prefix):
-  comm_s = "ls " + prefix + "*_master.h5"
+def findOneH5Master(prefix):
+  comm_s = "ls " + prefix + "*_master.h5 | head -1"
   masterFilename = os.popen(comm_s).read()[0:-1]
   return masterFilename
   

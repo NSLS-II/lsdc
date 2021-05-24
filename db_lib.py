@@ -1,3 +1,5 @@
+import os
+
 import time
 
 import six
@@ -24,7 +26,7 @@ configuration_ref = None
 mds_ref = None
 analysis_ref = None
 
-main_server = 'xf17id1-ca1.cs.nsls2.local'
+main_server = os.environ['MONGODB_HOST']
 
 services_config = {
     'amostra': {'host': main_server, 'port': '7770'},

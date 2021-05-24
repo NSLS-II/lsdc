@@ -1,8 +1,0 @@
-export PROJDIR=/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/
-export CONFIGDIR=${PROJDIR}bnlpx_config/
-export LSDCHOME=${PROJDIR}lsdc
-
-export PATH=/usr/local/bin:/usr/bin:/bin
-export PYTHONPATH=".:${CONFIGDIR}:/usr/local/albula_py3/dectris/albula/3.2/python:/usr/local/crys/edna-mx/mxv1/src:/usr/local/crys/edna-mx/kernel/src:${PROJDIR}lsdc"
-source ${CONFIGDIR}daq_env.txt
-/opt/conda_envs/lsdcGui_2020-1.0/bin/python $LSDCHOME/lsdcGui.py&

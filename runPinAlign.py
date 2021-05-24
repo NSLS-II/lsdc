@@ -4,13 +4,13 @@ import os
 
 fname1 = sys.argv[1]
 fname2 = sys.argv[2]
-pinAlignRootEnvVar = "/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/pinAlign/pin_align-master"
+pinAlignDir = os.environ['PINALIGNDIR']
 baseDirectory = os.environ["PWD"]
 beamline = os.environ["BEAMLINE_ID"]
 runningDir = baseDirectory + "/pinAlign"
 os.chdir(runningDir)
-comm_s = pinAlignRootEnvVar + "/pin_align_" + beamline + ".sh " + \
-    fname1 + " " + fname2
+scriptName = os.path.join(pinAlignDir, f'pin_align_{beamline}.sh')
+comm_s = f'{scriptName} {fname1} {fname2}'
 lines = os.popen(comm_s).readlines()
 tilted = False
 

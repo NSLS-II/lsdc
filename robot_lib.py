@@ -13,9 +13,13 @@ import daq_macros
 import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import os
+import sys
+import traceback
 import filecmp
 import _thread
 import logging
+import epics.ca
+
 from config_params import TOP_VIEW_CHECK
 logger = logging.getLogger(__name__)
 
@@ -122,7 +126,13 @@ def recoverRobot():
   try:
     rebootEMBL()
     time.sleep(8.0)    
-    RobotControlLib.runCmd("recover")
+    _,bLoaded,_ = RobotControlLib.recover()
+    if bLoaded:
+      daq_macros.robotOff()
+      daq_macros.disableMount()
+      daq_lib.gui_message("Found a sample in the gripper - CALL STAFF! disableMount() executed.")
+    else:
+      RobotControlLib.runCmd("goHome")
   except Exception as e:
     e_s = str(e)
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
@@ -176,7 +186,17 @@ def closePorts():
   RobotControlLib.runCmd("closePorts")
   
 def rebootEMBL():
-  RobotControlLib.rebootEMBL()
+  try:
+    RobotControlLib.rebootEMBL()
+  except Exception as e:
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    if exc_type == epics.ca.ChannelAccessGetFailure and str(exc_value) == "Get failed; status code: 192":
+      logger.info('channel access failure detected but error 192 is expected, so continuing')
+    else:
+      # channel access exception with error 192 seems "normal". only raise for other exceptions
+      logger.error('rebootEMBL exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
+      raise(e)
+
   
 def cooldownGripper():
   try:

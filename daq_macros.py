@@ -26,6 +26,9 @@ from string import Template
 from collections import OrderedDict
 from threading import Thread
 from config_params import *
+
+from fmx_annealer import govStatusGet, govStateSet, annealer # for using annealer specific to FMX
+
 try:
   import ispybLib
 except Exception as e:
@@ -607,6 +610,20 @@ def vectorProceed():
 def vectorSync():
   setPvDesc("vectorSync",1)
 
+def vectorWaitForGo(source="raster",timeout_trials=3):
+  while 1:
+    try:
+      setPvDesc("vectorGo",1)
+      vectorActiveWait()
+      break
+    except TimeoutError:
+      timeout_trials -= 1
+      logger.info('timeout_trials is down to: %s' % timeout_trials)
+      if not timeout_trials:
+        message = 'too many errors during %s vectorGo checks' % source
+        logger.error(message)
+        raise TimeoutError(message)
+
 def makeDozorRowDir(directory,rowIndex):
     """Makes separate directory for each row for dozor output,
     necessary to prevent file overwriting with mult. threads.
@@ -748,7 +765,8 @@ def runDozorThread(directory,
                    rowIndex,
                    rowCellCount,
                    seqNum,
-                   rasterReqObj):
+                   rasterReqObj,
+                   rasterReqID):
     """Creates sub-directory that contains dozor input and output files
     that result from master.h5 file in directory. Dozor executed via
     ssh on remote node(s).
@@ -766,28 +784,14 @@ def runDozorThread(directory,
     rasterReqObj: dict
         contains experimental metadata, used for setting detector dist and
         beam center for dozor input files
+    rasterReqID: str
+        ID of raster collection
     """
     global rasterRowResultsList,processedRasterRowCount
 
     time.sleep(0.5) #allow for file writing
-    dozorComm = "/usr/local/crys-local/dozor-10Aug2020/dozor"
      
-    if ((rowIndex % 8) == 1):
-        node = getBlConfig("spotNode1")
-    elif ((rowIndex % 8) == 2):
-        node = getBlConfig("spotNode2")
-    elif ((rowIndex % 8) == 3):
-        node = getBlConfig("spotNode3")
-    elif ((rowIndex % 8) == 4):
-        node = getBlConfig("spotNode4")
-    elif ((rowIndex % 8) == 5): 
-        node = getBlConfig("spotNode5")
-    elif ((rowIndex % 8) == 6): 
-        node = getBlConfig("spotNode6")
-    elif ((rowIndex % 8) == 7): 
-        node = getBlConfig("spotNode7")
-    else:
-        node = getBlConfig("spotNode8")
+    node = getNodeName("spot", rowIndex, 8)
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -800,10 +804,7 @@ def runDozorThread(directory,
     else:
         raise Exception("seqNum seems to be non-standard (<0)")
 
-    comm_s = "ssh -q {} \"cd {};{} -w -bin 1 h5_row_{}.dat\"".format(node,
-                                                                     dozorRowDir,
-                                                                     dozorComm,
-                                                                     rowIndex)
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dozor.sh {rasterReqID} {rowIndex}\""
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
@@ -817,74 +818,23 @@ def runDozorThread(directory,
                                                        pathToMasterH5)
     return
 
-def runDialsThread(directory,prefix,rowIndex,rowCellCount,seqNum):
+def runDialsThread(requestID, directory,prefix,rowIndex,rowCellCount,seqNum):
   global rasterRowResultsList,processedRasterRowCount
   time.sleep(1.0)
-  cbfComm = getBlConfig("cbfComm")
-  dialsComm = getBlConfig("dialsComm")
-  dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
-  dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
-  dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
-  dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)
-  dialsTuneThreshFlag = getBlConfig("rasterThreshFlag")    
-  dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
-  dialsTuneMinSpotSize = getBlConfig("rasterDefaultMinSpotSize")
-  dialsTuneThreshKern =  getBlConfig("rasterThreshKernSize")
-  dialsTuneThreshSigBck =  getBlConfig("rasterThreshSigBckrnd")
-  dialsTuneThreshSigStrong =  getBlConfig("rasterThreshSigStrong")    
-  if (dialsTuneIceRingFlag):
-    iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
-  else:
-    iceRingParams = ""
-  if (dialsTuneThreshFlag):
-    threshParams = " spotfinder.threshold.xds.kernel_size=" + str(dialsTuneThreshKern) + "," + str(dialsTuneThreshKern) + " spotfinder.threshold.xds.sigma_background=" + str(dialsTuneThreshSigBck) + " spotfinder.threshold.xds.sigma_strong=" + str(dialsTuneThreshSigStrong)
-  else:
-    threshParams = ""
-  if (dialsTuneResoFlag):
-    resoParams = " spotfinder.filter.d_min=" + str(dialsTuneHighRes) + " spotfinder.filter.d_max=" + str(dialsTuneLowRes)
-  else:
-    resoParams = ""
-  if (daq_utils.beamline == "amx"):
-    dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams + " min_spot_size=" + str(dialsTuneMinSpotSize)
-  else:
-    dialsCommWithParams = dialsComm + resoParams + threshParams + iceRingParams
-  logger.info('dials spotfinder command: %s' % dialsCommWithParams)
-  if (rowIndex%8 == 0):
-    node = getBlConfig("spotNode1")
-  elif (rowIndex%8 == 1):
-    node = getBlConfig("spotNode2")
-  elif (rowIndex%8 == 2):
-    node = getBlConfig("spotNode3")
-  elif (rowIndex%8 == 3):
-    node = getBlConfig("spotNode4")
-  elif (rowIndex%8 == 4):
-    node = getBlConfig("spotNode5")
-  elif (rowIndex%8 == 5):
-    node = getBlConfig("spotNode6")
-  elif (rowIndex%8 == 6):
-    node = getBlConfig("spotNode7")
-  else:
-    node = getBlConfig("spotNode8")  
+  node = getNodeName("spot", rowIndex, 8)
   if (seqNum>-1): #eiger
-    cbfDir = directory+"/cbf"
-    comm_s = "mkdir -p " + cbfDir
-    os.system(comm_s)
-    hdfSampleDataPattern = directory+"/"+prefix+"_" 
-    hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-    CBF_conversion_pattern = cbfDir + "/" + prefix+"_" + str(rowIndex)+"_"  
-    comm_s = "eiger2cbf-linux " + hdfRowFilepattern
     startIndex=(rowIndex*rowCellCount) + 1
     endIndex = startIndex+rowCellCount-1
-    comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\""  #works for rectangles only
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {requestID} {startIndex} {endIndex} {rowIndex} {seqNum}\""
     logger.info('eiger2cbf command: %s' % comm_s)
     os.system(comm_s)
+    cbfDir = os.path.join(directory, "cbf")
+    CBF_conversion_pattern = os.path.join(cbfDir, f'{prefix}_{rowIndex}_')
     CBFpattern = CBF_conversion_pattern + "*.cbf"
   else:
     CBFpattern = directory + "/cbf/" + prefix+"_" + str(rowIndex) + "_" + "*.cbf"
   time.sleep(1.0)
-  comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
-  lsOut = os.system(comm_s)
-  comm_s = "ssh -q " + node + " \"ls " + CBFpattern + "|" + dialsCommWithParams + "\""  
+  comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dials_spotfind.sh {requestID} {rowIndex} {seqNum}\""
   logger.info('checking for results on remote node: %s' % comm_s)
   retry = 3
   while(1):
@@ -1039,6 +989,10 @@ def generateGridMapFine(rasterRequest,rasterEncoderMap=None,rowsOfSubrasters=0,c
   rasterResult = db_lib.getResult(rasterResultID)
   return rasterResult
 
+def getNodeName(node_type, row_index, num_nodes=8): #calculate node name based on row index
+    node_number = row_index % num_nodes + 1
+    node_config_name = f'{node_type}Node{node_number}'
+    return getBlConfig(node_config_name)
 
 def snakeRaster(rasterReqID,grain=""):
   scannerType = getBlConfig("scannerType")
@@ -1148,7 +1102,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
         rasterEncoderMap[dataFileName[:-4]] = {"x":rasterRowEncoderVals["x"][j],"y":rasterRowEncoderVals["y"][j],"z":rasterRowEncoderVals["z"][j],"omega":rasterRowEncoderVals["omega"][j]}
     seqNum = int(det_lib.detector_get_seqnum())
     for i in range(len(rasterDef["rowDefs"])):  
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
+      _thread.start_new_thread(runDialsThread,(rasterRequest["uid"], data_directory_name,filePrefix+"_Raster",i,numsteps,seqNum))
   else:
     rasterRequestID = rasterRequest["uid"]
     db_lib.updateRequest(rasterRequest)    
@@ -1360,7 +1314,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
     zebraWait()
     seqNum = int(det_lib.detector_get_seqnum())
     if (procFlag):    
-      _thread.start_new_thread(runDialsThread,(data_directory_name,filePrefix+"_Raster",i,cellsPerSubraster,seqNum))    
+      _thread.start_new_thread(runDialsThread,(rasterRequest["uid"], data_directory_name,filePrefix+"_Raster",i,cellsPerSubraster,seqNum))    
   #delete these
   time.sleep(2.0)
   det_lib.detector_stop_acquire()
@@ -1520,19 +1474,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     rasterFilePrefix = dataFilePrefix + "_Raster_" + str(i)
     scanWidth = float(numsteps)*img_width_per_cell
     logger.info('raster done setting up')
-    timeout_trials = 3
-    while 1:
-      try:
-        setPvDesc("vectorGo",1)
-        vectorActiveWait()    
-        break
-      except TimeoutError:
-        timeout_trials -= 1
-        logger.info('timeout_trials is down to: %s' % timeout_trials)
-        if not timeout_trials:
-          message = 'too many errors during raster vectorGo checks'
-          logger.error(message)
-          raise Exception(message)
+    vectorWaitForGo(source="snakeRasterNormal")
     vectorWait()
     zebraWait()
     zebraWaitDownload(numsteps)
@@ -1549,64 +1491,120 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                                           i,
                                                           numsteps,
                                                           seqNum,
-                                                          reqObj))
+                                                          reqObj,
+                                                          rasterReqID))
       spotFindThread.start()
       spotFindThreadList.append(spotFindThread)
-  [thread.join() for thread in spotFindThreadList]
 
 
-  det_lib.detector_stop_acquire()
-  det_lib.detector_wait()  
-  logger.info('detector finished waiting')
-  if (daq_utils.beamline == "amxz"):  
-    setPvDesc("zebraReset",1)      
-  
-      
-#I guess this starts the gather loop
-  logger.info("moving to raster start")
-  beamline_lib.mvaDescriptor("sampleX",rasterStartX,"sampleY",rasterStartY,"sampleZ",rasterStartZ)
-  logger.info("done moving to raster start")  
+  """governor transitions:
+  initiate transitions here allows for GUI sample/heat map image to update
+  after moving to known position"""
+  if (lastOnSample() and not autoRasterFlag):
+    daq_lib.setGovRobotSA_nowait()
+    targetGovState = 'SA'
+  else:
+    daq_lib.setGovRobot('DI')
+    targetGovState = 'DI'
+
+  # priorities:
+  # 1. make heat map visible to users correctly aligned with sample
+  # 2. take snapshot for ISPyB with heat map and sample visible (governor moved to
+  #    a position with backlight in) and aligned
+
+  #data acquisition is finished, now processing and sample positioning
+  if not procFlag:
+    #must go to known position to account for windup dist. 
+    logger.info("moving to raster start")
+    beamline_lib.mvaDescriptor("sampleX",rasterStartX,
+                               "sampleY",rasterStartY,
+                               "sampleZ",rasterStartZ,
+                               "omega",omega)
+    logger.info("done moving to raster start")
+
   if (procFlag):
-    rasterTimeout = 300
-    timerCount = 0
-    while (1):
-      timerCount +=1
-      if (daq_lib.abort_flag == 1):
-        logger.error("caught abort waiting for raster!")
-        break
-      if (timerCount>rasterTimeout):
-        logger.error("Raster timeout!")
-        break
-      time.sleep(1)
-      logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
-      if (processedRasterRowCount == rowCount):
-        break
-    rasterResult = generateGridMap(rasterRequest)     
-    rasterRequest["request_obj"]["rasterDef"]["status"] = 2
-    protocol = reqObj["protocol"]
-    logger.info("protocol = " + protocol)
-    if (protocol == "multiCol" or parentReqProtocol == "multiColQ"):
+    if daq_lib.abort_flag != 1:
+      [thread.join(timeout=120) for thread in spotFindThreadList]
+    else:
+      logger.info("raster aborted, do not wait for spotfind threads")
+    logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
+    rasterResult = generateGridMap(rasterRequest)
+  
+    logger.info(f'protocol = {reqObj["protocol"]}')
+    if (reqObj["protocol"] == "multiCol" or parentReqProtocol == "multiColQ"):
       if (parentReqProtocol == "multiColQ"):    
         multiColThreshold  = parentReqObj["diffCutoff"]
       else:
         multiColThreshold  = reqObj["diffCutoff"]         
       gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
     else:
-      gotoMaxRaster(rasterResult)
-  rasterRequestID = rasterRequest["uid"]
-  db_lib.updateRequest(rasterRequest)
-  db_lib.updatePriority(rasterRequestID,-1)
-  if (lastOnSample() and not autoRasterFlag):  
-    daq_lib.setGovRobot('SA')
-  elif (autoRasterFlag):
-    daq_lib.setGovRobot('DI')
-  if (procFlag):
-    time.sleep(2.0)    
-    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
-  if (daq_utils.beamline == "fmx"):
-    setPvDesc("sampleProtect",1)        
-  return 1
+      try:
+        # go to start omega for faster heat map display
+        gotoMaxRaster(rasterResult,omega=omega)
+      except ValueError:
+        #must go to known position to account for windup dist.
+        logger.info("moving to raster start")
+        beamline_lib.mvaDescriptor("sampleX",rasterStartX,
+                                   "sampleY",rasterStartY,
+                                   "sampleZ",rasterStartZ,
+                                   "omega",omega)
+        logger.info("done moving to raster start")
 
+    """change request status so that GUI only fills heat map when
+    xrecRasterFlag PV is set"""
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_FILL.value
+    )
+    db_lib.updateRequest(rasterRequest)
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+  
+  #use this required pause to allow GUI time to fill map and for db update
+  det_lib.detector_stop_acquire()
+  det_lib.detector_wait()  
+  logger.info('detector finished waiting')
+
+  """change request status so that GUI only takes a snapshot of
+  sample plus heat map for ispyb when xrecRasterFlag PV is set"""
+  rasterRequestID = rasterRequest["uid"]
+  rasterRequest["request_obj"]["rasterDef"]["status"] = (
+      RasterStatus.READY_FOR_SNAPSHOT.value
+  )
+  db_lib.updateRequest(rasterRequest)  
+  db_lib.updatePriority(rasterRequestID,-1)
+
+  def govStatusCheck(statusPvName,waitTime=20):
+    startTime = time.time()
+    while (time.time() - startTime) < waitTime:
+      status = getPvDesc(statusPvName)
+      if status:
+        logger.info(f"{statusPvName} = {status}")
+        return
+      logger.info(f"{statusPvName} = {status}")
+      time.sleep(0.1)
+    logger.error(f"gov status failed, did not achieve {statusPvName}")
+    raise ValueError
+  
+  #ensure gov transitions have completed successfully
+  if targetGovState == 'SA':
+    govStatusCheck("robotSaActive")
+  elif targetGovState == 'DI':
+    govStatusCheck("robotDiActive")
+
+  if (procFlag):
+    """if sleep too short then black ispyb image, timing affected by speed
+    of governor transition. Sleep constraint can be relaxed with gov
+    transitions and concomitant GUI moved to an earlier stage."""
+    if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
+        > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
+      #larger rasters can delay GUI scene update
+      time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
+    else:
+      time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+    time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
+  if (daq_utils.beamline == "fmx"):
+    setPvDesc("sampleProtect",1)
+  return 1
 
 def reprocessRaster(rasterReqID):
   global rasterRowResultsList,processedRasterRowCount
@@ -1691,7 +1689,7 @@ def reprocessRaster(rasterReqID):
       #  seqNum = int(det_lib.detector_get_seqnum())
       #else:
       #  seqNum = -1
-      _thread.start_new_thread(runDialsThread,(data_directory_name,
+      _thread.start_new_thread(runDialsThread,(rasterReqID, data_directory_name,
                                                filePrefix+"_Raster",
                                                i,
                                                numsteps,
@@ -1713,15 +1711,24 @@ def reprocessRaster(rasterReqID):
       if (processedRasterRowCount == rowCount):
         break
     rasterResult = generateGridMap(rasterRequest)     
-    rasterRequest["request_obj"]["rasterDef"]["status"] = 2
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_REPROCESS.value
+    )
     protocol = reqObj["protocol"]
     logger.info("protocol = " + protocol)
-    gotoMaxRaster(rasterResult)
+    try:
+      gotoMaxRaster(rasterResult)
+    except ValueError:
+      logger.info("reprocessRaster: no max raster found, did not move gonio")
+      
   rasterRequestID = rasterRequest["uid"]
   db_lib.updateRequest(rasterRequest)
   db_lib.updatePriority(rasterRequestID,-1)
+
   if (procFlag):
-    time.sleep(2.0)    
+    """sleep allows for map update after gonio move, slightly longer
+    than 2 sec sleep for normal raster because no gov transition here"""
+    time.sleep(2.5)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   return 1
 
@@ -2013,11 +2020,13 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
     time.sleep(1) #I think I really need this, not sure why
     snakeRaster(rasterReqID)
 
-def gotoMaxRaster(rasterResult,multiColThreshold=-1):
+def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag
+  
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
+    raise ValueError("raster result object is None")
     return
   ceiling = 0.0
   floor = 100000000.0 #for resolution where small number means high score
@@ -2063,7 +2072,14 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
     y = hotCoords["y"]
     z = hotCoords["z"]
     logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
-    beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
+
+    if 'omega' in kwargs:
+      beamline_lib.mvaDescriptor("sampleX",x,
+                                 "sampleY",y,
+                                 "sampleZ",z,
+                                 "omega",kwargs['omega'])
+    else: beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
+
     if (autoVectorFlag): #if we found a hotspot, then look again at cellResults for coarse vector start and end
       xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
       xmaxColumn = []
@@ -2130,7 +2146,9 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1):
           
       autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
 
-      
+  else:
+    raise ValueError("No max position found for gonio move")
+    
 def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of what to pass here for details like how to organize data
   parentRequest = db_lib.getRequestByID(parentReqID)
   sampleID = parentRequest["sample"]
@@ -2219,7 +2237,7 @@ def defineTiledRaster(rasterDef,numsteps_h,numsteps_v,origRasterCenterScreenX,or
       vectorEndY = vectorStartY
       newRowDef = {"start":{"x": vectorStartX,"y":vectorStartY},"end":{"x":vectorEndX,"y":vectorEndY},"numsteps":numsteps_h}
       rasterDef["rowDefs"].append(newRowDef)
-  rasterDef["status"] = 1 # this will tell clients that the raster should be displayed.      
+  rasterDef["status"] = RasterStatus.DRAWN.value # this will tell clients that the raster should be displayed.      
   return rasterDef
 
 def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff=0.0,yoff=0.0,zoff=0.0): #maybe point_x and point_y are image center? #everything can come as microns, make this a horz vector scan, note this never deals with pixels.
@@ -2235,9 +2253,10 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   stepsize = float(stepsizeMicrons_s)
   beamWidth = stepsize
   beamHeight = stepsize
-  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":0,"x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
+  rasterDef = {"beamWidth":beamWidth,"beamHeight":beamHeight,"status":RasterStatus.NEW.value,"x":beamline_lib.motorPosFromDescriptor("sampleX")+xoff,"y":beamline_lib.motorPosFromDescriptor("sampleY")+yoff,"z":beamline_lib.motorPosFromDescriptor("sampleZ")+zoff,"omega":beamline_lib.motorPosFromDescriptor("omega"),"stepsize":stepsize,"rowDefs":[]} 
   numsteps_h = int(raster_w/stepsize)
   numsteps_v = int(raster_h/stepsize) #the numsteps is decided in code, so is already odd
+  rasterDef["numCells"] = numsteps_h * numsteps_v
   point_offset_x = -(numsteps_h*stepsize)/2.0
   point_offset_y = -(numsteps_v*stepsize)/2.0
   if (numsteps_v > numsteps_h): #vertical raster
@@ -2271,7 +2290,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
     reqObj["file_prefix"] = reqObj["file_prefix"]+"_r"
     rasterDef["rasterType"] = "normal"
   reqObj["rasterDef"] = rasterDef #should this be something like self.currentRasterDef?
-  reqObj["rasterDef"]["status"] = 1 # this will tell clients that the raster should be displayed.
+  reqObj["rasterDef"]["status"] = RasterStatus.DRAWN.value # this will tell clients that the raster should be displayed.
   runNum = db_lib.incrementSampleRequestCount(sampleID)
   reqObj["runNum"] = runNum
   reqObj["parentReqID"] = currentRequest["uid"]
@@ -2652,6 +2671,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
   logger.info("skinner about to take reference images.")
+  dna_image_info = {}
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
     logger.info("skinner prefix7 = " + prefix[0:7] +  " " + str(start_image_number) + "\n")
     if (len(prefix)> 8):
@@ -2663,7 +2683,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix
     image_number = start_image_number+i
-    dna_prefix_long = dna_directory+"/"+dna_prefix
+    dna_prefix_long = os.path.join(dna_directory, 'cbf', dna_prefix)
     beamline_lib.mvaDescriptor("omega",float(colstart))
     charRequest["request_obj"]["sweep_start"] = colstart
     if (i == int(dna_number_of_images)-1): # a temporary crap kludge to keep the governor from SA when more images are needed.
@@ -2671,9 +2691,10 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     imagesAttempted = daq_lib.collect_detector_seq_hw(colstart,dna_range,dna_range,dna_exptime,dna_prefix,dna_directory,image_number,charRequest)
     seqNum = int(det_lib.detector_get_seqnum())
     hdfSampleDataPattern = dna_prefix_long
-    filename = hdfSampleDataPattern + "_" + str(int(float(seqNum))) + "_master.h5"
+    filename = hdfSampleDataPattern + "_master.h5"
+    dna_image_info[seqNum] = {'uuid': charRequest["uid"], 'seq_num': seqNum}
     
-    dna_filename_list.append(filename)
+    dna_filename_list.append(filename) #TODO actually contains directory structure for cbf, but filename of h5
     picture_taken = 1
   edna_energy_ev = (12.3985/wave) * 1000.0
   if (daq_utils.beamline == "fmx"):   # a kludge b/c edna wants a square beam, so where making a 4x4 micron beam be the sqrt(1*1.5) for x and y on fmx
@@ -2695,25 +2716,28 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   flux = getPvDesc("sampleFlux")    
 
 
-  cbfComm = getBlConfig("cbfComm")
   node = getBlConfig("spotNode1")          
   cbfList = []
-  logger.info(dna_filename_list)
-  for i in range (0,len(dna_filename_list)):
-    hdfRowFilepattern = dna_filename_list[i]
+  logger.info(f'filenames for edna: {dna_filename_list}')
+  for key, info in dna_image_info.items():
+    seq_num = info['seq_num']
+    uuid = info['uuid']
+    comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {uuid} 1 1 0 {seq_num}\""
     CBF_conversion_pattern = dna_filename_list[i][0:len(dna_filename_list[i])-10]+"_"
-    cbfList.append(CBF_conversion_pattern+"000001.cbf")
-    startIndex=1
-    endIndex = 1
-    comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\"&" 
+    cbfList.append(f'{CBF_conversion_pattern}{seq_num}_000001.cbf')
     logger.info(comm_s)
     os.system(comm_s)
   time.sleep(2.0)
-  comm_s = "ssh -q xf17id2-ws10 \"source " + os.environ["PROJDIR"] + "wrappers/ednaWrap;cd " + dna_directory + ";" + os.environ["LSDCHOME"] + "/runEdna.py " + cbfList[0] + " " + cbfList[1] + " " + str(getPvDesc("transmissionRBV")*100.0) + " " + str(flux) + " " + str(xbeam_size) + " " + str(ybeam_size) + " " + str(charRequest["uid"]) + " " + daq_utils.beamline + "\""    
+  ednaHost = f'{getBlConfig("hostnameBase")}-fastproc'
+  comm_s = f"ssh -q {ednaHost} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}edna.sh {dna_directory} {charRequest['uid']} {cbfList[0]} {cbfList[1]} {getPvDesc('transmissionRBV')*100.0} {flux} {xbeam_size} {ybeam_size}\""
   logger.info(comm_s)
   os.system(comm_s)
   logger.info("EDNA DONE\n")
-  fEdnaLogFile = open(dna_directory+"/edna.log", "r" )
+  try:
+    fEdnaLogFile = open(dna_directory+"/edna.log", "r" )
+  except FileNotFoundError:
+    logger.error(f"File {dna_directory}/edna.log not found")
+    return 0
   ednaLogLines = fEdnaLogFile.readlines()
   fEdnaLogFile.close()
   collect_and_characterize_success = 0
@@ -3153,8 +3177,10 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  setPvDesc("vectorGo",1)
-  vectorActiveWait()  
+  try:
+    vectorWaitForGo(source="zebraDaq",timeout_trials=1)
+  except TimeoutError:
+    logger.info("caught TimeoutError in zebraDaq, proceeded with collection")
   vectorWait()
   zebraWait()
   logger.info("vector Done " + str(time.time()))          
@@ -3276,13 +3302,13 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   
 def setProcRam():
   if (daq_utils.beamline == "amx"):
-    db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id2-srv1")
-    db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id2-srv1")
+    db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id1-srv1")
+    db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id1-srv1")
     db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
     db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
   else:
-    db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws3")
-    db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws3")
+    db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws6")
+    db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws6")
     db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
     db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
     
@@ -3338,10 +3364,8 @@ def homePins():
   setPvDesc("syncPinZ",1)    
   
 def restartEMBL():
-  if (daq_utils.beamline == "amx"):      
-    os.system("ssh -q -X xf17id2-srv1 \"runEMBL\"&")
-  else:
-    os.system("ssh -q -X xf17id1-srv1 \"runEMBL\"&")    
+    emblserverName = f'{getBlConfig("hostnameBase")}-emblserver'
+    os.system(f"ssh -q -X {emblserverName} \"runEMBL\"&")
 
 
 def queueCollectOn():
@@ -3509,16 +3533,40 @@ def topViewCheckOn():
   setBlConfig(TOP_VIEW_CHECK,1)
 
 def anneal(annealTime):
-  robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
-  if (robotGovState):
-    setPvDesc("annealIn",1)
-    while (getPvDesc("annealStatus") != 1):
-      time.sleep(0.01)      
-    time.sleep(float(annealTime))
-    setPvDesc("annealIn",0)
-  else:
-    daq_lib.gui_message("Anneal only in SA state!!")    
+  if daq_utils.beamline == 'fmx':
+    if not govStatusGet('SA'):
+      daq_lib.gui_message('Not in Governor state SA, exiting')
+      return -1
 
+    govStateSet('CB')
+
+    annealer.air.put(1)
+
+    while not annealer.status.get():
+      logger.info(f'anneal state before annealing: {annealer.status.get()}')
+      time.sleep(0.1)
+
+    time.sleep(annealTime)
+    annealer.air.put(0)
+
+    while not annealer.status.get():
+      logger.info(f'anneal state after annealing: {annealer.status.get()}')
+      time.sleep(0.1)
+
+    govStateSet('SA')
+
+  elif daq_utils.beamline == 'amx':
+    robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
+    if (robotGovState):
+      setPvDesc("annealIn",1)
+      while (getPvDesc("annealStatus") != 1):
+        time.sleep(0.01)
+      time.sleep(float(annealTime))
+      setPvDesc("annealIn",0)
+    else:
+      daq_lib.gui_message("Anneal only in SA state!!")
+  else:
+    daq_lib.gui_message(f'Anneal not implemented for beamline {daq_utils.beamline}! Doing nothing')
   
 def topViewCheckOff():
   setBlConfig(TOP_VIEW_CHECK,0)

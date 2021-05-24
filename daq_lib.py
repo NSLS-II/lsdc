@@ -66,6 +66,15 @@ def destroy_gui_message():
   beamline_support.pvPut(gui_popup_message_string_pv,"killMessage")
 
 
+def unlatchGov(): # Command needed for FloCos to recover robot
+  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  setPvDesc("robotGovActive",1)
+  time.sleep(0.2)
+  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+
+
 def set_field(param,val):
   var_list[param] = val
   beamline_support.pvPut(var_channel_list[param],val)
@@ -166,12 +175,6 @@ def close_shutter():
   lib_close_shutter()
   set_field("state","Idle")
   
-def open_shutter2():
-  lib_open_shutter2()
-
-def close_shutter2():
-  lib_close_shutter2()
-  
 def init_diffractometer():
   lib_init_diffractometer()
 
@@ -231,18 +234,11 @@ def setRobotGovState(stateString):
 def toggleLowMagCameraSettings(stateCode):
 
   if (stateCode == "DA"):
-    lowMagExpTime = getBlConfig("lowMagExptimeDA")    
-    if daq_utils.beamline == 'amx':
-      setPvDesc("lowMagGain",32)
-    else:
-      setPvDesc("lowMagGain",25)
-    setPvDesc("lowMagAcquireTime",lowMagExpTime)
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
   else:
-    lowMagExpTime = getBlConfig("lowMagExptime")
-    setPvDesc("lowMagGain",1)      
-    setPvDesc("lowMagAcquireTime",lowMagExpTime)                    
-
-    
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
 
 def waitGovRobotSE():
   waitGovNoSleep()    
@@ -292,10 +288,16 @@ def govBusy():
   return (getPvDesc("robotGovStatus") == 1 or getPvDesc("humanGovStatus") == 1)
 
 def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
-  logger.info("setGovRobotSA")  
+  logger.info("setGovRobotSA")
+  toggleLowMagCameraSettings("SA")  
   setRobotGovState("SA")
-  toggleLowMagCameraSettings("SA")    
   return 1
+
+def setGovRobotDI_nowait():
+  logger.info("setGovRobotDI")
+  toggleLowMagCameraSettings("DI")
+  setRobotGovState("DI")
+  
 
 
 def waitGov():
@@ -499,7 +501,7 @@ def stopDCQueue(flag):
 
 
 
-def logMxRequestParams(currentRequest):
+def logMxRequestParams(currentRequest,wait=True):
   global currentIspybDCID
   reqObj = currentRequest["request_obj"]
   transmissionReadback = getPvDesc("transmissionRBV")
@@ -531,7 +533,9 @@ def logMxRequestParams(currentRequest):
   logfile.close()
   visitName = daq_utils.getVisitName()
   try: #I'm worried about unforseen ispyb db errors
-    time.sleep(5) #this sleep fixes black xtal picture in ispyb - see Edwin! 
+    #rasters results are entered in ispyb by the GUI, no need to wait
+    if wait:
+      time.sleep(getBlConfig(ISPYB_RESULT_ENTRY_DELAY))
     currentIspybDCID = ispybLib.insertResult(newResult,"mxExpParams",currentRequest,visitName)
   except Exception as e:
     currentIspybDCID = 999999
@@ -571,6 +575,7 @@ def collectData(currentRequest):
     
   status = 1
   if not (os.path.isdir(data_directory_name)):
+    logger.debug(f'creating {data_directory_name}')
     comm_s = "mkdir -p " + data_directory_name
     os.system(comm_s)
     comm_s = "chmod 777 " + data_directory_name
@@ -579,8 +584,10 @@ def collectData(currentRequest):
     os.system(comm_s)
     comm_s = "chmod 777 " + jpegDirectory
     os.system(comm_s)
+  logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
   beamline_lib.mvaDescriptor("detectorDist",colDist)  
+  logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
   currentRequest['request_obj']['xbeam'] = getPvDesc('beamCenterX')
   currentRequest['request_obj']['ybeam'] = getPvDesc('beamCenterY')
@@ -642,18 +649,8 @@ def collectData(currentRequest):
         else:
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
         seqNum = int(detector_get_seqnum())         
-        cbfComm = getBlConfig("cbfComm")
-        cbfDir = data_directory_name+"/cbf"
-        comm_s = "mkdir -p " + cbfDir
-        os.system(comm_s)
-        hdfSampleDataPattern = data_directory_name+"/"+file_prefix+"_" 
-        hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-        CBF_conversion_pattern = cbfDir + "/" + file_prefix+"_" + str(int(sweep_start))+".cbf"  
-        comm_s = "eiger2cbf-linux " + hdfRowFilepattern
-        startIndex=1
-        endIndex = 1
-        node = getBlConfig("spotNode1")        
-        comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " " + hdfRowFilepattern  + " " + str(startIndex) + ":" + str(endIndex) + " " + CBF_conversion_pattern + "\"&" 
+        node = getBlConfig("spotNode1")
+        comm_s = f'ssh -q {node} \"{os.environ["MXPROCESSINGSCRIPTSDIR"]}eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}\"'
         logger.info(comm_s)
         os.system(comm_s)
           
@@ -708,7 +705,9 @@ def collectData(currentRequest):
       beamline_lib.mvaDescriptor("omega",sweep_start)
       imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
-    if (logMe):
+    if (logMe) and prot == 'raster':
+      logMxRequestParams(currentRequest,wait=False)
+    elif (logMe):
       logMxRequestParams(currentRequest)
   except TypeError:
     logger.error("caught type error in logging")
@@ -737,10 +736,10 @@ def collectData(currentRequest):
         dimpleNode = getBlConfig("dimpleNode")      
         if (daq_utils.detector_id == "EIGER-16"):
           seqNum = int(detector_get_seqnum())
-          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + file_prefix + " " + str(seqNum) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
+          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
         else:
           comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-        logger.info(comm_s)
+        logger.info(f'Running fastdp command: {comm_s}')
         if (daq_utils.beamline == "amx"):                                            
           visitName = daq_utils.getVisitName()
           if (not os.path.exists(visitName + "/fast_dp_dir")):
@@ -748,7 +747,7 @@ def collectData(currentRequest):
             os.system("cd " + visitName + ";/GPFS/CENTRAL/xf17id2/jjakoncic/Scripts/loop-fdp-dple-populate.sh&")
         os.system(comm_s)
       if (reqObj["xia2"]):
-        comm_s = "ssh -q xf17id1-srv1 \"" + os.environ["LSDCHOME"] + "/runXia2.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + "\"&"
+        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
         os.system(comm_s)
   
   logger.info('processing should be triggered')

@@ -28,10 +28,10 @@ soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
 
-def getBlConfig(param):
+def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)
 
-def setBlConfig(param, value):
+def setBlConfig(param, value, beamline=beamline):
         db_lib.setBeamlineConfigParam(beamline, param, value)
 
 def init_environment():
@@ -160,6 +160,9 @@ def createDefaultRequest(sample_id,createVisit=True):
                "resolution": screenReso,
                "slit_height": screenbeamHeight,  "slit_width": screenbeamWidth,
                "attenuation": screenTransmissionPercent,
+               "visit_name": getVisitName(),
+               "detector": os.environ["DETECTOR_NAME"],
+               "beamline": os.environ["BEAMLINE_ID"],
                "pos_x": -999,  "pos_y": 0,  "pos_z": 0,  "pos_type": 'A', "gridStep": 20}
     request["request_obj"] = requestObj
 
@@ -205,7 +208,7 @@ def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):
 
 def create_filename(prefix,number):
   if (detector_id == "EIGER-16"):  
-   tmp_filename = findH5Master(prefix)
+   tmp_filename = findOneH5Master(prefix)
   else:
     tmp_filename = "%s_%05d.cbf" % (prefix,int(number))
   if (prefix[0] != "/"):
@@ -215,8 +218,8 @@ def create_filename(prefix,number):
     filename = tmp_filename
   return filename
 
-def findH5Master(prefix):
-  comm_s = "ls " + prefix + "*_master.h5"
+def findOneH5Master(prefix):
+  comm_s = "ls " + prefix + "*_master.h5 | head -1"
   masterFilename = os.popen(comm_s).read()[0:-1]
   return masterFilename
   

@@ -32,6 +32,7 @@ def mvrDescriptor(*args): #convenience to get around nasty PV names
 
 def mvaDescriptor(*args): #convenience to get around nasty PV names
   newArgsList = []
+  logger.info(f'mvaDescriptor: {tuple(args)}')
   if (args[0] == "detectorDist"):
     beamline_support.setPvValFromDescriptor("govRobotDetDist",float(args[1]))
     beamline_support.setPvValFromDescriptor("govHumanDetDist",float(args[1]))

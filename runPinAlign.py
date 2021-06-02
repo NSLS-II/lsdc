@@ -19,7 +19,7 @@ for outputline in lines:
     if (outputline.find("TILTED") != -1 or outputline.find('MISSING') != -1 or outputline.find('VIOLATION') != -1):
         print(outputline)
         tilted = True
-        break
+        sys.exit()
 if (not tilted):
     for outputline in lines:
         try:
@@ -29,7 +29,7 @@ if (not tilted):
                 offsetTokens = substring.split(',')
                 print(offsetTokens[0] + " " +
                       offsetTokens[1] + " " + offsetTokens[2])
-                break
+                sys.exit()
         except Exception:
             print('Top-view error, pin could be out of view, manual centering required')
 

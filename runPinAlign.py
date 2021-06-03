@@ -19,12 +19,18 @@ for outputline in lines:
     if (outputline.find("TILTED") != -1 or outputline.find('MISSING') != -1 or outputline.find('VIOLATION') != -1):
         print(outputline)
         tilted = True
+        sys.exit()
 if (not tilted):
     for outputline in lines:
-        if (outputline.find("OVERALL X,Y,Z OFFSETS TO CENTER") != -1):
-            index_s = outputline.find("[")
-            substring = outputline[index_s + 1:len(outputline) - 3]
-            offsetTokens = substring.split(',')
-            print(offsetTokens[0] + " " +
-                  offsetTokens[1] + " " + offsetTokens[2])
-            break
+        try:
+            if (outputline.find("OVERALL X,Y,Z OFFSETS TO CENTER") != -1):
+                index_s = outputline.find("[")
+                substring = outputline[index_s + 1:len(outputline) - 3]
+                offsetTokens = substring.split(',')
+                print(offsetTokens[0] + " " +
+                      offsetTokens[1] + " " + offsetTokens[2])
+                sys.exit()
+        except Exception:
+            print('Top-view error, pin could be out of view, manual centering required')
+
+

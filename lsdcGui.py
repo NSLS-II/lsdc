@@ -4213,7 +4213,7 @@ class ControlMain(QtWidgets.QMainWindow):
         return 
       retval,self.currentFrame = self.capture.read()
       if self.currentFrame is None:
-        logger.warning('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
+        logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
         return #maybe stop the timer also???
       height,width=self.currentFrame.shape[:2]
       qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)

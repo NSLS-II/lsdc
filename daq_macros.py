@@ -10,6 +10,7 @@ from daq_utils import getBlConfig, setBlConfig
 import det_lib
 import math
 import time
+import glob
 import xmltodict
 from start_bs import *
 import super_state_machine
@@ -2988,7 +2989,19 @@ def getLoopSize():
   return []
 
   
-  
+def clean_up_files(pic_prefix, output_file):
+  try:
+    os.remove(output_file) 
+  except FileNotFoundError:
+    pass #if erased or not present, not a problem
+  images = glob.glob(f'{pic_prefix}*.jpg')
+  for filename in images:
+    try:
+      os.remove(filename)
+    except FileNotFoundError:
+      pass #if erased or not present, not a problem
+    except Exception as e:
+      logger.error(f'Exception while removing file {filename}: {e}')
 
 def loop_center_xrec():
   global face_on
@@ -2996,11 +3009,17 @@ def loop_center_xrec():
   daq_lib.abort_flag = 0    
   os.system("chmod 777 .")
   pic_prefix = "findloop"
+  output_file = 'xrec_result.txt'
+  clean_up_files(pic_prefix, output_file)
   zebraCamDaq(0,360,40,.4,pic_prefix,os.getcwd(),0)    
-  comm_s = "xrec " + os.environ["CONFIGDIR"] + "/xrec_360_40Fast.txt xrec_result.txt"
+  comm_s = f'xrec {os.environ["CONFIGDIR"]}/xrec_360_40Fast.txt {output_file}'
   logger.info(comm_s)
-  os.system(comm_s)
-  xrec_out_file = open("xrec_result.txt","r")
+  try:
+    os.system(comm_s)
+    xrec_out_file = open(output_file,"r")
+  except FileNotFoundError:
+    logger.error(f'{output_file} not found, halting loop_center_xrec()')
+    return 0
   target_angle = 0.0
   radius = 0
   x_centre = 0

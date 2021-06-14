@@ -1502,6 +1502,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   """governor transitions:
   initiate transitions here allows for GUI sample/heat map image to update
   after moving to known position"""
+  logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
   if (lastOnSample() and not autoRasterFlag):
     daq_lib.setGovRobotSA_nowait()
     targetGovState = 'SA'
@@ -3372,6 +3373,8 @@ def lastOnSample():
     return False
   r = db_lib.popNextRequest(daq_utils.beamline)
   if (r != {}):
+    current_sample = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']
+    logger.debug(f'next sample: {r["sample"]} current_sample:{current_sample}')
     if (r["sample"] == db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']):
       return False
   return True

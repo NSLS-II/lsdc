@@ -358,6 +358,7 @@ def rasterScreen(currentRequest):
     rasterW = 630
     rasterH = 510
   rasterReqID = defineRectRaster(currentRequest,rasterW,rasterH,gridStep)     
+  db_lib.updatePriority(rasterReqID, -1)
   snakeRaster(rasterReqID)
   
 

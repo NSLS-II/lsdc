@@ -7,6 +7,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import os
 import filecmp
 import logging
+from config_params import TOP_VIEW_CHECK
 
 logger = logging.getLogger(__name__)
 
@@ -84,3 +85,34 @@ def wait90TopviewThread(prefix1,prefix90):
     message = "TopView check ERROR, will continue: " + e_s
     daq_lib.gui_message(message)
     logger.error(message)
+
+def topViewSnap(filePrefix,data_directory_name,file_number_start,acquire=1): #if we don't need to stream, then this requires few steps
+  os.system("mkdir -p " + data_directory_name)
+  os.system("chmod 777 " + data_directory_name)
+  setPvDesc("topViewAcquire",0,wait=False)
+  time.sleep(1.0) #this sleep definitely needed
+  setPvDesc("topViewTrigMode",5)
+  setPvDesc("topViewImMode",0)
+  setPvDesc("topViewDataType",0)
+  setPvDesc("topViewJpegFilePath",data_directory_name)
+  setPvDesc("topViewJpegFileName",filePrefix)
+  setPvDesc("topViewJpegFileNumber",file_number_start)
+  if (acquire):
+    setPvDesc("topViewAcquire",1)
+    setPvDesc("topViewWriteFile",1)
+    setPvDesc("topViewTrigMode",0)
+    setPvDesc("topViewImMode",2)
+    setPvDesc("topViewDataType",1)
+    setPvDesc("topViewAcquire",1,wait=False)
+
+def topViewWrite():
+  setPvDesc("topViewWriteFile",1)
+  setPvDesc("topViewTrigMode",0)
+  setPvDesc("topViewImMode",2)
+  setPvDesc("topViewDataType",1)
+
+def topViewCheckOn():
+  setBlConfig(TOP_VIEW_CHECK,1)
+
+def topViewCheckOff():
+  setBlConfig(TOP_VIEW_CHECK,0)

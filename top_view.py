@@ -41,8 +41,8 @@ def wait90TopviewThread(prefix1,prefix90):
       return
     time.sleep(0.10)
   try:
-    daq_macros.topViewWrite()
-    daq_macros.topViewSnap(prefix90,os.getcwd()+"/pinAlign",1)
+    topViewWrite()
+    topViewSnap(prefix90,os.getcwd()+"/pinAlign",1)
     snapshot1Name = prefix1+"_001.jpg"
     snapshot2Name = prefix90+"_001.jpg"
     if (not filecmp.cmp(os.getcwd()+"/pinAlign/"+snapshot1Name,os.getcwd()+"/pinAlign/"+snapshot2Name)): #this would mean something is wrong if true because the pictures are identical

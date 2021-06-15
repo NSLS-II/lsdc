@@ -194,7 +194,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         reqCount = sample['request_count']
         prefix1 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_0"
         prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"        
-        daq_macros.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
+        top_view.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
       except Exception as e:
         e_s = str(e)
         message = "TopView check ERROR, will continue: " + e_s

@@ -1560,6 +1560,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     )
     db_lib.updateRequest(rasterRequest)
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+    logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
   
   #use this required pause to allow GUI time to fill map and for db update
   det_lib.detector_stop_acquire()
@@ -1604,6 +1605,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     else:
       time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+    logger.info(f'Setting xrecRasterFlag at end of snakeRasterNormal: {rasterRequest["uid"]}')
     time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",1)
@@ -1733,6 +1735,7 @@ def reprocessRaster(rasterReqID):
     than 2 sec sleep for normal raster because no gov transition here"""
     time.sleep(2.5)    
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+    logger.info(f'xrecRasterFlag at end of reprocessRaster: {rasterRequest["uid"]}')
   return 1
 
 

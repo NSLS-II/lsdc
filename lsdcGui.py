@@ -3045,8 +3045,10 @@ class ControlMain(QtWidgets.QMainWindow):
           logger.error('bad xrecRasterFlag: %s' % xrecRasterFlag)
           return
         rasterDef = rasterReq["request_obj"]["rasterDef"]
+        logger.info(f'rasterDef["status"]: {rasterDef["status"]}')
         if (rasterDef["status"] == RasterStatus.DRAWN.value):
           self.drawPolyRaster(rasterReq)
+          logger.info('drawPolyRaster')
         elif (rasterDef["status"] == RasterStatus.READY_FOR_FILL.value):
           self.fillPolyRaster(
             rasterReq,

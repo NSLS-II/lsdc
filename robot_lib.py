@@ -251,6 +251,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   global sampXadjust, sampYadjust, sampZadjust  
 
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
+  logger.info(f'init: {init} warmup: {warmup}')
   if (getBlConfig('robot_online')):
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.setGovRobot('SE')
@@ -291,6 +292,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
       if (init):
+        logger.debug('main loading part')
         setPvDesc("boostSelect",0)
         if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
           setPvDesc("boostSelect",1)
@@ -312,6 +314,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         setPvDesc("boostSelect",0)                    
         if (getPvDesc("gripTemp")>-170):
           try:
+            logger.debug('mounting')
             RobotControlLib.mount(absPos)
           except Exception as e:
             e_s = str(e)
@@ -325,6 +328,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             logger.info("full mount")
             RobotControlLib.mount(absPos)
           else:
+            logger.debug('quick mount')
             RobotControlLib.initialize()
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)                                

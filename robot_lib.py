@@ -341,12 +341,8 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         else:
           RobotControlLib._mount(absPos)
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
-        daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
-        if (sampYadjust != 0):
-          pass
-        else:
+        if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
-#else it thinks it worked            return 0
       
       daq_lib.setGovRobot('SA')
       return 1

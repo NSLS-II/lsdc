@@ -3189,29 +3189,34 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   det_lib.detector_set_trigger_exposure(exposureTimePerImage)
   logger.info("detector arm " + str(time.time()))        
   daq_lib.detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
-  logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
-  startArm = time.time()
-  if not (daq_lib.setGovRobot('DA')):
-    return
-  endArm = time.time()
-  armTime = endArm-startArm
-  logger.info("gov wait time = " + str(armTime) +"\n")
-  
-  logger.info("vector Go " + str(time.time()))        
   try:
-    vectorWaitForGo(source="zebraDaq",timeout_trials=1)
-  except TimeoutError:
-    logger.info("caught TimeoutError in zebraDaq, proceeded with collection")
-  vectorWait()
-  zebraWait()
-  logger.info("vector Done " + str(time.time()))          
-  if (daq_utils.beamline == "amxz"):  
-    setPvDesc("zebraReset",1)      
+    logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
+    startArm = time.time()
+    if not (daq_lib.setGovRobot('DA')):
+      raise Exception('not in DA state, stopping collection')
+    endArm = time.time()
+    armTime = endArm-startArm
+    logger.info("gov wait time = " + str(armTime) +"\n")
   
-  if (lastOnSample() and changeState):
-    daq_lib.setGovRobotSA_nowait()    
-  logger.info("stop det acquire")
-  det_lib.detector_stop_acquire()
+    logger.info("vector Go " + str(time.time()))        
+    try:
+      vectorWaitForGo(source="zebraDaq",timeout_trials=1)
+    except TimeoutError:
+       logger.info("caught TimeoutError in zebraDaq, proceeded with collection")
+    vectorWait()
+    zebraWait()
+    logger.info("vector Done " + str(time.time()))          
+    if (daq_utils.beamline == "amxz"):  
+      setPvDesc("zebraReset",1)      
+  
+    if (lastOnSample() and changeState):
+      daq_lib.setGovRobotSA_nowait()    
+    logger.info("stop det acquire")
+  except Exception as e:
+    logger.error(f'Exception while collecting data: {e}')
+    return
+  finally:
+    det_lib.detector_stop_acquire()
   det_lib.detector_wait()
   setPvDesc("vectorBufferTime",3)
   logger.info("zebraDaq Done " + str(time.time()))            

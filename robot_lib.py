@@ -17,6 +17,7 @@ import sys
 import traceback
 import filecmp
 import _thread
+from threading import Thread
 import logging
 import epics.ca
 
@@ -258,7 +259,8 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
     if (getBlConfig(TOP_VIEW_CHECK) == 1):
       try:
         if (daq_utils.beamline == "fmx"):                  
-          _thread.start_new_thread(setWorkposThread,(init,0))        
+          workposThread = Thread(target=setWorkposThread,args=(init,0))
+          workposThread.start()        
 
         sample = db_lib.getSampleByID(sampID)
         sampName = sample['name']
@@ -344,12 +346,27 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
+      logger.info(f'{getBlConfig(TOP_VIEW_CHECK)} {daq_utils.beamline}')
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         if daq_utils.beamline == "fmx":
+          try: #make sure workposThread is finished before proceeding to robotGovActive check
+            timeout = 20
+            start_time = time.time()
+            while workposThread.isAlive():
+              time.sleep(0.5)
+              if time.time() - start_time > timeout:
+                raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')
+            logger.info(f'Time waiting for workposThread: {time.time() - start_time}s')
+          except Exception as e:
+            daq_lib.gui_message(e)
+            logger.error(e)
+            return 0
           if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
                                            #(due to setWorkposThread),
             logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
             setPvDesc('robotGovActive', 1) #set it active
+          else:
+            logger.info('not changing anything as governor is active')
         if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
       

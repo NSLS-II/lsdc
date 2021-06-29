@@ -345,6 +345,11 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         else:
           RobotControlLib._mount(absPos)
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
+        if daq_utils.beamline == "fmx":
+          if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
+                                           #(due to setWorkposThread),
+            logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
+            setPvDesc('robotGovActive', 1) #set it active
         if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
       

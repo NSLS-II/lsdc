@@ -26,7 +26,10 @@ from string import Template
 from collections import OrderedDict
 from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
-                   setup_vector_program)
+                   setup_vector_program, setup_eiger_exposure,
+                   setup_eiger_triggers, setup_eiger_arming,
+                   setup_eiger_stop_acquire_and_wiat
+                   )
 import bluesky.plan_stubs as bps
 
 try:
@@ -49,6 +52,8 @@ global autoVectorFlag, autoVectorCoarseCoords
 autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
+IMAGES_PER_FILE = 500 # default images per HDF5 data file for Eiger
+EXTERNAL_TRIGGER = 2 # external trigger for detector
 #12/19 - general comments. This file takes the brunt of the near daily changes and additions the scientists request. Some duplication and sloppiness reflects that.
 # I'm going to leave a lot of the commented lines in, since they might shed light on things or be useful later.
 
@@ -3046,7 +3051,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
 #careful - there's total exposure time, exposure period, exposure time
 
   logger.info("in Zebra Daq #1 " + str(time.time()))      
-  det_lib.detector_setImagesPerFile(500)
+  yield from bps.mv(eiger.fw_num_images_per_file, IMAGES_PER_FILE)
   daq_lib.setRobotGovState("DA")  
   yield from bps.mv(vector_program.expose, 1)
 
@@ -3063,9 +3068,8 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     yield from bps.mv(vector_program.buffer_time, 3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
-  det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
-  det_lib.detector_set_period(exposurePeriodPerImage)
-  detector_dead_time = det_lib.detector_get_deadtime()
+  yield from set_eiger_exposure(exposurePeriodPerImage, exposurePeriodPerImage)
+  detector_dead_time = eiger.dead_time.get()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
   yield from setup_vector_program(num_images=numImages,
                                   angle_start=angle_start,
@@ -3084,11 +3088,9 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
                        exposure_period_per_image=exposurePeriodPerImage, num_images=numImages, is_still=imgWidth==0)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
 
-  det_lib.detector_set_num_triggers(1)  
-  det_lib.detector_set_trigger_mode(2)
-  det_lib.detector_set_trigger_exposure(exposureTimePerImage)
+  yield from setup_eiger_triggers(EXTERNAL_TRIGGER, 1, exposureTimePerImage)
   logger.info("detector arm " + str(time.time()))        
-  daq_lib.detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
+  yield from setup_eiger_arming(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
   logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
   startArm = time.time()
   if not (daq_lib.setGovRobot('DA')):

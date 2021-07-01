@@ -3,8 +3,9 @@
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
-from zebra import Zebra
-from vector_program import VectorProgram, VectorProgramStart, VectorProgramEnd
+from mxtools.zebra import Zebra
+from mxtools.vector_program import VectorProgram, VectorProgramStart, VectorProgramEnd
+from mxtools.eiger import EigerSingleTriggerV26, setup_eiger_defaults
 import os
 #12/19 - author unknown. DAMA can help
 """
@@ -107,12 +108,14 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
-    vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
+    vector = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector')
+    eiger = EigerSingleTriggerV26('', name='eiger')
 else:
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
-    vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
-
+    vector = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector')
+    eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
+setup_eiger_defaults(eiger)

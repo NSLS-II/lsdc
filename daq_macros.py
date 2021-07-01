@@ -29,6 +29,10 @@ from threading import Thread
 from config_params import *
 
 from fmx_annealer import govStatusGet, govStateSet, annealer # for using annealer specific to FMX
+from scans import (zebra_daq_prep, setup_zebra_vector_scan,
+                   setup_zebra_vector_scan_for_raster,
+                   setup_vector_program)
+import bluesky.plan_stubs as bps
 
 try:
   import ispybLib
@@ -2889,19 +2893,6 @@ def setAttens(transmission): #where transmission = 0.0-1.0
 def importSpreadsheet(fname):
   parseSheet.importSpreadsheet(fname,daq_utils.owner)
 
-
-def zebraDaqPrep():
-
-  setPvDesc("zebraReset",1)
-  time.sleep(2.0)      
-  setPvDesc("zebraTTlSel",31)
-
-  setPvDesc("zebraM1SetPosProc",1)
-  setPvDesc("zebraM2SetPosProc",1)
-  setPvDesc("zebraM3SetPosProc",1)
-  setPvDesc("zebraArmTrigSource",1)
-
-
 def zebraArm():
   setPvDesc("zebraArm",1)
   while(1):
@@ -3081,7 +3072,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  zebraDaqPrep()
+  yield from zebra_daq_prep()
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)
@@ -3142,7 +3133,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("in Zebra Daq #1 " + str(time.time()))      
   det_lib.detector_setImagesPerFile(500)
   daq_lib.setRobotGovState("DA")  
-  setPvDesc("vectorExpose",1)
+  yield from bps.mv(vector_program.expose, 1)
 
   if (imgWidth == 0):
     angle_end = angle_start
@@ -3152,38 +3143,32 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     numImages = int(round(scanWidth/imgWidth))
   total_exposure_time = exposurePeriodPerImage*numImages
   if (total_exposure_time < 1.0):
-    setPvDesc("vectorBufferTime",1000)
+    yield from bps.mv(vector_program.buffer_time, 1000)
   else:
-    setPvDesc("vectorBufferTime",3)
+    yield from bps.mv(vector_program.buffer_time, 3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
   det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
   det_lib.detector_set_period(exposurePeriodPerImage)
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  setPvDesc("vectorNumFrames",numImages)  
-  setPvDesc("vectorStartOmega",angle_start)
-  setPvDesc("vectorEndOmega",angle_end)
-  setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
-  setPvDesc("vectorHold",0)
-  logger.info("zebraDaqPrep " + str(time.time()))        
-  zebraDaqPrep()
-  logger.info("done zebraDaqPrep " + str(time.time()))        
+  yield from setup_vector_program(num_images=numImages,
+                                  angle_start=angle_start,
+                                  angle_end=angle_end,
+                                  exposure_period_per_image=exposurePeriodPerImage)
+  logger.info("zebra_daq_prep " + str(time.time()))        
+  yield from zebra_daq_prep()
+  logger.info("done zebra_daq_prep " + str(time.time()))        
   time.sleep(1.0)
-  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
+
+
   PW=(exposurePeriodPerImage-detector_dead_time)*1000.0
   PS=(exposurePeriodPerImage)*1000.0
-  if (imgWidth != 0):  
-    GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
-    setPvDesc("zebraGateWidth",GW)
-    setPvDesc("zebraGateStep",scanWidth)
-  setPvDesc("zebraGateNumGates",1)
-  setPvDesc("zebraPulseStart",0)
-  setPvDesc("zebraPulseWidth",PW)
-  setPvDesc("zebraPulseStep",PS)
-  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
-  setPvDesc("zebraPulseMax",numImages)
+  GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
+  yield from setup_zebra_vector_scan(angle_start=angle_start, gate_width=GW, scan_width=scanWidth, pulse_width=PW, pulse_step=PS,
+                       exposure_period_per_image=exposurePeriodPerImage, num_images=numImages, is_still=imgWidth==0)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
+
   det_lib.detector_set_num_triggers(1)  
   det_lib.detector_set_trigger_mode(2)
   det_lib.detector_set_trigger_exposure(exposureTimePerImage)
@@ -3198,10 +3183,8 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("gov wait time = " + str(armTime) +"\n")
   
   logger.info("vector Go " + str(time.time()))        
-  try:
-    vectorWaitForGo(source="zebraDaq",timeout_trials=1)
-  except TimeoutError:
-    logger.info("caught TimeoutError in zebraDaq, proceeded with collection")
+  yield from bps.mv(vector_program.go, 1)
+  vectorActiveWait()  
   vectorWait()
   zebraWait()
   logger.info("vector Done " + str(time.time()))          
@@ -3213,7 +3196,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   logger.info("stop det acquire")
   det_lib.detector_stop_acquire()
   det_lib.detector_wait()
-  setPvDesc("vectorBufferTime",3)
+  yield from bps.mv(vector_program.buffer_time, 3)
   logger.info("zebraDaq Done " + str(time.time()))            
 
 
@@ -3240,7 +3223,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
   setPvDesc("vectorEndOmega",angle_end)
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  zebraDaqPrep()
+  yield from zebra_daq_prep()
   setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
@@ -3301,21 +3284,11 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   detector_dead_time = det_lib.detector_get_deadtime()
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
-  zebraDaqPrep()
-  setPvDesc("zebraEncoder",scanEncoder)
-  time.sleep(1.0)
-  setPvDesc("zebraDirection",0)  #direction 0 = positive
-  setPvDesc("zebraGateSelect",0)
-  setPvDesc("zebraGateStart",angle_start) #this will change for motors other than omega
-  if (imgWidth != 0):  
-    setPvDesc("zebraGateWidth",numImages*imgWidth)
-    setPvDesc("zebraGateStep",(numImages*imgWidth)+.001)
-  setPvDesc("zebraGateNumGates",1) #moved from loop
-  setPvDesc("zebraPulseTriggerSource",1)
-  setPvDesc("zebraPulseStart",0)
-  setPvDesc("zebraPulseWidth",(exposureTimePerImage-detector_dead_time)*1000.0)
-  setPvDesc("zebraPulseStep",(exposurePeriodPerImage)*1000.0)
-  setPvDesc("zebraPulseDelay",((exposurePeriodPerImage)/2.0)*1000.0)
+  yield from zebra_daq_prep()
+
+  yield from setup_zebra_vector_scan_for_raster(angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
+                                exposure_period_per_image=exposurePeriodPerImage, detector_dead_time=detector_dead_time,
+                                num_images=numImages, scan_encoder=scan_encoder)
   logger.info("exp tim = " + str(exposureTimePerImage))  
 
   setPvDesc("vectorHold",0)  

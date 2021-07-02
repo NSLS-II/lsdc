@@ -3052,6 +3052,7 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info("xrecrasterflag = %s" % xrecRasterFlag)
         try:
           rasterReq = db_lib.getRequestByID(xrecRasterFlag)
+          logger.info('done getting info from database')
         except IndexError:
           logger.error('bad xrecRasterFlag: %s' % xrecRasterFlag)
           return

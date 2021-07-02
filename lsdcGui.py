@@ -48,7 +48,7 @@ import platform
 from logging import handlers
 
 class HostnameFilter(logging.Filter):
-    hostname = platform.node()
+    hostname = platform.node().split('.')[0]
 
     def filter(self, record):
         record.hostname = HostnameFilter.hostname

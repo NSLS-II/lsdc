@@ -44,13 +44,24 @@ ws_split = hostname.split('ws')
 logging_file = 'lsdcGuiLog.txt'
 
 import logging
+import platform
 from logging import handlers
+
+class HostnameFilter(logging.Filter):
+    hostname = platform.node()
+
+    def filter(self, record):
+        record.hostname = HostnameFilter.hostname
+        return True
+
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=100)
+handler1.addFilter(HostnameFilter())
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
-myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
+#hostname added with help from: https://stackoverflow.com/questions/55584115/python-logging-how-to-track-hostname-in-logs
+myformat = logging.Formatter('%(asctime)s %(hostname)s: %(name)-8s %(levelname)-8s %(message)s')
 handler1.setFormatter(myformat)
 #handler2.setFormatter(myformat)
 logger.addHandler(handler1)

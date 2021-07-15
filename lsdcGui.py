@@ -5166,7 +5166,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.stopDet_pv = PV(det_stop_pv)
       det_reboot_pv = daq_utils.pvLookupDict["eigerIOC_reboot"]
       logger.info('setting detector ioc reboot PV: %s' % det_reboot_pv)
-      self.rebootDetIOC_pv = PV(daq_utils.beamlineComm + "eigerIOC_reboot")      
+      self.rebootDetIOC_pv = PV(det_reboot_pv)
       rz_pv = daq_utils.pvLookupDict["zebraReset"]
       logger.info('setting zebra reset PV: %s' % rz_pv)
       self.resetZebra_pv = PV(rz_pv)

@@ -4634,7 +4634,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
           if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
-            setPvDesc('restartServer', (int(getPvDesc('restartServer')) + 1) % 100)
+            restart_pv = PV(daq_utils.beamlineComm + "RestartServerSignal")
+            restart_pv.put(not(restart_pv.get()))
           else:
             logger.error('Not restarting server - unknown beamline')
       else:

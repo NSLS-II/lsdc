@@ -1407,7 +1407,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     if not (daq_lib.setGovRobot('DA')):
       if (daq_utils.beamline == "fmx"):
         setPvDesc("sampleProtect",1)    
-      return      
+      raise Exception('not in DA state')      
     zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
     procFlag = int(getBlConfig("rasterProcessFlag"))    
  
@@ -1417,7 +1417,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         daq_lib.setGovRobot('SA')
         if (daq_utils.beamline == "fmx"):
           setPvDesc("sampleProtect",1)    
-        return 0
+        raise Exception('raster aborted')
       numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
       startX = rasterDef["rowDefs"][i]["start"]["x"]
       endX = rasterDef["rowDefs"][i]["end"]["x"]
@@ -1567,6 +1567,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     return
   finally:
   #use this required pause to allow GUI time to fill map and for db update
+    logger.info('stopping detector')
     det_lib.detector_stop_acquire()
   det_lib.detector_wait()  
   logger.info('detector finished waiting')

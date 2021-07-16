@@ -3068,7 +3068,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     yield from bps.mv(vector_program.buffer_time, 3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
-  yield from set_eiger_exposure(exposurePeriodPerImage, exposurePeriodPerImage)
+  yield from setup_eiger_exposure(exposurePeriodPerImage, exposurePeriodPerImage)
   detector_dead_time = eiger.dead_time.get()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
   yield from setup_vector_program(num_images=numImages,

@@ -3111,7 +3111,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   if (lastOnSample() and changeState):
     daq_lib.setGovRobotSA_nowait()    
   logger.info("stop det acquire")
-  yield from bps.mv(eiger.start, 0)
+  yield from setup_eiger_stop_acquire_and_wait()
   yield from bps.mv(vector_program.buffer_time, 3)
   logger.info("zebraDaq Done " + str(time.time()))            
 

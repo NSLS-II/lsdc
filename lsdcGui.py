@@ -3137,10 +3137,11 @@ class ControlMain(QtWidgets.QMainWindow):
       self.beamsizeComboBox.setCurrentIndex(beamSizeFlag)
 
     def processEnergyChange(self,energyVal):
-      if (energyVal<9000):
-        self.beamsizeComboBox.setEnabled(False)
-      else:
-        self.beamsizeComboBox.setEnabled(True)
+      if daq_utils.beamline != "amx":
+        if (energyVal<9000):
+          self.beamsizeComboBox.setEnabled(False)
+        else:
+          self.beamsizeComboBox.setEnabled(True)
         
     def processControlMaster(self,controlPID):
       logger.info("in callback controlPID = " + str(controlPID))

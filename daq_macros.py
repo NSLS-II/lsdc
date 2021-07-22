@@ -3139,7 +3139,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
   setPvDesc("vectorEndOmega",angle_end)
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
@@ -3200,7 +3200,7 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   detector_dead_time = det_lib.detector_get_deadtime()
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
 
   yield from setup_zebra_vector_scan_for_raster(zebra=zebra, angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
                                 exposure_period_per_image=exposurePeriodPerImage, detector_dead_time=detector_dead_time,

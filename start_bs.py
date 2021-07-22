@@ -110,7 +110,7 @@ if (beamline=="amx"):
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     robot = EMBLRobot()
-else:  
+elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
@@ -119,3 +119,8 @@ else:
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
 
     robot = EMBLRobot()
+elif beamline == "nyx":
+    denso_robot = Robot("XF:19IDC-ES{Rbt:1}", name="robot")
+    robot = DensoRobot(denso_robot)
+else:
+    raise Exception("Unknown beamline")

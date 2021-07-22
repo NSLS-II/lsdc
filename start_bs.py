@@ -5,7 +5,9 @@ from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from zebra import Zebra
 import os
-from EMBLRobot import EMBLRobot
+from embl_robot import EMBLRobot
+from denso_robot import DensoRobot
+from nyxtools.robot import Robot
 
 #12/19 - author unknown. DAMA can help
 """

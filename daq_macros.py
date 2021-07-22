@@ -28,7 +28,7 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
                    setup_vector_program, setup_eiger_exposure,
                    setup_eiger_triggers, setup_eiger_arming,
-                   setup_eiger_stop_acquire_and_wiat
+                   setup_eiger_stop_acquire_and_wait
                    )
 import bluesky.plan_stubs as bps
 

@@ -21,7 +21,7 @@ import logging
 import epics.ca
 import top_view
 
-from config_params import TOP_VIEW_CHECK
+from config_params import TOP_VIEW_CHECK, MOUNT_SUCCESSFUL, MOUNT_FAILURE
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
@@ -69,27 +69,27 @@ def mountRobotSample():
       daq_macros.robotOff()
       daq_macros.disableMount()
       daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-      return 0                    
+      return MOUNT_FAILURE                    
     if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
       if (getBlConfig("queueCollect") == 0):          
         daq_lib.gui_message(e_s + ". Try mounting again")
-        return 0            
+        return MOUNT_FAILURE            
       else:
         if (retryMountCount == 0):
           retryMountCount+=1
           mountStat = mountRobotSample(puckPos,pinPos,sampID,init)
-          if (mountStat == 1):
+          if (mountStat == MOUNT_SUCCESSFUL):
             retryMountCount = 0
           return mountStat
         else:
           retryMountCount = 0
           daq_lib.gui_message("ROBOT: Could not recover from " + e_s)
-          return 2
+          return MOUNT_UNRECOVERABLE_ERROR
     daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
-    return 0
-  return 1
+    return MOUNT_FAILURE
+  return MOUNT_SUCCESSFUL
 
 def unmount():
   robot.preUnmount()
   robot.unmount()
-  return 1
+  return MOUNT_SUCCESSFUL

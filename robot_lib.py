@@ -40,7 +40,7 @@ def setWorkposThread(init,junk):
   setPvDesc("robotOmegaWorkPos",90.0)
   if (init):
     time.sleep(20)
-    setPvDesc("robotGovActive",0)      
+    setPvDesc("robotGovActive",0)
 
 def mountRobotSample():
   global retryMountCount
@@ -55,7 +55,7 @@ def mountRobotSample():
       else:
         logger.info("Cannot align pin - Mount next sample.")
 #else it thinks it worked            return 0
-      
+
       daq_lib.setGovRobot('SA')
       return MOUNT_SUCCESSFUL
   except Exception as e:
@@ -65,11 +65,11 @@ def mountRobotSample():
       daq_macros.robotOff()
       daq_macros.disableMount()
       daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-      return MOUNT_FAILURE                    
+      return MOUNT_FAILURE
     if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
-      if (getBlConfig("queueCollect") == 0):          
+      if (getBlConfig("queueCollect") == 0):
         daq_lib.gui_message(e_s + ". Try mounting again")
-        return MOUNT_FAILURE            
+        return MOUNT_FAILURE
       else:
         if (retryMountCount == 0):
           retryMountCount+=1

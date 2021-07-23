@@ -11,7 +11,6 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import os
 import sys
 import traceback
-import filecmp
 import _thread
 import logging
 import epics.ca

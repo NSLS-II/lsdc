@@ -162,10 +162,12 @@ class EMBLRobot:
       RobotControlLib.closeGripper()
 
 
-    def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
+    def mount(puckPos,pinPos,sampID,init=0,warmup=0):
       global retryMountCount
       global sampXadjust, sampYadjust, sampZadjust
 
+      init = kwargs.get("init")
+      warmup = kwargs.get("warmup")
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):
@@ -341,7 +343,7 @@ class EMBLRobot:
           return 0
         return 1
 
-    def unmount(absPos):
+    def unmount(puckPos, pinPos, sampID, absPos):
         try:
           RobotControlLib.unmount2(absPos)
         except Exception as e:

@@ -282,7 +282,7 @@ class EMBLRobot:
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
-                mountStat = mountRobotSample(puckPos,pinPos,sampID,init)
+                mountStat = mountRobotSample(puckPos,pinPos,sampID,init=init)
                 if (mountStat == 1):
                   retryMountCount = 0
                 return mountStat

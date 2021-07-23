@@ -165,8 +165,8 @@ class EMBLRobot:
       global retryMountCount
       global sampXadjust, sampYadjust, sampZadjust
 
-      init = kwargs.get("init")
-      warmup = kwargs.get("warmup")
+      init = kwargs.get("init", 0)
+      warmup = kwargs.get("warmup", 0)
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):

@@ -17,7 +17,7 @@ import logging
 import epics.ca
 import top_view
 
-from config_params import TOP_VIEW_CHECK, MOUNT_SUCCESSFUL, MOUNT_FAILURE
+from config_params import TOP_VIEW_CHECK, MOUNT_SUCCESSFUL, MOUNT_FAILURE, MOUNT_UNRECOVERABLE_ERROR
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
@@ -42,12 +42,12 @@ def setWorkposThread(init,junk):
     time.sleep(20)
     setPvDesc("robotGovActive",0)
 
-def mountRobotSample():
+def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
   global retryMountCount
   try:
-    robot.preMountRobotSample()
-    robot.mountRobotSample()
-    robot.postMountRobotSample()
+    robot.preMount(puck_pos, pin_pos, samp_id)
+    robot.mount(puck_pos, pin_pos, samp_id)
+    robot.postMount(puck_pos, pin_pos, abs_pos)
     if (getBlConfig(TOP_VIEW_CHECK) == 1):
       daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
       if (sampYadjust != 0):
@@ -73,7 +73,7 @@ def mountRobotSample():
       else:
         if (retryMountCount == 0):
           retryMountCount+=1
-          mountStat = mountRobotSample(puckPos,pinPos,sampID,init)
+          mountStat = robot.mount(puck_pos,pin_pos,samp_id)
           if (mountStat == MOUNT_SUCCESSFUL):
             retryMountCount = 0
           return mountStat
@@ -85,7 +85,7 @@ def mountRobotSample():
     return MOUNT_FAILURE
   return MOUNT_SUCCESSFUL
 
-def unmount():
-  robot.preUnmount()
-  robot.unmount()
+def unmountRobotSample(puck_pos, pin_pos, samp_id):
+  robot.preUnmount(puck_pos, pin_pos, samp_id)
+  robot.unmount(puck_pos, pin_pos, samp_id)
   return MOUNT_SUCCESSFUL

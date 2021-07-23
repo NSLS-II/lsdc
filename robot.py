@@ -2,7 +2,7 @@ class Robot:
     def preMount(self, puck_pos, pin_pos, samp_id):
         ...
 
-    def mount(self, puck_pos, pin_pos, samp_id):
+    def mount(self, puck_pos, pin_pos, samp_id, **kwargs):
         ...
 
     def postMount(self, puck_pos, pin_pos, samp_id):

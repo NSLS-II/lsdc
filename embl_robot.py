@@ -161,7 +161,7 @@ class EMBLRobot:
       RobotControlLib.closeGripper()
 
 
-    def mount(puckPos,pinPos,sampID,init=0,warmup=0):
+    def mount(puckPos,pinPos,sampID,**kwargs):
       global retryMountCount
       global sampXadjust, sampYadjust, sampZadjust
 

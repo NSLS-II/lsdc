@@ -1,12 +1,12 @@
 class Robot:
-    def preMount(self, puck_pos, pin_pos, samp_id):
+    def preMount(self, puck_pos: int, pin_pos: int, samp_id: str):
         ...
 
-    def mount(self, puck_pos, pin_pos, samp_id, **kwargs):
+    def mount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         ...
 
-    def postMount(self, puck_pos, pin_pos, samp_id):
+    def postMount(self, puck_pos: int, pin_pos: int, samp_id: str):
         ...
 
-    def unmount(self, puck_pos, pin_pos, abs_pos):
+    def unmount(self, puck_pos: int, pin_pos: int, abs_pos: int):
         ...

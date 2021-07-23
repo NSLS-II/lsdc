@@ -33,10 +33,10 @@ retryMountCount = 0
 
 class EMBLRobot:
     def finish():
-      if (getBlConfig('robot_online')):  
+      if (getBlConfig('robot_online')):
         try:
           RobotControlLib.runCmd("finish")
-          return 1    
+          return 1
         except Exception as e:
           e_s = str(e)
           message = "ROBOT Finish ERROR: " + e_s
@@ -46,13 +46,13 @@ class EMBLRobot:
 
     def warmupGripperRecoverThread(savedThreshold,junk):
       time.sleep(120.0)
-      setPvDesc("warmupThreshold",savedThreshold)      
+      setPvDesc("warmupThreshold",savedThreshold)
 
-     
+
     def recoverRobot():
       try:
         rebootEMBL()
-        time.sleep(8.0)    
+        time.sleep(8.0)
         _,bLoaded,_ = RobotControlLib.recover()
         if bLoaded:
           daq_macros.robotOff()
@@ -62,7 +62,7 @@ class EMBLRobot:
           RobotControlLib.runCmd("goHome")
       except Exception as e:
         e_s = str(e)
-        daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
+        daq_lib.gui_message("ROBOT Recover failed! " + e_s)
 
 
     def dryGripper():
@@ -74,8 +74,8 @@ class EMBLRobot:
       except Exception as e:
         e_s = str(e)
         daq_lib.gui_message("Dry gripper failed! " + e_s)
-        setPvDesc("warmupThreshold",saveThreshold)          
-        
+        setPvDesc("warmupThreshold",saveThreshold)
+
     def DewarAutoFillOn():
       RobotControlLib.runCmd("turnOnAutoFill")
 
@@ -84,7 +84,7 @@ class EMBLRobot:
 
     def DewarHeaterOn():
       RobotControlLib.runCmd("dewarHeaterOn")
-      
+
     def DewarHeaterOff():
       RobotControlLib.runCmd("dewarHeaterOff")
 
@@ -92,26 +92,26 @@ class EMBLRobot:
     def warmupGripper():
       try:
         RobotControlLib.runCmd("warmupGripper")
-        daq_lib.mountCounter = 0    
+        daq_lib.mountCounter = 0
       except:
-        daq_lib.gui_message("ROBOT warmup failed!")            
+        daq_lib.gui_message("ROBOT warmup failed!")
 
     def warmupGripperForDry():
 
         RobotControlLib.runCmd("warmupGripper")
-        daq_lib.mountCounter = 0    
-        
+        daq_lib.mountCounter = 0
+
 
 
     def enableDewarTscreen():
       RobotControlLib.runCmd("enableTScreen")
-      
+
     def openPort(portNo):
       RobotControlLib.openPort(int(portNo))
 
     def closePorts():
       RobotControlLib.runCmd("closePorts")
-      
+
     def rebootEMBL():
       try:
         RobotControlLib.rebootEMBL()
@@ -124,13 +124,13 @@ class EMBLRobot:
           logger.error('rebootEMBL exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
           raise(e)
 
-      
+
     def cooldownGripper():
       try:
         RobotControlLib.runCmd("cooldownGripper")
       except:
-        daq_lib.gui_message("ROBOT cooldown failed!")            
-        
+        daq_lib.gui_message("ROBOT cooldown failed!")
+
 
     def parkGripper():
       try:
@@ -140,7 +140,7 @@ class EMBLRobot:
         message = "Park gripper Failed!: " + e_s
         daq_lib.gui_message(message)
         logger.error(message)
-        
+
 
     def testRobot():
       try:
@@ -153,33 +153,33 @@ class EMBLRobot:
         daq_lib.gui_message(message)
         logger.error(message)
 
-      
+
     def openGripper():
       RobotControlLib.openGripper()
 
 
     def closeGripper():
       RobotControlLib.closeGripper()
-      
-      
+
+
     def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       global retryMountCount
-      global sampXadjust, sampYadjust, sampZadjust  
+      global sampXadjust, sampYadjust, sampZadjust
 
-      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
+      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):
           daq_lib.setGovRobot('SE')
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           try:
-            if (daq_utils.beamline == "fmx"):                  
-              _thread.start_new_thread(setWorkposThread,(init,0))        
+            if (daq_utils.beamline == "fmx"):
+              _thread.start_new_thread(setWorkposThread,(init,0))
 
             sample = db_lib.getSampleByID(sampID)
             sampName = sample['name']
             reqCount = sample['request_count']
             prefix1 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_0"
-            prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"        
+            prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
             top_view.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
@@ -222,10 +222,10 @@ class EMBLRobot:
               omegaCP = beamline_lib.motorPosFromDescriptor("omega")
               if (omegaCP > 89.5 and omegaCP < 90.5):
                 beamline_lib.mvrDescriptor("omega", 85.0)
-              logger.info("calling thread")                        
+              logger.info("calling thread")
               _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
               logger.info("called thread")
-            setPvDesc("boostSelect",0)                    
+            setPvDesc("boostSelect",0)
             if (getPvDesc("gripTemp")>-170):
               try:
                 RobotControlLib.mount(absPos)
@@ -243,13 +243,13 @@ class EMBLRobot:
               else:
                 RobotControlLib.initialize()
                 RobotControlLib._mount(absPos)
-            setPvDesc("boostSelect",1)                                
+            setPvDesc("boostSelect",1)
           else:
             if (getBlConfig(TOP_VIEW_CHECK) == 1):
               omegaCP = beamline_lib.motorPosFromDescriptor("omega")
               if (omegaCP > 89.5 and omegaCP < 90.5):
                 beamline_lib.mvrDescriptor("omega", 85.0)
-              logger.info("calling thread")            
+              logger.info("calling thread")
               _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
               logger.info("called thread")
             if (warmup):
@@ -263,7 +263,7 @@ class EMBLRobot:
             else:
               logger.info("Cannot align pin - Mount next sample.")
     #else it thinks it worked            return 0
-          
+
           daq_lib.setGovRobot('SA')
           return 1
         except Exception as e:
@@ -273,11 +273,11 @@ class EMBLRobot:
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-            return 0                    
+            return 0
           if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
-            if (getBlConfig("queueCollect") == 0):          
+            if (getBlConfig("queueCollect") == 0):
               daq_lib.gui_message(e_s + ". Try mounting again")
-              return 0            
+              return 0
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
@@ -296,15 +296,15 @@ class EMBLRobot:
         return 1
 
     def preUnmount(puckPos,pinPos,sampID): #will somehow know where it came from
-      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
+      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):
-        detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    
+        detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
           setPvDesc("govRobotDetDistOut",DETECTOR_SAFE_DISTANCE)
-          setPvDesc("govHumanDetDistOut",DETECTOR_SAFE_DISTANCE)          
-        daq_lib.setRobotGovState("SE")    
+          setPvDesc("govHumanDetDistOut",DETECTOR_SAFE_DISTANCE)
+        daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))
         platePos = int(puckPos/3)
@@ -348,7 +348,7 @@ class EMBLRobot:
           e_s = str(e)
           if (e_s.find("Fatal") != -1):
             daq_macros.robotOff()
-            daq_macros.disableMount()          
+            daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
             return 0
           message = "ROBOT unmount2 ERROR: " + e_s
@@ -357,6 +357,6 @@ class EMBLRobot:
           return 0
         if (not daq_lib.waitGovRobotSE()):
           daq_lib.clearMountedSample()
-          logger.info("could not go to SE")    
+          logger.info("could not go to SE")
           return 0
       return 1

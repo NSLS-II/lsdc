@@ -204,6 +204,17 @@ class EMBLRobot:
             return MOUNT_FAILURE
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
 
+
+    def callAlignPinThread(prefix1, prefix90):
+            if (getBlConfig(TOP_VIEW_CHECK) == 1):
+              omegaCP = beamline_lib.motorPosFromDescriptor("omega")
+              if (omegaCP > 89.5 and omegaCP < 90.5):
+                beamline_lib.mvrDescriptor("omega", 85.0)
+              logger.info("calling thread")
+              _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
+              logger.info("called thread")
+
+
     def mount(puckPos,pinPos,sampID,**kwargs):
       global retryMountCount
       global sampXadjust, sampYadjust, sampZadjust
@@ -224,13 +235,7 @@ class EMBLRobot:
                   time.sleep(3.0)
                 if (not daq_lib.setGovRobot('SE')):
                   return MOUNT_FAILURE
-            if (getBlConfig(TOP_VIEW_CHECK) == 1):
-              omegaCP = beamline_lib.motorPosFromDescriptor("omega")
-              if (omegaCP > 89.5 and omegaCP < 90.5):
-                beamline_lib.mvrDescriptor("omega", 85.0)
-              logger.info("calling thread")
-              _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
-              logger.info("called thread")
+            callAlignPinThread(prefix1, prefix90)
             setPvDesc("boostSelect",0)
             if (getPvDesc("gripTemp")>-170):
               try:
@@ -251,13 +256,7 @@ class EMBLRobot:
                 RobotControlLib._mount(absPos)
             setPvDesc("boostSelect",1)
           else:
-            if (getBlConfig(TOP_VIEW_CHECK) == 1):
-              omegaCP = beamline_lib.motorPosFromDescriptor("omega")
-              if (omegaCP > 89.5 and omegaCP < 90.5):
-                beamline_lib.mvrDescriptor("omega", 85.0)
-              logger.info("calling thread")
-              _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
-              logger.info("called thread")
+            callAlignPinThread(prefix1, prefix90)
             if (warmup):
               RobotControlLib._mount(absPos,warmup=True)
             else:

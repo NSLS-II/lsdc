@@ -206,13 +206,13 @@ class EMBLRobot:
 
 
     def callAlignPinThread(prefix1, prefix90):
-            if (getBlConfig(TOP_VIEW_CHECK) == 1):
-              omegaCP = beamline_lib.motorPosFromDescriptor("omega")
-              if (omegaCP > 89.5 and omegaCP < 90.5):
-                beamline_lib.mvrDescriptor("omega", 85.0)
-              logger.info("calling thread")
-              _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
-              logger.info("called thread")
+      if (getBlConfig(TOP_VIEW_CHECK) == 1):
+        omegaCP = beamline_lib.motorPosFromDescriptor("omega")
+        if (omegaCP > 89.5 and omegaCP < 90.5):
+          beamline_lib.mvrDescriptor("omega", 85.0)
+        logger.info("calling thread")
+        _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
+        logger.info("called thread")
 
 
     def mount(puckPos,pinPos,sampID,**kwargs):

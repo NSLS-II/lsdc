@@ -223,7 +223,7 @@ class EMBLRobot:
                   daq_macros.homePins()
                   time.sleep(3.0)
                 if (not daq_lib.setGovRobot('SE')):
-                  return
+                  return MOUNT_FAILURE
             if (getBlConfig(TOP_VIEW_CHECK) == 1):
               omegaCP = beamline_lib.motorPosFromDescriptor("omega")
               if (omegaCP > 89.5 and omegaCP < 90.5):

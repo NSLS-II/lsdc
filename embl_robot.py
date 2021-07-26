@@ -227,44 +227,44 @@ class EMBLRobot:
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
-          if (init):
-            setPvDesc("boostSelect",0)
-            if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
-              setPvDesc("boostSelect",1)
-            else:
-              robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
-              if (robotStatus != "Ready"):
-                if (daq_utils.beamline == "fmx"):
-                  daq_macros.homePins()
-                  time.sleep(3.0)
-                if (not daq_lib.setGovRobot('SE')):
-                  return MOUNT_FAILURE
-            callAlignPinThread(prefix1, prefix90)
-            setPvDesc("boostSelect",0)
-            if (getPvDesc("gripTemp")>-170):
-              try:
-                RobotControlLib.mount(absPos)
-              except Exception as e:
-                e_s = str(e)
-                message = "ROBOT mount ERROR: " + e_s
-                daq_lib.gui_message(message)
-                logger.error(message)
-                return MOUNT_FAILURE
-            else:
-              time.sleep(0.5)
-              if (getPvDesc("sampleDetected") == 0):
-                logger.info("full mount")
-                RobotControlLib.mount(absPos)
-              else:
-                RobotControlLib.initialize()
-                RobotControlLib._mount(absPos)
-            setPvDesc("boostSelect",1)
+      if (init):
+        setPvDesc("boostSelect",0)
+        if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
+          setPvDesc("boostSelect",1)
+        else:
+          robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
+          if (robotStatus != "Ready"):
+            if (daq_utils.beamline == "fmx"):
+              daq_macros.homePins()
+              time.sleep(3.0)
+            if (not daq_lib.setGovRobot('SE')):
+              return MOUNT_FAILURE
+        callAlignPinThread(prefix1, prefix90)
+        setPvDesc("boostSelect",0)
+        if (getPvDesc("gripTemp")>-170):
+          try:
+            RobotControlLib.mount(absPos)
+          except Exception as e:
+            e_s = str(e)
+            message = "ROBOT mount ERROR: " + e_s
+            daq_lib.gui_message(message)
+            logger.error(message)
+            return MOUNT_FAILURE
+        else:
+          time.sleep(0.5)
+          if (getPvDesc("sampleDetected") == 0):
+            logger.info("full mount")
+            RobotControlLib.mount(absPos)
           else:
-            callAlignPinThread(prefix1, prefix90)
-            if (warmup):
-              RobotControlLib._mount(absPos,warmup=True)
-            else:
-              RobotControlLib._mount(absPos)
+            RobotControlLib.initialize()
+            RobotControlLib._mount(absPos)
+        setPvDesc("boostSelect",1)
+      else:
+        callAlignPinThread(prefix1, prefix90)
+        if (warmup):
+          RobotControlLib._mount(absPos,warmup=True)
+        else:
+          RobotControlLib._mount(absPos)
 
 
     def postMount(puck, pinPos, sampID):

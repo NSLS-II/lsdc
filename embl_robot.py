@@ -181,6 +181,8 @@ class EMBLRobot:
             reqCount = sample['request_count']
             prefix1 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_0"
             prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
+            kwargs['prefix1'] = prefix1
+            kwargs['prefix90'] = prefix90
             top_view.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
@@ -204,12 +206,15 @@ class EMBLRobot:
             message = "ROBOT Park ERROR: " + e_s
             daq_lib.gui_message(message)
             logger.error(message)
-            return MOUNT_FAILURE
+            return MOUNT_FAILURE, kwargs
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
+          return MOUNT_SUCCESSFUL, kwargs
 
 
-    def callAlignPinThread(prefix1, prefix90):
+    def callAlignPinThread(**kwargs):
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
+        prefix1 = kwargs['prefix1']
+        prefix90 = kwargs['prefix90']
         omegaCP = beamline_lib.motorPosFromDescriptor("omega")
         if (omegaCP > 89.5 and omegaCP < 90.5):
           beamline_lib.mvrDescriptor("omega", 85.0)
@@ -221,6 +226,7 @@ class EMBLRobot:
     def mount(puckPos,pinPos,sampID,**kwargs):
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
+
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       if (init):
         setPvDesc("boostSelect",0)
@@ -234,7 +240,7 @@ class EMBLRobot:
               time.sleep(3.0)
             if (not daq_lib.setGovRobot('SE')):
               return MOUNT_FAILURE
-        callAlignPinThread(prefix1, prefix90)
+        callAlignPinThread(kwargs)
         setPvDesc("boostSelect",0)
         if (getPvDesc("gripTemp")>-170):
           try:
@@ -255,7 +261,7 @@ class EMBLRobot:
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)
       else:
-        callAlignPinThread(prefix1, prefix90)
+        callAlignPinThread(kwargs)
         if (warmup):
           RobotControlLib._mount(absPos,warmup=True)
         else:

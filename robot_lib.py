@@ -44,7 +44,7 @@ def setWorkposThread(init,junk):
 
 def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
   global retryMountCount
-  status = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
+  status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
   if status:
       return status
   try:

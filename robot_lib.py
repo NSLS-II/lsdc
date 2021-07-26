@@ -52,6 +52,8 @@ def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
     if status:
         return status
   except Exception as e:
+    # note: much of this code is based on topview results
+    # TODO organize better? extract to embl_robot?
     logger.error(e)
     e_s = str(e)
     if (e_s.find("Fatal") != -1):

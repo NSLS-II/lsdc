@@ -28,9 +28,6 @@ sampXadjust = 0
 sampYadjust = 0
 sampZadjust = 0
 
-global retryMountCount
-retryMountCount = 0
-
 global workposThread
 workposThread = 0
 

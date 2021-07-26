@@ -162,13 +162,9 @@ class EMBLRobot:
       RobotControlLib.closeGripper()
 
 
-    def mount(puckPos,pinPos,sampID,**kwargs):
-      global retryMountCount
-      global sampXadjust, sampYadjust, sampZadjust
-
+    # pin alignment, then dewar alignment done here
+    def preMount(puckPos, pinPos, sampID, **kwargs):
       init = kwargs.get("init", 0)
-      warmup = kwargs.get("warmup", 0)
-      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):
           daq_lib.setGovRobot('SE')
@@ -207,6 +203,14 @@ class EMBLRobot:
             logger.error(message)
             return MOUNT_FAILURE
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
+
+    def mount(puckPos,pinPos,sampID,**kwargs):
+      global retryMountCount
+      global sampXadjust, sampYadjust, sampZadjust
+
+      init = kwargs.get("init", 0)
+      warmup = kwargs.get("warmup", 0)
+      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
         try:
           if (init):
             setPvDesc("boostSelect",0)

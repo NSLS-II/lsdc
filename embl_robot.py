@@ -265,9 +265,6 @@ class EMBLRobot:
               RobotControlLib._mount(absPos,warmup=True)
             else:
               RobotControlLib._mount(absPos)
-       return MOUNT_SUCCESSFUL
-      else:
-        return MOUNT_SUCCESSFUL
 
 
     def postMount(puck, pinPos, sampID):

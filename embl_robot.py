@@ -222,8 +222,6 @@ class EMBLRobot:
 
 
     def mount(puckPos,pinPos,sampID,**kwargs):
-      global sampXadjust, sampYadjust, sampZadjust
-
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1

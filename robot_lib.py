@@ -79,7 +79,8 @@ def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
     daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
     return MOUNT_FAILURE
 
-  robot.postMount(puck_pos, pin_pos, abs_pos)
+  status = robot.postMount(puck_pos, pin_pos, abs_pos)
+  return status
 
 def unmountRobotSample(puck_pos, pin_pos, samp_id):
   robot.preUnmount(puck_pos, pin_pos, samp_id)

@@ -18,7 +18,8 @@ import epics.ca
 import top_view
 from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
-                          MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
+                          MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
+                          UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
 
 global retryMountCount
@@ -348,7 +349,7 @@ class EMBLRobot:
             message = "ROBOT park ERROR: " + e_s
             daq_lib.gui_message(message)
             logger.error(message)
-            return MOUNT_FAILURE
+            return UNMOUNT_FAILURE
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
         try:
           par_init=(beamline_support.get_any_epics_pv("SW:RobotState","VAL")!="Ready")
@@ -359,14 +360,14 @@ class EMBLRobot:
           message = "ROBOT unmount ERROR: " + e_s
           daq_lib.gui_message(message)
           logger.error(message)
-          return MOUNT_FAILURE
+          return UNMOUNT_FAILURE
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
           beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE)
         if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
           logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
-          return MOUNT_FAILURE
-      return MOUNT_SUCCESSFUL
+          return UNMOUNT_FAILURE
+      return UNMOUNT_STEP_SUCCESSFUL
 
     def unmount(self, puckPos, pinPos, sampID):
         absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
@@ -378,13 +379,13 @@ class EMBLRobot:
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-            return MOUNT_FAILURE
+            return UNMOUNT_FAILURE
           message = "ROBOT unmount2 ERROR: " + e_s
           daq_lib.gui_message(message)
           logger.error(message)
-          return MOUNT_FAILURE
+          return UNMOUNT_FAILURE
         if (not daq_lib.waitGovRobotSE()):
           daq_lib.clearMountedSample()
           logger.info("could not go to SE")
-          return MOUNT_FAILURE
-        return MOUNT_SUCCESSFUL
+          return UNMOUNT_FAILURE
+        return UNMOUNT_SUCCESSFUL

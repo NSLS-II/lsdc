@@ -18,10 +18,10 @@ def setWorkposThread(init,junk):
 
 def mountRobotSample(puck_pos, pin_pos, samp_id, **kwargs):
   status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
-  if status:
+  if status != MOUNT_SUCCESSFUL:
       return status
   status = robot.mount(puck_pos, pin_pos, samp_id, kwargs)
-  if status:
+  if status != MOUNT_SUCCESSFUL:
       return status
   status = robot.postMount(puck_pos, pin_pos, samp_id)
   return status

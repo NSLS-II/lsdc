@@ -36,7 +36,7 @@ class EMBLRobot:
         self.workposThread = None
 
 
-    def finish():
+    def finish(self):
       if (getBlConfig('robot_online')):
         try:
           RobotControlLib.runCmd("finish")
@@ -48,12 +48,12 @@ class EMBLRobot:
           logger.error(message)
           return MOUNT_FAILURE
 
-    def warmupGripperRecoverThread(savedThreshold,junk):
+    def warmupGripperRecoverThread(self, savedThreshold,junk):
       time.sleep(120.0)
       setPvDesc("warmupThreshold",savedThreshold)
 
 
-    def recoverRobot():
+    def recoverRobot(self):
       try:
         rebootEMBL()
         time.sleep(8.0)
@@ -69,7 +69,7 @@ class EMBLRobot:
         daq_lib.gui_message("ROBOT Recover failed! " + e_s)
 
 
-    def dryGripper():
+    def dryGripper(self):
       try:
         saveThreshold = getPvDesc("warmupThresholdRBV")
         setPvDesc("warmupThreshold",50)
@@ -80,43 +80,43 @@ class EMBLRobot:
         daq_lib.gui_message("Dry gripper failed! " + e_s)
         setPvDesc("warmupThreshold",saveThreshold)
 
-    def DewarAutoFillOn():
+    def DewarAutoFillOn(self):
       RobotControlLib.runCmd("turnOnAutoFill")
 
-    def DewarAutoFillOff():
+    def DewarAutoFillOff(self):
       RobotControlLib.runCmd("turnOffAutoFill")
 
-    def DewarHeaterOn():
+    def DewarHeaterOn(self):
       RobotControlLib.runCmd("dewarHeaterOn")
 
-    def DewarHeaterOff():
+    def DewarHeaterOff(self):
       RobotControlLib.runCmd("dewarHeaterOff")
 
 
-    def warmupGripper():
+    def warmupGripper(self):
       try:
         RobotControlLib.runCmd("warmupGripper")
         daq_lib.mountCounter = 0
       except:
         daq_lib.gui_message("ROBOT warmup failed!")
 
-    def warmupGripperForDry():
+    def warmupGripperForDry(self):
 
         RobotControlLib.runCmd("warmupGripper")
         daq_lib.mountCounter = 0
 
 
 
-    def enableDewarTscreen():
+    def enableDewarTscreen(self):
       RobotControlLib.runCmd("enableTScreen")
 
-    def openPort(portNo):
+    def openPort(self, portNo):
       RobotControlLib.openPort(int(portNo))
 
-    def closePorts():
+    def closePorts(self):
       RobotControlLib.runCmd("closePorts")
 
-    def rebootEMBL():
+    def rebootEMBL(self):
       try:
         RobotControlLib.rebootEMBL()
       except Exception as e:
@@ -129,14 +129,14 @@ class EMBLRobot:
           raise(e)
 
 
-    def cooldownGripper():
+    def cooldownGripper(self):
       try:
         RobotControlLib.runCmd("cooldownGripper")
       except:
         daq_lib.gui_message("ROBOT cooldown failed!")
 
 
-    def parkGripper():
+    def parkGripper(self):
       try:
         RobotControlLib.runCmd("park")
       except Exception as e:
@@ -146,7 +146,7 @@ class EMBLRobot:
         logger.error(message)
 
 
-    def testRobot():
+    def testRobot(self):
       try:
         RobotControlLib.testRobot()
         logger.info("Test Robot passed!")
@@ -158,16 +158,16 @@ class EMBLRobot:
         logger.error(message)
 
 
-    def openGripper():
+    def openGripper(self):
       RobotControlLib.openGripper()
 
 
-    def closeGripper():
+    def closeGripper(self):
       RobotControlLib.closeGripper()
 
 
     # pin alignment, then dewar alignment done here
-    def preMount(puckPos, pinPos, sampID, **kwargs):
+    def preMount(self, puckPos, pinPos, sampID, **kwargs):
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):
@@ -213,7 +213,7 @@ class EMBLRobot:
           return MOUNT_SUCCESSFUL, kwargs
 
 
-    def callAlignPinThread(**kwargs):
+    def callAlignPinThread(self, **kwargs):
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         prefix1 = kwargs['prefix1']
         prefix90 = kwargs['prefix90']
@@ -225,7 +225,7 @@ class EMBLRobot:
         logger.info("called thread")
 
 
-    def mount(puckPos,pinPos,sampID,**kwargs):
+    def mount(self, puckPos,pinPos,sampID,**kwargs):
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
 
@@ -270,7 +270,7 @@ class EMBLRobot:
           RobotControlLib._mount(absPos)
 
 
-    def postMount(puck, pinPos, sampID):
+    def postMount(self, puck, pinPos, sampID):
       global sampYadjust
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         if daq_utils.beamline == "fmx":
@@ -298,7 +298,7 @@ class EMBLRobot:
       return MOUNT_SUCCESSFUL
 
  
-    def preUnmount(puckPos,pinPos,sampID): #will somehow know where it came from
+    def preUnmount(self, puckPos,pinPos,sampID): #will somehow know where it came from
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
@@ -344,7 +344,7 @@ class EMBLRobot:
           return MOUNT_FAILURE
         return MOUNT_SUCCESSFUL
 
-    def unmount(puckPos, pinPos, sampID, absPos):
+    def unmount(self, puckPos, pinPos, sampID, absPos):
         try:
           RobotControlLib.unmount2(absPos)
         except Exception as e:

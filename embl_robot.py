@@ -12,12 +12,12 @@ import os
 import sys
 import traceback
 import _thread
+from threading import Thread
 import logging
 import epics.ca
 import top_view
 
-from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
-                          MOUNT_UNRECOVERABLE_ERROR
+from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE
 logger = logging.getLogger(__name__)
 
 global pinsPerPuck
@@ -55,7 +55,7 @@ class EMBLRobot:
 
     def recoverRobot(self):
       try:
-        rebootEMBL()
+        self.rebootEMBL()
         time.sleep(8.0)
         _,bLoaded,_ = RobotControlLib.recover()
         if bLoaded:
@@ -73,8 +73,8 @@ class EMBLRobot:
       try:
         saveThreshold = getPvDesc("warmupThresholdRBV")
         setPvDesc("warmupThreshold",50)
-        _thread.start_new_thread(warmupGripperRecoverThread,(saveThreshold,0))
-        warmupGripperForDry()
+        _thread.start_new_thread(self.warmupGripperRecoverThread,(saveThreshold,0))
+        self.warmupGripperForDry()
       except Exception as e:
         e_s = str(e)
         daq_lib.gui_message("Dry gripper failed! " + e_s)
@@ -242,7 +242,7 @@ class EMBLRobot:
               time.sleep(3.0)
             if (not daq_lib.setGovRobot('SE')):
               return MOUNT_FAILURE
-        callAlignPinThread(kwargs)
+        self.callAlignPinThread(kwargs)
         setPvDesc("boostSelect",0)
         if (getPvDesc("gripTemp")>-170):
           try:
@@ -263,7 +263,7 @@ class EMBLRobot:
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)
       else:
-        callAlignPinThread(kwargs)
+        self.callAlignPinThread(kwargs)
         if (warmup):
           RobotControlLib._mount(absPos,warmup=True)
         else:

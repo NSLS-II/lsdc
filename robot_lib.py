@@ -74,3 +74,52 @@ def unmountRobotSample(puck_pos, pin_pos, samp_id):
   robot.preUnmount(puck_pos, pin_pos, samp_id)
   robot.unmount(puck_pos, pin_pos, samp_id)
   return MOUNT_SUCCESSFUL
+
+def finish():
+    robot.finish()
+
+def recoverRobot():
+    robot.recoverRobot()
+
+def dryGripper():
+    robot.dryGripper()
+
+# TODO ask Edwin about these Dewar functions
+def DewarAutoFillOn():
+    robot.DewarAutoFillOn()
+
+def DewarAutoFillOff():
+    robot.DewarAutoFillOff()
+
+def DewarHeaterOn():
+    robot.DewarHeaterOn()
+
+def DewarHeaterOff():
+    robot.DewarHeaterOff()
+
+def warmupGripper():
+    robot.warmupGripper()
+
+def enableDewarTscreen():
+    robot.enableDewarTscreen()
+
+def openPort(portNo):
+    robot.openPort(portNo)
+
+def closePorts():
+    robot.closePorts()
+
+def rebootEMBL():
+    robot.rebootEMBL()
+
+def parkGripper():
+    robot.parkGripper()
+
+def testRobot():
+    robot.testRobot()
+
+def openGripper():
+    robot.openGripper()
+
+def closeGripper():
+    robot.closeGripper()

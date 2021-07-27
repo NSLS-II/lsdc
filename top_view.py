@@ -10,17 +10,7 @@ from config_params import TOP_VIEW_CHECK
 
 logger = logging.getLogger(__name__)
 
-global sampXadjust, sampYadjust, sampZadjust
-sampXadjust = 0
-sampYadjust = 0
-sampZadjust = 0
-
 def wait90TopviewThread(prefix1,prefix90):
-  global sampXadjust, sampYadjust, sampZadjust
-
-  sampXadjust = 0
-  sampYadjust = 0
-  sampZadjust = 0
   startTime = time.time()
   if (getPvDesc("gripTemp")>-170):
     threadTimeout = 130.0

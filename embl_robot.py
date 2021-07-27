@@ -23,11 +23,6 @@ logger = logging.getLogger(__name__)
 global pinsPerPuck
 pinsPerPuck = 16
 
-global sampXadjust, sampYadjust, sampZadjust
-sampXadjust = 0
-sampYadjust = 0
-sampZadjust = 0
-
 
 class EMBLRobot:
 
@@ -92,7 +87,7 @@ class EMBLRobot:
     def DewarHeaterOff(self):
       RobotControlLib.runCmd("dewarHeaterOff")
 
-
+  
     def warmupGripper(self):
       try:
         RobotControlLib.runCmd("warmupGripper")

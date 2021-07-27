@@ -11,11 +11,6 @@ logger = logging.getLogger(__name__)
 global method_pv,var_pv,pinsPerPuck
 pinsPerPuck = 16
 
-global sampXadjust, sampYadjust, sampZadjust
-sampXadjust = 0
-sampYadjust = 0
-sampZadjust = 0
-
 global retryMountCount
 retryMountCount = 0
 

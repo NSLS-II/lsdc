@@ -224,72 +224,75 @@ class EMBLRobot:
 
       absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
       logger.info("absPos = " + str(absPos))
-      try:
-      if (init):
-        setPvDesc("boostSelect",0)
-        if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
-          setPvDesc("boostSelect",1)
-        else:
-          robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
-          if (robotStatus != "Ready"):
-            if (daq_utils.beamline == "fmx"):
-              daq_macros.homePins()
-              time.sleep(3.0)
-            if (not daq_lib.setGovRobot('SE')):
-              return MOUNT_FAILURE
-        self.callAlignPinThread(kwargs)
-        setPvDesc("boostSelect",0)
-        if (getPvDesc("gripTemp")>-170):
-          try:
-            RobotControlLib.mount(absPos)
-          except Exception as e:
-            e_s = str(e)
-            message = "ROBOT mount ERROR: " + e_s
-            daq_lib.gui_message(message)
-            logger.error(message)
+      if getBlConfig('robot_online'):
+        try:
+          if (init):
+            setPvDesc("boostSelect",0)
+            if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
+              setPvDesc("boostSelect",1)
+            else:
+              robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
+              if (robotStatus != "Ready"):
+                if (daq_utils.beamline == "fmx"):
+                  daq_macros.homePins()
+                  time.sleep(3.0)
+                if (not daq_lib.setGovRobot('SE')):
+                  return MOUNT_FAILURE
+            self.callAlignPinThread(kwargs)
+            setPvDesc("boostSelect",0)
+            if (getPvDesc("gripTemp")>-170):
+              try:
+                RobotControlLib.mount(absPos)
+              except Exception as e:
+                e_s = str(e)
+                message = "ROBOT mount ERROR: " + e_s
+                daq_lib.gui_message(message)
+                logger.error(message)
+                return MOUNT_FAILURE
+            else:
+              time.sleep(0.5)
+              if (getPvDesc("sampleDetected") == 0):
+                logger.info("full mount")
+                RobotControlLib.mount(absPos)
+              else:
+                RobotControlLib.initialize()
+                RobotControlLib._mount(absPos)
+            setPvDesc("boostSelect",1)
+          else:
+            self.callAlignPinThread(kwargs)
+            if (warmup):
+              RobotControlLib._mount(absPos,warmup=True)
+            else:
+              RobotControlLib._mount(absPos)
+        except Exception as e:
+          # the following errors in the exception are from RobotControlMerge
+          logger.error(e)
+          e_s = str(e)
+          if (e_s.find("Fatal") != -1):
+            daq_macros.robotOff()
+            daq_macros.disableMount()
+            daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
             return MOUNT_FAILURE
-        else:
-          time.sleep(0.5)
-          if (getPvDesc("sampleDetected") == 0):
-            logger.info("full mount")
-            RobotControlLib.mount(absPos)
-          else:
-            RobotControlLib.initialize()
-            RobotControlLib._mount(absPos)
-        setPvDesc("boostSelect",1)
-      else:
-        self.callAlignPinThread(kwargs)
-        if (warmup):
-          RobotControlLib._mount(absPos,warmup=True)
-        else:
-          RobotControlLib._mount(absPos)
-    except Exception as e:
-      # the following errors in the exception are from RobotControlMerge
-      logger.error(e)
-      e_s = str(e)
-      if (e_s.find("Fatal") != -1):
-        daq_macros.robotOff()
-        daq_macros.disableMount()
-        daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-        return MOUNT_FAILURE
-      if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
-        if (getBlConfig("queueCollect") == 0):
-          daq_lib.gui_message(e_s + ". Try mounting again")
+          if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
+            if (getBlConfig("queueCollect") == 0):
+              daq_lib.gui_message(e_s + ". Try mounting again")
+              return MOUNT_FAILURE
+            else:
+              if (retryMountCount == 0):
+                retryMountCount+=1
+                mountStat = mountRobotSample(puck_pos,pin_pos,samp_id, kwargs)
+                if (mountStat == MOUNT_SUCCESSFUL):
+                  retryMountCount = 0
+                return mountStat
+              else:
+                retryMountCount = 0
+                daq_lib.gui_message("ROBOT: Could not recover from " + e_s)
+                return MOUNT_UNRECOVERABLE_ERROR
+          daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
           return MOUNT_FAILURE
-        else:
-          if (retryMountCount == 0):
-            retryMountCount+=1
-            mountStat = mountRobotSample(puck_pos,pin_pos,samp_id, kwargs)
-            if (mountStat == MOUNT_SUCCESSFUL):
-              retryMountCount = 0
-            return mountStat
-          else:
-            retryMountCount = 0
-            daq_lib.gui_message("ROBOT: Could not recover from " + e_s)
-            return MOUNT_UNRECOVERABLE_ERROR
-      daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
-      return MOUNT_FAILURE
-    return MOUNT_SUCCESSFUL
+        return MOUNT_SUCCESSFUL
+      else:
+        return MOUNT_SUCCESSFUL
 
     def postMount(self, puck, pinPos, sampID):
       global sampYadjust

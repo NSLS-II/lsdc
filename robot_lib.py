@@ -30,7 +30,7 @@ def setWorkposThread(init,junk):
     time.sleep(20)
     setPvDesc("robotGovActive",0)
 
-def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
+def mountRobotSample(puck_pos, pin_pos, samp_id, **kwargs):
   global retryMountCount
   status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
   if status:
@@ -67,7 +67,7 @@ def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
     daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
     return MOUNT_FAILURE
 
-  status = robot.postMount(puck_pos, pin_pos, abs_pos)
+  status = robot.postMount(puck_pos, pin_pos, samp_id)
   return status
 
 def unmountRobotSample(puck_pos, pin_pos, samp_id):

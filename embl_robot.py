@@ -17,7 +17,8 @@ import logging
 import epics.ca
 import top_view
 from robot_lib import setWorkposThread
-from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE, PINS_PER_PUCK
+from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
+                          MOUNT_UNRECOVERABLE_ERROR, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
 
 global retryMountCount
@@ -219,6 +220,7 @@ class EMBLRobot:
 
 
     def mount(self, puckPos,pinPos,sampID,**kwargs):
+      global retryMountCount
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
 
@@ -280,7 +282,7 @@ class EMBLRobot:
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
-                mountStat = self.mount(puck_pos,pin_pos,samp_id, kwargs)
+                mountStat = self.mount(puckPos,pinPos,sampID, kwargs)
                 if (mountStat == MOUNT_SUCCESSFUL):
                   retryMountCount = 0
                 return mountStat

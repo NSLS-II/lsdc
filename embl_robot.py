@@ -16,7 +16,7 @@ from threading import Thread
 import logging
 import epics.ca
 import top_view
-
+from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE
 logger = logging.getLogger(__name__)
 

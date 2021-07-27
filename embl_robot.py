@@ -17,11 +17,8 @@ import logging
 import epics.ca
 import top_view
 from robot_lib import setWorkposThread
-from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE
+from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
-
-global pinsPerPuck
-pinsPerPuck = 16
 
 
 class EMBLRobot:
@@ -223,7 +220,7 @@ class EMBLRobot:
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
 
-      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
+      absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
       logger.info("absPos = " + str(absPos))
       if (init):
         setPvDesc("boostSelect",0)
@@ -294,7 +291,7 @@ class EMBLRobot:
 
  
     def preUnmount(self, puckPos,pinPos,sampID): #will somehow know where it came from
-      absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
+      absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):

@@ -5,11 +5,8 @@ import daq_macros
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import logging
 
-from config_params import MOUNT_SUCCESSFUL, MOUNT_FAILURE, MOUNT_UNRECOVERABLE_ERROR
+from config_params import MOUNT_SUCCESSFUL, MOUNT_FAILURE, MOUNT_UNRECOVERABLE_ERROR, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
-
-global method_pv,var_pv,pinsPerPuck
-pinsPerPuck = 16
 
 global retryMountCount
 retryMountCount = 0

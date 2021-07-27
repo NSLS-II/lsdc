@@ -20,6 +20,8 @@ from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
 
+global retryMountCount
+retryMountCount = 0
 
 class EMBLRobot:
 
@@ -222,6 +224,7 @@ class EMBLRobot:
 
       absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
       logger.info("absPos = " + str(absPos))
+      try:
       if (init):
         setPvDesc("boostSelect",0)
         if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
@@ -260,7 +263,33 @@ class EMBLRobot:
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
-
+    except Exception as e:
+      # the following errors in the exception are from RobotControlMerge
+      logger.error(e)
+      e_s = str(e)
+      if (e_s.find("Fatal") != -1):
+        daq_macros.robotOff()
+        daq_macros.disableMount()
+        daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
+        return MOUNT_FAILURE
+      if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
+        if (getBlConfig("queueCollect") == 0):
+          daq_lib.gui_message(e_s + ". Try mounting again")
+          return MOUNT_FAILURE
+        else:
+          if (retryMountCount == 0):
+            retryMountCount+=1
+            mountStat = mountRobotSample(puck_pos,pin_pos,samp_id, kwargs)
+            if (mountStat == MOUNT_SUCCESSFUL):
+              retryMountCount = 0
+            return mountStat
+          else:
+            retryMountCount = 0
+            daq_lib.gui_message("ROBOT: Could not recover from " + e_s)
+            return MOUNT_UNRECOVERABLE_ERROR
+      daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
+      return MOUNT_FAILURE
+    return MOUNT_SUCCESSFUL
 
     def postMount(self, puck, pinPos, sampID):
       global sampYadjust

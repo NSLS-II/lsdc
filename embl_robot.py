@@ -28,11 +28,14 @@ sampXadjust = 0
 sampYadjust = 0
 sampZadjust = 0
 
-global workposThread
-workposThread = 0
-
 
 class EMBLRobot:
+
+
+    def __init__(self):
+        self.workposThread = None
+
+
     def finish():
       if (getBlConfig('robot_online')):
         try:
@@ -165,7 +168,6 @@ class EMBLRobot:
 
     # pin alignment, then dewar alignment done here
     def preMount(puckPos, pinPos, sampID, **kwargs):
-      global workposThread
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
         if (not daq_lib.waitGovRobotSE()):
@@ -173,8 +175,8 @@ class EMBLRobot:
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           try:
             if (daq_utils.beamline == "fmx"):
-              workposThread = Thread(target=setWorkposThread,args=(init,0))
-              workposThread.start()
+              self.workposThread = Thread(target=setWorkposThread,args=(init,0))
+              self.workposThread.start()
 
             sample = db_lib.getSampleByID(sampID)
             sampName = sample['name']
@@ -270,13 +272,12 @@ class EMBLRobot:
 
     def postMount(puck, pinPos, sampID):
       global sampYadjust
-      global workposThread
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         if daq_utils.beamline == "fmx":
           try: #make sure workposThread is finished before proceeding to robotGovActive check
             timeout = 20
             start_time = time.time()
-            while workposThread.isAlive():
+            while self.workposThread.isAlive():
               time.sleep(0.5)
               if time.time() - start_time > timeout:
                 raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')

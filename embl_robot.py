@@ -366,9 +366,10 @@ class EMBLRobot:
         if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
           logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
           return MOUNT_FAILURE
-        return MOUNT_SUCCESSFUL
+      return MOUNT_SUCCESSFUL
 
-    def unmount(self, puckPos, pinPos, sampID, absPos):
+    def unmount(self, puckPos, pinPos, sampID):
+        absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
         try:
           RobotControlLib.unmount2(absPos)
         except Exception as e:

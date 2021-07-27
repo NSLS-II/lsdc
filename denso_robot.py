@@ -34,7 +34,17 @@ class DensoRobot:
                 return MOUNT_FAILURE
         return MOUNT_SUCCESSFUL
 
-    def unmount(self, puck_pos: int, pin_pos: int, abs_pos=0):
+    def preUnmount(self, puck_pos: int, pin_pos: int, samp_id: str):
+        if getBlConfig('robot_online'):
+            logger.info(f"unmounting {puckPos} {pinPos} {samp_id}")
+            try:
+                daq_lib.setRobotGovState("SE")
+            except Exception as e:
+                logger.error('Exception while in preUnmount step: {e}')
+                return MOUNT_FAILURE
+        return MOUNT_STEP_SUCCESSFUL
+
+    def unmount(self, puck_pos: int, pin_pos: int, samp_id: str):
         try:
             self.robot.dismount(str(puck_pos), str(pin_pos))
         except Exception as e

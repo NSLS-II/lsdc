@@ -192,7 +192,6 @@ class EMBLRobot:
             daq_lib.gui_message(message)
             logger.error(message)
         logger.info("mounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
-        logger.info("absPos = " + str(absPos))
         platePos = int(puckPos/3)
         rotMotTarget = daq_utils.dewarPlateMap[platePos][0]
         rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
@@ -230,6 +229,7 @@ class EMBLRobot:
       warmup = kwargs.get("warmup", 0)
 
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
+      logger.info("absPos = " + str(absPos))
       if (init):
         setPvDesc("boostSelect",0)
         if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true

@@ -204,7 +204,7 @@ class EMBLRobot:
             logger.error(message)
             return MOUNT_FAILURE, kwargs
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
-          return MOUNT_SUCCESSFUL, kwargs
+      return MOUNT_SUCCESSFUL, kwargs
 
 
     def callAlignPinThread(self, **kwargs):

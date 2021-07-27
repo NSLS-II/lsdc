@@ -48,7 +48,7 @@ def mountRobotSample(puck_pos, pin_pos, samp_id, **kwargs):
       else:
         if (retryMountCount == 0):
           retryMountCount+=1
-          mountStat = robot.mount(puck_pos,pin_pos,samp_id, kwargs)
+          mountStat = mountRobotSample(puck_pos,pin_pos,samp_id, kwargs)
           if (mountStat == MOUNT_SUCCESSFUL):
             retryMountCount = 0
           return mountStat

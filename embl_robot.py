@@ -18,7 +18,7 @@ import epics.ca
 import top_view
 from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
-                          MOUNT_UNRECOVERABLE_ERROR, PINS_PER_PUCK
+                          MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
 logger = logging.getLogger(__name__)
 
 global retryMountCount
@@ -204,7 +204,7 @@ class EMBLRobot:
             logger.error(message)
             return MOUNT_FAILURE, kwargs
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
-      return MOUNT_SUCCESSFUL, kwargs
+      return MOUNT_STEP_SUCCESSFUL, kwargs
 
 
     def callAlignPinThread(self, **kwargs):
@@ -292,9 +292,7 @@ class EMBLRobot:
                 return MOUNT_UNRECOVERABLE_ERROR
           daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
           return MOUNT_FAILURE
-        return MOUNT_SUCCESSFUL
-      else:
-        return MOUNT_SUCCESSFUL
+      return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, puck, pinPos, sampID):
       global sampYadjust

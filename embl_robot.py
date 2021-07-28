@@ -20,7 +20,7 @@ import top_view
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE
 logger = logging.getLogger(__name__)
 
-global method_pv,var_pv,pinsPerPuck
+global pinsPerPuck
 pinsPerPuck = 16
 
 global sampXadjust, sampYadjust, sampZadjust
@@ -368,19 +368,3 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       logger.info("could not go to SE")    
       return 0
   return 1
-
-
-
-def initStaubliControl():
-  global method_pv,var_pv
-  method_pv = staubliEpicsLib.MethodPV("SW:startRobotTask")
-  var_pv = staubliEpicsLib.MethodPV("SW:setRobotVariable")
-
-def testRobotComm(numTurns=0):
-  if (numTurns>0):
-    var_pv.execute("nCamDelay",numTurns)
-  method_pv.execute("Test",50000)
-  logger.info("executing robot task")
-  staubliEpicsLib.waitReady()
-  logger.info("done executing robot task")
-

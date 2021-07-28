@@ -16,7 +16,8 @@ import logging
 import epics.ca
 import top_view
 
-from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE
+from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
+                          MOUNT_UNRECOVERABLE_ERROR
 logger = logging.getLogger(__name__)
 
 global pinsPerPuck
@@ -35,13 +36,13 @@ class EMBLRobot:
       if (getBlConfig('robot_online')):
         try:
           RobotControlLib.runCmd("finish")
-          return 1
+          return MOUNT_SUCCESSFUL
         except Exception as e:
           e_s = str(e)
           message = "ROBOT Finish ERROR: " + e_s
           daq_lib.gui_message(message)
           logger.error(message)
-          return 0
+          return MOUNT_FAILURE
 
     def warmupGripperRecoverThread(savedThreshold,junk):
       time.sleep(120.0)
@@ -204,7 +205,7 @@ class EMBLRobot:
             message = "ROBOT Park ERROR: " + e_s
             daq_lib.gui_message(message)
             logger.error(message)
-            return 0
+            return MOUNT_FAILURE
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
         try:
           if (init):
@@ -235,7 +236,7 @@ class EMBLRobot:
                 message = "ROBOT mount ERROR: " + e_s
                 daq_lib.gui_message(message)
                 logger.error(message)
-                return 0
+                return MOUNT_FAILURE
             else:
               time.sleep(0.5)
               if (getPvDesc("sampleDetected") == 0):
@@ -266,7 +267,7 @@ class EMBLRobot:
     #else it thinks it worked            return 0
 
           daq_lib.setGovRobot('SA')
-          return 1
+          return MOUNT_SUCCESSFUL
         except Exception as e:
           logger.error(e)
           e_s = str(e)
@@ -274,11 +275,11 @@ class EMBLRobot:
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-            return 0
+            return MOUNT_FAILURE
           if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
             if (getBlConfig("queueCollect") == 0):
               daq_lib.gui_message(e_s + ". Try mounting again")
-              return 0
+              return MOUNT_FAILURE
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
@@ -289,12 +290,12 @@ class EMBLRobot:
               else:
                 retryMountCount = 0
                 daq_lib.gui_message("ROBOT: Could not recover from " + e_s)
-                return 2
+                return MOUNT_UNRECOVERABLE_ERROR
           daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
-          return 0
-        return 1
+          return MOUNT_FAILURE
+        return MOUNT_SUCCESSFUL
       else:
-        return 1
+        return MOUNT_SUCCESSFUL
 
     def preUnmount(puckPos,pinPos,sampID): #will somehow know where it came from
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
@@ -322,7 +323,7 @@ class EMBLRobot:
             message = "ROBOT park ERROR: " + e_s
             daq_lib.gui_message(message)
             logger.error(message)
-            return 0
+            return MOUNT_FAILURE
           beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
         try:
           par_init=(beamline_support.get_any_epics_pv("SW:RobotState","VAL")!="Ready")
@@ -333,14 +334,14 @@ class EMBLRobot:
           message = "ROBOT unmount ERROR: " + e_s
           daq_lib.gui_message(message)
           logger.error(message)
-          return 0
+          return MOUNT_FAILURE
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
           beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE)
         if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
           logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
-          return 0
-        return 1
+          return MOUNT_FAILURE
+        return MOUNT_SUCCESSFUL
 
     def unmount(puckPos, pinPos, sampID, absPos):
         try:
@@ -351,13 +352,13 @@ class EMBLRobot:
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-            return 0
+            return MOUNT_FAILURE
           message = "ROBOT unmount2 ERROR: " + e_s
           daq_lib.gui_message(message)
           logger.error(message)
-          return 0
+          return MOUNT_FAILURE
         if (not daq_lib.waitGovRobotSE()):
           daq_lib.clearMountedSample()
           logger.info("could not go to SE")
-          return 0
-      return 1
+          return MOUNT_FAILURE
+        return MOUNT_SUCCESSFUL

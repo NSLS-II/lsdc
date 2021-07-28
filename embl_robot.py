@@ -141,17 +141,6 @@ def parkGripper():
     logger.error(message)
     
 
-def setWorkposThread(init,junk):
-  logger.info("setting work pos in thread")
-  setPvDesc("robotGovActive",1)
-  setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
-  setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
-  setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
-  setPvDesc("robotOmegaWorkPos",90.0)
-  if (init):
-    time.sleep(20)
-    setPvDesc("robotGovActive",0)      
-
 def testRobot():
   try:
     RobotControlLib.testRobot()
@@ -305,8 +294,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   else:
     return 1
 
-def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came from
-
+def preUnmount(puckPos,pinPos,sampID): #will somehow know where it came from
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
   robotOnline = getBlConfig('robot_online')
   logger.info("robot online = " + str(robotOnline))
@@ -350,6 +338,9 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
     if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
       logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
       return 0
+    return 1
+
+def unmount(absPos):
     try:
       RobotControlLib.unmount2(absPos)
     except Exception as e:

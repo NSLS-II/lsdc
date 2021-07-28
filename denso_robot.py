@@ -5,6 +5,9 @@ from config_params import MOUNT_SUCCESSFUL, MOUNT_STEP_SUCCESSFUL, MOUNT_FAILURE
 import logging
 logger = logging.getLogger(__name__)
 
+def get_puck_letter(puck_number):
+    return chr(ord('@') + int(puck_number))
+
 class DensoRobot:
     def __init__(self, robot):
         self.robot = robot
@@ -47,7 +50,7 @@ class DensoRobot:
 
     def unmount(self, puck_pos: int, pin_pos: int, samp_id: str):
         try:
-            self.robot.dismount(str(puck_pos), str(pin_pos))
+            self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
         except Exception as e
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE

@@ -1,8 +1,7 @@
-from daq_utils import getBlConfig
+from daq_utils import setBlConfig
 import daq_lib
 import beamline_lib
 import time
-import daq_macros
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import os
 import filecmp

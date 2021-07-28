@@ -1,23 +1,11 @@
-import RobotControlLib
-import daq_utils
-import db_lib
 from daq_utils import getBlConfig
 import daq_lib
-import beamline_lib
 import time
 import daq_macros
-import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
-import os
-import sys
-import traceback
-import filecmp
-import _thread
 import logging
-import epics.ca
-import top_view
 
-from config_params import TOP_VIEW_CHECK, MOUNT_SUCCESSFUL, MOUNT_FAILURE, MOUNT_UNRECOVERABLE_ERROR
+from config_params import MOUNT_SUCCESSFUL, MOUNT_FAILURE, MOUNT_UNRECOVERABLE_ERROR
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck

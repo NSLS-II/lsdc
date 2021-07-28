@@ -5,6 +5,8 @@ from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from zebra import Zebra
 import os
+from EMBLRobot import EMBLRobot
+
 #12/19 - author unknown. DAMA can help
 """
 # Subscribe metadatastore to documents.
@@ -105,7 +107,8 @@ if (beamline=="amx"):
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
-else:
+    robot = EMBLRobot()
+else:  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
@@ -113,3 +116,4 @@ else:
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
 
+    robot = EMBLRobot()

@@ -44,22 +44,13 @@ def setWorkposThread(init,junk):
 
 def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
   global retryMountCount
+  status = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
+  if status:
+      return status
   try:
-    status = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
+    status = robot.mount(puck_pos, pin_pos, samp_id, kwargs)
     if status:
         return status
-    robot.mount(puck_pos, pin_pos, samp_id, kwargs)
-    robot.postMount(puck_pos, pin_pos, abs_pos)
-    if (getBlConfig(TOP_VIEW_CHECK) == 1):
-      daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
-      if (sampYadjust != 0):
-        pass
-      else:
-        logger.info("Cannot align pin - Mount next sample.")
-#else it thinks it worked            return 0
-
-      daq_lib.setGovRobot('SA')
-      return MOUNT_SUCCESSFUL
   except Exception as e:
     logger.error(e)
     e_s = str(e)
@@ -85,7 +76,8 @@ def mountRobotSample(puck_pos, pin_pos, abs_pos, **kwargs):
           return MOUNT_UNRECOVERABLE_ERROR
     daq_lib.gui_message("ROBOT mount ERROR: " + e_s)
     return MOUNT_FAILURE
-  return MOUNT_SUCCESSFUL
+
+  robot.postMount(puck_pos, pin_pos, abs_pos)
 
 def unmountRobotSample(puck_pos, pin_pos, samp_id):
   robot.preUnmount(puck_pos, pin_pos, samp_id)

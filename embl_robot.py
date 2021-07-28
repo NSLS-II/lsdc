@@ -297,6 +297,36 @@ class EMBLRobot:
       else:
         return MOUNT_SUCCESSFUL
 
+
+    def postMount(puck, pinPos, sampID):
+      global sampYadjust
+      global workposThread
+      if (getBlConfig(TOP_VIEW_CHECK) == 1):
+        if daq_utils.beamline == "fmx":
+          try: #make sure workposThread is finished before proceeding to robotGovActive check
+            timeout = 20
+            start_time = time.time()
+            while workposThread.isAlive():
+              time.sleep(0.5)
+              if time.time() - start_time > timeout:
+                raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')
+            logger.info(f'Time waiting for workposThread: {time.time() - start_time}s')
+          except Exception as e:
+            daq_lib.gui_message(e)
+            logger.error(e)
+            return MOUNT_FAILURE
+          if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
+                                           #(due to setWorkposThread),
+            logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
+            setPvDesc('robotGovActive', 1) #set it active
+          else:
+            logger.info('not changing anything as governor is active')
+        if (sampYadjust == 0):
+          logger.info("Cannot align pin - Mount next sample.")
+      daq_lib.setGovRobot('SA')
+      return MOUNT_SUCCESSFUL
+
+ 
     def preUnmount(puckPos,pinPos,sampID): #will somehow know where it came from
       absPos = (pinsPerPuck*(puckPos%3))+pinPos+1
       robotOnline = getBlConfig('robot_online')

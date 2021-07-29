@@ -26,7 +26,10 @@ from string import Template
 from collections import OrderedDict
 from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
-                   setup_vector_program)
+                   setup_vector_program, setup_eiger_exposure,
+                   setup_eiger_triggers, setup_eiger_arming,
+                   setup_eiger_stop_acquire_and_wait
+                   )
 import bluesky.plan_stubs as bps
 
 try:
@@ -49,6 +52,8 @@ global autoVectorFlag, autoVectorCoarseCoords
 autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
+IMAGES_PER_FILE = 500 # default images per HDF5 data file for Eiger
+EXTERNAL_TRIGGER = 2 # external trigger for detector
 #12/19 - general comments. This file takes the brunt of the near daily changes and additions the scientists request. Some duplication and sloppiness reflects that.
 # I'm going to leave a lot of the commented lines in, since they might shed light on things or be useful later.
 
@@ -2987,7 +2992,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)
@@ -3046,7 +3051,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
 #careful - there's total exposure time, exposure period, exposure time
 
   logger.info("in Zebra Daq #1 " + str(time.time()))      
-  det_lib.detector_setImagesPerFile(500)
+  yield from bps.mv(eiger.fw_num_images_per_file, IMAGES_PER_FILE)
   daq_lib.setRobotGovState("DA")  
   yield from bps.mv(vector_program.expose, 1)
 
@@ -3063,16 +3068,15 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
     yield from bps.mv(vector_program.buffer_time, 3)
     pass
   logger.info("in Zebra Daq #2 " + str(time.time()))        
-  det_lib.detector_set_exposure_time(exposurePeriodPerImage)  
-  det_lib.detector_set_period(exposurePeriodPerImage)
-  detector_dead_time = det_lib.detector_get_deadtime()
+  yield from setup_eiger_exposure(eiger, exposurePeriodPerImage, exposurePeriodPerImage)
+  detector_dead_time = eiger.dead_time.get()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  yield from setup_vector_program(num_images=numImages,
+  yield from setup_vector_program(vector=vector, num_images=numImages,
                                   angle_start=angle_start,
                                   angle_end=angle_end,
                                   exposure_period_per_image=exposurePeriodPerImage)
   logger.info("zebra_daq_prep " + str(time.time()))        
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   logger.info("done zebra_daq_prep " + str(time.time()))        
   time.sleep(1.0)
 
@@ -3080,15 +3084,13 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   PW=(exposurePeriodPerImage-detector_dead_time)*1000.0
   PS=(exposurePeriodPerImage)*1000.0
   GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
-  yield from setup_zebra_vector_scan(angle_start=angle_start, gate_width=GW, scan_width=scanWidth, pulse_width=PW, pulse_step=PS,
+  yield from setup_zebra_vector_scan(zebra=zebra, angle_start=angle_start, gate_width=GW, scan_width=scanWidth, pulse_width=PW, pulse_step=PS,
                        exposure_period_per_image=exposurePeriodPerImage, num_images=numImages, is_still=imgWidth==0)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
 
-  det_lib.detector_set_num_triggers(1)  
-  det_lib.detector_set_trigger_mode(2)
-  det_lib.detector_set_trigger_exposure(exposureTimePerImage)
+  yield from setup_eiger_triggers(eiger, EXTERNAL_TRIGGER, 1, exposureTimePerImage)
   logger.info("detector arm " + str(time.time()))        
-  daq_lib.detectorArm(angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
+  yield from setup_eiger_arming(eiger, angle_start,imgWidth,numImages,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start) #this waits
   logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
   startArm = time.time()
   if not (daq_lib.setGovRobot('DA')):
@@ -3109,8 +3111,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   if (lastOnSample() and changeState):
     daq_lib.setGovRobotSA_nowait()    
   logger.info("stop det acquire")
-  det_lib.detector_stop_acquire()
-  det_lib.detector_wait()
+  yield from setup_eiger_stop_acquire_and_wait(eiger)
   yield from bps.mv(vector_program.buffer_time, 3)
   logger.info("zebraDaq Done " + str(time.time()))            
 
@@ -3138,7 +3139,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
   setPvDesc("vectorEndOmega",angle_end)
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
@@ -3199,9 +3200,9 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   detector_dead_time = det_lib.detector_get_deadtime()
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
 
-  yield from setup_zebra_vector_scan_for_raster(angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
+  yield from setup_zebra_vector_scan_for_raster(zebra=zebra, angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
                                 exposure_period_per_image=exposurePeriodPerImage, detector_dead_time=detector_dead_time,
                                 num_images=numImages, scan_encoder=scan_encoder)
   logger.info("exp tim = " + str(exposureTimePerImage))  

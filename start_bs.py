@@ -123,4 +123,4 @@ elif beamline == "nyx":
     denso_robot = Robot("XF:19IDC-ES{Rbt:1}", name="robot")
     robot = DensoRobot(denso_robot)
 else:
-    raise Exception("Unknown beamline")
+    raise Exception(f"Unknown beamline: {beamline}")

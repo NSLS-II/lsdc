@@ -7,7 +7,7 @@ from zebra import Zebra
 import os
 from embl_robot import EMBLRobot
 from denso_robot import DensoRobot
-from nyxtools.robot import Robot
+from nyxtools.robot import DensoOphydRobot
 
 #12/19 - author unknown. DAMA can help
 """
@@ -120,7 +120,7 @@ elif beamline == "fmx":
 
     robot = EMBLRobot()
 elif beamline == "nyx":
-    denso_robot = Robot("XF:19IDC-ES{Rbt:1}", name="robot")
-    robot = DensoRobot(denso_robot)
+    denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
+    robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
 else:
     raise Exception(f"Unknown beamline: {beamline}")

@@ -11,37 +11,25 @@ from mongoengine import NotUniqueError
 from db_lib import *  # makes db connection
 
 
+primary_dewar_name = 'primaryDewarJohn'
+beamline = "nyx"
+owner = 'mike'
+
 def createTestDB():
-        db_connect()
-        beamline = "fmx"
-        createBeamline(beamline, "17id1")
-#        createBeamline("amx", "17id2")        
-#        createBeamline("john", "99id1")
-        owner = 'john'
-        
-        
+        createBeamline(beamline, "19id2")
+
+
         # containers
+        createContainer(primary_dewar_name, 16, owner, kind='automounterDewar')
+
         for i in range(1,5):  # 1 indexed, discontinuity for testing
             containerName = 'Puck_{0}'.format(i)
             createContainer(containerName, 16, owner, kind='16_pin_puck')
 
-        for i in range(1,5):  # discontinuity for testing
-            containerName = 'dewar_{0}'.format(i)
-            createContainer(containerName, 100, owner, kind='shipping_dewar') # I don't know dewar capacity
-
-
-        # named containers
-        primary_dewar_name = 'primaryDewar'
-
-        createContainer("primaryDewar", 24, owner, kind='24_puck_robot_dewar')
-        createContainer("primaryDewarAMX", 24, owner, kind='24_puck_robot_dewar')
-        createContainer("primaryDewarFMX", 24, owner, kind='24_puck_robot_dewar')
-        
 
         for i in range(1,5):  # discontinuity for testing
             containerName = 'Puck_{0}'.format(i)
             insertIntoContainer(primary_dewar_name, owner, i, getContainerIDbyName(containerName, 'john'))
-
 
         # samples
         type_name = 'pin'
@@ -51,7 +39,7 @@ def createTestDB():
                 sampleName = 'samp_{0}_{1}'.format(i, j)
 
                 try:
-                    sampID = createSample(sampleName, owner, kind='24_puck_robot_dewar', sample_type=type_name)
+                    sampID = createSample(sampleName, owner, kind='16_puck_robot_dewar', sample_type=type_name)
 
                 except NotUniqueError:
                     raise NotUniqueError('{0}'.format(sampleName))
@@ -59,13 +47,20 @@ def createTestDB():
                 if not insertIntoContainer(containerName, owner, j, sampID):
                     print('name {0}, pos {1}, sampid {2}'.format(containerName, j, sampID))
 
-
-
-        #setBeamlineConfigParam(beamline, 'mountedSample', {'puckPos': 0, 'pinPos': 0, 'sampleID': -99}) #mountedSample has no val... why??
+def addBeamlineInfo():
         beamlineInfo(beamline, 'mountedSample', {'puckPos': 0, 'pinPos': 0, 'sampleID': '-99'})
         beamlineInfo(beamline, 'rasterScoreFlag',{'index':0} )
-        setBeamlineConfigParam(beamline, 'dewarPlateMap', {'0':[180,-180], '1':[135,225], '2':[90,-270], '3':[45,-315], '4':[0,360], '5':[315,-45], '6':[270,90], '7':[225,-135]})
-        setBeamlineConfigParam(beamline, 'dewarPlateName', 'dewarPlateJohn')
+
+def addCommParams():
+        setBeamlineConfigParam(beamline, 'beamlineComm', 'XF:19IDC-ES:FMX{Comm}')
+
+def addCameraParams():
+        setBeamlineConfigParam(beamline, 'has_xtalview', '1')
+        setBeamlineConfigParam(beamline, 'xtal_url', 'http://xf17id1c-ioc2.cs.nsls2.local:8007/C2.MJPG.jpg')
+        setBeamlineConfigParam(beamline, 'xtal_url_small', 'http://xf17id1c-ioc2.cs.nsls2.local:8008/C2.MJPG.jpg')
+        setBeamlineConfigParam(beamline, 'camera_offset', '0.0')
+        setBeamlineConfigParam(beamline, 'hutchTopCamURL','http://xf19id2-webcam2/axis-cgi/jpg/image.cgi?resolution=320x180&.jpg')
+        setBeamlineConfigParam(beamline, 'hutchCornerCamURL','http://xf19id2-webcam1/axis-cgi/jpg/image.cgi?resolution=320x180&.jpg')
         setBeamlineConfigParam(beamline, 'lowMagCamURL', 'http://xf17id1c-ioc2.cs.nsls2.local:8007/C2.MJPG.mjpg')
         setBeamlineConfigParam(beamline, 'highMagCamURL', 'http://xf17id1c-ioc2.cs.nsls2.local:8008/C2.MJPG.mjpg')
         setBeamlineConfigParam(beamline, 'highMagZoomCamURL', 'http://xf17id1c-ioc2.cs.nsls2.local:8008/C1.MJPG.mjpg')
@@ -80,21 +75,26 @@ def createTestDB():
         setBeamlineConfigParam(beamline, 'highMagPixY', '512')
         setBeamlineConfigParam(beamline, 'screenPixX', '640')
         setBeamlineConfigParam(beamline, 'screenPixY', '512')
-        setBeamlineConfigParam(beamline, 'beamlineComm', 'XF:17IDC-ES:FMX{Comm}')
-        setBeamlineConfigParam(beamline, 'gonioPvPrefix', 'XF:17IDC-ES:FMX')
+
+def addHardwareParams():
+        setBeamlineConfigParam(beamline, 'dewarPlateMap', {'0':[180,-180], '1':[135,225], '2':[90,-270], '3':[45,-315], '4':[0,360], '5':[315,-45], '6':[270,90], '7':[225,-135]})
+
+        setBeamlineConfigParam(beamline, 'gonioPvPrefix', 'XF:19IDC-ES:FMX')
         setBeamlineConfigParam(beamline, 'detector_id', 'EIGER-16')
         setBeamlineConfigParam(beamline, 'detRadius', '116.0')
         setBeamlineConfigParam(beamline, 'detector_type', 'pixel_array')
-        setBeamlineConfigParam(beamline, 'imgsrv_port', '14007')
-        setBeamlineConfigParam(beamline, 'imgsrv_host', 'x25-h.nsls.bnl.gov')
         setBeamlineConfigParam(beamline, 'has_edna', '1')
         setBeamlineConfigParam(beamline, 'has_beamline', '0')
         setBeamlineConfigParam(beamline, 'detector_offline', '0')
-        setBeamlineConfigParam(beamline, 'has_xtalview', '1')
-        setBeamlineConfigParam(beamline, 'camera_offset', '0.0')
-        setBeamlineConfigParam(beamline, 'xtal_url_small', 'http://xf17id1c-ioc2.cs.nsls2.local:8008/C2.MJPG.jpg')
-        setBeamlineConfigParam(beamline, 'xtal_url', 'http://xf17id1c-ioc2.cs.nsls2.local:8007/C2.MJPG.jpg')
         setBeamlineConfigParam(beamline, 'mono_mot_code', 'mon')
+        #hopefully unused, look to remove
+        setBeamlineConfigParam(beamline, 'imgsrv_port', '14007')
+        setBeamlineConfigParam(beamline, 'imgsrv_host', 'x25-h.nsls.bnl.gov')
+
+        #don't forget to add these back to main dev_utils
+        setBeamlineConfigParam(beamline, 'primaryDewarName', primary_dewar_name)        
+
+def addGuiParams():
         setBeamlineConfigParam(beamline, 'screen_default_protocol', 'Screen')
         setBeamlineConfigParam(beamline, 'screen_default_phist', '0.0')
         setBeamlineConfigParam(beamline, 'screen_default_phi_end', '0.2')
@@ -116,9 +116,14 @@ def createTestDB():
         setBeamlineConfigParam(beamline, 'omegaMonitorPV', 'VAL')
         setBeamlineConfigParam(beamline, 'mountEnabled', '1')
 
-        
-
-
 if __name__ == '__main__':
-    createTestDB()
+    db_connect()
+
+    #createTestDB()
+
+    addBeamlineInfo()
+    addCommParams()
+    addCameraParams()
+    addHardwareParams()
+    addGuiParams()
 

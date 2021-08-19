@@ -196,7 +196,7 @@ def det_waitArmed(): #not even sure what this means.
     start_time = time.time()
     while (get_det_pv("armed_state") == 0):
       if time.time() - start_time > timeout:
-        logger.error('aborting arm')
+        logger.error('timeout - detector staying unarmed - aborting arm')
         sys.exit(1)
       time.sleep(.01)
 

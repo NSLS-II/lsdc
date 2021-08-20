@@ -43,5 +43,3 @@ try:
 finally:
     rob.runATask("TraceSample", CMD_TIMEOUT)
     rob.runATask("Finish", CMD_TIMEOUT)
-
-

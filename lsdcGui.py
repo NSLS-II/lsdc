@@ -44,13 +44,24 @@ ws_split = hostname.split('ws')
 logging_file = 'lsdcGuiLog.txt'
 
 import logging
+import platform
 from logging import handlers
+
+class HostnameFilter(logging.Filter):
+    hostname = platform.node().split('.')[0]
+
+    def filter(self, record):
+        record.hostname = HostnameFilter.hostname
+        return True
+
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('requests.packages.urllib3.connectionpool').setLevel(logging.WARNING)
 handler1 = handlers.RotatingFileHandler(logging_file, maxBytes=5000000, backupCount=100)
+handler1.addFilter(HostnameFilter())
 #handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcGuiLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=50000000)
-myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
+#hostname added with help from: https://stackoverflow.com/questions/55584115/python-logging-how-to-track-hostname-in-logs
+myformat = logging.Formatter('%(asctime)s %(hostname)s: %(name)-8s %(levelname)-8s %(message)s')
 handler1.setFormatter(myformat)
 #handler2.setFormatter(myformat)
 logger.addHandler(handler1)
@@ -1770,6 +1781,8 @@ class ControlMain(QtWidgets.QMainWindow):
         emptyQueueButton.clicked.connect(functools.partial(self.dewarTree.deleteSelectedCB,1))
         warmupButton = QtWidgets.QPushButton("Warmup Gripper")        
         warmupButton.clicked.connect(self.warmupGripperCB)
+        restartServerButton = QtWidgets.QPushButton("Restart Server")        
+        restartServerButton.clicked.connect(self.restartServerCB)
         self.openShutterButton = QtWidgets.QPushButton("Open Photon Shutter")        
         self.openShutterButton.clicked.connect(self.openPhotonShutterCB)
         self.popUserScreen = QtWidgets.QPushButton("User Screen...")
@@ -1790,6 +1803,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)        
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
+        vBoxTreeButtsLayoutRight.addWidget(restartServerButton)        
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutLeft)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutRight)
         vBoxDFlayout.addLayout(hBoxTreeButtsLayout)
@@ -3123,10 +3137,11 @@ class ControlMain(QtWidgets.QMainWindow):
       self.beamsizeComboBox.setCurrentIndex(beamSizeFlag)
 
     def processEnergyChange(self,energyVal):
-      if (energyVal<9000):
-        self.beamsizeComboBox.setEnabled(False)
-      else:
-        self.beamsizeComboBox.setEnabled(True)
+      if daq_utils.beamline != "amx":
+        if (energyVal<9000):
+          self.beamsizeComboBox.setEnabled(False)
+        else:
+          self.beamsizeComboBox.setEnabled(True)
         
     def processControlMaster(self,controlPID):
       logger.info("in callback controlPID = " + str(controlPID))
@@ -4213,7 +4228,7 @@ class ControlMain(QtWidgets.QMainWindow):
         return 
       retval,self.currentFrame = self.capture.read()
       if self.currentFrame is None:
-        logger.warning('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
+        logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
         return #maybe stop the timer also???
       height,width=self.currentFrame.shape[:2]
       qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
@@ -4621,6 +4636,24 @@ class ControlMain(QtWidgets.QMainWindow):
     def parkGripperCB(self):
       self.send_to_server("parkGripper()")      
       
+    def restartServerCB(self):
+      if (self.controlEnabled()):
+        msg = "Desperation move. Are you sure?"
+        self.timerHutch.stop()
+        self.timerSample.stop()      
+        reply = QtWidgets.QMessageBox.question(self, 'Message',msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        self.timerSample.start(0)            
+        self.timerHutch.start(HUTCH_TIMER_DELAY)      
+        if reply == QtWidgets.QMessageBox.Yes:
+          if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
+            restart_pv = PV(daq_utils.beamlineComm + "RestartServerSignal")
+            restart_pv.put(not(restart_pv.get()))
+          else:
+            logger.error('Not restarting server - unknown beamline')
+      else:
+        self.popupServerMessage("You don't have control")
+          
+
     def openPhotonShutterCB(self):
       self.photonShutterOpen_pv.put(1)
 
@@ -5146,7 +5179,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.stopDet_pv = PV(det_stop_pv)
       det_reboot_pv = daq_utils.pvLookupDict["eigerIOC_reboot"]
       logger.info('setting detector ioc reboot PV: %s' % det_reboot_pv)
-      self.rebootDetIOC_pv = PV(daq_utils.beamlineComm + "eigerIOC_reboot")      
+      self.rebootDetIOC_pv = PV(det_reboot_pv)
       rz_pv = daq_utils.pvLookupDict["zebraReset"]
       logger.info('setting zebra reset PV: %s' % rz_pv)
       self.resetZebra_pv = PV(rz_pv)

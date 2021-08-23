@@ -17,6 +17,7 @@ import sys
 import traceback
 import filecmp
 import _thread
+from threading import Thread
 import logging
 import epics.ca
 
@@ -251,13 +252,15 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   global sampXadjust, sampYadjust, sampZadjust  
 
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
+  logger.info(f'init: {init} warmup: {warmup}')
   if (getBlConfig('robot_online')):
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.setGovRobot('SE')
     if (getBlConfig(TOP_VIEW_CHECK) == 1):
       try:
         if (daq_utils.beamline == "fmx"):                  
-          _thread.start_new_thread(setWorkposThread,(init,0))        
+          workposThread = Thread(target=setWorkposThread,args=(init,0))
+          workposThread.start()        
 
         sample = db_lib.getSampleByID(sampID)
         sampName = sample['name']
@@ -291,6 +294,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
       if (init):
+        logger.debug('main loading part')
         setPvDesc("boostSelect",0)
         if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
           setPvDesc("boostSelect",1)
@@ -312,6 +316,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         setPvDesc("boostSelect",0)                    
         if (getPvDesc("gripTemp")>-170):
           try:
+            logger.debug('mounting')
             RobotControlLib.mount(absPos)
           except Exception as e:
             e_s = str(e)
@@ -325,6 +330,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             logger.info("full mount")
             RobotControlLib.mount(absPos)
           else:
+            logger.debug('quick mount')
             RobotControlLib.initialize()
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)                                
@@ -340,13 +346,29 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
+      logger.info(f'{getBlConfig(TOP_VIEW_CHECK)} {daq_utils.beamline}')
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
-        daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
-        if (sampYadjust != 0):
-          pass
-        else:
+        if daq_utils.beamline == "fmx":
+          try: #make sure workposThread is finished before proceeding to robotGovActive check
+            timeout = 20
+            start_time = time.time()
+            while workposThread.isAlive():
+              time.sleep(0.5)
+              if time.time() - start_time > timeout:
+                raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')
+            logger.info(f'Time waiting for workposThread: {time.time() - start_time}s')
+          except Exception as e:
+            daq_lib.gui_message(e)
+            logger.error(e)
+            return 0
+          if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
+                                           #(due to setWorkposThread),
+            logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
+            setPvDesc('robotGovActive', 1) #set it active
+          else:
+            logger.info('not changing anything as governor is active')
+        if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
-#else it thinks it worked            return 0
       
       daq_lib.setGovRobot('SA')
       return 1

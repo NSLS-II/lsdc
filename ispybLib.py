@@ -6,6 +6,7 @@ from ispyb.xmltools import mx_data_reduction_to_ispyb, xml_file_to_dict
 import daq_utils
 from epics import PV
 import db_lib
+import det_lib
 import time
 import mysql.connector
 import logging
@@ -27,8 +28,6 @@ mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREEN
 cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev.cs.nsls2.local',database='ispyb')
 cursor = cnx.cursor()
 beamline = os.environ["BEAMLINE_ID"]
-detSeqNumPVNAME = db_lib.getBeamlineConfigParam(beamline,"detSeqNumPVNAME") #careful - this pvname is stored in DB and in detControl.
-detSeqNumPV = PV(detSeqNumPVNAME)
 
   # Find the id for a particular
 
@@ -224,7 +223,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
      
-     seqNum = int(detSeqNumPV.get())          
+     seqNum = int(det_lib.detector_get_seqnum())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
      request_id = result['request']
      comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {request_id} 1 1 0 {seqNum}\""

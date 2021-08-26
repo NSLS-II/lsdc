@@ -1,0 +1,8 @@
+export PROJDIR=/data/Software/LSDC/
+export CONFIGDIR=${PROJDIR}bnlpx_config/
+export LSDCHOME=${PROJDIR}lsdc
+
+export PATH=/usr/local/bin:/usr/bin:/bin
+export PYTHONPATH=".:${CONFIGDIR}:/opt/dectris/albula/4.0/python:/usr/local/crys/edna-mx/mxv1/src:/usr/local/crys/edna-mx/kernel/src:${LSDCHOME}"
+source ${CONFIGDIR}daq_env_nyx.txt
+/opt/conda_envs/lsdc-gui-1.0/bin/python $LSDCHOME/lsdcGui.py&

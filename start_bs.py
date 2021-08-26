@@ -110,6 +110,7 @@ if (beamline=="amx"):
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     robot = EMBLRobot()
+
 elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
@@ -117,10 +118,17 @@ elif beamline == "fmx":
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
-
     robot = EMBLRobot()
-elif beamline == "nyx":
+
+elif beamline=="nyx":
+    mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
+    mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
+                                            'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
+    vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
+    zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
+    # We plan to provide a proper definition later
+    #vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
     robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
 else:
-    raise Exception(f"Unknown beamline: {beamline}")
+    raise Exception(f"Invalid beamline name provided: {beamline}")

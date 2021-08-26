@@ -20,7 +20,7 @@ def createTestDB():
 
 
         # containers
-        createContainer(primary_dewar_name, 16, owner, kind='automounterDewar')
+        createContainer(primary_dewar_name, 16, owner, kind='automounterDewar')  # All dewars currently in use are automounterDewar
 
         for i in range(1,5):  # 1 indexed, discontinuity for testing
             containerName = 'Puck_{0}'.format(i)

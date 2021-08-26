@@ -98,6 +98,8 @@ def addHardwareParams():
         # below are all parameters that allow clean running of the LSDC GUI and server but
         # are not required for the GUI and server to start up.
 
+        setBeamlineConfigParam(beamline, config_params.DETECTOR_OBJECT_TYPE, config_params.DETECTOR_OBJECT_TYPE_OPHYD)
+
         # additional params required for staff and user GUI panels to open without crashing the GUI
         setBeamlineConfigParam(beamline, 'robot_online', 0)
         setBeamlineConfigParam(beamline, config_params.TOP_VIEW_CHECK, 0)

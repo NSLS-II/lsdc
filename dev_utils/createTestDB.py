@@ -77,6 +77,7 @@ def addCameraParams():
         setBeamlineConfigParam(beamline, 'screenPixY', '512')
 
 def addHardwareParams():
+        #dewarPlateName parameter is no longer used and has been removed
         setBeamlineConfigParam(beamline, 'dewarPlateMap', {'0':[180,-180], '1':[135,225], '2':[90,-270], '3':[45,-315], '4':[0,360], '5':[315,-45], '6':[270,90], '7':[225,-135]})
 
         setBeamlineConfigParam(beamline, 'gonioPvPrefix', 'XF:19IDC-ES:FMX')

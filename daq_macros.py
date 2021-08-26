@@ -3099,33 +3099,6 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   
   setPvDesc("lowMagTrigMode",0)
 
-def topViewSnap(filePrefix,data_directory_name,file_number_start,acquire=1): #if we don't need to stream, then this requires few steps
-  os.system("mkdir -p " + data_directory_name)  
-  os.system("chmod 777 " + data_directory_name)  
-  setPvDesc("topViewAcquire",0,wait=False)
-  time.sleep(1.0) #this sleep definitely needed
-  setPvDesc("topViewTrigMode",5)
-  setPvDesc("topViewImMode",0)
-  setPvDesc("topViewDataType",0)    
-  setPvDesc("topViewJpegFilePath",data_directory_name)
-  setPvDesc("topViewJpegFileName",filePrefix)
-  setPvDesc("topViewJpegFileNumber",file_number_start)
-  if (acquire):
-    setPvDesc("topViewAcquire",1)
-    setPvDesc("topViewWriteFile",1)
-    setPvDesc("topViewTrigMode",0)    
-    setPvDesc("topViewImMode",2)
-    setPvDesc("topViewDataType",1)
-    setPvDesc("topViewAcquire",1,wait=False)    
-
-def topViewWrite():  
-  setPvDesc("topViewWriteFile",1)
-  setPvDesc("topViewTrigMode",0)    
-  setPvDesc("topViewImMode",2)
-  setPvDesc("topViewDataType",1)
-  
-  
-  
 
 def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
@@ -3525,9 +3498,6 @@ def createProposal(propNum,PI_login="boaty"):
   ispybLib.createProposal(propNum,PI_login)
   
 
-def topViewCheckOn():
-  setBlConfig(TOP_VIEW_CHECK,1)
-
 def anneal(annealTime):
   if daq_utils.beamline == 'fmx':
     if not govStatusGet('SA'):
@@ -3564,9 +3534,6 @@ def anneal(annealTime):
   else:
     daq_lib.gui_message(f'Anneal not implemented for beamline {daq_utils.beamline}! Doing nothing')
   
-def topViewCheckOff():
-  setBlConfig(TOP_VIEW_CHECK,0)
-
 def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy = 12.7, wedge = 180, flux = 1e12, verbose = True):
   if (not os.path.exists("2vb1.pdb")):
     os.system("ln -s $CONFIGDIR/2vb1.pdb .")

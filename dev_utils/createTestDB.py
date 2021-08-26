@@ -9,7 +9,7 @@ import traceback
 from mongoengine import NotUniqueError
 
 from db_lib import *  # makes db connection
-
+import config_params
 
 primary_dewar_name = 'primaryDewarJohn'
 beamline = "nyx"
@@ -94,6 +94,29 @@ def addHardwareParams():
 
         #don't forget to add these back to main dev_utils
         setBeamlineConfigParam(beamline, 'primaryDewarName', primary_dewar_name)        
+
+        # below are all parameters that allow clean running of the LSDC GUI and server but
+        # are not required for the GUI and server to start up.
+
+        # additional params required for staff and user GUI panels to open without crashing the GUI
+        setBeamlineConfigParam(beamline, 'robot_online', 0)
+        setBeamlineConfigParam(beamline, config_params.TOP_VIEW_CHECK, 0)
+        setBeamlineConfigParam(beamline, 'queueCollect', 0)
+        setBeamlineConfigParam(beamline, 'vertRasterOn', 0)
+        setBeamlineConfigParam(beamline, 'rasterProcessFlag', 0)
+        setBeamlineConfigParam(beamline, 'fastDPNode1', 'cpu-001')
+        setBeamlineConfigParam(beamline, 'fastDPNode2', 'cpu-002')
+        setBeamlineConfigParam(beamline, 'fastDPNode3', 'cpu-003')
+        setBeamlineConfigParam(beamline, 'fastDPNode4', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode1', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode2', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode3', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode4', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode5', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode6', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode7', 'cpu-004')
+        setBeamlineConfigParam(beamline, 'spotNode8', 'cpu-004')
+
 
 def addGuiParams():
         setBeamlineConfigParam(beamline, 'screen_default_protocol', 'Screen')

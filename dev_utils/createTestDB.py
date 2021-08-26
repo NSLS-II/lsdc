@@ -52,7 +52,7 @@ def addBeamlineInfo():
         beamlineInfo(beamline, 'rasterScoreFlag',{'index':0} )
 
 def addCommParams():
-        setBeamlineConfigParam(beamline, 'beamlineComm', 'XF:19IDC-ES:FMX{Comm}')
+        setBeamlineConfigParam(beamline, 'beamlineComm', 'XF:19ID2-ES:NYX{Comm}')
 
 def addCameraParams():
         setBeamlineConfigParam(beamline, 'has_xtalview', '1')

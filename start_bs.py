@@ -127,6 +127,7 @@ elif beamline=="nyx":
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     #TODO: We plan to provide a proper definition later
+    #vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     vector_program = object()
     denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
     robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object

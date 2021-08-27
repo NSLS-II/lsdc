@@ -10,6 +10,7 @@ from mongoengine import NotUniqueError
 
 from db_lib import *  # makes db connection
 
+import config_params
 
 primary_dewar_name = 'primaryDewarJohn'
 beamline = "nyx"
@@ -94,6 +95,8 @@ def addHardwareParams():
 
         #don't forget to add these back to main dev_utils
         setBeamlineConfigParam(beamline, 'primaryDewarName', primary_dewar_name)        
+
+        setBeamlineConfigParam(beamline, config_params.CRYOSTREAM_ONLINE, 0)
 
 def addGuiParams():
         setBeamlineConfigParam(beamline, 'screen_default_protocol', 'Screen')

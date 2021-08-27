@@ -716,6 +716,9 @@ def collectData(currentRequest):
     logger.error("caught index error in logging")
   except KeyError as e:
     logger.error('caught key error in logging: %s' % e)
+
+  # collection finished, start processing
+  send_message(uuid=currentRequest['uid'], protocol=currentRequest["prot"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
     seqNum = int(detector_get_seqnum())
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"

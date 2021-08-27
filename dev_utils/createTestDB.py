@@ -95,6 +95,8 @@ def addHardwareParams():
         #don't forget to add these back to main dev_utils
         setBeamlineConfigParam(beamline, 'primaryDewarName', primary_dewar_name)        
 
+        setBeamlineConfigParam(beamline, 'cryostream_online', 0)
+
 def addGuiParams():
         setBeamlineConfigParam(beamline, 'screen_default_protocol', 'Screen')
         setBeamlineConfigParam(beamline, 'screen_default_phist', '0.0')

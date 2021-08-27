@@ -1631,7 +1631,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = PV(daq_utils.pvLookupDict["gripTemp"])
-        if getBlConfig('cryostream_online'):
+        if getBlConfig(CRYOSTREAM_ONLINE):
           self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
         if (daq_utils.beamline == "fmx"):        
           self.slit1XGapSP_pv = PV(daq_utils.motor_dict["slit1XGap"] + ".VAL")
@@ -2567,7 +2567,7 @@ class ControlMain(QtWidgets.QMainWindow):
         gripperLabel = QtWidgets.QLabel('Gripper Temp:')
         self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel('Cryostream Temp:')
-        if getBlConfig('cryostream_online'):
+        if getBlConfig(CRYOSTREAM_ONLINE):
           self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
         else:
           self.cryostreamTempLabel = QtWidgets.QLabel("N/A")
@@ -5264,7 +5264,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
       self.gripTempSignal.connect(self.processGripTemp)
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
-      if getBlConfig('cryostream_online'):
+      if getBlConfig(CRYOSTREAM_ONLINE):
         self.cryostreamTempSignal.connect(self.processCryostreamTemp)
         self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
       self.ringCurrentSignal.connect(self.processRingCurrent)      

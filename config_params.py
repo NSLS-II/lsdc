@@ -1,6 +1,6 @@
 from enum import Enum
 
-# BlConfig parameters
+# BlConfig parameter variable names
 
 # rastering parameters
 RASTER_TUNE_LOW_RES = 'rasterTuneLowRes'
@@ -26,6 +26,10 @@ LOW_MAG_EXP_TIME = 'lowMagExptime'
 
 # top view
 TOP_VIEW_CHECK = 'topViewCheck'
+
+CRYOSTREAM_ONLINE = 'cryostream_online'  # consistent naming with hardware, such as robot_online
+
+# constant values below
 
 # raster request status updates
 class RasterStatus(Enum):

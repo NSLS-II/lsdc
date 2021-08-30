@@ -51,7 +51,7 @@ class DensoRobot:
     def unmount(self, puck_pos: int, pin_pos: int, samp_id: str):
         try:
             self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
-        except Exception as e
+        except Exception as e:
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE
         return UNMOUNT_SUCCESSFUL

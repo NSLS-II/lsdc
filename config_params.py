@@ -61,3 +61,5 @@ PINS_PER_PUCK = 16
 DETECTOR_OBJECT_TYPE_LSDC = "lsdc"  # using det_lib
 DETECTOR_OBJECT_TYPE_OPHYD = "ophyd"  # instantiated in start_bs, using Bluesky scans
 DETECTOR_OBJECT_TYPE = "detectorObjectType"
+
+DETECTOR_SAFE_DISTANCE = 200.0

@@ -3227,7 +3227,11 @@ class ControlMain(QtWidgets.QMainWindow):
     def processChoochResult(self,choochResultFlag):
       if (choochResultFlag == "0"):
         return
-      choochResult = db_lib.getResult(choochResultFlag)
+      try:
+        choochResult = db_lib.getResult(choochResultFlag)
+      except IndexError:  # if no result, just return as if no result
+        logger.info(f'Exception while retrieving result for chooch result so not plotting but continuing GUI: {choochResultFlag}')
+        return
       choochResultObj = choochResult["result_obj"]
       graph_x = choochResultObj["choochInXAxis"]
       graph_y = choochResultObj["choochInYAxis"]

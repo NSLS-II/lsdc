@@ -10,4 +10,5 @@ export LD_LIBRARY_PATH=$matlab_distrib/bin/glnx86:$matlab_distrib/toolbox
 export PINALIGNDIR=${PROJDIR}pinAlign/pin_align-master/
 export MXPROCESSINGSCRIPTSDIR=${PROJDIR}mx-processing/
 export WRAPPERSDIR=${PROJDIR}wrappers/
+export KAFKA_SERVERS="kafka1.nsls2.bnl.gov:9092,kafka2.nsls2.bnl.gov:9092,kafka3.nsls2.bnl.gov:9092,kafka4.nsls2.bnl.gov:9092,kafka5.nsls2.bnl.gov:9092,kafka6.nsls2.bnl.gov:9092,kafka7.nsls2.bnl.gov:9092"
 $LSDCHOME/lsdcServer

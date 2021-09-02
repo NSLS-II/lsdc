@@ -1,5 +1,6 @@
 import os
 from math import *
+import math
 import requests
 import getpass
 import logging
@@ -27,6 +28,8 @@ scan_list = []
 soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
+
+EV_ANGSTROM_CONSTANT = 12398.42  # https://www.kmlabs.com/en/wavelength-to-photon-energy-calculator
 
 def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)
@@ -90,7 +93,7 @@ def calc_reso(det_radius,detDistance,wave,theta):
     distance = 100.0
   else:
     distance = detDistance
-  dg2rd = 3.14159265 / 180.0
+  dg2rd = math.pi / 180.0
   theta_radians = float(theta) * dg2rd
   theta_t = (theta_radians + atan(det_radius/float(distance)))/2
   dmin_t = float(wave)/(2*(sin(theta_t)))
@@ -100,7 +103,7 @@ def calc_reso(det_radius,detDistance,wave,theta):
 def distance_from_reso(det_radius,reso,wave,theta):
 
   try:
-    dg2rd = 3.14159265 / 180.0
+    dg2rd = math.pi / 180.0
     theta_radians = float(theta) * dg2rd
     dx = det_radius/(tan(2*(asin(float(wave)/(2*reso)))-theta_radians))
     return float("%.2f" % dx)
@@ -112,13 +115,13 @@ def energy2wave(e):
   if (float(e)==0.0):
     return 1.0
   else:
-    return float("%.2f" % (12398.5/e))
+    return float("%.2f" % (EV_ANGSTROM_CONSTANT/e))
 
 def wave2energy(w):
   if (float(w)==0.0):
     return 12600.0
   else:
-    return float("%.2f" % (12398.5/w))
+    return float("%.2f" % (EV_ANGSTROM_CONSTANT/w))
 
 def createDefaultRequest(sample_id,createVisit=True):
     """

@@ -15,7 +15,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
-from kafka import send_kafka_message
+from kafka_producer import send_kafka_message
 import logging
 logger = logging.getLogger(__name__)
 
@@ -719,7 +719,8 @@ def collectData(currentRequest):
     logger.error('caught key error in logging: %s' % e)
 
   # collection finished, start processing
-  send_kafka_message(uuid=currentRequest['uid'], protocol=currentRequest["prot"])
+  if currentRequest["prot"] in ("standard", "vector", "raster"):
+    send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=currentRequest["prot"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
     seqNum = int(detector_get_seqnum())
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"

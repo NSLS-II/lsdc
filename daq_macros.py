@@ -27,6 +27,7 @@ from string import Template
 from collections import OrderedDict
 from threading import Thread
 from config_params import *
+from kafka_producer import send_kafka_message
 
 from fmx_annealer import govStatusGet, govStateSet, annealer # for using annealer specific to FMX
 
@@ -1482,6 +1483,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
       zebraWait()
       zebraWaitDownload(numsteps)
       logger.info('done raster')
+
+      # processing
       if (procFlag):    
         if (daq_utils.detector_id == "EIGER-16"):
           seqNum = int(det_lib.detector_get_seqnum())
@@ -1498,6 +1501,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
                                                             rasterReqID))
         spotFindThread.start()
         spotFindThreadList.append(spotFindThread)
+      send_kafka_message(f'{daq_utils.beamline}.lsdc.documents', event='event', uuid=rasterReqID, protocol="raster", row=i, proc_flag=procFlag)
 
 
     """governor transitions:

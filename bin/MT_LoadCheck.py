@@ -26,7 +26,7 @@ try:
         for n in range(1,49):
             rob.par.execute("nSample",n)
             rob.parChk.execute("nDummy")
-            if n!=int(float(rob.parChk.execute("nSample")))
+            if n!=int(float(rob.parChk.execute("nSample"))):
                 raise Exception("Failed to set robot viable nSample")
 
 #            if n in [17,33]:

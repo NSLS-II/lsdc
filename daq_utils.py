@@ -151,17 +151,17 @@ def distance_from_reso(det_radius,reso,wave,theta):
     return 501.0 #a safe value for now
 
 
-def energy2wave(e):
+def energy2wave(e, digits=2):
   if (float(e)==0.0):
     return 1.0
   else:
-    return float("%.2f" % (12398.5/e))
+    return float(f"%.{digits}f" % (EV_ANGSTROM_CONSTANT/e))
 
-def wave2energy(w):
+def wave2energy(w, digits=2):
   if (float(w)==0.0):
     return 12600.0
   else:
-    return float("%.2f" % (12398.5/w))
+    return float(f"%.{digits}f" % (EV_ANGSTROM_CONSTANT/w))
 
 def createDefaultRequest(sample_id,createVisit=True):
     """

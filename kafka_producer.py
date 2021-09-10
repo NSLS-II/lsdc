@@ -18,7 +18,7 @@ def delivery_callback(err, msg):
 def send_kafka_message(topic=topic, event=event, uuid=uuid, protocol=protocol, **kwargs):
     try:
         if protocol in ("standard", "vector") or (protocol == "raster" and event == "stop"):
-            message = {"event":event, "uuid":uuid, "protocol":protocol)
+            message = {"event":event, "uuid":uuid, "protocol":protocol}
         elif protocol == "raster" and event == "event":
             message = {"event":event, "uuid":uuid, "protocol":protocol, "row":kwargs["row"], "proc_flag":kwargs["proc_flag"]}
         else:

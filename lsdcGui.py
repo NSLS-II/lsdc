@@ -1601,9 +1601,9 @@ class ControlMain(QtWidgets.QMainWindow):
     beamAvailableSignal = QtCore.Signal(float)
     sampleExposedSignal = QtCore.Signal(float)
     sampMoveSignal = QtCore.Signal(int, str)
-    roiChangeSignal = QtCore.Signal(str)
-    highMagCursorChangeSignal = QtCore.Signal(str)
-    lowMagCursorChangeSignal = QtCore.Signal(str)
+    roiChangeSignal = QtCore.Signal(int, str)
+    highMagCursorChangeSignal = QtCore.Signal(int, str)
+    lowMagCursorChangeSignal = QtCore.Signal(int, str)
     cryostreamTempSignal = QtCore.Signal(str)
 
     def __init__(self):

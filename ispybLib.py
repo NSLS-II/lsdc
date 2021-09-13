@@ -137,7 +137,9 @@ def createVisit(propNum):
   cnx.commit()
   try:
     personsOnProposalList = core.retrieve_persons_for_proposal("mx",propNum)
+    logger.debug(f'list of all persons: {personsOnProposalList}')
   except:
+    logger.error(f'exception when retrieving persons for proposal {propNum}')
     return visitName      
   for i in range (0,len(personsOnProposalList)):
     personLogin = personsOnProposalList[i]["login"]

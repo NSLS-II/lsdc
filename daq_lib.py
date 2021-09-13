@@ -719,8 +719,8 @@ def collectData(currentRequest):
     logger.error('caught key error in logging: %s' % e)
 
   # collection finished, start processing
-  if currentRequest["prot"] in ("standard", "vector", "raster"):
-    send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=currentRequest["prot"])
+  if reqObj["protocol"] in ("standard", "vector", "raster"):
+    send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=reqObj["protocol"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
     seqNum = int(detector_get_seqnum())
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
@@ -825,7 +825,7 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   detector_set_filepath(data_directory_name)
   detector_set_fileprefix(file_prefix_minus_directory)
   detector_set_filenumber(file_number)
-  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy")),0.0,exposure_period,getPvDesc("beamCenterX"),getPvDesc("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
+  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), 6),0.0,exposure_period,getPvDesc("beamCenterX"),getPvDesc("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
   
   detector_start() #but you need wired or manual trigger
   startArm = time.time()

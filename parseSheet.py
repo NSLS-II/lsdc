@@ -8,7 +8,7 @@ def parseSpreadsheet(infilename):
 
   excel_data = pandas.read_excel(infilename,header=1)
 
-  DataFrame = pandas.read_excel(infilename, sheetname=0)
+  DataFrame = pandas.read_excel(infilename, sheet_name=0)
   d = DataFrame.to_dict()
   logger.info(d)
   return d

@@ -2,7 +2,7 @@
 
 # this script is to be run via sudo to cleanup leftover processes from previous groups
 
-killall -KILL daq_main2.py
+pkill -KILL -f daq_main2.py
 
 #id
 #whoami

@@ -346,6 +346,12 @@ def mountSample(sampID):
   currentMountedSampleID = mountedSampleDict["sampleID"]
   if (getBlConfig(TOP_VIEW_CHECK) == 1):
     logger.info("setting work pos")
+    if daq_utils.beamline == "fmx":
+      beamline_lib.mvaDescriptor("sampleX", getPvDesc("robotXMountPos"))
+      beamline_lib.mvaDescriptor("sampleY", getPvDesc("robotYMountPos"))
+      beamline_lib.mvaDescriptor("sampleZ", getPvDesc("robotZMountPos"))
+      beamline_lib.mvaDescriptor("omega", 90.0)
+      logger.info(f'Done moving motors for{daq_utils.beamline}')
     setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
     setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
     setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))

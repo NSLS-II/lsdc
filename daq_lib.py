@@ -346,12 +346,11 @@ def mountSample(sampID):
   currentMountedSampleID = mountedSampleDict["sampleID"]
   if (getBlConfig(TOP_VIEW_CHECK) == 1):
     logger.info("setting work pos")
-    if (daq_utils.beamline == "amx"):                          
-      setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
-      setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
-      setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
-      setPvDesc("robotOmegaWorkPos",90.0)    
-      logger.info("done setting work pos")  
+    setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
+    setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
+    setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
+    setPvDesc("robotOmegaWorkPos",90.0)    
+    logger.info("done setting work pos")  
   if (currentMountedSampleID != ""): #then unmount what's there
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]

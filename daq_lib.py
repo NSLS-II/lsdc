@@ -471,7 +471,7 @@ def runDCQueue(): #maybe don't run rasters from here???
     reqObj = currentRequest["request_obj"]
     setPvDesc("govRobotDetDist",reqObj["detDist"])
     setPvDesc("govHumanDetDist",reqObj["detDist"])
-    if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
+    if (reqObj["detDist"] >= ROBOT_MIN_DISTANCE and getBlConfig("HePath") == 0):
       setPvDesc("govRobotDetDistOut",reqObj["detDist"])
       setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
     sampleID = currentRequest["sample"]

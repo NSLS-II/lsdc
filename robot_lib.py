@@ -21,7 +21,7 @@ from threading import Thread
 import logging
 import epics.ca
 
-from config_params import TOP_VIEW_CHECK
+from config_params import TOP_VIEW_CHECK, ROBOT_MIN_DISTANCE, ROBOT_DISTANCE_TOLERANCE
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
@@ -374,9 +374,9 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
   logger.info("robot online = " + str(robotOnline))
   if (robotOnline):
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    
-    if (detDist<200.0):
-      setPvDesc("govRobotDetDistOut",200.0)
-      setPvDesc("govHumanDetDistOut",200.0)          
+    if (detDist<ROBOT_MIN_DISTANCE):
+      setPvDesc("govRobotDetDistOut",ROBOT_MIN_DISTANCE)
+      setPvDesc("govHumanDetDistOut",ROBOT_MIN_DISTANCE)          
     daq_lib.setRobotGovState("SE")    
     logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
     logger.info("absPos = " + str(absPos))
@@ -407,10 +407,8 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       logger.error(message)
       return 0
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-    if (detDist<200.0):
-      beamline_lib.mvaDescriptor("detectorDist",200.0)
-    if (beamline_lib.motorPosFromDescriptor("detectorDist") < 199.0):
-      logger.error("ERROR - Detector < 200.0!")
+    if detDist < ROBOT_MIN_DISTANCE and abs(detDist - ROBOT_MIN_DISTANCE) > ROBOT_DISTANCE_TOLERANCE:
+      logger.error(f"ERROR - Detector closer than {ROBOT_MIN_DISTANCE} and move than {ROBOT_DISTANCE_TOLERANCE} from {ROBOT_MIN_DISTANCE}! actual distance: {detDist}. Stopping.")
       return 0
     try:
       RobotControlLib.unmount2(absPos)

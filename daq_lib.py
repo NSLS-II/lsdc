@@ -346,12 +346,17 @@ def mountSample(sampID):
   currentMountedSampleID = mountedSampleDict["sampleID"]
   if (getBlConfig(TOP_VIEW_CHECK) == 1):
     logger.info("setting work pos")
-    if (daq_utils.beamline == "amx"):                          
-      setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
-      setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
-      setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
-      setPvDesc("robotOmegaWorkPos",90.0)    
-      logger.info("done setting work pos")  
+    if daq_utils.beamline == "fmx":
+      beamline_lib.mvaDescriptor("sampleX", getPvDesc("robotXMountPos"))
+      beamline_lib.mvaDescriptor("sampleY", getPvDesc("robotYMountPos"))
+      beamline_lib.mvaDescriptor("sampleZ", getPvDesc("robotZMountPos"))
+      beamline_lib.mvaDescriptor("omega", 90.0)
+      logger.info(f'Done moving motors for{daq_utils.beamline}')
+    setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
+    setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
+    setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
+    setPvDesc("robotOmegaWorkPos",90.0)    
+    logger.info("done setting work pos")  
   if (currentMountedSampleID != ""): #then unmount what's there
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
@@ -466,7 +471,7 @@ def runDCQueue(): #maybe don't run rasters from here???
     reqObj = currentRequest["request_obj"]
     setPvDesc("govRobotDetDist",reqObj["detDist"])
     setPvDesc("govHumanDetDist",reqObj["detDist"])
-    if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
+    if (reqObj["detDist"] >= ROBOT_MIN_DISTANCE and getBlConfig("HePath") == 0):
       setPvDesc("govRobotDetDistOut",reqObj["detDist"])
       setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
     sampleID = currentRequest["sample"]

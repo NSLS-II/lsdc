@@ -1,0 +1,1 @@
+script -a -c lsdcRemote.cmd -f lsdcRemoteLog.txt

@@ -6,7 +6,7 @@ from time import sleep
 
 import certifi
 
-conf = {'bootstrap.servers':os.environ["KAFKA_SERVERS"]
+conf = {'bootstrap.servers':os.environ["KAFKA_SERVERS"],
         'security.protocol': 'SSL',
         'ssl.ca.location': certifi.where()}
 p = Producer(**conf)

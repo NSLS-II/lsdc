@@ -4,7 +4,11 @@ import sys
 import json
 from time import sleep
 
-conf = {'bootstrap.servers':os.environ["KAFKA_SERVERS"]}
+import certifi
+
+conf = {'bootstrap.servers':os.environ["KAFKA_SERVERS"],
+        'security.protocol': 'SSL',
+        'ssl.ca.location': certifi.where()}
 p = Producer(**conf)
 
 def delivery_callback(err, msg):

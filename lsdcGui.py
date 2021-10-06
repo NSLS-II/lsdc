@@ -238,6 +238,10 @@ class StaffScreenDialog(QFrame):
         else:
           self.guiRemoteOnCheckBox.setChecked(False)            
         self.guiRemoteOnCheckBox.stateChanged.connect(self.guiRemoteOnCheckCB)
+        self.albulaDispCheckBox = QCheckBox("Display Data (Albula)")
+        self.albulaDispCheckBox.setChecked(True)
+        hBoxColParams1.addWidget(self.albulaDispCheckBox)
+
         self.enableMountCheckBox = QCheckBox("Enable Mount")
         if (getBlConfig("mountEnabled") == 1):
           self.enableMountCheckBox.setChecked(True)
@@ -1517,7 +1521,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       filename = cell.data(1)
                       d_min = cell.data(2)
                       intensity = cell.data(3)
-                      if (self.parent.albulaDispCheckBox.isChecked()):
+                      if (self.parent.staffScreenDialog.albulaDispCheckBox.isChecked()):
                           if (filename != "empty"):
                               albulaUtils.albulaDispFile(filename)
                       if not (self.parent.rasterExploreDialog.isVisible()):
@@ -2188,13 +2192,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.characterizeParamsFrame.hide()
         colParamsGB.setLayout(vBoxColParams1)
         self.dataPathGB = DataLocInfo(self)
-        hBoxDisplayOptionLayout= QtWidgets.QHBoxLayout()        
-        self.albulaDispCheckBox = QCheckBox("Display Data (Albula)")
-        self.albulaDispCheckBox.setChecked(False)
-        hBoxDisplayOptionLayout.addWidget(self.albulaDispCheckBox)
         vBoxMainColLayout.addWidget(colParamsGB)
         vBoxMainColLayout.addWidget(self.dataPathGB)
-        vBoxMainColLayout.addLayout(hBoxDisplayOptionLayout)
         self.mainColFrame.setLayout(vBoxMainColLayout)
         self.mainToolBox.addItem(self.mainColFrame,"Collection Parameters")        
         editSampleButton = QtWidgets.QPushButton("Apply Changes") 
@@ -4842,7 +4841,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
       if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
         if ("priority" in selectedSampleRequest):
-          if (selectedSampleRequest["priority"] < 0 and self.albulaDispCheckBox.isChecked()):
+          if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
             firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
             albulaUtils.albulaDispFile(firstFilename)            
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
@@ -4967,6 +4966,9 @@ class ControlMain(QtWidgets.QMainWindow):
                   self.processChoochResult(resultID)
           except KeyError:
             logger.error('KeyError - ignoring chooch-related items, perhaps from a bad energy scan')
+        elif reqObj["protocol"] == "raster":
+            logger.info('doing something')
+            #use albulaUtils to open albula main window
         self.refreshCollectionParams(self.selectedSampleRequest)
 
 

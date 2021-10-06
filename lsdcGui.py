@@ -178,7 +178,8 @@ class RasterExploreDialog(QtWidgets.QDialog):
 
 
 class StaffScreenDialog(QFrame):  
-    def __init__(self,parent = None):
+    def __init__(self, parent = None, **kwargs):
+        show = kwargs.get('show', True)
         self.parent=parent
         QFrame.__init__(self)
         self.setWindowTitle("Staff Only")
@@ -343,7 +344,8 @@ class StaffScreenDialog(QFrame):
         vBoxColParams1.addWidget(robotGB)
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)        
-        self.show()
+        if show:
+          self.show()
 
 
     def getSpotNodeList(self):
@@ -1623,7 +1625,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scannerType = getBlConfig("scannerType")
         self.vectorStart = None
         self.vectorEnd = None
-        self.staffScreenDialog = None
         self.centerMarkerCharSize = 20
         self.centerMarkerCharOffsetX = 12
         self.centerMarkerCharOffsetY = 18
@@ -1672,6 +1673,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.mountedPin_pv.put(mountedPin)
         self.rasterExploreDialog = RasterExploreDialog()
         self.userScreenDialog = UserScreenDialog(self)        
+        self.staffScreenDialog = StaffScreenDialog(self, show=False)
         self.detDistMotorEntry.getEntry().setText(self.detDistRBVLabel.getEntry().text()) #this is to fix the current val being overwritten by reso
         self.proposalID = -999999
         if (len(sys.argv)>1):

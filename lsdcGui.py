@@ -5162,7 +5162,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):
-        self.staffScreenDialog = StaffScreenDialog(self)
+        self.staffScreenDialog.show()
       else:
         self.popupServerMessage("You don't have control")          
       

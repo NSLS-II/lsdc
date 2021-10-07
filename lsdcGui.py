@@ -4978,9 +4978,6 @@ class ControlMain(QtWidgets.QMainWindow):
                   self.processChoochResult(resultID)
           except KeyError:
             logger.error('KeyError - ignoring chooch-related items, perhaps from a bad energy scan')
-        elif reqObj["protocol"] == "raster":
-            logger.info('doing something')
-            #use albulaUtils to open albula main window
         self.refreshCollectionParams(self.selectedSampleRequest)
 
 

@@ -63,3 +63,5 @@ DETECTOR_OBJECT_TYPE_OPHYD = "ophyd"  # instantiated in start_bs, using Bluesky 
 DETECTOR_OBJECT_TYPE = "detectorObjectType"
 
 DETECTOR_SAFE_DISTANCE = 200.0
+
+GOVERNOR_TIMEOUT = 120  # seconds for a governor move

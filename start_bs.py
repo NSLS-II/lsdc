@@ -8,6 +8,7 @@ import os
 from embl_robot import EMBLRobot
 from denso_robot import DensoRobot
 from nyxtools.robot import DensoOphydRobot
+from nyxtools.governor import _make_governors
 
 #12/19 - author unknown. DAMA can help
 """
@@ -131,5 +132,7 @@ elif beamline=="nyx":
     vector_program = object()
     denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
     robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
+    govs = _make_governors("XF:19IDC-ES", name="govs")
+
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")

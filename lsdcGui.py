@@ -283,6 +283,9 @@ class StaffScreenDialog(QFrame):
           self.fastDPNodeEntryList[i].setFixedWidth(30)
           self.fastDPNodeEntryList[i].setText(str(nodeList[i]))
           hBoxFastDP.addWidget(self.fastDPNodeEntryList[i])
+        self.fastDPCheckBox = QCheckBox("FastDP")
+        self.fastDPCheckBox.setChecked(True)
+        hBoxFastDP.addWidget(self.fastDPCheckBox)
         self.setBeamcenterButton = QtWidgets.QPushButton("Set Beamcenter")
         self.setBeamcenterButton.clicked.connect(self.setBeamcenterCB)
         hBoxFastDP.addWidget(self.setBeamcenterButton)
@@ -2046,8 +2049,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autoProcessingCheckBox = QCheckBox("AutoProcessing On")
         self.autoProcessingCheckBox.setChecked(True)
         self.autoProcessingCheckBox.stateChanged.connect(self.autoProcessingCheckCB)
-        self.fastDPCheckBox = QCheckBox("FastDP")
-        self.fastDPCheckBox.setChecked(False)
         self.fastEPCheckBox = QCheckBox("FastEP")
         self.fastEPCheckBox.setChecked(False)
         self.fastEPCheckBox.setEnabled(False)
@@ -2056,7 +2057,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.xia2CheckBox = QCheckBox("Xia2")
         self.xia2CheckBox.setChecked(False)
         self.hBoxProcessingLayout1.addWidget(self.autoProcessingCheckBox)                
-        self.hBoxProcessingLayout1.addWidget(self.fastDPCheckBox)
         self.hBoxProcessingLayout1.addWidget(self.fastEPCheckBox)
         self.hBoxProcessingLayout1.addWidget(self.dimpleCheckBox)                
         self.processingOptionsFrame.setLayout(self.hBoxProcessingLayout1)
@@ -2653,11 +2653,9 @@ class ControlMain(QtWidgets.QMainWindow):
     
     def autoProcessingCheckCB(self,state):
       if state == QtCore.Qt.Checked:
-        self.fastDPCheckBox.setEnabled(True)
         self.dimpleCheckBox.setEnabled(True)
         self.xia2CheckBox.setEnabled(True)                                                          
       else:
-        self.fastDPCheckBox.setEnabled(False)                                  
         self.fastEPCheckBox.setEnabled(False)
         self.dimpleCheckBox.setEnabled(False)
         self.xia2CheckBox.setEnabled(False)                                                          
@@ -3386,10 +3384,10 @@ class ControlMain(QtWidgets.QMainWindow):
             pass
             
         try:
-          if (float(self.osc_end_ledit.text()) > 4.9):
-            self.fastDPCheckBox.setChecked(True)
+          if (float(self.osc_end_ledit.text()) >= 5.0):
+            self.staffScreenDialog.fastDPCheckBox.setChecked(True)
           else:
-            self.fastDPCheckBox.setChecked(False)              
+            self.staffScreenDialog.fastDPCheckBox.setChecked(False)
         except:
           pass
         
@@ -3476,6 +3474,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vidActionRasterDefRadio.setChecked(True)
       else:
         self.vidActionC2CRadio.setChecked(True)
+      if protocol == "burn":
+        self.staffScreenDialog.fastDPCheckBox.setChecked(False)
+      else:
+        self.staffScreenDialog.fastDPCheckBox.setChecked(True)
       if (protocol == "raster"):
         self.protoRasterRadio.setChecked(True)
         self.osc_start_ledit.setEnabled(False)
@@ -3492,7 +3494,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_start_ledit.setEnabled(True)
         self.osc_end_ledit.setEnabled(True)
       elif (protocol == "burn"):
-        self.fastDPCheckBox.setChecked(False)        
         self.setGuiValues({'osc_range':"0.0", 'exp_time':getBlConfig("burnDefaultTime"), 'transmission':getBlConfig("burnDefaultTrans")})
         screenWidth = float(getBlConfig("burnDefaultNumFrames"))
         self.setGuiValues({'osc_end':screenWidth})
@@ -4349,7 +4350,7 @@ class ControlMain(QtWidgets.QMainWindow):
       reqObj["energy"] = float(self.energy_ledit.text())
       wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
       reqObj["wavelength"] = wave
-      reqObj["fastDP"] =(self.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
+      reqObj["fastDP"] =(self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
       reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
       reqObj["dimple"] =self.dimpleCheckBox.isChecked()      
       reqObj["xia2"] =self.xia2CheckBox.isChecked()
@@ -4499,7 +4500,7 @@ class ControlMain(QtWidgets.QMainWindow):
              reqObj["pos_x"] = float(self.centeringMarksList[i]["sampCoords"]["x"])
              reqObj["pos_y"] = float(self.centeringMarksList[i]["sampCoords"]["y"])
              reqObj["pos_z"] = float(self.centeringMarksList[i]["sampCoords"]["z"])
-             reqObj["fastDP"] = (self.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
+             reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
              reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
              reqObj["dimple"] =self.dimpleCheckBox.isChecked()             
              reqObj["xia2"] =self.xia2CheckBox.isChecked()
@@ -4551,7 +4552,7 @@ class ControlMain(QtWidgets.QMainWindow):
           reqObj["fastEP"] = False
           reqObj["dimple"] = False          
         else:
-          reqObj["fastDP"] = (self.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
+          reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
           reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
           reqObj["dimple"] =self.dimpleCheckBox.isChecked()          
         reqObj["xia2"] =self.xia2CheckBox.isChecked()
@@ -4821,7 +4822,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
       self.beamHeight_ledit.setText(str(reqObj["slit_height"]))
       if ("fastDP" in reqObj):
-        self.fastDPCheckBox.setChecked((reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"]))
+        self.staffScreenDialog.fastDPCheckBox.setChecked((reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"]))
       if ("fastEP" in reqObj):
         self.fastEPCheckBox.setChecked(reqObj["fastEP"])
       if ("dimple" in reqObj):

@@ -15,6 +15,14 @@ imgSeries = None
 global seriesDict
 seriesDict = {}
 
+def startup_albula():
+  global albulaFrame,albulaSubFrame
+  if (albulaFrame == None or albulaSubFrame == None):
+    logger.debug('starting up albula')
+    albulaFrame = dectris.albula.openMainFrame()
+    albulaFrame.disableClose()
+    albulaSubFrame = albulaFrame.openSubFrame()
+
 def albulaClose(): #not used
   global albulaFrame,albulaSubFrame
   if (albulaSubFrame != None):
@@ -27,10 +35,7 @@ def albulaClose(): #not used
 def albulaDispImage(Dimage):
   global albulaFrame,albulaSubFrame
 
-  if (albulaFrame == None or albulaSubFrame == None):
-     albulaFrame = dectris.albula.openMainFrame()
-     albulaFrame.disableClose()
-     albulaSubFrame = albulaFrame.openSubFrame()
+  startup_albula()
   try:
     albulaSubFrame.loadImage(Dimage)
   except dectris.albula.DNoObject:
@@ -61,10 +66,7 @@ def albulaDispFile(filename):
 def _albulaDispFile(filename):
     global albulaFrame,albulaSubFrame,currentMasterH5
 
-    if (albulaFrame == None or albulaSubFrame == None):
-        albulaFrame = dectris.albula.openMainFrame()
-        albulaFrame.disableClose()
-        albulaSubFrame = albulaFrame.openSubFrame()
+    startup_albula()
     try:
         logger.info('loading file %s'% filename)
         albulaSubFrame.loadFile(filename)
@@ -79,11 +81,7 @@ def _albulaDispFile(filename):
 def _albulaDispFile(filename):
     global albulaFrame,albulaSubFrame,currentMasterH5,imgSeries
 
-    if (albulaFrame == None or albulaSubFrame == None):
-        logger.debug('starting up albula')
-        albulaFrame = dectris.albula.openMainFrame()
-        albulaFrame.disableClose()
-        albulaSubFrame = albulaFrame.openSubFrame()
+    startup_albula()
 
     try:
         if not (currentMasterH5 == filename[0]):

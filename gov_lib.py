@@ -25,10 +25,10 @@ def setGovRobot(state, wait=True):
       failure = False
     if ((wait and not failure) or (not wait)) and (state in ["SA", "DA", "DI", "SE"]):
       toggleLowMagCameraSettings(state)
-    return not failure
+    return {'failure': not failure, 'status': govStatus}
   except Exception: #TODO verify what kind of exception is thrown if we do not reach state
     logger.info(f"Governor did not reach {state}")
-    return 0
+    return {'failure': 1, 'status': govStatus}
 
 def waitGov(status):
   try:

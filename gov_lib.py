@@ -30,10 +30,10 @@ def setGovRobot(state, wait=True):
     logger.info(f"Governor did not reach {state}")
     return {'failure': 1, 'status': govStatus}
 
-def waitGov(status):
+def waitGov(status, timeout=GOVERNOR_TIMEOUT):
   try:
     # TODO add callback for periodic updates
-    failure = status.wait(GOVERNOR_TIMEOUT)
+    failure = status.wait(timeout)
     return failure
   except StatusTimeoutError, WaitTimeoutError:
     message = 'Governor Timeout!'

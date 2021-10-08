@@ -167,8 +167,12 @@ class EMBLRobot:
     def preMount(self, puckPos, pinPos, sampID, **kwargs):
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
-        if (not daq_lib.waitGovRobotSE()):
-          daq_lib.setGovRobot('SE')
+        desired_gov_state = 'SE'
+        if (not daq_lib.waitGovRobotSE()):  # TODO have to deal with this when the change has been done elsewhere
+          gov_return = gov_lib.setGovRobot(desired_gov_state)
+          if gov_return['failure']:
+            logger.error(f'Did not reach {desired_gov_state}')
+            return
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           try:
             if (daq_utils.beamline == "fmx"):
@@ -240,7 +244,8 @@ class EMBLRobot:
                 if (daq_utils.beamline == "fmx"):
                   daq_macros.homePins()
                   time.sleep(3.0)
-                if (not daq_lib.setGovRobot('SE')):
+                gov_status = gov_lib.setGovRobot('SE')
+                if gov_status['failure']:
                   return MOUNT_FAILURE
             self.callAlignPinThread(kwargs)
             setPvDesc("boostSelect",0)
@@ -320,7 +325,9 @@ class EMBLRobot:
             logger.info('not changing anything as governor is active')
         if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
-      daq_lib.setGovRobot('SA')
+      gov_status = gov_lib.setGovRobot('SA')
+      if gov_status['failure']:
+        logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL
 
  

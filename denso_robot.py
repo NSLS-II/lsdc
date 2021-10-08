@@ -2,6 +2,7 @@ import daq_lib
 from daq_utils import getBlConfig
 from config_params import MOUNT_SUCCESSFUL, MOUNT_STEP_SUCCESSFUL, MOUNT_FAILURE,\
                           UNMOUNT_SUCCESSFUL, UNMOUNT_FAILURE
+import gov_lib
 import logging
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class DensoRobot:
     def preMount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         if getBlConfig('robot_online'):
             try:
-                daq_lib.setGovRobot('SE')
+                gov_lib.setGovRobot('SE')
             except Exception as e:
                 logger.error(f'Exception while in preMount step: {e}')
                 return MOUNT_FAILURE
@@ -32,7 +33,7 @@ class DensoRobot:
     def postMount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         if getBlConfig('robot_online'):
             try:
-                daq_lib.setGovRobot('SA')
+                gov_lib.setGovRobot('SA')
             except Exception as e:
                 logger.error(f'Exception while in postMount step: {e}')
                 return MOUNT_FAILURE

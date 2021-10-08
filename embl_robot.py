@@ -168,7 +168,8 @@ class EMBLRobot:
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
         desired_gov_state = 'SE'
-        if (not daq_lib.waitGovRobotSE()):  # TODO have to deal with this when the change has been done elsewhere
+        failure = gov_lib.waitGov(kwargs['govStatus'])
+        if failure:  # TODO check that we are at desired_gov_state
           gov_return = gov_lib.setGovRobot(desired_gov_state)
           if gov_return['failure']:
             logger.error(f'Did not reach {desired_gov_state}')

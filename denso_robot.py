@@ -16,7 +16,8 @@ class DensoRobot:
     def preMount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         if getBlConfig('robot_online'):
             try:
-                gov_lib.setGovRobot('SE')
+                status = gov_lib.setGovRobot('SE')
+                kwargs['govStatus'] = status
             except Exception as e:
                 logger.error(f'Exception while in preMount step: {e}')
                 return MOUNT_FAILURE

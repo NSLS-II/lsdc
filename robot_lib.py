@@ -17,7 +17,7 @@ def setWorkposThread(init,junk):
     setPvDesc("robotGovActive",0)
 
 def mountRobotSample(puck_pos, pin_pos, samp_id, **kwargs):
-  status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)
+  status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
   if status != MOUNT_STEP_SUCCESSFUL:
       return status
   status = robot.mount(puck_pos, pin_pos, samp_id, kwargs)

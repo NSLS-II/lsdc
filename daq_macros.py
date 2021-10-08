@@ -1585,23 +1585,11 @@ def snakeRasterNormal(rasterReqID,grain=""):
   db_lib.updateRequest(rasterRequest)  
   db_lib.updatePriority(rasterRequestID,-1)
 
-  def govStatusCheck(statusPvName,waitTime=20):
-    startTime = time.time()
-    while (time.time() - startTime) < waitTime:
-      status = getPvDesc(statusPvName)
-      if status:
-        logger.info(f"{statusPvName} = {status}")
-        return
-      logger.info(f"{statusPvName} = {status}")
-      time.sleep(0.1)
-    logger.error(f"gov status failed, did not achieve {statusPvName}")
-    raise ValueError
-  
   #ensure gov transitions have completed successfully
-  if targetGovState == 'SA':
-    govStatusCheck("robotSaActive")
-  elif targetGovState == 'DI':
-    govStatusCheck("robotDiActive")
+  timeout = 20
+  success = gov_lib.waitGov(govStatus, timeout)
+  if not(success) or not(govs.gov.robot.state == targetGovState):
+    logger.error(f"gov status check failed, did not achieve {targetGovState}")
 
   if (procFlag):
     """if sleep too short then black ispyb image, timing affected by speed

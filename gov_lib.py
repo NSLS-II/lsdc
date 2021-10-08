@@ -19,10 +19,11 @@ def setGovRobot(state, wait=True):
   try:
     logger.info(f"setGovRobot{state}")
     govStatus = gov_robot.set(state)
-    if not wait:
-        return govStatus
-    failure = waitGov(govStatus)
-    if not failure and (state in ["SA", "DA", "DI"]):
+    if wait:
+      failure = waitGov(govStatus)
+    else:
+      failure = False
+    if ((wait and not failure) or (not wait)) and (state in ["SA", "DA", "DI", "SE"]):
       toggleLowMagCameraSettings(state)
     return not failure
   except Exception: #TODO verify what kind of exception is thrown if we do not reach state

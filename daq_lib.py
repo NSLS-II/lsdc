@@ -274,17 +274,6 @@ def setGovRobot(state):
       gui_message("Governor did not reach %s." % state)
       return 0
 
-def setGovRobot(state):
-  try:
-    logger.info(f"setGovRobot{state}")
-    govStatus = gov_rbt.set(state)
-    waitGov(govStatus)
-    if state in ["SA", "DA"]:
-      toggleLowMagCameraSettings(state)
-  except Exception: #TODO verify what kind of exception is thrown if we do not reach state
-    logger.info(f"Governor did not reach {state}")
-
-
 def setGovRobotDI(): # keep this because it is different from the others
   setRobotGovState("DI")
   waitGov()    
@@ -329,19 +318,6 @@ def waitGov():
       return 0
     time.sleep(0.1)        
   time.sleep(1.0)    
-
-def governorWaitCallback():
-  logger.info("robot gov status = " + str(robotGovStatus))
-
-def waitGov(status):
-  try:
-    # TODO add callback for periodic updates
-    failure = status.wait(GOVERNOR_TIMEOUT)
-    return failure
-  except StatusTimeoutError, WaitTimeoutError:
-    message = 'Governor Timeout!'
-    logger.error(message)
-    gui_message(message)
 
 def waitGovNoSleep():
   govTimeout = 120  

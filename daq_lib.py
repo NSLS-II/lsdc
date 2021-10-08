@@ -14,6 +14,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
+from start_bs import govs
 import logging
 logger = logging.getLogger(__name__)
 
@@ -327,9 +328,14 @@ def waitGov():
     time.sleep(0.1)        
   time.sleep(1.0)    
 
+def governorWaitCallback():
+  logger.info("robot gov status = " + str(robotGovStatus))
+
 def waitGov(status):
   try:
-    status.wait(GOVERNOR_TIMEOUT)
+    # TODO add callback for periodic updates
+    failure = status.wait(GOVERNOR_TIMEOUT)
+    return failure
   except StatusTimeoutError, WaitTimeoutError:
     message = 'Governor Timeout!'
     logger.error(message)
@@ -481,11 +487,11 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    setPvDesc("govRobotDetDist",reqObj["detDist"])
-    setPvDesc("govHumanDetDist",reqObj["detDist"])
+    govs.gov.Robot.dev.dz.target_In.set(reqObj["detDist"])
+    govs.gov.Human.dev.dz.target_In.set(reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
-      setPvDesc("govRobotDetDistOut",reqObj["detDist"])
-      setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
+      govs.gov.Robot.dev.dz.target_Out.set(reqObj["detDist"])
+      govs.gov.Human.dev.dz.target_Out.set(reqObj["detDist"])          
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]

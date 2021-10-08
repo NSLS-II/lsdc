@@ -15,6 +15,7 @@ import db_lib
 from daq_utils import getBlConfig
 from config_params import *
 from start_bs import govs
+import gov_lib
 import logging
 logger = logging.getLogger(__name__)
 
@@ -488,11 +489,9 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    govs.gov.Robot.dev.dz.target_In.set(reqObj["detDist"])
-    govs.gov.Human.dev.dz.target_In.set(reqObj["detDist"])
+    gov_lib.set_detz_in(reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
-      govs.gov.Robot.dev.dz.target_Out.set(reqObj["detDist"])
-      govs.gov.Human.dev.dz.target_Out.set(reqObj["detDist"])          
+      gov_lib.set_detz_out(reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]

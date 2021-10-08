@@ -6,7 +6,7 @@ from element_info import *
 import beamline_support
 import daq_lib
 import db_lib
-from start_bs import govs
+import gov_lib
 import logging
 logger = logging.getLogger(__name__)
 
@@ -35,8 +35,7 @@ def mvaDescriptor(*args): #convenience to get around nasty PV names
   newArgsList = []
   logger.info(f'mvaDescriptor: {tuple(args)}')
   if (args[0] == "detectorDist"):
-    govs.gov.Robot.dev.dz.target_In.set(float(args[1]))
-    govs.gov.Human.dev.dz.target_In.set(float(args[1]))
+    gov_lib.set_detz_in(float(args[1]))
     if (db_lib.getBeamlineConfigParam(daq_utils.beamline,"HePath") == 1):
       return
   

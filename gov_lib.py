@@ -1,5 +1,6 @@
 from start_bs import govs
 from daq_lib import gui_message, toggleLowMagCameraSettings
+from config_params import GOVERNOR_TIMEOUT
 import logging
 logger = logging.getLogger(__name__)
 

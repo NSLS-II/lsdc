@@ -8,6 +8,7 @@ import daq_lib
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
+from gov_lib import setGovRobot
 import atexit
 from daq_main_common import pybass_init
 import logging

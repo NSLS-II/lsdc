@@ -3570,7 +3570,7 @@ def createProposal(propNum,PI_login="boaty"):
 def topViewCheckOn():
   setBlConfig(TOP_VIEW_CHECK,1)
 
-def anneal(annealTime):
+def anneal(annealTime=1.0):
   if daq_utils.beamline == 'fmx':
     if not govStatusGet('SA'):
       daq_lib.gui_message('Not in Governor state SA, exiting')
@@ -3580,15 +3580,15 @@ def anneal(annealTime):
 
     annealer.air.put(1)
 
-    while not annealer.status.get():
-      logger.info(f'anneal state before annealing: {annealer.status.get()}')
+    while not annealer.inStatus.get():
+      logger.info(f'anneal state before annealing: {annealer.inStatus.get()}')
       time.sleep(0.1)
 
     time.sleep(annealTime)
     annealer.air.put(0)
 
-    while not annealer.status.get():
-      logger.info(f'anneal state after annealing: {annealer.status.get()}')
+    while not annealer.outStatus.get():
+      logger.info(f'anneal state after annealing: {annealer.outStatus.get()}')
       time.sleep(0.1)
 
     govStateSet('SA')

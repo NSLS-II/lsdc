@@ -38,9 +38,9 @@ else:
   shutil.copy(dataFile2, "edna_image_0002.cbf" )
 
 if (beamline == "amx"):
-  command_string = "/usr/local/crys-local/edna-mx3/mxv1/bin/edna-mxv1-characterisation --verbose --image " + "edna_image_0001.cbf" + " " + "edna_image_0002.cbf" + " --flux " + str(flux) + " --transmission " + str(transmission) + " --minExposureTimePerImage 0.005 --beamSize 0.006"
+  command_string = "/usr/lib64/edna-mx3/mxv1/bin/edna-mxv1-characterisation --verbose --image " + "edna_image_0001.cbf" + " " + "edna_image_0002.cbf" + " --flux " + str(flux) + " --transmission " + str(transmission) + " --minExposureTimePerImage 0.005 --beamSize 0.006"
 else:
-  command_string = "/usr/local/crys-local/edna-mx3/mxv1/bin/edna-mxv1-characterisation --verbose --image " + "edna_image_0001.cbf" + " " + "edna_image_0002.cbf" + " --flux " + str(flux) + " --transmission " + str(transmission) + " --minExposureTimePerImage 0.01 --beamSize 0.004"
+  command_string = "/usr/lib64/edna-mx3/mxv1/bin/edna-mxv1-characterisation --verbose --image " + "edna_image_0001.cbf" + " " + "edna_image_0002.cbf" + " --flux " + str(flux) + " --transmission " + str(transmission) + " --minExposureTimePerImage 0.01 --beamSize 0.004"
 logger.info(command_string)
 if ( os.path.exists( "edna.log" ) ) :
   os.remove( "edna.log" )

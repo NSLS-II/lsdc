@@ -3340,13 +3340,13 @@ def setProcRam():
   if (daq_utils.beamline == "amx"):
     db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id1-srv1")
     db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id1-srv1")
-    db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
-    db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")        
   else:
     db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws6")
     db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws6")
-    db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
-    db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("fmx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("fmx","dialsComm","dials.find_spots_client")        
     
 
 def setProcGPFS():
@@ -3357,8 +3357,8 @@ def setProcGPFS():
     db_lib.setBeamlineConfigParam("amx","spotNode4","cpu-003")
     db_lib.setBeamlineConfigParam("amx","spotNode5","cpu-002")
     db_lib.setBeamlineConfigParam("amx","spotNode6","cpu-003")    
-    db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/crys-local/bin/eiger2cbf-linux")
-    db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/crys-local/phenix-1.12-2829/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")        
     
   else:
     db_lib.setBeamlineConfigParam("fmx","spotNode1","cpu-007")
@@ -3367,8 +3367,8 @@ def setProcGPFS():
     db_lib.setBeamlineConfigParam("fmx","spotNode4","cpu-010")
     db_lib.setBeamlineConfigParam("fmx","spotNode5","cpu-008")
     db_lib.setBeamlineConfigParam("fmx","spotNode6","cpu-004")        
-    db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/crys-local/bin/eiger2cbf-linux")
-    db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/crys-prod/phenix-1.11rc2-2531/build/bin/dials.find_spots_client")
+    db_lib.setBeamlineConfigParam("fmx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("fmx","dialsComm","dials.find_spots_client")
     
 
 

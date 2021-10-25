@@ -8,7 +8,6 @@ import daq_utils
 import det_lib
 import beamline_support
 import beamline_lib
-from start_bs import plt
 import atexit
 import traceback
 

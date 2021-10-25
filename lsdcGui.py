@@ -354,14 +354,14 @@ class StaffScreenDialog(QFrame):
     def getSpotNodeList(self):
       nodeList = []
       for i in range (0,self.spotNodeCount):
-        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('-')[2]))
       return nodeList
         
         
     def getFastDPNodeList(self):
       nodeList = []
       for i in range (0,self.fastDPNodeCount):
-        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('-')[2]))
       return nodeList
 
     def setFastDPNodesCB(self):

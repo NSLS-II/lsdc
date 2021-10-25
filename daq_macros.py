@@ -3428,7 +3428,7 @@ def spotNodes(*args):
     logger.error("C'mon, I need 8 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      setBlConfig("spotNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("spotNode"+str(i+1),"uranus-cpu-%03d" % args[i])
 
 def fastDPNodes(*args):
   """fastDPNodes(*args) : Set the fastDP nodes. You must give 4 nodes. Example: fastDPNodes(4,5,7,8)"""  
@@ -3436,7 +3436,7 @@ def fastDPNodes(*args):
     logger.error("C'mon, I need 4 nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      setBlConfig("fastDPNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("fastDPNode"+str(i+1),"uranus-cpu-%03d" % args[i])
 
 def setVisitName(vname):
   setBlConfig("visitName",str(vname))

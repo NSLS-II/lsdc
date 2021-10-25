@@ -2327,8 +2327,6 @@ def collectSpec(filename,gotoSA=True):
       break
     time.sleep(0.05)
   specArray = getPvDesc("mercurySpectrum")
-  plt.plot(specArray)
-  plt.show(block=False)
   nowtime_s = str(int(time.time()))
   specFileName = filename + "_" + nowtime_s + ".txt"
   specFile = open(specFileName,"w+")
@@ -2345,7 +2343,6 @@ def collectSpec(filename,gotoSA=True):
 
     
 def eScan(energyScanRequest):
-  plt.clf()
   sampleID = energyScanRequest["sample"]
   reqObj = energyScanRequest["request_obj"]
   exptime = reqObj['exposure_time']

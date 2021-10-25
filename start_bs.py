@@ -17,9 +17,6 @@ from bluesky.callbacks.broker import post_run
 from bluesky.callbacks.broker import verify_files_saved
 gs.RE.subscribe('stop', post_run(verify_files_saved))
 """
-# Import matplotlib and put it in interactive mode.
-import matplotlib.pyplot as plt
-plt.ion()
 
 # import nslsii
 

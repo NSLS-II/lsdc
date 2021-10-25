@@ -3424,16 +3424,16 @@ def guiRemote(): #monitor omega VAL
 
 def spotNodes(*args):
   """spotNodes(*args) : Set the dials spotfinding nodes. You must give 8 nodes. Example: spotNodes(4,5,7,8,12,13,14,15)"""
-  if (len(args) != 8):
-    logger.error("C'mon, I need 8 nodes. No change. Try again.")
+  if (len(args) != SPOT_MIN_NODES):
+    logger.error(f"C'mon, I need {SPOT_MIN_NODES} nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
       setBlConfig("spotNode"+str(i+1),"uranus-cpu-%03d" % args[i])
 
 def fastDPNodes(*args):
   """fastDPNodes(*args) : Set the fastDP nodes. You must give 4 nodes. Example: fastDPNodes(4,5,7,8)"""  
-  if (len(args) != 4):
-    logger.error("C'mon, I need 4 nodes. No change. Try again.")
+  if (len(args) != FAST_DP_MIN_NODES):
+    logger.error(f"C'mon, I need {FAST_DP_MIN_NODES} nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
       setBlConfig("fastDPNode"+str(i+1),"uranus-cpu-%03d" % args[i])

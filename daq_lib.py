@@ -593,8 +593,9 @@ def collectData(currentRequest):
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
-  beamline_lib.mvaDescriptor("detectorDist",colDist)  
-  logger.debug('transmission and detector distance done')
+  if prot not in ["rasterScreen", "eScan"]:
+    beamline_lib.mvaDescriptor("detectorDist",colDist)  
+  logger.debug('transmission and detector distance (if not fluorescence-related) done')
   # now that the detector is in the correct position, get the beam center
   currentRequest['request_obj']['xbeam'] = getPvDesc('beamCenterX')
   currentRequest['request_obj']['ybeam'] = getPvDesc('beamCenterY')

@@ -14,7 +14,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
-from start_bs import govs, gov_human, gov_robot
+from start_bs import govs, gov_robot
 import gov_lib
 import logging
 logger = logging.getLogger(__name__)
@@ -374,9 +374,9 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    gov_lib.set_detz_in(gov_human, gov_robot, reqObj["detDist"])
+    gov_lib.set_detz_in(gov_robot, reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
-      gov_lib.set_detz_out(gov_human, gov_robot, reqObj["detDist"])
+      gov_lib.set_detz_out(gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]

@@ -3,15 +3,13 @@ from config_params import GOVERNOR_TIMEOUT
 import logging
 logger = logging.getLogger(__name__)
 
-def set_detz_in(gov_human, gov_robot, distance):
-    gov_human.dev.dz.target_In.set(distance)
+def set_detz_in(gov_robot, distance):
     gov_robot.dev.dz.target_In.set(distance)
 
-def set_detz_out(gov_human, gov_robot, distance):
-    gov_human.dev.dz.target_Out.set(distance)
+def set_detz_out(gov_robot, distance):
     gov_robot.dev.dz.target_Out.set(distance)
 
-def setGovRobot(state, wait=True):
+def setGovRobot(gov_robot, state, wait=True):
   try:
     logger.info(f"setGovRobot{state}")
     govStatus = gov_robot.set(state)

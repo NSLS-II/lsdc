@@ -4,14 +4,11 @@ from config_params import GOVERNOR_TIMEOUT
 import logging
 logger = logging.getLogger(__name__)
 
-gov_human = govs.gov.Human
-gov_robot = govs.gov.Robot
-
-def set_detz_in(distance):
+def set_detz_in(gov_human, gov_robot, distance):
     gov_human.dev.dz.target_In.set(distance)
     gov_robot.dev.dz.target_In.set(distance)
 
-def set_detz_out(distance):
+def set_detz_out(gov_human, gov_robot, distance):
     gov_human.dev.dz.target_Out.set(distance)
     gov_robot.dev.dz.target_Out.set(distance)
 

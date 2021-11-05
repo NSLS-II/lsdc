@@ -3058,7 +3058,7 @@ def loop_center_xrec():
 
   
 
-def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
+def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 
 #imgWidth will be something like 40 for xtalCenter
@@ -3071,7 +3071,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)
@@ -3099,7 +3099,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("lowMagTrigMode",0)
 
 
-def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
+def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 
   logger.info("in Zebra Daq #1 " + str(time.time()))      
@@ -3124,12 +3124,12 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   det_lib.detector_set_period(exposurePeriodPerImage)
   detector_dead_time = det_lib.detector_get_deadtime()
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time  
-  yield from setup_vector_program(num_images=numImages,
+  yield from setup_vector_program(vector_program=vector_program, num_images=numImages,
                                   angle_start=angle_start,
                                   angle_end=angle_end,
                                   exposure_period_per_image=exposurePeriodPerImage)
   logger.info("zebra_daq_prep " + str(time.time()))        
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   logger.info("done zebra_daq_prep " + str(time.time()))        
   time.sleep(1.0)
 
@@ -3137,7 +3137,7 @@ def zebraDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,da
   PW=(exposurePeriodPerImage-detector_dead_time)*1000.0
   PS=(exposurePeriodPerImage)*1000.0
   GW=scanWidth-(1.0-(PW/PS))*(imgWidth/2.0)
-  yield from setup_zebra_vector_scan(angle_start=angle_start, gate_width=GW, scan_width=scanWidth, pulse_width=PW, pulse_step=PS,
+  yield from setup_zebra_vector_scan(vector_program=vector_program, angle_start=angle_start, gate_width=GW, scan_width=scanWidth, pulse_width=PW, pulse_step=PS,
                        exposure_period_per_image=exposurePeriodPerImage, num_images=numImages, is_still=imgWidth==0)
   logger.info("zebraDaq - setting and arming detector " + str(time.time()))      
 
@@ -3196,7 +3196,7 @@ def zebraDaqNoDet(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePref
   setPvDesc("vectorEndOmega",angle_end)
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
   setPvDesc("zebraEncoder",scanEncoder)
   time.sleep(1.0)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
@@ -3257,9 +3257,9 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
   detector_dead_time = det_lib.detector_get_deadtime()
   total_exposure_time = exposurePeriodPerImage*numImages
   exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
-  yield from zebra_daq_prep()
+  yield from zebra_daq_prep(zebra)
 
-  yield from setup_zebra_vector_scan_for_raster(angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
+  yield from setup_zebra_vector_scan_for_raster(zebra=zebra, angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
                                 exposure_period_per_image=exposurePeriodPerImage, detector_dead_time=detector_dead_time,
                                 num_images=numImages, scan_encoder=scan_encoder)
   logger.info("exp tim = " + str(exposureTimePerImage))  

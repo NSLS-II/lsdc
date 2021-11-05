@@ -21,6 +21,7 @@ from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSF
                           MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
                           UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
 import gov_lib
+#from start_bs import gov_human, gov_robot
 logger = logging.getLogger(__name__)
 
 global retryMountCount
@@ -339,7 +340,7 @@ class EMBLRobot:
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
-          gov_lib.set_detz_out(DETECTOR_SAFE_DISTANCE)
+          pass#gov_lib.set_detz_out(gov_human, gov_robot, DETECTOR_SAFE_DISTANCE)
         daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

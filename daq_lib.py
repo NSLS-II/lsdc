@@ -374,9 +374,9 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    gov_lib.set_detz_in(reqObj["detDist"])
+    gov_lib.set_detz_in(gov_human, gov_robot, reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
-      gov_lib.set_detz_out(reqObj["detDist"])
+      gov_lib.set_detz_out(gov_human, gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]

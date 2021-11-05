@@ -1,5 +1,4 @@
-from start_bs import govs
-from daq_lib import gui_message, toggleLowMagCameraSettings
+#from daq_lib import gui_message, toggleLowMagCameraSettings
 from config_params import GOVERNOR_TIMEOUT
 import logging
 logger = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ def setGovRobot(state, wait=True):
     else:
       failure = False
     if ((wait and not failure) or (not wait)) and (state in ["SA", "DA", "DI", "SE"]):
-      toggleLowMagCameraSettings(state)
+      pass #toggleLowMagCameraSettings(state)
     return {'failure': not failure, 'status': govStatus}
   except Exception: #TODO verify what kind of exception is thrown if we do not reach state
     logger.info(f"Governor did not reach {state}")
@@ -35,5 +34,5 @@ def waitGov(status, timeout=GOVERNOR_TIMEOUT):
   except (StatusTimeoutError, WaitTimeoutError) as e:
     message = 'Governor Timeout!'
     logger.error(message)
-    gui_message(message)
+    #gui_message(message)
 

@@ -133,6 +133,9 @@ elif beamline=="nyx":
     denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
     robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
     govs = _make_governors("XF:19IDC-ES", name="govs")
+    gov_human = govs.gov.Human
+    gov_robot = govs.gov.Robot
+
 
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")

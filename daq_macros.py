@@ -208,7 +208,7 @@ def autoRasterLoop(currentRequest):
 
   
   gov_status = gov_lib.setGovRobot('SA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return 0
   if (getBlConfig("queueCollect") == 1):
     delayTime = getBlConfig("autoRasterDelay")
@@ -265,7 +265,7 @@ def autoVector(currentRequest): #12/19 - not tested!
   global autoVectorFlag
 
   gov_status = gov_lib.setGovRobot('SA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return 0
   reqObj = currentRequest["request_obj"]
   daq_lib.set_field("xrecRasterFlag","100")        
@@ -1014,7 +1014,7 @@ def snakeRasterNoTile(rasterReqID,grain=""):
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
 
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   
   rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -1159,7 +1159,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
 
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   
   rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -1413,7 +1413,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_setImagesPerFile(numsteps)  
   daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",1)    
     return      
@@ -1587,8 +1587,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
 
   #ensure gov transitions have completed successfully
   timeout = 20
-  success = gov_lib.waitGov(govStatus, timeout)
-  if not(success) or not(govs.gov.robot.state == targetGovState):
+  gov_lib.waitGov(govStatus, timeout)
+  if not(govStatus.success) or not(govs.gov.robot.state == targetGovState):
     logger.error(f"gov status check failed, did not achieve {targetGovState}")
 
   if (procFlag):
@@ -1736,7 +1736,7 @@ def reprocessRaster(rasterReqID):
 
 def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
@@ -1970,7 +1970,7 @@ def printGridRasterParams():
 
 def gridRaster(currentRequest):
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   
   sampleID = currentRequest["sample"]  
@@ -2353,7 +2353,7 @@ def eScan(energyScanRequest):
   scan_element = reqObj['element']
   beamline_lib.mvaDescriptor("energy",targetEnergy)
   gov_status = gov_lib.setGovRobot('XF')
-  if gov_status['failure']:
+  if not gov_status.success:
     daq_lib.gui_message('Governor did not reach XF state')
     return
   daq_lib.open_shutter()
@@ -2457,7 +2457,7 @@ def vectorZebraScan(vecRequest):
     
 def vectorZebraScanFine(vecRequest):
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   
   reqObj = vecRequest["request_obj"]
@@ -2588,7 +2588,7 @@ def vectorZebraScanNormal(vecRequest):
 
 def vectorZebraStepScan(vecRequest):
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   
   reqObj = vecRequest["request_obj"]
@@ -3149,7 +3149,7 @@ def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImag
   logger.info("detector done arm, timed in zebraDaq " + str(time.time()))          
   startArm = time.time()
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']:
+  if not gov_status.success:
     return
   endArm = time.time()
   armTime = endArm-startArm

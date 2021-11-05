@@ -1003,8 +1003,8 @@ class PuckDialog(QtWidgets.QDialog):
 class DewarDialog(QtWidgets.QDialog):
     def __init__(self, parent = None,action="add"):
         super(DewarDialog, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.action = action
         self.parent=parent
 
@@ -1078,8 +1078,8 @@ class DewarDialog(QtWidgets.QDialog):
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
         super(DewarTree, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.parent=parent
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)

@@ -35,7 +35,7 @@ def waitGov(status, timeout=GOVERNOR_TIMEOUT):
     # TODO add callback for periodic updates
     failure = status.wait(timeout)
     return failure
-  except StatusTimeoutError, WaitTimeoutError:
+  except (StatusTimeoutError, WaitTimeoutError) as e:
     message = 'Governor Timeout!'
     logger.error(message)
     gui_message(message)

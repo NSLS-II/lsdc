@@ -207,7 +207,7 @@ def autoRasterLoop(currentRequest):
   global autoRasterFlag
 
   
-  gov_status = gov_lib.setGovRobot('SA')):
+  gov_status = gov_lib.setGovRobot('SA')
   if gov_status['failure']:
     return 0
   if (getBlConfig("queueCollect") == 1):
@@ -1159,7 +1159,7 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
 
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']
+  if gov_status['failure']:
     return
   
   rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -1413,7 +1413,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   det_lib.detector_setImagesPerFile(numsteps)  
   daq_lib.detectorArm(omega,img_width_per_cell,totalImages,exptimePerCell,rasterFilePrefix,data_directory_name,file_number_start) #this waits
   gov_status = gov_lib.setGovRobot('DA')
-  if gov_status['failure']
+  if gov_status['failure']:
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",1)    
     return      
@@ -1514,7 +1514,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   after moving to known position"""
   logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
   if (lastOnSample() and not autoRasterFlag):
-    govStatus = gov_lib.setGovRobot'SA', wait=False)
+    govStatus = gov_lib.setGovRobot('SA', wait=False)
     targetGovState = 'SA'
   else:
     govStatus = gov_lib.setGovRobot('DI')
@@ -2587,7 +2587,7 @@ def vectorZebraScanNormal(vecRequest):
     gov_lib.setGovRobot('SA')
 
 def vectorZebraStepScan(vecRequest):
-  gov_status = gov_lib.setGovRobot('DA')):
+  gov_status = gov_lib.setGovRobot('DA')
   if gov_status['failure']:
     return
   

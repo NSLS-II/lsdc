@@ -59,3 +59,6 @@ class DensoRobot:
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE
         return UNMOUNT_SUCCESSFUL
+
+    def finish(self):
+        ...

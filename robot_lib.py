@@ -1,6 +1,7 @@
 import time
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import logging
+from start_bs import robot
 
 from config_params import MOUNT_STEP_SUCCESSFUL, UNMOUNT_STEP_SUCCESSFUL
 logger = logging.getLogger(__name__)
@@ -16,21 +17,21 @@ def setWorkposThread(init,junk):
     time.sleep(20)
     setPvDesc("robotGovActive",0)
 
-def mountRobotSample(puck_pos, pin_pos, samp_id, **kwargs):
-  status, kwargs = robot.preMount(puck_pos, pin_pos, samp_id, kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
+def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
+  status, kwargs = robot.preMount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
   if status != MOUNT_STEP_SUCCESSFUL:
       return status
-  status = robot.mount(puck_pos, pin_pos, samp_id, kwargs)
+  status = robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)
   if status != MOUNT_STEP_SUCCESSFUL:
       return status
-  status = robot.postMount(puck_pos, pin_pos, samp_id)
+  status = robot.postMount(gov_robot, puck_pos, pin_pos, samp_id)
   return status
 
-def unmountRobotSample(puck_pos, pin_pos, samp_id):
-  status = robot.preUnmount(puck_pos, pin_pos, samp_id)
+def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
+  status = robot.preUnmount(gov_robot, puck_pos, pin_pos, samp_id)
   if status != UNMOUNT_STEP_SUCCESSFUL:
       return status
-  status = robot.unmount(puck_pos, pin_pos, samp_id)
+  status = robot.unmount(gov_robot, puck_pos, pin_pos, samp_id)
   return status
 
 def finish():

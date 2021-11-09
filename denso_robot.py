@@ -13,46 +13,46 @@ class DensoRobot:
     def __init__(self, robot):
         self.robot = robot
 
-    def preMount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
+    def preMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         if getBlConfig('robot_online'):
             try:
-                status = gov_lib.setGovRobot('SE')
+                status = gov_lib.setGovRobot(gov_robot, 'SE')
                 kwargs['govStatus'] = status
             except Exception as e:
                 logger.error(f'Exception while in preMount step: {e}')
                 return MOUNT_FAILURE
         return MOUNT_STEP_SUCCESSFUL, kwargs
 
-    def mount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
+    def mount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         try:
-            yield from self.robot.mount(get_puck_letter(puck_pos), str(pin_pos))
+            RE(self.robot.mount(get_puck_letter(puck_pos), str(pin_pos)))
         except Exception as e:
             logger.error(f'Exception during mount step: {e}')
             return MOUNT_FAILURE
         return MOUNT_STEP_SUCCESSFUL
 
-    def postMount(self, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
+    def postMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         if getBlConfig('robot_online'):
             try:
-                gov_lib.setGovRobot('SA')
+                gov_lib.setGovRobot(gov_robot, 'SA')
             except Exception as e:
                 logger.error(f'Exception while in postMount step: {e}')
                 return MOUNT_FAILURE
         return MOUNT_SUCCESSFUL
 
-    def preUnmount(self, puck_pos: int, pin_pos: int, samp_id: str):
+    def preUnmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         if getBlConfig('robot_online'):
             logger.info(f"unmounting {puckPos} {pinPos} {samp_id}")
             try:
-                daq_lib.setRobotGovState("SE")
+                daq_lib.setRobotGovState(gov_robot, "SE")
             except Exception as e:
                 logger.error('Exception while in preUnmount step: {e}')
                 return UNMOUNT_FAILURE
         return UNMOUNT_STEP_SUCCESSFUL
 
-    def unmount(self, puck_pos: int, pin_pos: int, samp_id: str):
+    def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         try:
-            yield from self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
+            RE(self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos)))
         except Exception as e:
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE

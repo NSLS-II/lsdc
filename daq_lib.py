@@ -266,7 +266,7 @@ def mountSample(sampID):
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
-      if RE(robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID)):
+      if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
         db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)
         set_field("mounted_pin","")        
         db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})        
@@ -274,7 +274,7 @@ def mountSample(sampID):
         if (warmUpNeeded):
           gui_message("Warming gripper. Please stand by.")
           mountCounter = 0
-        mountStat = RE(robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded))
+        mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
         if (warmUpNeeded):
           destroy_gui_message()
         if (mountStat == 1):
@@ -293,7 +293,7 @@ def mountSample(sampID):
       return 1
   else: #nothing mounted
     (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
-    mountStat = RE(robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1))
+    mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
     if (mountStat == 1):
       set_field("mounted_pin",sampID)
     elif(mountStat == 2):
@@ -319,7 +319,7 @@ def unmountSample():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if RE(robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.finish()
       set_field("mounted_pin","")
@@ -334,7 +334,7 @@ def unmountCold():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if RE(robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.parkGripper()
       set_field("mounted_pin","")

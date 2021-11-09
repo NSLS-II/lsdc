@@ -25,7 +25,8 @@ class DensoRobot:
 
     def mount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         try:
-            RE(self.robot.mount(get_puck_letter(puck_pos), str(pin_pos)))
+            logger.info(f'Mounting: {puck_pos} {pin_pos}')
+            yield from self.robot.mount(get_puck_letter(puck_pos), str(pin_pos))
         except Exception as e:
             logger.error(f'Exception during mount step: {e}')
             return MOUNT_FAILURE
@@ -52,7 +53,7 @@ class DensoRobot:
 
     def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         try:
-            RE(self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos)))
+            yield from self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
         except Exception as e:
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE

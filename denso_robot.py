@@ -43,7 +43,7 @@ class DensoRobot:
 
     def preUnmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         if getBlConfig('robot_online'):
-            logger.info(f"unmounting {puckPos} {pinPos} {samp_id}")
+            logger.info(f"unmounting {puck_pos} {pin_pos} {samp_id}")
             try:
                 daq_lib.setRobotGovState(gov_robot, "SE")
             except Exception as e:
@@ -53,6 +53,7 @@ class DensoRobot:
 
     def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         try:
+            logger.info(f'dismount {puck_pos} {pin_pos}')
             yield from self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
         except Exception as e:
             logger.error(f'Exception while unmounting sample: {e}')

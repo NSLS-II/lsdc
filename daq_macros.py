@@ -3351,24 +3351,24 @@ def setProcRam():
 
 def setProcGPFS():
   if (daq_utils.beamline == "amx"):
-    db_lib.setBeamlineConfigParam("amx","spotNode1","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode2","cpu-003")
-    db_lib.setBeamlineConfigParam("amx","spotNode3","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode4","cpu-003")
-    db_lib.setBeamlineConfigParam("amx","spotNode5","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode6","cpu-003")    
+    db_lib.setBeamlineConfigParam("amx","spotNode1","uranus-cpu-002")
+    db_lib.setBeamlineConfigParam("amx","spotNode2","uranus-cpu-003")
+    db_lib.setBeamlineConfigParam("amx","spotNode3","uranus-cpu-002")
+    db_lib.setBeamlineConfigParam("amx","spotNode4","uranus-cpu-003")
+    db_lib.setBeamlineConfigParam("amx","spotNode5","uranus-cpu-002")
+    db_lib.setBeamlineConfigParam("amx","spotNode6","uranus-cpu-003")    
     db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
-    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")
     
   else:
-    db_lib.setBeamlineConfigParam("fmx","spotNode1","cpu-007")
-    db_lib.setBeamlineConfigParam("fmx","spotNode2","cpu-008")
-    db_lib.setBeamlineConfigParam("fmx","spotNode3","cpu-009")
-    db_lib.setBeamlineConfigParam("fmx","spotNode4","cpu-010")
-    db_lib.setBeamlineConfigParam("fmx","spotNode5","cpu-008")
-    db_lib.setBeamlineConfigParam("fmx","spotNode6","cpu-004")        
-    db_lib.setBeamlineConfigParam("fmx","cbfComm","eiger2cbf")
-    db_lib.setBeamlineConfigParam("fmx","dialsComm","dials.find_spots_client")
+    db_lib.setBeamlineConfigParam("fmx","spotNode1","uranus-cpu-007")
+    db_lib.setBeamlineConfigParam("fmx","spotNode2","uranus-cpu-008")
+    db_lib.setBeamlineConfigParam("fmx","spotNode3","uranus-cpu-009")
+    db_lib.setBeamlineConfigParam("fmx","spotNode4","uranus-cpu-010")
+    db_lib.setBeamlineConfigParam("fmx","spotNode5","uranus-cpu-008")
+    db_lib.setBeamlineConfigParam("fmx","spotNode6","uranus-cpu-004")        
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")
     
 
 

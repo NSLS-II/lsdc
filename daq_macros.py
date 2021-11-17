@@ -3340,35 +3340,35 @@ def setProcRam():
   if (daq_utils.beamline == "amx"):
     db_lib.setBeamlineConfigParam("amx","spotNode1","xf17id1-srv1")
     db_lib.setBeamlineConfigParam("amx","spotNode2","xf17id1-srv1")
-    db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
-    db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")        
   else:
     db_lib.setBeamlineConfigParam("fmx","spotNode1","xf17id2-ws6")
     db_lib.setBeamlineConfigParam("fmx","spotNode2","xf17id2-ws6")
-    db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/MX-Soft/bin/eiger2cbfJohn")
-    db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/MX-Soft/Phenix/phenix-installer-dev-2666-intel-linux-2.6-x86_64-centos6/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("fmx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("fmx","dialsComm","dials.find_spots_client")        
     
 
 def setProcGPFS():
   if (daq_utils.beamline == "amx"):
-    db_lib.setBeamlineConfigParam("amx","spotNode1","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode2","cpu-003")
-    db_lib.setBeamlineConfigParam("amx","spotNode3","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode4","cpu-003")
-    db_lib.setBeamlineConfigParam("amx","spotNode5","cpu-002")
-    db_lib.setBeamlineConfigParam("amx","spotNode6","cpu-003")    
-    db_lib.setBeamlineConfigParam("amx","cbfComm","/usr/local/crys-local/bin/eiger2cbf-linux")
-    db_lib.setBeamlineConfigParam("amx","dialsComm","/usr/local/crys-local/phenix-1.12-2829/build/bin/dials.find_spots_client")        
+    db_lib.setBeamlineConfigParam("amx","spotNode1","uranus-cpu002")
+    db_lib.setBeamlineConfigParam("amx","spotNode2","uranus-cpu003")
+    db_lib.setBeamlineConfigParam("amx","spotNode3","uranus-cpu002")
+    db_lib.setBeamlineConfigParam("amx","spotNode4","uranus-cpu003")
+    db_lib.setBeamlineConfigParam("amx","spotNode5","uranus-cpu002")
+    db_lib.setBeamlineConfigParam("amx","spotNode6","uranus-cpu003")    
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")
     
   else:
-    db_lib.setBeamlineConfigParam("fmx","spotNode1","cpu-007")
-    db_lib.setBeamlineConfigParam("fmx","spotNode2","cpu-008")
-    db_lib.setBeamlineConfigParam("fmx","spotNode3","cpu-009")
-    db_lib.setBeamlineConfigParam("fmx","spotNode4","cpu-010")
-    db_lib.setBeamlineConfigParam("fmx","spotNode5","cpu-008")
-    db_lib.setBeamlineConfigParam("fmx","spotNode6","cpu-004")        
-    db_lib.setBeamlineConfigParam("fmx","cbfComm","/usr/local/crys-local/bin/eiger2cbf-linux")
-    db_lib.setBeamlineConfigParam("fmx","dialsComm","/usr/local/crys-prod/phenix-1.11rc2-2531/build/bin/dials.find_spots_client")
+    db_lib.setBeamlineConfigParam("fmx","spotNode1","uranus-cpu007")
+    db_lib.setBeamlineConfigParam("fmx","spotNode2","uranus-cpu008")
+    db_lib.setBeamlineConfigParam("fmx","spotNode3","uranus-cpu009")
+    db_lib.setBeamlineConfigParam("fmx","spotNode4","uranus-cpu010")
+    db_lib.setBeamlineConfigParam("fmx","spotNode5","uranus-cpu008")
+    db_lib.setBeamlineConfigParam("fmx","spotNode6","uranus-cpu004")        
+    db_lib.setBeamlineConfigParam("amx","cbfComm","eiger2cbf")
+    db_lib.setBeamlineConfigParam("amx","dialsComm","dials.find_spots_client")
     
 
 
@@ -3424,19 +3424,19 @@ def guiRemote(): #monitor omega VAL
 
 def spotNodes(*args):
   """spotNodes(*args) : Set the dials spotfinding nodes. You must give 8 nodes. Example: spotNodes(4,5,7,8,12,13,14,15)"""
-  if (len(args) != 8):
-    logger.error("C'mon, I need 8 nodes. No change. Try again.")
+  if (len(args) != SPOT_MIN_NODES):
+    logger.error(f"C'mon, I need {SPOT_MIN_NODES} nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      setBlConfig("spotNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("spotNode"+str(i+1),"uranus-cpu%03d" % args[i])
 
 def fastDPNodes(*args):
   """fastDPNodes(*args) : Set the fastDP nodes. You must give 4 nodes. Example: fastDPNodes(4,5,7,8)"""  
-  if (len(args) != 4):
-    logger.error("C'mon, I need 4 nodes. No change. Try again.")
+  if (len(args) != FAST_DP_MIN_NODES):
+    logger.error(f"C'mon, I need {FAST_DP_MIN_NODES} nodes. No change. Try again.")
   else:
     for i in range (0,len(args)):
-      setBlConfig("fastDPNode"+str(i+1),"cpu-%03d" % args[i])
+      setBlConfig("fastDPNode"+str(i+1),"uranus-cpu%03d" % args[i])
 
 def setVisitName(vname):
   setBlConfig("visitName",str(vname))

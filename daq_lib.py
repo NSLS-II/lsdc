@@ -14,6 +14,8 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
+from start_bs import govs, gov_robot
+import gov_lib
 import logging
 logger = logging.getLogger(__name__)
 
@@ -67,12 +69,13 @@ def destroy_gui_message():
 
 
 def unlatchGov(): # Command needed for FloCos to recover robot
-  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  setPvDesc("robotGovActive",1)
-  time.sleep(0.2)
-  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  message1 = f"OLD: unlatchGov called, gov active state = {govs.sel.active.get()}"
+  print(message1)
+  logger.info(message1)
+  govs.sel.active.set(1)
+  message2 = f"NEW: unlatchGov called, gov active state = {govs.sel.active.get()}"
+  print(message2)
+  logger.info(message2)
 
 
 def set_field(param,val):
@@ -240,97 +243,6 @@ def toggleLowMagCameraSettings(stateCode):
     setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
     setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
 
-def waitGovRobotSE():
-  waitGovNoSleep()    
-  robotGovState = (getPvDesc("robotSeActive") or getPvDesc("humanSeActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("SE")
-    return 1
-  else:
-    logger.info("Governor did not reach SE")
-    gui_message("Governor did not reach SE.")    
-    return 0
-
-def setGovRobot(state):
-  if state == "DI":
-    return setGovRobotDI()
-  else:
-    logger.info('setGovRob%s' % state)
-    setRobotGovState(state)
-    altName = state.lower().capitalize()
-    waitGov()
-    robotGovState = (getPvDesc("robot%sActive" % altName) or getPvDesc("human%sActive" % altName))
-    logger.info("robot gov state = " + str(robotGovState))
-    if (robotGovState != 0):
-      if state in ["SA", "DA"]:
-        toggleLowMagCameraSettings(state)
-      return 1
-    else:
-      logger.info("Governor did not reach %s" % state)
-      gui_message("Governor did not reach %s." % state)
-      return 0
-
-def setGovRobotDI(): # keep this because it is different from the others
-  setRobotGovState("DI")
-  waitGov()    
-  robotGovState = getPvDesc("robotDiActive")
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("DI")        
-    return 1
-  else:
-    logger.info("Governor did not reach DI")
-    gui_message("Governor did not reach DI.")        
-    return 0
-
-def govBusy():
-  return (getPvDesc("robotGovStatus") == 1 or getPvDesc("humanGovStatus") == 1)
-
-def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
-  logger.info("setGovRobotSA")
-  toggleLowMagCameraSettings("SA")  
-  setRobotGovState("SA")
-  return 1
-
-def setGovRobotDI_nowait():
-  logger.info("setGovRobotDI")
-  toggleLowMagCameraSettings("DI")
-  setRobotGovState("DI")
-  
-
-
-def waitGov():
-  govTimeout = 120  
-  startTime = time.time()
-  time.sleep(1.5)  
-  while (1):
-    robotGovStatus = govBusy()
-    logger.info("robot gov status = " + str(robotGovStatus))    
-    if (robotGovStatus != 1): #enum 1 = busy
-      break
-    if (time.time()-startTime > govTimeout):
-      logger.info("Governor Timeout!")
-      gui_message("Governor Timeout!")          
-      return 0
-    time.sleep(0.1)        
-  time.sleep(1.0)    
-
-def waitGovNoSleep():
-  govTimeout = 120  
-  startTime = time.time()
-  while (1):
-    time.sleep(.05)
-    robotGovStatus = govBusy()
-    logger.info("robot gov status = " + str(robotGovStatus))    
-    if (robotGovStatus != 1): #enum 1 = busy
-      break
-    if (time.time()-startTime > govTimeout):
-      logger.info("Governor Timeout!")
-      gui_message("Governor Timeout!")                
-      return 0
-  
-  
 def mountSample(sampID):
   global mountCounter
 
@@ -354,7 +266,7 @@ def mountSample(sampID):
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
-      if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+      if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
         db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)
         set_field("mounted_pin","")        
         db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})        
@@ -362,7 +274,7 @@ def mountSample(sampID):
         if (warmUpNeeded):
           gui_message("Warming gripper. Please stand by.")
           mountCounter = 0
-        mountStat = robot_lib.mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
+        mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
         if (warmUpNeeded):
           destroy_gui_message()
         if (mountStat == 1):
@@ -381,7 +293,7 @@ def mountSample(sampID):
       return 1
   else: #nothing mounted
     (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
-    mountStat = robot_lib.mountRobotSample(puckPos,pinPos,sampID,init=1)
+    mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
     if (mountStat == 1):
       set_field("mounted_pin",sampID)
     elif(mountStat == 2):
@@ -407,7 +319,7 @@ def unmountSample():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.finish()
       set_field("mounted_pin","")
@@ -422,7 +334,7 @@ def unmountCold():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.parkGripper()
       set_field("mounted_pin","")
@@ -462,11 +374,9 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    setPvDesc("govRobotDetDist",reqObj["detDist"])
-    setPvDesc("govHumanDetDist",reqObj["detDist"])
+    gov_lib.set_detz_in(gov_robot, reqObj["detDist"])
     if (reqObj["detDist"] >= 200.0 and getBlConfig("HePath") == 0):
-      setPvDesc("govRobotDetDistOut",reqObj["detDist"])
-      setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
+      gov_lib.set_detz_out(gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]

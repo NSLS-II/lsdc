@@ -20,6 +20,8 @@ from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
                           MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
                           UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
+import gov_lib
+#from start_bs import gov_human, gov_robot
 logger = logging.getLogger(__name__)
 
 global retryMountCount
@@ -166,8 +168,13 @@ class EMBLRobot:
     def preMount(self, puckPos, pinPos, sampID, **kwargs):
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
-        if (not daq_lib.waitGovRobotSE()):
-          daq_lib.setGovRobot('SE')
+        desired_gov_state = 'SE'
+        gov_lib.waitGov(kwargs['govStatus'])
+        if not kwargs['govStatus'].success:  # TODO check that we are at desired_gov_state
+          gov_return = gov_lib.setGovRobot(desired_gov_state)
+          if not gov_return.success:
+            logger.error(f'Did not reach {desired_gov_state}')
+            return
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           try:
             if (daq_utils.beamline == "fmx"):
@@ -239,7 +246,8 @@ class EMBLRobot:
                 if (daq_utils.beamline == "fmx"):
                   daq_macros.homePins()
                   time.sleep(3.0)
-                if (not daq_lib.setGovRobot('SE')):
+                gov_status = gov_lib.setGovRobot('SE')
+                if not gov_status.success:
                   return MOUNT_FAILURE
             self.callAlignPinThread(kwargs)
             setPvDesc("boostSelect",0)
@@ -319,7 +327,9 @@ class EMBLRobot:
             logger.info('not changing anything as governor is active')
         if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
-      daq_lib.setGovRobot('SA')
+      gov_status = gov_lib.setGovRobot('SA')
+      if not gov_status.success:
+        logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL
 
  
@@ -330,8 +340,7 @@ class EMBLRobot:
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
-          setPvDesc("govRobotDetDistOut",DETECTOR_SAFE_DISTANCE)
-          setPvDesc("govHumanDetDistOut",DETECTOR_SAFE_DISTANCE)
+          pass#gov_lib.set_detz_out(gov_human, gov_robot, DETECTOR_SAFE_DISTANCE)
         daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

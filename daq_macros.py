@@ -3114,7 +3114,7 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
         det_distance_m /= 1000  # convert distance from mm to m on NYX
 
     flyer.update_params(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
-                   x_start=current_x, y_start=current_y, z_start=current_z, \
+                   x_start_um=current_x, y_start_um=current_y, z_start_um=current_z, \
                    file_prefix=filePrefix, data_directory_name=dataDirectoryName, file_number_start=file_number_start,\
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
                    scan_encoder=scanEncoder, change_state=changeState)

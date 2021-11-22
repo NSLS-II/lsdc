@@ -3117,7 +3117,7 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
                    x_start=current_x, y_start=current_y, z_start=current_z, \
                    file_prefix=filePrefix, data_directory_name=dataDirectoryName, file_number_start=file_number_start,\
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
-                   scan_encoder=scanEncoder, change_state=changeState):
+                   scan_encoder=scanEncoder, change_state=changeState)
     RE(bps.fly([flyer])
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega

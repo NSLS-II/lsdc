@@ -3099,6 +3099,10 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   setPvDesc("lowMagTrigMode",0)
 
 def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, scanEncoder=3, changeState=True):
+
+    logger.info("in Zebra Daq Bluesky #1")
+    gov_lib.setGovRobot("DA")
+
     num_images = int(round(scanWidth / imgWidth))
     current_x = beamline_lib.motorPosFromDescriptor("sampleX")
     current_y = beamline_lib.motorPosFromDescriptor("sampleY")
@@ -3119,6 +3123,13 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
                    scan_encoder=scanEncoder, change_state=changeState)
     RE(bps.fly([flyer])
+
+    logger.info("vector Done")
+    if lastOnSample() and changeState:
+        gov_lib.setGovRobot('SA', wait=False)
+    logger.info("stop det acquire")
+    flyer.detector.acquire.put(0, wait=True)
+    logger.info("zebraDaq Done")
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time

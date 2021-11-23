@@ -130,7 +130,8 @@ elif beamline=="nyx":
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
-    detector = object()
+    from nyxtools.pilatus_detector import PilatusBase
+    detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
     from nyxtools.flyer import NYXFlyer
     flyer = NYXFlyer(vector, zebra, detector)
 

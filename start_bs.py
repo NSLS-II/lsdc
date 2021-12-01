@@ -3,7 +3,7 @@
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
-from zebra import Zebra
+from mxtools.zebra import Zebra
 import os
 from nyxtools.governor import _make_governors
 
@@ -106,6 +106,7 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
+    from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -116,7 +117,9 @@ elif beamline == "fmx":
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
+    from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
+    from embl_robot import EMBLRobot
     robot = EMBLRobot()
 
 elif beamline=="nyx":
@@ -125,9 +128,12 @@ elif beamline=="nyx":
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
-    #TODO: We plan to provide a proper definition later
-    #vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
-    vector_program = object()
+    from nyxtools.vector import VectorProgram
+    vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
+    from nyxtools.pilatus_detector import PilatusBase
+    detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
+    from nyxtools.flyer import NYXFlyer
+    flyer = NYXFlyer(vector, zebra, detector)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

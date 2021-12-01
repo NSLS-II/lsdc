@@ -3098,6 +3098,38 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   
   setPvDesc("lowMagTrigMode",0)
 
+def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, scanEncoder=3, changeState=True):
+
+    logger.info("in Zebra Daq Bluesky #1")
+    gov_lib.setGovRobot("DA")
+
+    num_images = int(round(scanWidth / imgWidth))
+    current_x = beamline_lib.motorPosFromDescriptor("sampleX")
+    current_y = beamline_lib.motorPosFromDescriptor("sampleY")
+    current_z = beamline_lib.motorPosFromDescriptor("sampleZ")
+    x_beam = getPvDesc("beamCenterX")
+    y_beam = getPvDesc("beamCenterY")
+    wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
+    det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist")
+    if daq_utils.beamline == "nyx":
+        current_x *= 1000  # convert translation from mm to microns on NYX
+        current_y *= 1000
+        current_z *= 1000
+        det_distance_m /= 1000  # convert distance from mm to m on NYX
+
+    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
+                   x_start_um=current_x, y_start_um=current_y, z_start_um=current_z, \
+                   file_prefix=filePrefix, data_directory_name=dataDirectoryName, file_number_start=file_number_start,\
+                   x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
+                   scan_encoder=scanEncoder, change_state=changeState)
+    RE(bps.fly([flyer])
+
+    logger.info("vector Done")
+    if lastOnSample() and changeState:
+        gov_lib.setGovRobot('SA', wait=False)
+    logger.info("stop det acquire")
+    flyer.detector.acquire.put(0, wait=True)
+    logger.info("zebraDaq Done")
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time

@@ -8,7 +8,7 @@ source ${CONFIGDIR}daq_env.txt
 export matlab_distrib=${PROJDIR}/software/c3d/matlab_distrib
 export LD_LIBRARY_PATH=$matlab_distrib/bin/glnx86:$matlab_distrib/toolbox
 export PINALIGNDIR=${PROJDIR}pinAlign/pin_align-master/
-export MXPROCESSINGSCRIPTSDIR=${PROJDIR}mx-processing/
+export MXPROCESSINGSCRIPTSDIR=/GPFS/CENTRAL/xf17id1/dkreitler/projects/mx-processing-new/
 # below not idea as environment name also needed by daq_main2
 conda activate lsdc-server-2021-1.3
 $LSDCHOME/lsdcServer

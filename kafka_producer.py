@@ -5,10 +5,18 @@ import json
 from time import sleep
 
 import certifi
+import yaml
 
-conf = {'bootstrap.servers':os.environ["KAFKA_SERVERS"],
-        'security.protocol': 'SSL',
+with open("nsls2-kafka-config.yml") as f:
+    kafka_config = yaml.safe_load(f)
+
+bootstrap_servers = ",".join(kafka_config["bootstrap_servers"])
+lsdc_producer_config = kafka_config["lsdc_producer_config"]
+
+conf = {'bootstrap.servers':bootstrap_servers,
         'ssl.ca.location': certifi.where()}
+conf.update(lsdc_producer_config)
+
 p = Producer(**conf)
 
 def delivery_callback(err, msg):

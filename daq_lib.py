@@ -14,7 +14,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
-from start_bs import govs, gov_robot
+from start_bs import govs, gov_robot, flyer
 import gov_lib
 import logging
 logger = logging.getLogger(__name__)

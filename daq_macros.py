@@ -3122,7 +3122,7 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
                    file_prefix=filePrefix, data_directory_name=dataDirectoryName, file_number_start=file_number_start,\
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
                    scan_encoder=scanEncoder, change_state=changeState)
-    RE(bps.fly([flyer])
+    RE(bps.fly([flyer]))
 
     logger.info("vector Done")
     if lastOnSample() and changeState:

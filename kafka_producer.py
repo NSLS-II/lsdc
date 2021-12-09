@@ -7,7 +7,7 @@ from time import sleep
 import certifi
 import yaml
 
-with open("nsls2-kafka-config.yml") as f:
+with open(f"{os.environ['CONFIGDIR']}/nsls2-kafka-config.yml") as f:
     kafka_config = yaml.safe_load(f)
 
 bootstrap_servers = ",".join(kafka_config["bootstrap_servers"])

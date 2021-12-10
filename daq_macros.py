@@ -34,6 +34,7 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
                    setup_vector_program)
 import bluesky.plan_stubs as bps
+import bluesky.plans as bp
 
 try:
   import ispybLib
@@ -3122,7 +3123,7 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
                    file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
                    scan_encoder=scanEncoder, change_state=changeState)
-    RE(bps.fly([flyer]))
+    RE(bp.fly([flyer]))
 
     logger.info("vector Done")
     if lastOnSample() and changeState:

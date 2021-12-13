@@ -3129,7 +3129,7 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
     if lastOnSample() and changeState:
         gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
     logger.info("stop det acquire")
-    flyer.detector.acquire.put(0, wait=True)
+    flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega

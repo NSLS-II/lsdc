@@ -763,7 +763,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
     if not (checkC2C_X(x,fovx)):
       return
   if (source == "screen"):
-    waitGovNoSleep()
+    gov_lib.waitGovNoSleep()
     setPvDesc("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui
     setPvDesc("image_Y_scalePix",daq_utils.screenPixY)
     setPvDesc("image_X_centerPix",daq_utils.screenPixX/2)

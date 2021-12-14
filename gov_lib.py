@@ -32,3 +32,6 @@ def waitGov(status, timeout=GOVERNOR_TIMEOUT):
     message = 'Governor Timeout!'
     logger.error(message)
     #gui_message(message)
+
+def waitGovNoSleep(timeout=GOVERNOR_TIMEOUT):
+  pass

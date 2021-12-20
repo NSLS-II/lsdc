@@ -44,6 +44,8 @@ db = Broker.named(beamline)
 
 RE.subscribe(db.insert)
 
+#from bluesky.utils import ts_msg_hook
+#RE.msg_hook = ts_msg_hook
 # from bluesky.callbacks.best_effort import BestEffortCallback
 # bec = BestEffortCallback()
 # RE.subscribe(bec)
@@ -127,10 +129,10 @@ elif beamline=="nyx":
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
-    zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
+    zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
-    from nyxtools.pilatus_detector import PilatusBase
+    from nyxtools.pilatus import PilatusBase
     detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
     from nyxtools.flyer import NYXFlyer
     flyer = NYXFlyer(vector, zebra, detector)

@@ -14,7 +14,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import db_lib
 from daq_utils import getBlConfig
 from config_params import *
-from start_bs import govs, gov_robot
+from start_bs import govs, gov_robot, flyer
 import gov_lib
 import logging
 logger = logging.getLogger(__name__)
@@ -626,39 +626,40 @@ def collectData(currentRequest):
   except KeyError as e:
     logger.error('caught key error in logging: %s' % e)
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
-    seqNum = int(detector_get_seqnum())
-    comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-    logger.info(comm_s)
-    os.system(comm_s)    
-    if img_width > 0: #no dataset processing in stills mode
-      if (reqObj["fastDP"]):
-        if (reqObj["fastEP"]):
-          fastEPFlag = 1
-        else:
-          fastEPFlag = 0
-        if (reqObj["dimple"]):
-          dimpleFlag = 1
-        else:
-          dimpleFlag = 0        
-        nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
-        fastDPNodeCounter+=1
-        node = getBlConfig(nodeName)      
-        dimpleNode = getBlConfig("dimpleNode")      
-        if (daq_utils.detector_id == "EIGER-16"):
-          seqNum = int(detector_get_seqnum())
-          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
-        else:
-          comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-        logger.info(f'Running fastdp command: {comm_s}')
-        if (daq_utils.beamline == "amx"):                                            
-          visitName = daq_utils.getVisitName()
-          if (not os.path.exists(visitName + "/fast_dp_dir")):
-            os.system("killall -KILL loop-fdp-dple-populate")
-            os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
-        os.system(comm_s)
-      if (reqObj["xia2"]):
-        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
-        os.system(comm_s)
+    if daq_utils.beamline != "nyx":
+      seqNum = int(detector_get_seqnum())
+      comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
+      logger.info(comm_s)
+      os.system(comm_s)    
+      if img_width > 0: #no dataset processing in stills mode
+        if (reqObj["fastDP"]):
+          if (reqObj["fastEP"]):
+            fastEPFlag = 1
+          else:
+            fastEPFlag = 0
+          if (reqObj["dimple"]):
+            dimpleFlag = 1
+          else:
+            dimpleFlag = 0        
+          nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
+          fastDPNodeCounter+=1
+          node = getBlConfig(nodeName)      
+          dimpleNode = getBlConfig("dimpleNode")      
+          if (daq_utils.detector_id == "EIGER-16"):
+            seqNum = int(detector_get_seqnum())
+            comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
+          else:
+            comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
+          logger.info(f'Running fastdp command: {comm_s}')
+          if (daq_utils.beamline == "amx"):                                            
+            visitName = daq_utils.getVisitName()
+            if (not os.path.exists(visitName + "/fast_dp_dir")):
+              os.system("killall -KILL loop-fdp-dple-populate")
+              os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
+          os.system(comm_s)
+        if (reqObj["xia2"]):
+          comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
+          os.system(comm_s)
   
   logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)
@@ -698,7 +699,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     logger.info("vectorSync " + str(time.time()))    
     daq_macros.vectorSync()
     logger.info("zebraDaq " + str(time.time()))        
-    daq_macros.zebraDaqBluesky(flyer,angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,changeState))
+    daq_macros.zebraDaqBluesky(flyer,angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,changeState)
 #    daq_macros.zebraDaq(angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,protocol=protocol)  #?protocol?
   elif (protocol == "vector"):
     daq_macros.vectorZebraScan(currentRequest)  
@@ -762,7 +763,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
     if not (checkC2C_X(x,fovx)):
       return
   if (source == "screen"):
-    waitGovNoSleep()
+    gov_lib.waitGovNoSleep()
     setPvDesc("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui
     setPvDesc("image_Y_scalePix",daq_utils.screenPixY)
     setPvDesc("image_X_centerPix",daq_utils.screenPixX/2)

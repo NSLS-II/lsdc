@@ -1,7 +1,7 @@
 import daq_lib
 from daq_utils import getBlConfig
 from config_params import MOUNT_SUCCESSFUL, MOUNT_STEP_SUCCESSFUL, MOUNT_FAILURE,\
-                          UNMOUNT_SUCCESSFUL, UNMOUNT_FAILURE
+                          UNMOUNT_SUCCESSFUL, UNMOUNT_STEP_SUCCESSFUL, UNMOUNT_FAILURE
 import gov_lib
 import logging
 logger = logging.getLogger(__name__)

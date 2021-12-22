@@ -114,9 +114,11 @@ from ophyd import PVPositioner, PVPositionerPC, Device, Component as Cpt, EpicsM
         
 ## DONE Redo ophyd object with proper PV
 class Annealer(Device):
-    air = Cpt(EpicsSignal, 'Air-Sel')
-    status = Cpt(EpicsSignalRO, 'In-Sts') # status: 0 (Not In), 1 (In)
-    
-annealer = Annealer('XF:17IDC-ES:FMX{Wago:1}Annealer', name='annealer',
+    air = Cpt(EpicsSignal, '1}AnnealerAir-Sel')
+    inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
+    outStatus = Cpt(EpicsSignalRO, '2}AnnealerOut-Sts') # status: 0 (Not In), 1 (In)
+
+## FMX annealer aka cryo blocker
+annealer = Annealer('XF:17IDC-ES:FMX{Wago:', name='annealer',
                         read_attrs=[],
                         labels=['fmx'])

@@ -354,14 +354,14 @@ class StaffScreenDialog(QFrame):
     def getSpotNodeList(self):
       nodeList = []
       for i in range (0,self.spotNodeCount):
-        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('cpu')[1]))
       return nodeList
         
         
     def getFastDPNodeList(self):
       nodeList = []
       for i in range (0,self.fastDPNodeCount):
-        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('-')[1]))
+        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('cpu')[1]))
       return nodeList
 
     def setFastDPNodesCB(self):
@@ -1671,13 +1671,13 @@ class ControlMain(QtWidgets.QMainWindow):
           self.motPos = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get()}
         else:
           self.motPos = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get(),"fineX":self.sampFineX_pv.get(),"fineY":self.sampFineY_pv.get(),"fineZ":self.sampFineZ_pv.get()}                    
+        self.staffScreenDialog = StaffScreenDialog(self, show=False)
         self.dewarTree.refreshTreeDewarView()
         if (self.mountedPin_pv.get() == ""):
           mountedPin = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')["sampleID"]
           self.mountedPin_pv.put(mountedPin)
         self.rasterExploreDialog = RasterExploreDialog()
         self.userScreenDialog = UserScreenDialog(self)        
-        self.staffScreenDialog = StaffScreenDialog(self, show=False)
         self.detDistMotorEntry.getEntry().setText(self.detDistRBVLabel.getEntry().text()) #this is to fix the current val being overwritten by reso
         self.proposalID = -999999
         if (len(sys.argv)>1):

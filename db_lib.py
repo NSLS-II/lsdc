@@ -789,11 +789,17 @@ def getAllBeamlineConfigParams(beamline_id):
   configList = list(g)
   return configList
 
-def printAllBeamlineConfigParams(beamline_id):
+def logAllBeamlineConfigParams(beamline_id):
+  printAllBeamlineConfigParams(beamline_id, log=True)
+
+def printAllBeamlineConfigParams(beamline_id, log=False):
   configList = getAllBeamlineConfigParams(beamline_id)
   for i in range (0,len(configList)):
     try:
-      logger.info(configList[i]['info_name'] + " " + str(configList[i]['info']['val']))
+      if log:
+        logger.info(configList[i]['info_name'] + " " + str(configList[i]['info']['val']))
+      else:
+        print(configList[i]['info_name'] + " " + str(configList[i]['info']['val']))
     except KeyError:
       pass
 

@@ -20,6 +20,7 @@ import _thread
 from threading import Thread
 import logging
 import epics.ca
+from epics import caget, caput
 
 from config_params import TOP_VIEW_CHECK, ROBOT_MIN_DISTANCE, ROBOT_DISTANCE_TOLERANCE
 logger = logging.getLogger(__name__)
@@ -406,7 +407,14 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       daq_lib.gui_message(message)
       logger.error(message)
       return 0
-    detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
+    if daq_utils.beamline == "fmx":
+      det_z_pv = 'XF:17IDC-ES:FMX{Det-Ax:Z}Mtr'
+      detDist = caget(f'{det_z_pv}.RBV')
+      if detDist < ROBOT_MIN_DISTANCE:
+        caput(f'{det_z_pv}.VAL', ROBOT_MIN_DISTANCE, wait=True)  # TODO shouldn't this wait for SE transition or something??
+      detDist = caget(f'{det_z_pv}.RBV')
+    else:
+      detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
     if detDist < ROBOT_MIN_DISTANCE and abs(detDist - ROBOT_MIN_DISTANCE) > ROBOT_DISTANCE_TOLERANCE:
       logger.error(f"ERROR - Detector closer than {ROBOT_MIN_DISTANCE} and move than {ROBOT_DISTANCE_TOLERANCE} from {ROBOT_MIN_DISTANCE}! actual distance: {detDist}. Stopping.")
       return 0

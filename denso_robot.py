@@ -6,8 +6,8 @@ import gov_lib
 import logging
 logger = logging.getLogger(__name__)
 
-def get_puck_letter(puck_number):
-    return chr(ord('@') + int(puck_number))
+def get_denso_puck_pin(puck_number, pin_number):
+    return (chr(ord('@') + int(puck_number), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
 
 class DensoRobot:
     def __init__(self, robot):
@@ -25,8 +25,9 @@ class DensoRobot:
 
     def mount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         try:
-            logger.info(f'Mounting: {puck_pos} {pin_pos}')
-            yield from self.robot.mount(get_puck_letter(puck_pos), str(pin_pos))
+            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+            logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
+            yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
         except Exception as e:
             logger.error(f'Exception during mount step: {e}')
             return MOUNT_FAILURE
@@ -43,7 +44,8 @@ class DensoRobot:
 
     def preUnmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         if getBlConfig('robot_online'):
-            logger.info(f"unmounting {puck_pos} {pin_pos} {samp_id}")
+            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+            logger.info(f"unmounting {denso_puck_pos} {denso_pin_pos} {samp_id}")
             try:
                 daq_lib.setRobotGovState(gov_robot, "SE")
             except Exception as e:
@@ -52,9 +54,10 @@ class DensoRobot:
         return UNMOUNT_STEP_SUCCESSFUL
 
     def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
+        denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
         try:
-            logger.info(f'dismount {puck_pos} {pin_pos}')
-            yield from self.robot.dismount(get_puck_letter(puck_pos), str(pin_pos))
+            logger.info(f'dismount {denso_puck_pos} {denso_pin_pos}')
+            yield from self.robot.dismount(denso_puck_pos, denso_pin_pos)
         except Exception as e:
             logger.error(f'Exception while unmounting sample: {e}')
             return UNMOUNT_FAILURE

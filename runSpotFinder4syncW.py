@@ -6,6 +6,7 @@ import db_lib
 from daq_utils import getBlConfig
 import xmltodict
 import ispybLib
+from config_params import *
 
 baseDirectory = os.environ["PWD"]
 directory = sys.argv[1]
@@ -28,13 +29,12 @@ range_degrees = abs(sweep_end-sweep_start)
 numimages = round(range_degrees/img_width)
 numstart = reqObj["file_number_start"]
 
-cbfComm = getBlConfig("cbfComm")
 dialsComm = getBlConfig("dialsComm")
-dialsTuneLowRes = getBlConfig("rasterTuneLowRes")
-dialsTuneHighRes = getBlConfig("rasterTuneHighRes")
-dialsTuneIceRingFlag = getBlConfig("rasterTuneIceRingFlag")
-dialsTuneResoFlag = getBlConfig("rasterTuneResoFlag")  
-dialsTuneIceRingWidth = getBlConfig("rasterTuneIceRingWidth")
+dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
+dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
+dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
+dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)  
+dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
 if (dialsTuneIceRingFlag):
   iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
 else:
@@ -45,20 +45,10 @@ else:
   resoParams = ""
 dialsCommWithParams = dialsComm + resoParams + iceRingParams
 print(dialsCommWithParams)
-hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
-hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
-CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"  
-comm_s = "eiger2cbf-linux " + hdfRowFilepattern
 for i in range (numstart,numimages,10):
-  comm_s = "ssh -q " + node + " \"" + cbfComm + " " + hdfRowFilepattern  + " " + str(i) + ":" + str(i) + " " + CBF_conversion_pattern + ">>/dev/null 2>&1\""   
+  comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {request_id} {i} {i} 0 {seqNum}\""
   os.system(comm_s)
-CBFpattern = CBF_conversion_pattern + "*.cbf"
 
-time.sleep(1.0)
-comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + ">>/dev/null\""
-lsOut = os.system(comm_s)
-comm_s = "ssh -q " + node + " \"ls -rt " + CBFpattern + "|" + dialsCommWithParams + "\""
-print(comm_s)
 retry = 3
 localDialsResultDict = {}
 while(1):
@@ -70,8 +60,7 @@ while(1):
     if (retry==0):
       localDialsResultDict["data"]={}
       localDialsResultDict["data"]["response"]=[]
-      for jj in range (0,rowCellCount):
-        localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
+      localDialsResultDict["data"]["response"].append({'d_min': '-1.00','d_min_method_1': '-1.00','d_min_method_2': '-1.00','image': '','spot_count': '0','spot_count_no_ice': '0','total_intensity': '0'})
       break
   else:
     break
@@ -82,7 +71,10 @@ for i in range (0,len(localDialsResultDict["data"]["response"])):
   method2Res = localDialsResultDict["data"]["response"][i]['d_min_method_2']
   totalIntegratedSignal = localDialsResultDict["data"]["response"][i]['total_intensity']
   logfile.write(str(i*10) + " " + str(goodBraggCandidates)+"\n")
-  ispybLib.insertPlotResult(ispybDCID,i*10,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal)
+  try:
+    ispybLib.insertPlotResult(ispybDCID,i*10,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal)
+  except Exception as e:
+    print(f'exception during insertPlotResult:{e}')
 logfile.close()
 os.system("rm " + cbfDir + "/*.cbf")
 

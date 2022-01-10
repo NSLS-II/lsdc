@@ -13,9 +13,16 @@ import daq_macros
 import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
 import os
+import sys
+import traceback
 import filecmp
 import _thread
+from threading import Thread
 import logging
+import epics.ca
+from epics import caget, caput
+
+from config_params import TOP_VIEW_CHECK, ROBOT_MIN_DISTANCE, ROBOT_DISTANCE_TOLERANCE
 logger = logging.getLogger(__name__)
 
 global method_pv,var_pv,pinsPerPuck
@@ -121,7 +128,13 @@ def recoverRobot():
   try:
     rebootEMBL()
     time.sleep(8.0)    
-    RobotControlLib.runCmd("recover")
+    _,bLoaded,_ = RobotControlLib.recover()
+    if bLoaded:
+      daq_macros.robotOff()
+      daq_macros.disableMount()
+      daq_lib.gui_message("Found a sample in the gripper - CALL STAFF! disableMount() executed.")
+    else:
+      RobotControlLib.runCmd("goHome")
   except Exception as e:
     e_s = str(e)
     daq_lib.gui_message("ROBOT Recover failed! " + e_s)            
@@ -175,7 +188,17 @@ def closePorts():
   RobotControlLib.runCmd("closePorts")
   
 def rebootEMBL():
-  RobotControlLib.rebootEMBL()
+  try:
+    RobotControlLib.rebootEMBL()
+  except Exception as e:
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    if exc_type == epics.ca.ChannelAccessGetFailure and str(exc_value) == "Get failed; status code: 192":
+      logger.info('channel access failure detected but error 192 is expected, so continuing')
+    else:
+      # channel access exception with error 192 seems "normal". only raise for other exceptions
+      logger.error('rebootEMBL exception: %s' % traceback.format_exception(exc_type, exc_value, exc_tb))
+      raise(e)
+
   
 def cooldownGripper():
   try:
@@ -192,18 +215,7 @@ def parkGripper():
     message = "Park gripper Failed!: " + e_s
     daq_lib.gui_message(message)
     logger.error(message)
-    
 
-def setWorkposThread(init,junk):
-  logger.info("setting work pos in thread")
-  setPvDesc("robotGovActive",1)
-  setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
-  setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
-  setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
-  setPvDesc("robotOmegaWorkPos",90.0)
-  if (init):
-    time.sleep(20)
-    setPvDesc("robotGovActive",0)      
 
 def testRobot():
   try:
@@ -230,14 +242,12 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
   global sampXadjust, sampYadjust, sampZadjust  
 
   absPos = (pinsPerPuck*(puckPos%3))+pinPos+1  
+  logger.info(f'init: {init} warmup: {warmup}')
   if (getBlConfig('robot_online')):
     if (not daq_lib.waitGovRobotSE()):
       daq_lib.setGovRobot('SE')
-    if (getBlConfig("topViewCheck") == 1):
+    if (getBlConfig(TOP_VIEW_CHECK) == 1):
       try:
-        if (daq_utils.beamline == "fmx"):                  
-          _thread.start_new_thread(setWorkposThread,(init,0))        
-
         sample = db_lib.getSampleByID(sampID)
         sampName = sample['name']
         reqCount = sample['request_count']
@@ -270,6 +280,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
       beamline_lib.mvaDescriptor("dewarRot",rotMotTarget)
     try:
       if (init):
+        logger.debug('main loading part')
         setPvDesc("boostSelect",0)
         if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
           setPvDesc("boostSelect",1)
@@ -281,7 +292,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
               time.sleep(3.0)
             if (not daq_lib.setGovRobot('SE')):
               return
-        if (getBlConfig("topViewCheck") == 1):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -291,6 +302,7 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
         setPvDesc("boostSelect",0)                    
         if (getPvDesc("gripTemp")>-170):
           try:
+            logger.debug('mounting')
             RobotControlLib.mount(absPos)
           except Exception as e:
             e_s = str(e)
@@ -304,11 +316,12 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
             logger.info("full mount")
             RobotControlLib.mount(absPos)
           else:
+            logger.debug('quick mount')
             RobotControlLib.initialize()
             RobotControlLib._mount(absPos)
         setPvDesc("boostSelect",1)                                
       else:
-        if (getBlConfig("topViewCheck") == 1):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
           omegaCP = beamline_lib.motorPosFromDescriptor("omega")
           if (omegaCP > 89.5 and omegaCP < 90.5):
             beamline_lib.mvrDescriptor("omega", 85.0)
@@ -319,13 +332,10 @@ def mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=0):
           RobotControlLib._mount(absPos,warmup=True)
         else:
           RobotControlLib._mount(absPos)
-      if (getBlConfig("topViewCheck") == 1):
-        daq_lib.setGovRobot('SA')  #make sure we're in SA before moving motors
-        if (sampYadjust != 0):
-          pass
-        else:
+      logger.info(f'{getBlConfig(TOP_VIEW_CHECK)} {daq_utils.beamline}')
+      if (getBlConfig(TOP_VIEW_CHECK) == 1):
+        if (sampYadjust == 0):
           logger.info("Cannot align pin - Mount next sample.")
-#else it thinks it worked            return 0
       
       daq_lib.setGovRobot('SA')
       return 1
@@ -365,9 +375,9 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
   logger.info("robot online = " + str(robotOnline))
   if (robotOnline):
     detDist = beamline_lib.motorPosFromDescriptor("detectorDist")    
-    if (detDist<200.0):
-      setPvDesc("govRobotDetDistOut",200.0)
-      setPvDesc("govHumanDetDistOut",200.0)          
+    if (detDist<ROBOT_MIN_DISTANCE):
+      setPvDesc("govRobotDetDistOut",ROBOT_MIN_DISTANCE)
+      setPvDesc("govHumanDetDistOut",ROBOT_MIN_DISTANCE)          
     daq_lib.setRobotGovState("SE")    
     logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
     logger.info("absPos = " + str(absPos))
@@ -397,11 +407,16 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       daq_lib.gui_message(message)
       logger.error(message)
       return 0
-    detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-    if (detDist<200.0):
-      beamline_lib.mvaDescriptor("detectorDist",200.0)
-    if (beamline_lib.motorPosFromDescriptor("detectorDist") < 199.0):
-      logger.error("ERROR - Detector < 200.0!")
+    if daq_utils.beamline == "fmx":
+      det_z_pv = 'XF:17IDC-ES:FMX{Det-Ax:Z}Mtr'
+      detDist = caget(f'{det_z_pv}.RBV')
+      if detDist < ROBOT_MIN_DISTANCE:
+        caput(f'{det_z_pv}.VAL', ROBOT_MIN_DISTANCE, wait=True)  # TODO shouldn't this wait for SE transition or something??
+      detDist = caget(f'{det_z_pv}.RBV')
+    else:
+      detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
+    if detDist < ROBOT_MIN_DISTANCE and abs(detDist - ROBOT_MIN_DISTANCE) > ROBOT_DISTANCE_TOLERANCE:
+      logger.error(f"ERROR - Detector closer than {ROBOT_MIN_DISTANCE} and move than {ROBOT_DISTANCE_TOLERANCE} from {ROBOT_MIN_DISTANCE}! actual distance: {detDist}. Stopping.")
       return 0
     try:
       RobotControlLib.unmount2(absPos)

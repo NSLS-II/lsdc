@@ -1,5 +1,6 @@
 import os
 from math import *
+import math
 import requests
 import getpass
 import logging
@@ -28,10 +29,12 @@ soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
 
-def getBlConfig(param):
+EV_ANGSTROM_CONSTANT = 12398.42  # https://www.kmlabs.com/en/wavelength-to-photon-energy-calculator
+
+def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)
 
-def setBlConfig(param, value):
+def setBlConfig(param, value, beamline=beamline):
         db_lib.setBeamlineConfigParam(beamline, param, value)
 
 def init_environment():
@@ -90,7 +93,7 @@ def calc_reso(det_radius,detDistance,wave,theta):
     distance = 100.0
   else:
     distance = detDistance
-  dg2rd = 3.14159265 / 180.0
+  dg2rd = math.pi / 180.0
   theta_radians = float(theta) * dg2rd
   theta_t = (theta_radians + atan(det_radius/float(distance)))/2
   dmin_t = float(wave)/(2*(sin(theta_t)))
@@ -100,7 +103,7 @@ def calc_reso(det_radius,detDistance,wave,theta):
 def distance_from_reso(det_radius,reso,wave,theta):
 
   try:
-    dg2rd = 3.14159265 / 180.0
+    dg2rd = math.pi / 180.0
     theta_radians = float(theta) * dg2rd
     dx = det_radius/(tan(2*(asin(float(wave)/(2*reso)))-theta_radians))
     return float("%.2f" % dx)
@@ -108,17 +111,17 @@ def distance_from_reso(det_radius,reso,wave,theta):
     return 501.0 #a safe value for now
 
 
-def energy2wave(e):
+def energy2wave(e, digits=2):
   if (float(e)==0.0):
     return 1.0
   else:
-    return float("%.2f" % (12398.5/e))
+    return float(f"%.{digits}f" % (EV_ANGSTROM_CONSTANT/e))
 
-def wave2energy(w):
+def wave2energy(w, digits=2):
   if (float(w)==0.0):
     return 12600.0
   else:
-    return float("%.2f" % (12398.5/w))
+    return float(f"%.{digits}f" % (EV_ANGSTROM_CONSTANT/w))
 
 def createDefaultRequest(sample_id,createVisit=True):
     """
@@ -160,6 +163,9 @@ def createDefaultRequest(sample_id,createVisit=True):
                "resolution": screenReso,
                "slit_height": screenbeamHeight,  "slit_width": screenbeamWidth,
                "attenuation": screenTransmissionPercent,
+               "visit_name": getVisitName(),
+               "detector": os.environ["DETECTOR_NAME"],
+               "beamline": os.environ["BEAMLINE_ID"],
                "pos_x": -999,  "pos_y": 0,  "pos_z": 0,  "pos_type": 'A', "gridStep": 20}
     request["request_obj"] = requestObj
 
@@ -205,7 +211,7 @@ def take_crystal_picture(filename=None,czoom=0,reqID=None,omega=-999):
 
 def create_filename(prefix,number):
   if (detector_id == "EIGER-16"):  
-   tmp_filename = findH5Master(prefix)
+   tmp_filename = findOneH5Master(prefix)
   else:
     tmp_filename = "%s_%05d.cbf" % (prefix,int(number))
   if (prefix[0] != "/"):
@@ -215,8 +221,8 @@ def create_filename(prefix,number):
     filename = tmp_filename
   return filename
 
-def findH5Master(prefix):
-  comm_s = "ls " + prefix + "*_master.h5"
+def findOneH5Master(prefix):
+  comm_s = "ls " + prefix + "*_master.h5 | head -1"
   masterFilename = os.popen(comm_s).read()[0:-1]
   return masterFilename
   

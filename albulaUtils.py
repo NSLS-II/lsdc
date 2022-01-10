@@ -2,14 +2,26 @@ try:
   import dectris.albula
 except ImportError as e:
   print('albula library import error: %s' %e)
+import logging
+logger = logging.getLogger(__name__)
+logger.info('reading albulaUtils')
 from functools import singledispatch
 from time import sleep
 global albulaFrame, albulaSubFrame, currentMasterH5
 albulaFrame = None
 albulaSubframeFrame = None
 currentMasterH5 = None
+imgSeries = None
 global seriesDict
 seriesDict = {}
+
+def startup_albula():
+  global albulaFrame,albulaSubFrame
+  if (albulaFrame == None or albulaSubFrame == None):
+    logger.debug('starting up albula')
+    albulaFrame = dectris.albula.openMainFrame()
+    albulaFrame.disableClose()
+    albulaSubFrame = albulaFrame.openSubFrame()
 
 def albulaClose(): #not used
   global albulaFrame,albulaSubFrame
@@ -23,10 +35,7 @@ def albulaClose(): #not used
 def albulaDispImage(Dimage):
   global albulaFrame,albulaSubFrame
 
-  if (albulaFrame == None or albulaSubFrame == None):
-     albulaFrame = dectris.albula.openMainFrame()
-     albulaFrame.disableClose()
-     albulaSubFrame = albulaFrame.openSubFrame()
+  startup_albula()
   try:
     albulaSubFrame.loadImage(Dimage)
   except dectris.albula.DNoObject:
@@ -57,11 +66,9 @@ def albulaDispFile(filename):
 def _albulaDispFile(filename):
     global albulaFrame,albulaSubFrame,currentMasterH5
 
-    if (albulaFrame == None or albulaSubFrame == None):
-        albulaFrame = dectris.albula.openMainFrame()
-        albulaFrame.disableClose()
-        albulaSubFrame = albulaFrame.openSubFrame()
+    startup_albula()
     try:
+        logger.info('loading file %s'% filename)
         albulaSubFrame.loadFile(filename)
         currentMasterH5 = ""
     except dectris.albula.DNoObject:
@@ -72,23 +79,22 @@ def _albulaDispFile(filename):
 @albulaDispFile.register(tuple)    
 @albulaDispFile.register(list)
 def _albulaDispFile(filename):
-    global albulaFrame,albulaSubFrame,currentMasterH5
+    global albulaFrame,albulaSubFrame,currentMasterH5,imgSeries
 
-    if (albulaFrame == None or albulaSubFrame == None):
-        albulaFrame = dectris.albula.openMainFrame()
-        albulaFrame.disableClose()
-        albulaSubFrame = albulaFrame.openSubFrame()
+    startup_albula()
 
     try:
         if not (currentMasterH5 == filename[0]):
+            logger.info('reading file: %s' % filename[0])
             albulaSubFrame.loadFile(filename[0])
-            sleep(1.2)
+            imgSeries = dectris.albula.DImageSeries(filename[0])
             currentMasterH5 = filename[0]
-        albulaSubFrame.goTo(filename[1])
+        logger.debug('reading image number %s' % filename[1])
+        albulaSubFrame.loadImage(imgSeries[filename[1]])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
-        albulaSubFrame.loadFile(filename[0])
-        sleep(1.2)
-        albulaSubFrame.goTo(filename[1])
+        imgSeries = dectris.albula.DimageSeries(filename[0])
+        albulaSubFrame.loadImage(imgSeries[filename[1]])
+        currentMasterH5 = filename[0]
 

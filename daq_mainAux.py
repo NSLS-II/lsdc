@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdcServer_2020-1.0/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2021-1.3/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """
@@ -16,8 +16,8 @@ logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('ophyd').setLevel(logging.WARN)
 logging.getLogger('caproto').setLevel(logging.WARN)
-handler1 = handlers.RotatingFileHandler('lsdcServerLog.txt', maxBytes=5000000, backupCount=10)
-handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcServerLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=5000000, backupCount=10)
+handler1 = handlers.RotatingFileHandler('lsdcServerLog.txt', maxBytes=5000000, backupCount=100)
+handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcServerLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=5000000, backupCount=100)
 myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
 handler1.setFormatter(myformat)
 handler2.setFormatter(myformat)

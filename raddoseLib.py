@@ -6,6 +6,7 @@ from shutil import copyfile
 import fileinput
 import sys
 import os.path
+import os
 import logging
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ def replaceLine(file,searchExp,replaceExp):
         sys.stdout.write(line)
 
 def run_rd3d(inputFileName):
-    prc = subprocess.Popen(["java", "-jar", "/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/bnlpx_config/raddose3d.jar", "-i", inputFileName, "-p", "rd3d/rd3d_"],
+    prc = subprocess.Popen(["java", "-jar", os.environ['CONFIGDIR'] + "/raddose3d.jar", "-i", inputFileName, "-p", "rd3d/rd3d_"],
         stdout=subprocess.PIPE,
         universal_newlines=True)
     out = prc.communicate()[0]
@@ -32,7 +33,7 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
               startOffsetX=0, startOffsetY=0, startOffsetZ=0,
               dimX=20, dimY=20, dimZ=20,
               pixelsPerMicron=2, angularResolution=2,
-              templateFileName = '/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/bnlpx_config/rd3d_input_template.txt',
+              templateFileName = os.environ["CONFIGDIR"] + '/rd3d_input_template.txt',
               verbose=True,
              ):
     """

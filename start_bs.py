@@ -88,19 +88,16 @@ class VerticalDCM(Device):
     e = Cpt(EpicsMotor, '-Ax:E}Mtr')
     w = Cpt(EpicsMotor, '-Ax:W}Mtr')
 
-
 class StandardProsilica(SingleTrigger, ProsilicaDetector):
     image = Cpt(ImagePlugin, 'image1:')
     roi1 = Cpt(ROIPlugin, 'ROI1:')
     stats1 = Cpt(StatsPlugin, 'Stats1:')
     stats5 = Cpt(StatsPlugin, 'Stats5:')
 
-
 def filter_camera_data(camera):
     camera.read_attrs = ['stats1', 'stats5']
     camera.stats1.read_attrs = ['total', 'centroid']
     camera.stats5.read_attrs = ['total', 'centroid']
-
 
 if (beamline=="amx"):
     mercury = ABBIXMercury('XF:17IDB-ES:AMX{Det:Mer}', name='mercury')

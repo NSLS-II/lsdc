@@ -158,11 +158,11 @@ def process_input(command_string):
     print("*** print_tb:")
     traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
   except SyntaxError:
-    logger.error("Syntax error")
+    logger.exception("Syntax error")
   except KeyError as e:
-    logger.error("Key error. Error: %s. Command was: %s" % (e, command_string))
+    logger.exception("Key error. Error: %s. Command was: %s" % (e, command_string))
   except TypeError as e:
-    logger.error("Type error. Error: %s" % e)
+    logger.exception("Type error. Error: %s" % e)
   except AttributeError as e:
     logger.error("Attribute Error: %s" % e)
   except KeyboardInterrupt:

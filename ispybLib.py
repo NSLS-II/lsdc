@@ -24,7 +24,7 @@ core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
 mxacquisition = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXACQUISITION, conn)
 mxprocessing = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXPROCESSING, conn)
 mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREENING, conn)
-cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev',database='ispyb')
+cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev.cs.nsls2.local',database='ispyb')
 cursor = cnx.cursor()
 beamline = os.environ["BEAMLINE_ID"]
 detSeqNumPVNAME = db_lib.getBeamlineConfigParam(beamline,"detSeqNumPVNAME") #careful - this pvname is stored in DB and in detControl.
@@ -137,7 +137,9 @@ def createVisit(propNum):
   cnx.commit()
   try:
     personsOnProposalList = core.retrieve_persons_for_proposal("mx",propNum)
+    logger.debug(f'list of all persons: {personsOnProposalList}')
   except:
+    logger.error(f'exception when retrieving persons for proposal {propNum}')
     return visitName      
   for i in range (0,len(personsOnProposalList)):
     personLogin = personsOnProposalList[i]["login"]
@@ -192,11 +194,10 @@ def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,
 def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None): #xmlfilename for fastDP
 #keep in mind that request type can be standard and result type be fastDP - multiple results per req.
 
- cbfComm = db_lib.getBeamlineConfigParam(beamline,"cbfComm")
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("caught ISPyBNoResultException: %s. make sure visit name is in the format mx999999-1234" % e)
+   logger.error("insert result - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
    propNum = visitName.split('-')[0]
    sessionid = createVisit(propNum)
  request_type = request['request_type']
@@ -205,10 +206,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
-     params = mxprocessing.get_program_params()
-     params['id'] = app_id
-     params['status'] = 1
-     mxprocessing.upsert_program(list(params.values()))
+     mxprocessing.upsert_program_ex(program_id=app_id,status=1)
          
    elif resultType == 'mxExpParams':
      result_obj = result['result_obj']
@@ -224,21 +222,18 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
-     comm_s = "ssh -q " + node + " \"convert " + jpegImageFilename + " -resize 40% " + jpegImageThumbFilename + "\"&"     
+     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}resize.sh {jpegImageFilename} {jpegImageThumbFilename} 40% \"&"
      logger.info('resizing image: %s' % comm_s)
      os.system(comm_s)
-     seqNum = int(detSeqNumPV.get())          
-     hdfSampleDataPattern = directory+"/"+filePrefix+"_" 
-     hdfRowFilepattern = hdfSampleDataPattern + str(int(float(seqNum))) + "_master.h5"
      
-# keep in mind I could do the jpeg conversion here, but maybe best to allow synchWeb on demand.
-     cbfDir = directory
-     CBF_conversion_pattern = cbfDir + "/" + filePrefix+"_"
-     JPEG_conversion_pattern = fullJpegDirectory + "/" + filePrefix+"_"
+     seqNum = int(detSeqNumPV.get())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
-     adxvComm = os.environ["PROJDIR"] + db_lib.getBeamlineConfigParam(daq_utils.beamline,"adxvComm")
-     comm_s = "ssh -q " + node + " \"sleep 6;" + cbfComm + " "  + hdfRowFilepattern  + " 1:1 " + CBF_conversion_pattern + ";" + adxvComm + " -sa "  + CBF_conversion_pattern + "000001.cbf " + JPEG_conversion_pattern + "0001.jpeg;convert " + JPEG_conversion_pattern + "0001.jpeg -resize 10% " + JPEG_conversion_pattern + "0001.thumb.jpeg\"&"     
-     logger.info('diffraction thumbnail image: %s' % comm_s)
+     request_id = result['request']
+     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {request_id} 1 1 0 {seqNum}\""
+     logger.info(f'diffraction thumbnail conversion to cbf: {comm_s}')
+     os.system(comm_s)
+     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}cbf2jpeg.sh {request_id}\""
+     logger.info(f'diffraction thumbnail conversion to jpeg: {comm_s}')
      os.system(comm_s)
      # Create a new data collection group entry:
      params = mxacquisition.get_data_collection_group_params()
@@ -350,7 +345,10 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     params['run_status'] = 'DataCollection Successful'  # assume success / not aborted
     params['datacollection_number'] = request_obj['runNum']
-    params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    if request_obj['img_width'] > 0:
+      params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+    else:
+      params['n_images'] = 1 # stills mode
     params['exp_time'] = request_obj['exposure_time']
     params['start_image_number'] = request_obj['file_number_start']
     params['axis_start'] = request_obj['sweep_start']
@@ -382,15 +380,15 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
 #         if request_type == 'screening':
 #           params['overlap'] = 89.0
                  
-def insertRasterResult(result,request,visitName): 
+def insertRasterResult(request,visitName): 
 
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("caught ISPyBNoResultException, make sure visit name is in the format mx999999-1234. bye: %s" % e)
+   logger.error("insertRasterResult - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
    return
  sample = request['sample'] # this needs to be created and linked to a DC group
- result_obj = result['result_obj']
+ #result_obj = result['result_obj'] this doesn't appear to be used -DK
  request_obj = request['request_obj']
  directory = request_obj["directory"]
  filePrefix = request_obj['file_prefix']

@@ -1,8 +1,8 @@
-import daq_lib
 from daq_utils import getBlConfig
 from config_params import MOUNT_SUCCESSFUL, MOUNT_STEP_SUCCESSFUL, MOUNT_FAILURE,\
                           UNMOUNT_SUCCESSFUL, UNMOUNT_STEP_SUCCESSFUL, UNMOUNT_FAILURE
 import gov_lib
+import traceback
 import logging
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class DensoRobot:
             logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
             yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
         except Exception as e:
-            logger.error(f'Exception during mount step: {e}')
+            logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
             return MOUNT_FAILURE
         return MOUNT_STEP_SUCCESSFUL
 
@@ -45,11 +45,11 @@ class DensoRobot:
     def preUnmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
         if getBlConfig('robot_online'):
             denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
-            logger.info(f"unmounting {denso_puck_pos} {denso_pin_pos} {samp_id}")
+            logger.info(f"preparing to unmount {denso_puck_pos} {denso_pin_pos} {samp_id}")
             try:
-                daq_lib.setRobotGovState(gov_robot, "SE")
+                gov_lib.setGovRobot(gov_robot, "SE")
             except Exception as e:
-                logger.error('Exception while in preUnmount step: {e}')
+                logger.error(f'Exception while in preUnmount step: {e}')
                 return UNMOUNT_FAILURE
         return UNMOUNT_STEP_SUCCESSFUL
 

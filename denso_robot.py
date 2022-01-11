@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_denso_puck_pin(puck_number, pin_number):
-    return (chr(ord('@') + int(puck_number), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
+    return (chr(ord('@') + int(puck_number)), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
 
 class DensoRobot:
     def __init__(self, robot):

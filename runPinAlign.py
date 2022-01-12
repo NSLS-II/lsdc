@@ -1,4 +1,4 @@
-#!/opt/conda_envs/collection-2018-1.0/bin/python
+#!/opt/conda_envs/lsdc-server-2022-1-latest/bin/python
 import sys
 import os
 

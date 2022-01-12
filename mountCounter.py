@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc_dev/bin/python
+#!/opt/conda_envs/lsdc-server-2022-1-latest/bin/python
 import lsdb1
 import sys
 

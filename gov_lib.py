@@ -2,6 +2,7 @@
 from config_params import GOVERNOR_TIMEOUT
 from ophyd.utils.errors import StatusTimeoutError, WaitTimeoutError
 import ophyd
+from ophyd import StatusBase
 import logging
 logger = logging.getLogger(__name__)
 
@@ -17,11 +18,15 @@ def setGovRobot(gov_robot, state, wait=True):
     govStatus = gov_robot.set(state)
     if wait:
       waitGov(govStatus)
+    if wait and govStatus.success and gov_robot.state.get() != state:
+      raise Exception(f'Did not reach expected state "{state}". actual state is "{gov_robot.state.get()}"')
     if ((wait and govStatus.success) or not wait) and state in ["SA", "DA", "DI", "SE"]:
       pass #toggleLowMagCameraSettings(state)
     return govStatus
-  except Exception:
+  except Exception as e:
     logger.info(f"Governor did not reach {state}")
+    govStatus = StatusBase()
+    govStatus.set_exception(e)
     return govStatus
 
 def waitGov(status, timeout=GOVERNOR_TIMEOUT):

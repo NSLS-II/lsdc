@@ -1,5 +1,5 @@
 #!/bin/bash -l
-export PROJDIR=/GPFS/CENTRAL/xf17id2/skinnerProjectsBackup/
+export PROJDIR=/nsls2/software/mx/daq/
 export CONFIGDIR=${PROJDIR}bnlpx_config/
 export LSDCHOME=${PROJDIR}lsdc_amx
 export PYTHONPATH=".:${CONFIGDIR}:/usr/lib64/edna-mx/mxv1/src:/usr/lib64/edna-mx/kernel/src:${LSDCHOME}:${PROJDIR}/RobotControlMerge"

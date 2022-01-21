@@ -11,8 +11,9 @@ import mysql.connector
 import logging
 logger = logging.getLogger(__name__)
 
-#12/19 - I'm leaving all commented lines alone on this. Karl Levik, DLS, is an immense help with this.
+raise Exception('stop importing ispybLib to prevent calling functions - ispyb database is currently down')
 
+#12/19 - I'm leaving all commented lines alone on this. Karl Levik, DLS, is an immense help with this.
 conf_file = os.environ["CONFIGDIR"] + "ispybConfig.cfg"
 visit = 'mx99999-1'
 # Get a list of request dicts

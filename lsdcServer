@@ -1,2 +1,2 @@
-sudo /usr/local/bin/kill_daq
+dzdo /usr/local/bin/kill_daq
 $LSDCHOME/daq_main2.py

@@ -2280,13 +2280,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomRadioGroup.addButton(self.zoom1Radio)
         self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
         self.zoom2Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom2"))
-        self.zoomRadioGroup.addButton(self.zoom2Radio)
+        if (daq_utils.sampleCameraCount>=2):
+          self.zoomRadioGroup.addButton(self.zoom2Radio)
         self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
         self.zoom3Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom3"))
-        self.zoomRadioGroup.addButton(self.zoom3Radio)
+        if (daq_utils.sampleCameraCount>=3):
+          self.zoomRadioGroup.addButton(self.zoom3Radio)
         self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
         self.zoom4Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom4"))
-        self.zoomRadioGroup.addButton(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=4):
+          self.zoomRadioGroup.addButton(self.zoom4Radio)
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30        

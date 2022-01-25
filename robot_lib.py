@@ -18,18 +18,18 @@ def setWorkposThread(init,junk):
 
 def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
   status, kwargs = robot.preMount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
-  #if status != MOUNT_STEP_SUCCESSFUL:
-  #    return status
+  if status != MOUNT_STEP_SUCCESSFUL:
+      return status
   status = RE(robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs))
-  #if status != MOUNT_STEP_SUCCESSFUL:
-  #    return status
+  if status != MOUNT_STEP_SUCCESSFUL:
+      return status
   status = robot.postMount(gov_robot, puck_pos, pin_pos, samp_id)
   return MOUNT_SUCCESSFUL  # TODO hard-coded for testing
 
 def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
   status = robot.preUnmount(gov_robot, puck_pos, pin_pos, samp_id)
-  #if status != UNMOUNT_STEP_SUCCESSFUL:
-  #    return status
+  if status != UNMOUNT_STEP_SUCCESSFUL:
+      return status
   status = RE(robot.unmount(gov_robot, puck_pos, pin_pos, samp_id))
   return UNMOUNT_SUCCESSFUL  # TODO hard-coded for testing
 

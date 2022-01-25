@@ -1,4 +1,4 @@
-#!/opt/conda_envs/collection-2018-1.0/bin/python
+#!/opt/conda_envs/nsls2-collection-2021-2.2/bin/python
 import sys
 import os
 

@@ -1,2 +1,2 @@
-/usr/local/bin/kill_daq
+dzdo pkill -KILL -f daq_main2.py
 $LSDCHOME/daq_main2.py

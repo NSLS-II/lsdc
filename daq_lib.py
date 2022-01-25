@@ -755,13 +755,13 @@ def checkC2C_X(x,fovx,unitscaling): # this is to make sure the user doesn't make
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,unitscaling=1,axisX="x",axisY="y"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,axisX="x",axisY="y"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
       return
-    if not (checkC2C_X(x,fovx,unitscaling)):
+    if not (checkC2C_X(x,fovx,daq_utils.unitScaling)):
       return
   if (source == "screen"):
     gov_lib.waitGovNoSleep()
@@ -792,17 +792,16 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,unitscaling=1
   # The following is intended to allow non-standard axis changes based on alternative camera views
   # x=x and y=y is in-line view
   # x=x and y=z would be an above/below view
-  # unitscaling can be negative to account for camera inversion
   if (axisX=="x"):
-    correctedX = x * unitscaling
+    correctedX = x * daq_utils.unitScaling
   elif (axisX=="y"):
-    correctedY = x * unitscaling
+    correctedY = x * daq_utils.unitScaling
   elif (axisX=="z"): #focus axis, 
     #TODO: focus adjust 
   if (axisY=="y"):
-    correctedY = y * unitscaling
+    correctedY = y * daq_utils.unitScaling
   elif (axisY=="x"):
-    correctedX = y * unitscaling
+    correctedX = y * daq_utils.unitScaling
   elif (axisY=="z"):
     #TODO: focus adjust
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0

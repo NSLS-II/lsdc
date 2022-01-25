@@ -740,11 +740,12 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   logger.info("\narm time = " + str(armTime) +"\n")
   return
 
-def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of an x-move in C2C
+def checkC2C_X(x,fovx,unitscaling): # this is to make sure the user doesn't make too much of an x-move in C2C
   scalePixX = getPvDesc("image_X_scalePix")
   centerPixX = getPvDesc("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
+  target = unitscaling * target
   logger.info('checkC2C_X target: %s' % target)
   xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
   xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
@@ -754,13 +755,13 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,unitscaling=1,axisX="x",axisY="y"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
       return
-    if not (checkC2C_X(x,fovx)):
+    if not (checkC2C_X(x,fovx,unitscaling)):
       return
   if (source == "screen"):
     gov_lib.waitGovNoSleep()
@@ -788,8 +789,24 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
       setPvDesc("image_X_scaleMM",float(fovx))
       setPvDesc("image_Y_scaleMM",float(fovy))
 
+  # The following is intended to allow non-standard axis changes based on alternative camera views
+  # x=x and y=y is in-line view
+  # x=x and y=z would be an above/below view
+  # unitscaling can be negative to account for camera inversion
+  if (axisX=="x"):
+    correctedX = x * unitscaling
+  elif (axisX=="y"):
+    correctedY = x * unitscaling
+  elif (axisX=="z"): #focus axis, 
+    #TODO: focus adjust 
+  if (axisY=="y"):
+    correctedY = y * unitscaling
+  elif (axisY=="x"):
+    correctedX = y * unitscaling
+  elif (axisY=="z"):
+    #TODO: focus adjust
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
-  lib_gon_center_xtal(x,y,omega_mod,0)
+  lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)
   if (jog):
     beamline_lib.mvrDescriptor("omega",float(jog))
 
@@ -799,5 +816,4 @@ def setProposalID(proposalID):
 
 def getProposalID():
   return daq_utils.getProposalID()
-
 

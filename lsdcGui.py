@@ -3670,7 +3670,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage("You don't have control")
 
     def focusTweakCB(self,tv):
-      tvf = float(tv)        
+      tvf = float(tv)*daq_utils.unitScaling        
       if (self.controlEnabled()):
         tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
         tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))

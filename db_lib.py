@@ -101,7 +101,7 @@ def createContainer(name, capacity, owner, kind, **kwargs): #16_pin_puck, automo
 def updateContainer(cont_info): #really updating the contents
     cont = cont_info['uid']
     q = {'uid': cont_info.pop('uid', '')}
-    # cont_info.pop('time', '') update time to support ordering by most recent
+    cont_info.pop('time', '')
     container_ref.update(q, {'content':cont_info['content']}) 
 
     return cont

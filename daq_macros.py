@@ -3528,6 +3528,8 @@ def vertRasterOff():
 def newVisit():
   """newVisit() : Trick LSDC into creating a new visit on the next request creation"""
   setBlConfig("proposal",987654) #a kludge to cause the next collection to generate a new visit
+  logger.info('newVisit() called but new visit will not be triggered until ISPyB database is restored')
+  # JA 20220126 - note this won't create a new visit as we will stick to visit 1 until ISPyB is back
 
 
 def logMe():

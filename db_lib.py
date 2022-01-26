@@ -98,11 +98,14 @@ def createContainer(name, capacity, owner, kind, **kwargs): #16_pin_puck, automo
     return uid
 
 
-def updateContainer(cont_info): #really updating the contents
+def updateContainer(cont_info, update_time=False): #really updating the contents
     cont = cont_info['uid']
     q = {'uid': cont_info.pop('uid', '')}
     # cont_info.pop('time', '') update time to support ordering by most recent
-    container_ref.update(q, {'content':cont_info['content']}) 
+    if update_time:
+        container_ref.update(q, {'content':cont_info['content'], 'time': time.time()})
+    else:
+        container_ref.update(q, {'content':cont_info['content']})
 
     return cont
 
@@ -423,7 +426,7 @@ def insertIntoContainer(container_name, owner, position, itemID):
         cnt = c['content']
         cnt[position - 1] = itemID  # most people don't zero index things
         c['content'] = cnt
-        updateContainer(c)
+        updateContainer(c, update_time=True)
         return True
     else:
         logger.error("bad container name %s" % container_name)

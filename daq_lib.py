@@ -796,14 +796,14 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,axisX="x",axi
     correctedX = x * daq_utils.unitScaling
   elif (axisX=="y"):
     correctedY = x * daq_utils.unitScaling
-  elif (axisX=="z"): #focus axis, 
-    #TODO: focus adjust 
+  elif (axisX=="z"): #focus axis, needs proper handling
+    correctedZ = x * daq_utils.unitScaling #TODO: focus adjust 
   if (axisY=="y"):
     correctedY = y * daq_utils.unitScaling
   elif (axisY=="x"):
     correctedX = y * daq_utils.unitScaling
   elif (axisY=="z"):
-    #TODO: focus adjust
+    correctedZ = y * daq_utils.unitScaling #TODO: focus adjust
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
   lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)
   if (jog):

@@ -56,8 +56,13 @@ def init_environment():
   highMagPixY = float(getBlConfig("highMagPixY"))
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
-  unitScaling = float(getBlConfig("UnitScaling"))
-  sampleCameraCount = float(getBlConfig("sampleCameraCount"))
+  try: 
+    unitScaling = float(getBlConfig("UnitScaling"))
+    sampleCameraCount = float(getBlConfig("sampleCameraCount"))
+  except Exception as e:
+    logging.exception("Missing UnitScaling or sampleCameraCount configs, switching to default values")
+    unitScaling = 1
+    sampleCameraCount = 4
   beamlineComm = getBlConfig("beamlineComm")
   screenPixCenterX = screenPixX/2.0
   screenPixCenterY = screenPixY/2.0

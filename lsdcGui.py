@@ -2381,9 +2381,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
         hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        hBoxVidControlLayout.addWidget(self.zoom2Radio)
-        hBoxVidControlLayout.addWidget(self.zoom3Radio)
-        hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2):
+          hBoxVidControlLayout.addWidget(self.zoom2Radio)
+        if (daq_utils.sampleCameraCount>=3):
+          hBoxVidControlLayout.addWidget(self.zoom3Radio)
+        if (daq_utils.sampleCameraCount>=4):
+          hBoxVidControlLayout.addWidget(self.zoom4Radio)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)                        

@@ -755,8 +755,9 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,axisX="x",axisY="y"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle="beam"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
+  #viewangle=beam, default camera angle is in-line with the beam
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
@@ -789,21 +790,20 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,axisX="x",axi
       setPvDesc("image_X_scaleMM",float(fovx))
       setPvDesc("image_Y_scaleMM",float(fovy))
 
-  # The following is intended to allow non-standard axis changes based on alternative camera views
-  # x=x and y=y is in-line view
-  # x=x and y=z would be an above/below view
-  if (axisX=="x"):
+  # The following is intended to allow basic axis changes for standard off-axis camera views
+  # "beam" - camera view is directly in line with beam
+  # "above" - camera is looking down from directly above
+  # "below" - camera is looking up from directly below
+  if (viewangle=="beam"):
     correctedX = x * daq_utils.unitScaling
-  elif (axisX=="y"):
-    correctedY = x * daq_utils.unitScaling
-  elif (axisX=="z"): #focus axis, needs proper handling
-    correctedZ = x * daq_utils.unitScaling #TODO: focus adjust 
-  if (axisY=="y"):
     correctedY = y * daq_utils.unitScaling
-  elif (axisY=="x"):
-    correctedX = y * daq_utils.unitScaling
-  elif (axisY=="z"):
-    correctedZ = y * daq_utils.unitScaling #TODO: focus adjust
+  if (viewangle=="above"):
+    correctedX = x * daq_utils.unitScaling
+    correctedZ = y * daq_utils.unitScaling
+  if (viewangle=="below"):
+    correctedX = x * daq_utils.unitScaling
+    correctedZ = -y * daq_utils.unitScaling
+  
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
   lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)
   if (jog):

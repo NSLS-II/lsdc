@@ -740,12 +740,12 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   logger.info("\narm time = " + str(armTime) +"\n")
   return
 
-def checkC2C_X(x,fovx,unitscaling): # this is to make sure the user doesn't make too much of an x-move in C2C
+def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of an x-move in C2C
   scalePixX = getPvDesc("image_X_scalePix")
   centerPixX = getPvDesc("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
-  target = unitscaling * target
+  target = target * daq_utils.unitScaling  # unitScaling multiplier used to adjust units between microns and mm
   logger.info('checkC2C_X target: %s' % target)
   xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
   xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
@@ -761,7 +761,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,axisX="x",axi
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
       return
-    if not (checkC2C_X(x,fovx,daq_utils.unitScaling)):
+    if not (checkC2C_X(x,fovx)):
       return
   if (source == "screen"):
     gov_lib.waitGovNoSleep()

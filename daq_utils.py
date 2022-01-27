@@ -57,10 +57,10 @@ def init_environment():
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
   try: 
-    unitScaling = float(getBlConfig("UnitScaling"))
+    unitScaling = float(getBlConfig("unitScaling"))
     sampleCameraCount = float(getBlConfig("sampleCameraCount"))
   except Exception as e:
-    logging.exception("Missing UnitScaling or sampleCameraCount configs, switching to default values")
+    logging.exception("Missing unitScaling or sampleCameraCount configs, switching to default values")
     unitScaling = 1
     sampleCameraCount = 4
   beamlineComm = getBlConfig("beamlineComm")

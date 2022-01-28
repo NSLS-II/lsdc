@@ -797,12 +797,14 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle="be
   if (viewangle=="beam"):
     correctedX = x * daq_utils.unitScaling
     correctedY = y * daq_utils.unitScaling
-  if (viewangle=="above"):
+  elif (viewangle=="above"):
     correctedX = x * daq_utils.unitScaling
     correctedZ = y * daq_utils.unitScaling
-  if (viewangle=="below"):
+  elif (viewangle=="below"):
     correctedX = x * daq_utils.unitScaling
     correctedZ = -y * daq_utils.unitScaling
+  else:
+    logger.error(f"blconfig 'viewangle' set to invalid value:  {viewangle}") 
   
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
   lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)

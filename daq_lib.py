@@ -745,6 +745,7 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   centerPixX = getPvDesc("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
+  target = target * daq_utils.unitScaling  # unitScaling multiplier used to adjust units between microns and mm
   logger.info('checkC2C_X target: %s' % target)
   xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
   xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
@@ -754,8 +755,9 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle="beam"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
+  #viewangle=beam, default camera angle is in-line with the beam
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
@@ -788,8 +790,24 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
       setPvDesc("image_X_scaleMM",float(fovx))
       setPvDesc("image_Y_scaleMM",float(fovy))
 
+  # The following is intended to allow basic axis changes for standard off-axis camera views
+  # "beam" - camera view is directly in line with beam
+  # "above" - camera is looking down from directly above
+  # "below" - camera is looking up from directly below
+  if (viewangle=="beam"):
+    correctedX = x * daq_utils.unitScaling
+    correctedY = y * daq_utils.unitScaling
+  elif (viewangle=="above"):
+    correctedX = x * daq_utils.unitScaling
+    correctedZ = y * daq_utils.unitScaling
+  elif (viewangle=="below"):
+    correctedX = x * daq_utils.unitScaling
+    correctedZ = -y * daq_utils.unitScaling
+  else:
+    logger.error(f"blconfig 'viewangle' set to invalid value:  {viewangle}") 
+  
   omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
-  lib_gon_center_xtal(x,y,omega_mod,0)
+  lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)
   if (jog):
     beamline_lib.mvrDescriptor("omega",float(jog))
 
@@ -799,5 +817,4 @@ def setProposalID(proposalID):
 
 def getProposalID():
   return daq_utils.getProposalID()
-
 

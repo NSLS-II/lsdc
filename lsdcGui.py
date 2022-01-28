@@ -2280,13 +2280,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomRadioGroup.addButton(self.zoom1Radio)
         self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
         self.zoom2Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom2"))
-        self.zoomRadioGroup.addButton(self.zoom2Radio)
         self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
         self.zoom3Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom3"))
-        self.zoomRadioGroup.addButton(self.zoom3Radio)
         self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
         self.zoom4Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom4"))
-        self.zoomRadioGroup.addButton(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2):
+          self.zoomRadioGroup.addButton(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            self.zoomRadioGroup.addButton(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              self.zoomRadioGroup.addButton(self.zoom4Radio)
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30        
@@ -2378,9 +2381,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
         hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        hBoxVidControlLayout.addWidget(self.zoom2Radio)
-        hBoxVidControlLayout.addWidget(self.zoom3Radio)
-        hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2): # Button naming assumes sequential camera ordering
+          hBoxVidControlLayout.addWidget(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            hBoxVidControlLayout.addWidget(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              hBoxVidControlLayout.addWidget(self.zoom4Radio)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)                        
@@ -3670,7 +3676,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage("You don't have control")
 
     def focusTweakCB(self,tv):
-      tvf = float(tv)        
+      tvf = float(tv)*daq_utils.unitScaling        
       if (self.controlEnabled()):
         tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
         tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))

@@ -4280,12 +4280,21 @@ class ControlMain(QtWidgets.QMainWindow):
           return
         fov = self.getCurrentFOV()
         correctedC2C_x = daq_utils.screenPixCenterX + (x_click - (self.centerMarker.x()+self.centerMarkerCharOffsetX))
-        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))        
+        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))
+
+        current_viewangle = daq_utils.mag1ViewAngle
+        if (self.zoom2Radio.isChecked()):
+          current_viewangle = daq_utils.mag2ViewAngle
+        elif (self.zoom3Radio.isChecked()): 
+          current_viewangle = daq_utils.mag3ViewAngle
+        elif (self.zoom4Radio.isChecked()):
+          current_viewangle = daq_utils.mag4ViewAngle
+        
         if (self.threeClickCount > 0): #3-click centering
           self.threeClickCount = self.threeClickCount + 1
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"]) + "," + '"screen",jog=90)'          
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'          
         else:
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"])  + "," + '"screen",0)'
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
         if (not self.vidActionRasterExploreRadio.isChecked()):
           self.aux_send_to_server(comm_s)
         if (self.threeClickCount == 4):

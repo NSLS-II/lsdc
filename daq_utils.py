@@ -27,6 +27,12 @@ scan_list = []
 soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
+# Constants for use with C2C
+global CAMERA_ANGLE_BEAM,CAMERA_ANGLE_ABOVE, CAMERA_ANGLE_BELOW
+CAMERA_ANGLE_BEAM = 0 # viewing angle is in line with beam, upstream from the sample, facing downstream, top toward ceiling
+CAMERA_ANGLE_ABOVE = 1 # viewing angle is directly above sample facing downward, top of view is downstream
+CAMERA_ANGLE_BELOW = 2 # viewing angle is directly below sample facing upward, top of view is downstream
+
 
 def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)
@@ -63,6 +69,31 @@ def init_environment():
     logging.exception("Missing unitScaling or sampleCameraCount configs, switching to default values")
     unitScaling = 1
     sampleCameraCount = 4
+
+  try:
+    mag1ViewAngle = int(getBlConfig("mag1ViewAngle"))
+  except Exception as e:
+    mag1ViewAngle = CAMERA_ANGLE_BEAM
+    logging.exception(f"Missing or invalid mag1ViewAngle config, using default value {mag1ViewAngle}")
+
+  try:
+    mag2ViewAngle = int(getBlConfig("mag2ViewAngle"))
+  except Exception as e:
+    mag2ViewAngle = CAMERA_ANGLE_BEAM
+    logging.exception(f"Missing or invalid mag2ViewAngle config, using default value {mag2ViewAngle}")
+  
+  try:
+    mag3ViewAngle = int(getBlConfig("mag3ViewAngle"))
+  except Exception as e:
+    mag3ViewAngle = CAMERA_ANGLE_BEAM
+    logging.exception(f"Missing or invalid mag3ViewAngle config, using default value {mag3ViewAngle}")
+
+  try:
+    mag4ViewAngle = int(getBlConfig("mag4ViewAngle"))
+  except Exception as e:
+    mag4ViewAngle = CAMERA_ANGLE_BEAM
+    logging.exception(f"Missing or invalid mag4ViewAngle config, using default value {mag4ViewAngle}")
+
   beamlineComm = getBlConfig("beamlineComm")
   screenPixCenterX = screenPixX/2.0
   screenPixCenterY = screenPixY/2.0

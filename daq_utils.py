@@ -27,6 +27,11 @@ scan_list = []
 soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
+# Constants for use with C2C
+global CAMERA_ANGLE_BEAM,CAMERA_ANGLE_ABOVE, CAMERA_ANGLE_BELOW
+CAMERA_ANGLE_BEAM = 0 # Camera is in line with beam
+CAMERA_ANGLE_ABOVE = 1 # Camera is above sample looking down
+CAMERA_ANGLE_BELOW = 2 # Camera is below sample looking up
 
 def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)

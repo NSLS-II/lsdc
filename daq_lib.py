@@ -755,9 +755,9 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle="beam"): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAM_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
-  #viewangle=beam, default camera angle is in-line with the beam
+  #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
@@ -791,16 +791,16 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle="be
       setPvDesc("image_Y_scaleMM",float(fovy))
 
   # The following is intended to allow basic axis changes for standard off-axis camera views
-  # "beam" - camera view is directly in line with beam
-  # "above" - camera is looking down from directly above
-  # "below" - camera is looking up from directly below
-  if (viewangle=="beam"):
+  # CAMERA_ANGLE_BEAM - camera view is directly in line with beam
+  # CAMERA_ANGLE_ABOVE - camera is looking down from directly above
+  # CAMERA_ANGLE_BELOW - camera is looking up from directly below
+  if (viewangle==daq_utils.CAMERA_ANGLE_BEAM):
     correctedX = x * daq_utils.unitScaling
     correctedY = y * daq_utils.unitScaling
-  elif (viewangle=="above"):
+  elif (viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
     correctedX = x * daq_utils.unitScaling
     correctedZ = y * daq_utils.unitScaling
-  elif (viewangle=="below"):
+  elif (viewangle==daq_utils.CAMERA_ANGLE_BELOW):
     correctedX = x * daq_utils.unitScaling
     correctedZ = -y * daq_utils.unitScaling
   else:

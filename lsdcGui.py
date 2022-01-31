@@ -4292,9 +4292,9 @@ class ControlMain(QtWidgets.QMainWindow):
         
         if (self.threeClickCount > 0): #3-click centering
           self.threeClickCount = self.threeClickCount + 1
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"]) + "," + '"screen",jog=90,viewangle=' + str(current_viewangle) + ')'          
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},"screen",jog=90,viewangle={current_viewangle})'          
         else:
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"])  + "," + '"screen",0,viewangle=' + str(current_viewangle) + ')'
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},"screen",0,viewangle={current_viewangle})'
         if (not self.vidActionRasterExploreRadio.isChecked()):
           self.aux_send_to_server(comm_s)
         if (self.threeClickCount == 4):

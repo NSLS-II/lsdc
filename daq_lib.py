@@ -755,7 +755,7 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAM_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAMERA_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?

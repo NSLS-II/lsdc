@@ -29,9 +29,10 @@ global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
 # Constants for use with C2C
 global CAMERA_ANGLE_BEAM,CAMERA_ANGLE_ABOVE, CAMERA_ANGLE_BELOW
-CAMERA_ANGLE_BEAM = 0 # Camera is in line with beam, upstream from the sample, facing downstream, top toward ceiling
-CAMERA_ANGLE_ABOVE = 1 # Camera is directly above sample facing downward, top of camera is facing downstream
-CAMERA_ANGLE_BELOW = 2 # Camera is directly below sample facing upward, top of camera is facing downstream
+CAMERA_ANGLE_BEAM = 0 # viewing angle is in line with beam, upstream from the sample, facing downstream, top toward ceiling
+CAMERA_ANGLE_ABOVE = 1 # viewing angle is directly above sample facing downward, top of view is downstream
+CAMERA_ANGLE_BELOW = 2 # viewing angle is directly below sample facing upward, top of view is downstream
+
 
 def getBlConfig(param, beamline=beamline):
         return db_lib.getBeamlineConfigParam(beamline, param)

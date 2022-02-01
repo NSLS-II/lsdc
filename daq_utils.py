@@ -65,34 +65,34 @@ def init_environment():
   try: 
     unitScaling = float(getBlConfig("unitScaling"))
     sampleCameraCount = float(getBlConfig("sampleCameraCount"))
-  except Exception as e:
-    logging.exception("Missing unitScaling or sampleCameraCount configs, switching to default values")
+  except KeyError as e:
+    logging.info("Missing unitScaling or sampleCameraCount configs, switching to default values")
     unitScaling = 1
     sampleCameraCount = 4
 
   try:
     mag1ViewAngle = int(getBlConfig("mag1ViewAngle"))
-  except Exception as e:
+  except KeyError as e:
     mag1ViewAngle = CAMERA_ANGLE_BEAM
-    logging.exception(f"Missing or invalid mag1ViewAngle config, using default value {mag1ViewAngle}")
+    logging.info(f"Missing or invalid mag1ViewAngle config, using default value {mag1ViewAngle}")
 
   try:
     mag2ViewAngle = int(getBlConfig("mag2ViewAngle"))
-  except Exception as e:
+  except KeyError as e:
     mag2ViewAngle = CAMERA_ANGLE_BEAM
-    logging.exception(f"Missing or invalid mag2ViewAngle config, using default value {mag2ViewAngle}")
+    logging.info(f"Missing or invalid mag2ViewAngle config, using default value {mag2ViewAngle}")
   
   try:
     mag3ViewAngle = int(getBlConfig("mag3ViewAngle"))
-  except Exception as e:
+  except KeyError as e:
     mag3ViewAngle = CAMERA_ANGLE_BEAM
-    logging.exception(f"Missing or invalid mag3ViewAngle config, using default value {mag3ViewAngle}")
+    logging.info(f"Missing or invalid mag3ViewAngle config, using default value {mag3ViewAngle}")
 
   try:
     mag4ViewAngle = int(getBlConfig("mag4ViewAngle"))
-  except Exception as e:
+  except KeyError as e:
     mag4ViewAngle = CAMERA_ANGLE_BEAM
-    logging.exception(f"Missing or invalid mag4ViewAngle config, using default value {mag4ViewAngle}")
+    logging.info(f"Missing or invalid mag4ViewAngle config, using default value {mag4ViewAngle}")
 
   beamlineComm = getBlConfig("beamlineComm")
   screenPixCenterX = screenPixX/2.0

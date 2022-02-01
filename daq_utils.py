@@ -66,9 +66,9 @@ def init_environment():
     unitScaling = float(getBlConfig("unitScaling"))
     sampleCameraCount = float(getBlConfig("sampleCameraCount"))
   except KeyError as e:
-    logging.info("Missing unitScaling or sampleCameraCount configs, switching to default values")
     unitScaling = 1
     sampleCameraCount = 4
+    logging.info(f"Missing unitScaling or sampleCameraCount configs, switching to default values: unitScaling: {unitScaling}, sampleCameraCount: {sampleCameraCount}")
 
   try:
     mag1ViewAngle = int(getBlConfig("mag1ViewAngle"))

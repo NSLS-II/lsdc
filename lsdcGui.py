@@ -4051,9 +4051,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def getCurrentFOV(self):
       fov = {"x":0.0,"y":0.0}
-      if (self.zoom2Radio.isChecked()):  #lowmagzoom      
-        fov["x"] = daq_utils.lowMagFOVx/2.0
-        fov["y"] = daq_utils.lowMagFOVy/2.0
+      if (self.zoom2Radio.isChecked()):  #lowmagzoom
+        if (daq_utils.sampleCameraCount==2):   #this is a hard assumption that when there are 2 cameras the second uses highmagfov   
+          fov["x"] = daq_utils.highMagFOVx
+          fov["y"] = daq_utils.highMagFOVy
+        else:
+          fov["x"] = daq_utils.lowMagFOVx/2.0
+          fov["y"] = daq_utils.lowMagFOVy/2.0
       elif (self.zoom1Radio.isChecked()):
         fov["x"] = daq_utils.lowMagFOVx
         fov["y"] = daq_utils.lowMagFOVy

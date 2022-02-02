@@ -3677,9 +3677,25 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def focusTweakCB(self,tv):
       tvf = float(tv)*daq_utils.unitScaling        
+
+      current_viewangle = daq_utils.mag1ViewAngle
+      if (self.zoom2Radio.isChecked()):
+        current_viewangle = daq_utils.mag2ViewAngle
+      elif (self.zoom3Radio.isChecked()):
+        current_viewangle = daq_utils.mag3ViewAngle
+      elif (self.zoom4Radio.isChecked()):
+        current_viewangle = daq_utils.mag4ViewAngle
+
+      if (current_viewangle==daq_utils.CAMERA_ANGLE_BEAM):
+        view_omega_offset = 0
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_BELOW):
+        view_omega_offset = 90
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
+        view_omega_offset = -90
+
       if (self.controlEnabled()):
-        tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
-        tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))
+        tvY = tvf*(math.cos(math.radians(90.0 + view_omega_offset  + self.motPos["omega"]))) #these are opposite C2C
+        tvZ = tvf*(math.sin(math.radians(90.0 + view_omega_offset  + self.motPos["omega"])))
         self.sampyTweak_pv.put(tvY)
         self.sampzTweak_pv.put(tvZ)        
       else:

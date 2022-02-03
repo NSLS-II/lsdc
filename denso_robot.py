@@ -65,3 +65,21 @@ class DensoRobot:
 
     def finish(self):
         ...
+
+    def check_sample_mounted(self, mount, puck_pos, pin_pos):  # is the correct sample present/absent as expected during a mount/unmount?
+        if mount:
+            check_occupied = 1
+        else:
+            check_occupied = 0
+        if int(self.robot.spindle_occupied_sts.get()) == check_occupied and \
+           int(self.robot.puck_num_sel.get()) == puck_pos - 1 and \
+           int(self.robot.sample_num_sel.get()) == pin_pos:
+            if mount:
+                return MOUNT_SUCCESSFUL
+            else:
+                return UNMOUNT_SUCCESSFUL
+        else:
+            if mount:
+                return MOUNT_FAILURE
+            else:
+                return UNMOUNT_FAILURE

@@ -32,6 +32,9 @@ class DensoRobot:
             except Exception as e:
                 logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
                 return MOUNT_FAILURE
+        else:
+            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+            logger.info(f'robot offline - mount not being attempted for puck:{denso_puck_pos} pin:{denso_pin_pos} (staff: puck and pin names correspond to those on CSS)')
         return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
@@ -63,6 +66,10 @@ class DensoRobot:
             except Exception as e:
                 logger.error(f'Exception while unmounting sample: {e}')
                 return UNMOUNT_FAILURE
+        else:
+            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+            logger.info(f'robot offline - unmount not being attempted for puck:{denso_puck_pos} pin:{denso_pin_pos} (staff: puck and pin names correspond to those on CSS)')
+
         return UNMOUNT_SUCCESSFUL
 
     def finish(self):

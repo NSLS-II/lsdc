@@ -24,13 +24,14 @@ class DensoRobot:
         return MOUNT_STEP_SUCCESSFUL, kwargs
 
     def mount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
-        try:
-            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
-            logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
-            yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
-        except Exception as e:
-            logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
-            return MOUNT_FAILURE
+        if getBlConfig('robot_online'):
+            try:
+                denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+                logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
+                yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
+            except Exception as e:
+                logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
+                return MOUNT_FAILURE
         return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
@@ -54,13 +55,14 @@ class DensoRobot:
         return UNMOUNT_STEP_SUCCESSFUL
 
     def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
-        denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
-        try:
-            logger.info(f'dismount {denso_puck_pos} {denso_pin_pos}')
-            yield from self.robot.dismount(denso_puck_pos, denso_pin_pos)
-        except Exception as e:
-            logger.error(f'Exception while unmounting sample: {e}')
-            return UNMOUNT_FAILURE
+        if getBlConfig('robot_online'):
+            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+            try:
+                logger.info(f'dismount {denso_puck_pos} {denso_pin_pos}')
+                yield from self.robot.dismount(denso_puck_pos, denso_pin_pos)
+            except Exception as e:
+                logger.error(f'Exception while unmounting sample: {e}')
+                return UNMOUNT_FAILURE
         return UNMOUNT_SUCCESSFUL
 
     def finish(self):

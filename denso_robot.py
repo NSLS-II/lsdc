@@ -73,7 +73,7 @@ class DensoRobot:
             check_occupied = 0
         if int(self.robot.spindle_occupied_sts.get()) == check_occupied and \
            int(self.robot.puck_num_sel.get()) == puck_pos - 1 and \
-           int(self.robot.sample_num_sel.get()) == pin_pos:
+           int(self.robot.sample_num_sel.get()) == pin_pos:  # make sure puck number and sample number coming from robot and LSDC are zero- or one-indexed as necessary
             if mount:
                 return MOUNT_SUCCESSFUL
             else:

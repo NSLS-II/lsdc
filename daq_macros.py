@@ -2875,8 +2875,9 @@ def setTrans(transmission): #where transmission = 0.0-1.0
     setPvDesc("transmissionSet",transmission)
     setPvDesc("transmissionGo",1)
   time.sleep(0.5)
-  while (not getPvDesc("transmissionDone")):
-    time.sleep(0.1)
+  if daq_utils.beamline != "nyx":  # transmissionDone not available on NYX
+    while (not getPvDesc("transmissionDone")):
+      time.sleep(0.1)
   
   
   

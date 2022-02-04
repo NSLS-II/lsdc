@@ -2861,7 +2861,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   return 1
 
 def setTrans(transmission): #where transmission = 0.0-1.0
-  if (daq_utils.beamline == "fmx"):  
+  if (daq_utils.beamline in ["fmx", "nyx"]):  
     if (getBlConfig("attenType") == "RI"):
       setPvDesc("RIattenEnergySP",beamline_lib.motorPosFromDescriptor("energy"))
       setPvDesc("RI_Atten_SP",transmission)      
@@ -2875,8 +2875,9 @@ def setTrans(transmission): #where transmission = 0.0-1.0
     setPvDesc("transmissionSet",transmission)
     setPvDesc("transmissionGo",1)
   time.sleep(0.5)
-  while (not getPvDesc("transmissionDone")):
-    time.sleep(0.1)
+  if daq_utils.beamline != "nyx":  # transmissionDone not available on NYX
+    while (not getPvDesc("transmissionDone")):
+      time.sleep(0.1)
   
   
   

@@ -1881,7 +1881,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams25.addWidget(sampleLifetimeLabel)
         hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
-        if (daq_utils.beamline == "fmx"):
+        if (daq_utils.beamline in ("fmx", "nyx")):
           if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
@@ -3643,8 +3643,12 @@ class ControlMain(QtWidgets.QMainWindow):
       
 
     def setTransCB(self):
-      if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
-        self.popupServerMessage("Transmission must be 0.001-1.0")
+      try:
+        if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
+          self.popupServerMessage("Transmission must be 0.001-1.0")
+          return
+      except ValueError as e:
+        self.popupServerMessage("Please enter a valid number")
         return
       comm_s = "setTrans(" + str(self.transmission_ledit.text()) + ")"
       logger.info(comm_s)

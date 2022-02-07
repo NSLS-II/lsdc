@@ -364,19 +364,26 @@ def readPVDesc():
     counter_inf = line.split()
     counter_dict[counter_inf[1]] = beamline_designation + counter_inf[0]    
 
-def setProposalID(proposalID,createVisit=True):
-  if (getProposalID() != proposalID): #proposalID changed - create a new visit.
-    logger.info("you changed proposals! " + str(proposalID))
-    try:
-      if (createVisit):
-        visitName = ispybLib.createVisit(proposalID)
-        db_lib.setBeamlineConfigParam(beamline,"proposal",proposalID)                
-      else:
-        visitName, visitNum = ispybLib.createVisitName(proposalID)
-    except Exception as e:
-      visitName = "999999-1234"
-      logger.error("ispyb error in set proposal. Error: %s" % e)
-    setVisitName(visitName)
+def createVisitNameRaw(proposalName, maxNumber=None):
+  if maxNumber:
+    number = maxNumber + 1
+  else:
+    number = 1
+  return f'mx{proposalName}-{number}', number
+
+def createVisitName(proposalName, maxNumber=None):
+  return createVisitNameRaw(proposalName, maxNumber)
+
+def setProposalID(proposalID,createVisit=True):  # TODO JA proposalID implies a database ID, which it is not (just proposal number). Misleading
+   if (getProposalID() != proposalID): #proposalID changed - create a new visit.
+     logger.info("you changed proposals! " + str(proposalID))
+     logger.info('ignoring createVisit for now - ISPyB required to properly account for visit numbers')
+     try:
+       visitName, visitNum = createVisitName(proposalID)
+       db_lib.setBeamlineConfigParam(beamline,"proposal",proposalID)                
+     except Exception as e:
+       visitName = "999999-1234"
+       logger.error("error in set proposal. Error: %s" % e)
 
 def getProposalID():
   return getBlConfig("proposal")

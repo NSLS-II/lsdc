@@ -3681,9 +3681,25 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def focusTweakCB(self,tv):
       tvf = float(tv)*daq_utils.unitScaling        
+
+      current_viewangle = daq_utils.mag1ViewAngle
+      if (self.zoom2Radio.isChecked()):
+        current_viewangle = daq_utils.mag2ViewAngle
+      elif (self.zoom3Radio.isChecked()):
+        current_viewangle = daq_utils.mag3ViewAngle
+      elif (self.zoom4Radio.isChecked()):
+        current_viewangle = daq_utils.mag4ViewAngle
+
+      if (current_viewangle==daq_utils.CAMERA_ANGLE_BEAM):
+        view_omega_offset = 0
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_BELOW):
+        view_omega_offset = 90
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
+        view_omega_offset = -90
+      
       if (self.controlEnabled()):
-        tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
-        tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))
+        tvY = tvf*(math.cos(math.radians(view_omega_offset  + self.motPos["omega"]))) #these are opposite C2C
+        tvZ = tvf*(math.sin(math.radians(view_omega_offset  + self.motPos["omega"])))
         self.sampyTweak_pv.put(tvY)
         self.sampzTweak_pv.put(tvZ)        
       else:
@@ -4039,9 +4055,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def getCurrentFOV(self):
       fov = {"x":0.0,"y":0.0}
-      if (self.zoom2Radio.isChecked()):  #lowmagzoom      
-        fov["x"] = daq_utils.lowMagFOVx/2.0
-        fov["y"] = daq_utils.lowMagFOVy/2.0
+      if (self.zoom2Radio.isChecked()):  #lowmagzoom
+        if (daq_utils.sampleCameraCount==2):   #this is a hard assumption that when there are 2 cameras the second uses highmagfov   
+          fov["x"] = daq_utils.highMagFOVx
+          fov["y"] = daq_utils.highMagFOVy
+        else:
+          fov["x"] = daq_utils.lowMagFOVx/2.0
+          fov["y"] = daq_utils.lowMagFOVy/2.0
       elif (self.zoom1Radio.isChecked()):
         fov["x"] = daq_utils.lowMagFOVx
         fov["y"] = daq_utils.lowMagFOVy
@@ -5273,7 +5293,10 @@ class ControlMain(QtWidgets.QMainWindow):
       self.omega_pv = PV(daq_utils.motor_dict["omega"] + ".VAL")
       self.omegaTweak_pv = PV(daq_utils.motor_dict["omega"] + ".RLV")
       self.sampyTweak_pv = PV(daq_utils.motor_dict["sampleY"] + ".RLV")
-      self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
+      if (daq_utils.beamline=="nyx"): 
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleX"] + ".RLV")            
+      else:
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
       self.omegaRBV_pv = PV(daq_utils.motor_dict["omega"] + ".RBV")
       self.omegaRBV_pv.add_callback(self.processSampMoveCB,motID="omega") #I think monitoring this allows for the textfield to monitor val and this to deal with the graphics. Else next line has two callbacks on same thing.
       self.photonShutterOpen_pv = PV(daq_utils.pvLookupDict["photonShutterOpen"])

@@ -761,6 +761,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
+      logger.error("Bad governor state, must be in SA to use C2C, aborting C2C movement")
       return
     if not (checkC2C_X(x,fovx)):
       return
@@ -795,22 +796,18 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
   # CAMERA_ANGLE_ABOVE - camera is looking down from directly above
   # CAMERA_ANGLE_BELOW - camera is looking up from directly below
   if (viewangle==daq_utils.CAMERA_ANGLE_BEAM):
-    correctedX = x * daq_utils.unitScaling
-    correctedY = y * daq_utils.unitScaling
+    camera_view_omega_offset = 0
   elif (viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
-    correctedX = x * daq_utils.unitScaling
-    correctedZ = y * daq_utils.unitScaling
+    camera_view_omega_offset = -90
   elif (viewangle==daq_utils.CAMERA_ANGLE_BELOW):
-    correctedX = x * daq_utils.unitScaling
-    correctedZ = -y * daq_utils.unitScaling
+    camera_view_omega_offset = 90
   else:
     logger.error(f"blconfig 'viewangle' set to invalid value:  {viewangle}") 
   
-  omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
-  lib_gon_center_xtal(correctedX,correctedY,omega_mod,0)
+  omega_mod = (camera_view_omega_offset + beamline_lib.motorPosFromDescriptor("omega"))%360.0
+  lib_gon_center_xtal(x,y,omega_mod,0)
   if (jog):
     beamline_lib.mvrDescriptor("omega",float(jog))
-
 
 def setProposalID(proposalID):
   daq_utils.setProposalID(proposalID)

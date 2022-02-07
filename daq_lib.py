@@ -761,7 +761,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
-      logger.info("Bad governor state, must be in SA to use C2C, aborting C2C movement")
+      logger.error("Bad governor state, must be in SA to use C2C, aborting C2C movement")
       return
     if not (checkC2C_X(x,fovx)):
       return

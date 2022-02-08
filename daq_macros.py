@@ -3111,7 +3111,10 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
     current_z = beamline_lib.motorPosFromDescriptor("sampleZ")
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
-    wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
+    if beamline == "nyx":
+      wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"))
+    else:
+      wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
     det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist")
     if daq_utils.beamline == "nyx":
         current_x *= 1000  # convert translation from mm to microns on NYX

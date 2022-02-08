@@ -2,20 +2,21 @@ import time
 import beamline_lib
 import beamline_support
 from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDescriptor as setPvDesc
+from start_bs import back_light, back_light_range
 import logging
 logger = logging.getLogger(__name__)
-
+BACK_LIGHT_STEP = 0.05 # percent of intensity range
 
 def backlightBrighter():
-  intensity=getPvDesc("backLightVal")
-  intensity = intensity+5  
-  setPvDesc("backLightVal",intensity)  
+  intensity = back_light.get()
+  intensity += BACK_LIGHT_STEP * (back_light_range[1]-back_light_range[0])
+  back_light.put(intensity)  
 
 def backlightDimmer():
-  intensity=getPvDesc("backLightVal")
-  intensity = intensity-5
-  setPvDesc("backLightVal",intensity)  
-
+  intensity = back_light.get()
+  intensity -= BACK_LIGHT_STEP * (back_light_range[1]-back_light_range[0])
+  back_light.put(intensity)
+  
 def lib_init_diffractometer():
   beamline_support.initControlPVs()
 

@@ -9,3 +9,9 @@ LSDC is an application for data acquisition on the macromolecular crystallograph
 * Data processing - processing of data collected in experiments is triggered.
 
 Primary location of code: https://github.com/NSLS-II/lsdc
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Developer notes
+
+   release_notes

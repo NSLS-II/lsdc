@@ -1404,7 +1404,13 @@ class DataLocInfo(QtWidgets.QGroupBox):
         self.hBoxDPathParams1 = QtWidgets.QHBoxLayout()
         self.basePathLabel = QtWidgets.QLabel('Base Path:')
         self.base_path_ledit = QtWidgets.QLabel() #leave editable for now
-        self.base_path_ledit.setText(os.getcwd())
+        base_path = os.getcwd().split('/auto/nfs')
+        if len(base_path) > 1:
+            logger.info(f'>1: setting base path to : {base_path[1]}')
+            self.base_path_ledit.setText(base_path[1])
+        else:
+            logger.info(f'setting base path to: {base_path}')
+            self.base_path_ledit.setText(base_path)
         self.base_path_ledit.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
         #self.base_path_ledit.textChanged[str].connect(self.basePathTextChanged)
         self.browseBasePathButton = QtWidgets.QPushButton("Browse...") 

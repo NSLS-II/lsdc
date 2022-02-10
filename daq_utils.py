@@ -181,7 +181,7 @@ def createDefaultRequest(sample_id,createVisit=True):
       setProposalID(propNum,createVisit)
     screenDist, screenEnergy, screenExptime, screenPhiend, screenPhist, screenReso, screenTransmissionPercent, screenWidth, screenbeamHeight, screenbeamWidth = getScreenDefaultParams()
     sampleName = str(db_lib.getSampleNamebyID(sample_id))
-    basePath = os.getcwd()
+    basePath = os.getcwd().split('/auto/nfs')[1]
     runNum = db_lib.getSampleRequestCount(sample_id)
     (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(beamline,sample_id)          
     request = {"sample": sample_id}

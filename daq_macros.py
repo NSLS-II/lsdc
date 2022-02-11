@@ -3386,12 +3386,14 @@ def setDimpleCommand(commName):
 def lastOnSample():
   if (ednaActiveFlag == 1):
     return False
-  r = db_lib.popNextRequest(daq_utils.beamline)
-  if (r != {}):
-    current_sample = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']
-    logger.debug(f'next sample: {r["sample"]} current_sample:{current_sample}')
-    if (r["sample"] == db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']):
-      return False
+  current_sample = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']
+  logger.debug(f'number of requests for current sample: {len(db_lib.getRequestsBySampleID(current_sample))}')
+  if len(db_lib.getRequestsBySampleID(current_sample)) > 1:  # quickly check if there are other requests for this sample
+    r = db_lib.popNextRequest(daq_utils.beamline)  # do comparison above to avoid this time-expensive call
+    if (r != {}):
+      logger.debug(f'next sample: {r["sample"]} current_sample:{current_sample}')
+      if (r["sample"] == db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']):
+        return False
   return True
 
 def homePins():

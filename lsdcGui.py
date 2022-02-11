@@ -3222,7 +3222,10 @@ class ControlMain(QtWidgets.QMainWindow):
     def processChoochResult(self,choochResultFlag):
       if (choochResultFlag == "0"):
         return
-      choochResult = db_lib.getResult(choochResultFlag)
+      try:
+        choochResult = db_lib.getResult(choochResultFlag)
+      except IndexError:
+        return  # a bad result flag
       choochResultObj = choochResult["result_obj"]
       graph_x = choochResultObj["choochInXAxis"]
       graph_y = choochResultObj["choochInYAxis"]

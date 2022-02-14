@@ -5227,7 +5227,24 @@ class ControlMain(QtWidgets.QMainWindow):
         self.show()
 
     def blueCrosshairTriggeredCB(self):
-    
+        centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)                
+        self.centerMarker.setBrush(centerMarkBrush)
+
+    def redCrosshairTriggeredCB(self):
+        centerMarkBrush = QtGui.QBrush(QtCore.Qt.red)                
+        self.centerMarker.setBrush(centerMarkBrush)
+
+    def greenCrosshairTriggeredCB(self):
+        centerMarkBrush = QtGui.QBrush(QtCore.Qt.green)                
+        self.centerMarker.setBrush(centerMarkBrush)
+
+    def whiteCrosshairTriggeredCB(self):
+        centerMarkBrush = QtGui.QBrush(QtCore.Qt.white)                
+        self.centerMarker.setBrush(centerMarkBrush)
+
+    def blackCrosshairTriggeredCB(self):
+        centerMarkBrush = QtGui.QBrush(QtCore.Qt.black)                
+        self.centerMarker.setBrush(centerMarkBrush)
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):

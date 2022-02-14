@@ -2603,7 +2603,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.tabs.addTab(self.XRFTab,"XRF Spectrum")
         self.zoomLevelToggledCB("Zoom1")
 
-        if(beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
+        if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
           self.protoRasterRadio.setDisabled(True)
           self.protoStandardRadio.setDisabled(True)
           self.protoVectorRadio.setDisabled(True)
@@ -2612,7 +2612,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.fastDPCheckBox.setDisabled(True)
           self.fastEPCheckBox.setDisabled(True)
           self.dimpleCheckBox.setDisabled(True)
-          self.CenteringComboBox.setDisabled(True)
+          self.centeringComboBox.setDisabled(True)
           self.beamsizeComboBox.setDisabled(True)
           centerLoopButton.setDisabled(True)
           clearGraphicsButton.setDisabled(True)

@@ -5209,7 +5209,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.WhiteCrosshairAction.triggered.connect(self.whiteCrosshairTriggeredCB)
         self.BlackCrosshairAction.triggered.connect(self.blackCrosshairTriggeredCB)
         # Create the action group and populate it
-        self.centerMarkerColorActionGroup = new QActionGroup(self)
+        self.centerMarkerColorActionGroup = QtWidgets.QActionGroup(self)
         self.centerMarkerColorActionGroup.setExclusive(True)
         self.centerMarkerColorActionGroup.addAction(self.BlueCrosshairAction)
         self.centerMarkerColorActionGroup.addAction(self.RedCrosshairAction)

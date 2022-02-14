@@ -5196,10 +5196,38 @@ class ControlMain(QtWidgets.QMainWindow):
         fileMenu.addAction(self.userAction)
         fileMenu.addAction(self.expertAction)
         fileMenu.addAction(self.staffAction)                
+        # Define all of the available actions for the crosshair color group
+        self.BlueCrosshairAction = QtWidgets.QAction('Blue', self, checkable=True)
+        self.RedCrosshairAction = QtWidgets.QAction('Red', self, checkable=True)
+        self.GreenCrosshairAction = QtWidgets.QAction('Green', self, checkable=True)
+        self.WhiteCrosshairAction = QtWidgets.QAction('White', self, checkable=True)
+        self.BlackCrosshairAction = QtWidgets.QAction('Black', self, checkable=True)
+        # Connect all of the trigger callbacks to their respective actions
+        self.BlueCrosshairAction.triggered.connect(self.blueCrosshairTriggeredCB)
+        self.RedCrosshairAction.triggered.connect(self.redCrosshairTriggeredCB)
+        self.GreenCrosshairAction.triggered.connect(self.greenCrosshairTriggeredCB)
+        self.WhiteCrosshairAction.triggered.connect(self.whiteCrosshairTriggeredCB)
+        self.BlackCrosshairAction.triggered.connect(self.blackCrosshairTriggeredCB)
+        # Create the action group and populate it
+        self.centerMarkerColorActionGroup = new QActionGroup(self)
+        self.centerMarkerColorActionGroup.setExclusive(True)
+        self.centerMarkerColorActionGroup.addAction(self.BlueCrosshairAction)
+        self.centerMarkerColorActionGroup.addAction(self.RedCrosshairAction)
+        self.centerMarkerColorActionGroup.addAction(self.GreenCrosshairAction)
+        self.centerMarkerColorActionGroup.addAction(self.WhiteCrosshairAction)
+        self.centerMarkerColorActionGroup.addAction(self.BlackCrosshairAction)
+        # Create the menu item with the submenu, add the group 
+        self.centerMarkerMenu = fileMenu.addMenu("Crosshair Settings")
+        self.centerMarkerMenu.addActions(self.centerMarkerColorActionGroup)
+        self.BlueCrosshairAction.setChecked(True)
+        
         fileMenu.addAction(exitAction)
         self.setGeometry(300, 300, 1550, 1000) #width and height here. 
         self.setWindowTitle('LSDC on %s' % daq_utils.beamline)
         self.show()
+
+    def blueCrosshairTriggeredCB(self):
+    
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):

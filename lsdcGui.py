@@ -2604,6 +2604,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomLevelToggledCB("Zoom1")
 
         if(beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
+          self.protoRasterRadio.setDisabled(True)
+          self.protoStandardRadio.setDisabled(True)
+          self.protoVectorRadio.setDisabled(True)
+          self.protoOtherRadio.setDisabled(True)
+          self.autoProcessingCheckBox.setDisabled(True)
+          self.fastDPCheckBox.setDisabled(True)
+          self.fastEPCheckBox.setDisabled(True)
+          self.dimpleCheckBox.setDisabled(True)
+          self.CenteringComboBox.setDisabled(True)
+          self.beamsizeComboBox.setDisabled(True)
           centerLoopButton.setDisabled(True)
           clearGraphicsButton.setDisabled(True)
           saveCenteringButton.setDisabled(True) 

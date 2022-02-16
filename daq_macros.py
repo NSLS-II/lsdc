@@ -3121,12 +3121,16 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
         current_y *= 1000
         current_z *= 1000
         det_distance_m /= 1000  # convert distance from mm to m on NYX
+    if daq_utils.beamline in ("nyx", "fmx"):
+        transmission = getPvDesc("RI_Atten_SP")
+    else:
+        transmission = getPvDesc("transmissionRBV")
 
     flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
                    x_start_um=current_x, y_start_um=current_y, z_start_um=current_z, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
                    x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
-                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState)
+                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState, transmission=transmission)
     RE(bp.fly([flyer]))
 
     logger.info("vector Done")

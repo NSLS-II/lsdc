@@ -14,13 +14,12 @@ class DensoRobot:
         self.robot = robot
 
     def preMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
-        if getBlConfig('robot_online'):
-            try:
-                status = gov_lib.setGovRobot(gov_robot, 'SE')
-                kwargs['govStatus'] = status
-            except Exception as e:
-                logger.error(f'Exception while in preMount step: {e}')
-                return MOUNT_FAILURE
+        try:
+            status = gov_lib.setGovRobot(gov_robot, 'SE')
+            kwargs['govStatus'] = status
+        except Exception as e:
+            logger.error(f'Exception while in preMount step: {e}')
+            return MOUNT_FAILURE
         return MOUNT_STEP_SUCCESSFUL, kwargs
 
     def mount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
@@ -38,23 +37,21 @@ class DensoRobot:
         return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
-        if getBlConfig('robot_online'):
-            try:
-                gov_lib.setGovRobot(gov_robot, 'SA')
-            except Exception as e:
-                logger.error(f'Exception while in postMount step: {e}')
-                return MOUNT_FAILURE
+        try:
+            gov_lib.setGovRobot(gov_robot, 'SA')
+        except Exception as e:
+            logger.error(f'Exception while in postMount step: {e}')
+            return MOUNT_FAILURE
         return MOUNT_SUCCESSFUL
 
     def preUnmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):
-        if getBlConfig('robot_online'):
-            denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
-            logger.info(f"preparing to unmount {denso_puck_pos} {denso_pin_pos} {samp_id}")
-            try:
-                gov_lib.setGovRobot(gov_robot, "SE")
-            except Exception as e:
-                logger.error(f'Exception while in preUnmount step: {e}')
-                return UNMOUNT_FAILURE
+        denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
+        logger.info(f"preparing to unmount {denso_puck_pos} {denso_pin_pos} {samp_id}")
+        try:
+            gov_lib.setGovRobot(gov_robot, "SE")
+        except Exception as e:
+            logger.error(f'Exception while in preUnmount step: {e}')
+            return UNMOUNT_FAILURE
         return UNMOUNT_STEP_SUCCESSFUL
 
     def unmount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str):

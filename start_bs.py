@@ -4,9 +4,12 @@ from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from mxtools.zebra import Zebra
-from mxtools.vector_program import VectorProgram, VectorProgramStart, VectorProgramEnd
+from mxtools.vector_program import VectorProgram
 from mxtools.eiger import EigerSingleTriggerV26, setup_eiger_defaults
+from embl_robot import EMBLRobot
 import os
+from nyxtools.governor import _make_governors
+
 #12/19 - author unknown. DAMA can help
 """
 # Subscribe metadatastore to documents.
@@ -44,6 +47,8 @@ db = Broker.named(beamline)
 
 RE.subscribe(db.insert)
 
+#from bluesky.utils import ts_msg_hook
+#RE.msg_hook = ts_msg_hook
 # from bluesky.callbacks.best_effort import BestEffortCallback
 # bec = BestEffortCallback()
 # RE.subscribe(bec)
@@ -105,14 +110,43 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
-    vector = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector')
     eiger = EigerSingleTriggerV26('', name='eiger')
-else:
+    vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
+    robot = EMBLRobot()
+
+elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
-    vector = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector')
     eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
 setup_eiger_defaults(eiger)
+    vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
+    robot = EMBLRobot()
+
+elif beamline=="nyx":
+    mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
+    mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
+                                            'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
+    vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
+    zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
+    vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
+    from nyxtools.pilatus import PilatusBase
+    detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
+    from nyxtools.flyer import NYXFlyer
+    flyer = NYXFlyer(vector, zebra, detector)
+
+    from nyxtools.robot import DensoOphydRobot
+    from denso_robot import DensoRobot
+    denso_ophyd_robot = DensoOphydRobot("XF:19IDC-ES{Rbt:1}", name="robot")
+    robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
+    govs = _make_governors("XF:19IDC-ES", name="govs")
+    gov_robot = govs.gov.Robot
+
+    back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
+    back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 
+    back_light_high_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:HighLimit-RB",name="back_light_high_limit")
+    back_light_range = (back_light_low_limit.get(), back_light_high_limit.get())
+else:
+    raise Exception(f"Invalid beamline name provided: {beamline}")

@@ -28,6 +28,17 @@ scan_list = []
 soft_motor_list = []
 global screenYCenterPixelsLowMagOffset
 screenYCenterPixelsLowMagOffset = 58
+# Constants for use with C2C
+global CAMERA_ANGLE_BEAM,CAMERA_ANGLE_ABOVE, CAMERA_ANGLE_BELOW
+CAMERA_ANGLE_BEAM = 0 # viewing angle is in line with beam, upstream from the sample, facing downstream, top toward ceiling
+CAMERA_ANGLE_ABOVE = 1 # viewing angle is directly above sample facing downward, top of view is downstream
+CAMERA_ANGLE_BELOW = 2 # viewing angle is directly below sample facing upward, top of view is downstream
+global mag1ViewAngle, mag2ViewAngle, mag3VivewAngle, mag4ViewAngle
+mag1ViewAngle = CAMERA_ANGLE_BEAM
+mag2ViewAngle = CAMERA_ANGLE_BEAM
+mag3ViewAngle = CAMERA_ANGLE_BEAM
+mag4ViewAngle = CAMERA_ANGLE_BEAM
+
 
 EV_ANGSTROM_CONSTANT = 12398.42  # https://www.kmlabs.com/en/wavelength-to-photon-energy-calculator
 
@@ -38,7 +49,7 @@ def setBlConfig(param, value, beamline=beamline):
         db_lib.setBeamlineConfigParam(beamline, param, value)
 
 def init_environment():
-  global beamline,detector_id,mono_mot_code,has_beamline,has_xtalview,xtal_url,xtal_url_small,xtalview_user,xtalview_pass,det_type,has_dna,beamstop_x_pvname,beamstop_y_pvname,camera_offset,det_radius,lowMagFOVx,lowMagFOVy,highMagFOVx,highMagFOVy,lowMagPixX,lowMagPixY,highMagPixX,highMagPixY,screenPixX,screenPixY,screenPixCenterX,screenPixCenterY,screenProtocol,screenPhist,screenPhiend,screenWidth,screenDist,screenExptime,screenWave,screenReso,gonioPvPrefix,searchParams,screenEnergy,detectorOffline,imgsrv_host,imgsrv_port,beamlineComm,primaryDewarName,lowMagCamURL,highMagZoomCamURL,lowMagZoomCamURL,highMagCamURL,owner,dewarPlateMap
+  global beamline,detector_id,mono_mot_code,has_beamline,has_xtalview,xtal_url,xtal_url_small,unitScaling,sampleCameraCount,xtalview_user,xtalview_pass,det_type,has_dna,beamstop_x_pvname,beamstop_y_pvname,camera_offset,det_radius,lowMagFOVx,lowMagFOVy,highMagFOVx,highMagFOVy,lowMagPixX,lowMagPixY,highMagPixX,highMagPixY,screenPixX,screenPixY,screenPixCenterX,screenPixCenterY,screenProtocol,screenPhist,screenPhiend,screenWidth,screenDist,screenExptime,screenWave,screenReso,gonioPvPrefix,searchParams,screenEnergy,detectorOffline,imgsrv_host,imgsrv_port,beamlineComm,primaryDewarName,lowMagCamURL,highMagZoomCamURL,lowMagZoomCamURL,highMagCamURL,owner,dewarPlateMap,mag1ViewAngle,mag2ViewAngle,mag3ViewAngle,mag4ViewAngle
 
 
   owner = getpass.getuser()
@@ -59,6 +70,38 @@ def init_environment():
   highMagPixY = float(getBlConfig("highMagPixY"))
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
+  try: 
+    unitScaling = float(getBlConfig("unitScaling"))
+    sampleCameraCount = float(getBlConfig("sampleCameraCount"))
+  except KeyError as e:
+    unitScaling = 1
+    sampleCameraCount = 4
+    logging.info(f"Missing unitScaling or sampleCameraCount configs, switching to default values: unitScaling: {unitScaling}, sampleCameraCount: {sampleCameraCount}")
+
+  try:
+    mag1ViewAngle = int(getBlConfig("mag1ViewAngle"))
+  except KeyError as e:
+    mag1ViewAngle = CAMERA_ANGLE_BEAM
+    logging.info(f"Missing or invalid mag1ViewAngle config, using default value {mag1ViewAngle}")
+
+  try:
+    mag2ViewAngle = int(getBlConfig("mag2ViewAngle"))
+  except KeyError as e:
+    mag2ViewAngle = CAMERA_ANGLE_BEAM
+    logging.info(f"Missing or invalid mag2ViewAngle config, using default value {mag2ViewAngle}")
+  
+  try:
+    mag3ViewAngle = int(getBlConfig("mag3ViewAngle"))
+  except KeyError as e:
+    mag3ViewAngle = CAMERA_ANGLE_BEAM
+    logging.info(f"Missing or invalid mag3ViewAngle config, using default value {mag3ViewAngle}")
+
+  try:
+    mag4ViewAngle = int(getBlConfig("mag4ViewAngle"))
+  except KeyError as e:
+    mag4ViewAngle = CAMERA_ANGLE_BEAM
+    logging.info(f"Missing or invalid mag4ViewAngle config, using default value {mag4ViewAngle}")
+
   beamlineComm = getBlConfig("beamlineComm")
   screenPixCenterX = screenPixX/2.0
   screenPixCenterY = screenPixY/2.0

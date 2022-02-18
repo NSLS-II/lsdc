@@ -11,6 +11,7 @@ from daq_macros import *
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
+from gov_lib import setGovRobot
 
 import logging
 from logging import handlers

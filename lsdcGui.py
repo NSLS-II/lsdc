@@ -80,9 +80,9 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
-VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
-VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
-VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}}
+VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}, 'nyx':{'min':0.01, 'max':10, 'digits':3}}
+VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}, 'nyx':{'min':100, 'max':500, 'digits':3}}
+VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':300, 'digits':3}}
 VALID_PREFIX_LENGTH = 25 #TODO centralize with spreadsheet validation?
 VALID_PREFIX_NAME = '[0-9a-zA-Z-_]{0,%s}' % VALID_PREFIX_LENGTH
 
@@ -678,16 +678,16 @@ class UserScreenDialog(QFrame):
       self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-      self.parent.send_to_server("setGovRobot('SE')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'SE')")
 
     def SAgovCB(self):
-      self.parent.send_to_server("setGovRobot('SA')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'SA')")
 
     def DAgovCB(self):
-      self.parent.send_to_server("setGovRobot('DA')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'DA')")
 
     def BLgovCB(self):
-      self.parent.send_to_server("setGovRobot('BL')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'BL')")
 
     def userScreenOKCB(self):
       self.hide()
@@ -1023,8 +1023,8 @@ class PuckDialog(QtWidgets.QDialog):
 class DewarDialog(QtWidgets.QDialog):
     def __init__(self, parent = None,action="add"):
         super(DewarDialog, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.action = action
         self.parent=parent
 
@@ -1098,8 +1098,8 @@ class DewarDialog(QtWidgets.QDialog):
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
         super(DewarTree, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.parent=parent
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)
@@ -1651,7 +1651,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = PV(daq_utils.pvLookupDict["gripTemp"])
-        self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
+        if getBlConfig(CRYOSTREAM_ONLINE):
+          self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
         if (daq_utils.beamline == "fmx"):        
           self.slit1XGapSP_pv = PV(daq_utils.motor_dict["slit1XGap"] + ".VAL")
           self.slit1YGapSP_pv = PV(daq_utils.motor_dict["slit1YGap"] + ".VAL")        
@@ -1904,7 +1905,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams25.addWidget(sampleLifetimeLabel)
         hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
-        if (daq_utils.beamline == "fmx"):
+        if (daq_utils.beamline in ("fmx", "nyx")):
           if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
@@ -2295,13 +2296,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomRadioGroup.addButton(self.zoom1Radio)
         self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
         self.zoom2Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom2"))
-        self.zoomRadioGroup.addButton(self.zoom2Radio)
         self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
         self.zoom3Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom3"))
-        self.zoomRadioGroup.addButton(self.zoom3Radio)
         self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
         self.zoom4Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom4"))
-        self.zoomRadioGroup.addButton(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2):
+          self.zoomRadioGroup.addButton(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            self.zoomRadioGroup.addButton(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              self.zoomRadioGroup.addButton(self.zoom4Radio)
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30        
@@ -2401,9 +2405,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
         hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        hBoxVidControlLayout.addWidget(self.zoom2Radio)
-        hBoxVidControlLayout.addWidget(self.zoom3Radio)
-        hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2): # Button naming assumes sequential camera ordering
+          hBoxVidControlLayout.addWidget(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            hBoxVidControlLayout.addWidget(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              hBoxVidControlLayout.addWidget(self.zoom4Radio)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)                        
@@ -2590,7 +2597,10 @@ class ControlMain(QtWidgets.QMainWindow):
         gripperLabel = QtWidgets.QLabel('Gripper Temp:')
         self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel('Cryostream Temp:')
-        self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
+        if getBlConfig(CRYOSTREAM_ONLINE):
+          self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
+        else:
+          self.cryostreamTempLabel = QtWidgets.QLabel("N/A")
 
         fileHBoxLayout.addWidget(gripperLabel)
         fileHBoxLayout.addWidget(self.gripperTempLabel)
@@ -3663,8 +3673,12 @@ class ControlMain(QtWidgets.QMainWindow):
       
 
     def setTransCB(self):
-      if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
-        self.popupServerMessage("Transmission must be 0.001-1.0")
+      try:
+        if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
+          self.popupServerMessage("Transmission must be 0.001-1.0")
+          return
+      except ValueError as e:
+        self.popupServerMessage("Please enter a valid number")
         return
       comm_s = "setTrans(" + str(self.transmission_ledit.text()) + ")"
       logger.info(comm_s)
@@ -3696,10 +3710,26 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage("You don't have control")
 
     def focusTweakCB(self,tv):
-      tvf = float(tv)        
+      tvf = float(tv)*daq_utils.unitScaling        
+
+      current_viewangle = daq_utils.mag1ViewAngle
+      if (self.zoom2Radio.isChecked()):
+        current_viewangle = daq_utils.mag2ViewAngle
+      elif (self.zoom3Radio.isChecked()):
+        current_viewangle = daq_utils.mag3ViewAngle
+      elif (self.zoom4Radio.isChecked()):
+        current_viewangle = daq_utils.mag4ViewAngle
+
+      if (current_viewangle==daq_utils.CAMERA_ANGLE_BEAM):
+        view_omega_offset = 0
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_BELOW):
+        view_omega_offset = 90
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
+        view_omega_offset = -90
+      
       if (self.controlEnabled()):
-        tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
-        tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))
+        tvY = tvf*(math.cos(math.radians(view_omega_offset  + self.motPos["omega"]))) #these are opposite C2C
+        tvZ = tvf*(math.sin(math.radians(view_omega_offset  + self.motPos["omega"])))
         self.sampyTweak_pv.put(tvY)
         self.sampzTweak_pv.put(tvZ)        
       else:
@@ -4055,9 +4085,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def getCurrentFOV(self):
       fov = {"x":0.0,"y":0.0}
-      if (self.zoom2Radio.isChecked()):  #lowmagzoom      
-        fov["x"] = daq_utils.lowMagFOVx/2.0
-        fov["y"] = daq_utils.lowMagFOVy/2.0
+      if (self.zoom2Radio.isChecked()):  #lowmagzoom
+        if (daq_utils.sampleCameraCount==2):   #this is a hard assumption that when there are 2 cameras the second uses highmagfov   
+          fov["x"] = daq_utils.highMagFOVx
+          fov["y"] = daq_utils.highMagFOVy
+        else:
+          fov["x"] = daq_utils.lowMagFOVx/2.0
+          fov["y"] = daq_utils.lowMagFOVy/2.0
       elif (self.zoom1Radio.isChecked()):
         fov["x"] = daq_utils.lowMagFOVx
         fov["y"] = daq_utils.lowMagFOVy
@@ -4300,12 +4334,21 @@ class ControlMain(QtWidgets.QMainWindow):
           return
         fov = self.getCurrentFOV()
         correctedC2C_x = daq_utils.screenPixCenterX + (x_click - (self.centerMarker.x()+self.centerMarkerCharOffsetX))
-        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))        
+        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))
+
+        current_viewangle = daq_utils.mag1ViewAngle
+        if (self.zoom2Radio.isChecked()):
+          current_viewangle = daq_utils.mag2ViewAngle
+        elif (self.zoom3Radio.isChecked()): 
+          current_viewangle = daq_utils.mag3ViewAngle
+        elif (self.zoom4Radio.isChecked()):
+          current_viewangle = daq_utils.mag4ViewAngle
+        
         if (self.threeClickCount > 0): #3-click centering
           self.threeClickCount = self.threeClickCount + 1
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"]) + "," + '"screen",jog=90)'          
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'          
         else:
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"])  + "," + '"screen",0)'
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
         if (not self.vidActionRasterExploreRadio.isChecked()):
           self.aux_send_to_server(comm_s)
         if (self.threeClickCount == 4):
@@ -5298,7 +5341,10 @@ class ControlMain(QtWidgets.QMainWindow):
       self.omega_pv = PV(daq_utils.motor_dict["omega"] + ".VAL")
       self.omegaTweak_pv = PV(daq_utils.motor_dict["omega"] + ".RLV")
       self.sampyTweak_pv = PV(daq_utils.motor_dict["sampleY"] + ".RLV")
-      self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
+      if (daq_utils.beamline=="nyx"): 
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleX"] + ".RLV")            
+      else:
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
       self.omegaRBV_pv = PV(daq_utils.motor_dict["omega"] + ".RBV")
       self.omegaRBV_pv.add_callback(self.processSampMoveCB,motID="omega") #I think monitoring this allows for the textfield to monitor val and this to deal with the graphics. Else next line has two callbacks on same thing.
       self.photonShutterOpen_pv = PV(daq_utils.pvLookupDict["photonShutterOpen"])
@@ -5308,8 +5354,9 @@ class ControlMain(QtWidgets.QMainWindow):
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
       self.gripTempSignal.connect(self.processGripTemp)
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
-      self.cryostreamTempSignal.connect(self.processCryostreamTemp)
-      self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
+      if getBlConfig(CRYOSTREAM_ONLINE):
+        self.cryostreamTempSignal.connect(self.processCryostreamTemp)
+        self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
       self.ringCurrentSignal.connect(self.processRingCurrent)      
       self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)
       self.beamAvailableSignal.connect(self.processBeamAvailable)      

@@ -2571,7 +2571,10 @@ class ControlMain(QtWidgets.QMainWindow):
           self.sampleExposedLabel = QtWidgets.QLabel("Sample Not Exposed")
           self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")              
         gripperLabel = QtWidgets.QLabel('Gripper Temp:')
-        self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
+        if(daq_utils.beamline=="nyx"):
+          self.gripperTempLabel = QtWidgets.QLabel("N/A")
+        else:
+          self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel('Cryostream Temp:')
         if getBlConfig(CRYOSTREAM_ONLINE):
           self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))

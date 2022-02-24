@@ -5,7 +5,7 @@ from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from mxtools.zebra import Zebra
 import os
-from nyxtools.governor import _make_governors
+from mxtools.governor import _make_governors
 
 #12/19 - author unknown. DAMA can help
 """

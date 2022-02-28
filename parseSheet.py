@@ -64,7 +64,7 @@ def insertSpreadsheetDict(d,owner):
 
 
 def importSpreadsheet(infilename,owner):
-  if(infilename != ""):
+  try:
     d = parseSpreadsheet(infilename)
     insertSpreadsheetDict(d,owner)    
   except OSError as e:
@@ -73,3 +73,7 @@ def importSpreadsheet(infilename,owner):
     logger.error(f"No data in excel file:  {infilename}")
   except ValueError as e:
     logger.error(f"Bad excel format in file {infilename}, panda raised the following error: {e}")
+
+  
+
+    

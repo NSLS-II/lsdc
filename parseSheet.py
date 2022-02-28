@@ -63,11 +63,11 @@ def insertSpreadsheetDict(d,owner):
 
 
 def importSpreadsheet(infilename,owner):
-  if(infilename != ""):
+  try:
     d = parseSpreadsheet(infilename)
     insertSpreadsheetDict(d,owner)
-  else:
-    logger.error("import spreadsheet error:  no filename given")
+  except OSError as e:
+    logger.error(f"Aborting import, bad spreadsheet file:  {infilename}")
 
   
 

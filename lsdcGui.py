@@ -2730,7 +2730,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def adjustGraphics4ZoomChange(self,fov):
-      imageScaleMicrons = int(round(self.imageScaleLineLen * (fov["x"]/daq_utils.screenPixX)))
+      imageScaleMicrons = int(round(self.imageScaleLineLen * (fov["x"]/daq_utils.screenPixX))) * daq_utils.unitScaling
       self.imageScaleText.setText(str(imageScaleMicrons) + " microns")
       if (self.rasterList != []):
         saveRasterList = self.rasterList

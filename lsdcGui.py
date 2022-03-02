@@ -5192,6 +5192,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.statusBar()
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        settingsMenu = menubar.addMenu('Settings')
         fileMenu.addAction(importAction)
         fileMenu.addAction(self.userAction)
         fileMenu.addAction(self.expertAction)
@@ -5217,7 +5218,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.centerMarkerColorActionGroup.addAction(self.WhiteCrosshairAction)
         self.centerMarkerColorActionGroup.addAction(self.BlackCrosshairAction)
         # Create the menu item with the submenu, add the group 
-        self.centerMarkerMenu = fileMenu.addMenu("Crosshair Settings")
+        self.centerMarkerMenu = settingsMenu.addMenu("Crosshair Settings")
         self.centerMarkerMenu.addActions(self.centerMarkerColorActionGroup)
         self.BlueCrosshairAction.setChecked(True)
         

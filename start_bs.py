@@ -8,7 +8,7 @@ from mxtools.vector_program import VectorProgram
 from mxtools.eiger import EigerSingleTriggerV26, setup_eiger_defaults
 from embl_robot import EMBLRobot
 import os
-from nyxtools.governor import _make_governors
+from mxtools.governor import _make_governors
 
 #12/19 - author unknown. DAMA can help
 """

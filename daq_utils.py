@@ -39,6 +39,7 @@ mag2ViewAngle = CAMERA_ANGLE_BEAM
 mag3ViewAngle = CAMERA_ANGLE_BEAM
 mag4ViewAngle = CAMERA_ANGLE_BEAM
 
+EV_ANGSTROM_CONSTANT = 12398.42  # https://www.kmlabs.com/en/wavelength-to-photon-energy-calculator
 
 EV_ANGSTROM_CONSTANT = 12398.42  # https://www.kmlabs.com/en/wavelength-to-photon-energy-calculator
 

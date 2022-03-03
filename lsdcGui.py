@@ -2625,7 +2625,31 @@ class ControlMain(QtWidgets.QMainWindow):
         self.tabs.addTab(sampleTab,"Collect")
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
         self.tabs.addTab(self.XRFTab,"XRF Spectrum")
-        self.zoomLevelToggledCB("Zoom1")        
+        self.zoomLevelToggledCB("Zoom1")
+
+        if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
+          self.protoRasterRadio.setDisabled(True)
+          self.protoStandardRadio.setDisabled(True)
+          self.protoVectorRadio.setDisabled(True)
+          self.protoOtherRadio.setDisabled(True)
+          self.autoProcessingCheckBox.setDisabled(True)
+          self.fastDPCheckBox.setDisabled(True)
+          self.fastEPCheckBox.setDisabled(True)
+          self.dimpleCheckBox.setDisabled(True)
+          self.centeringComboBox.setDisabled(True)
+          self.beamsizeComboBox.setDisabled(True)
+          centerLoopButton.setDisabled(True)
+          clearGraphicsButton.setDisabled(True)
+          saveCenteringButton.setDisabled(True) 
+          selectAllCenteringButton.setDisabled(True) 
+          snapshotButton.setDisabled(True) 
+          self.hideRastersCheckBox.setDisabled(True) 
+          self.vidActionC2CRadio.setDisabled(True)
+          self.vidActionRasterExploreRadio.setDisabled(True)
+          self.vidActionRasterDefRadio.setDisabled(True)
+          self.vidActionDefineCenterRadio.setDisabled(True)
+        else:
+          return
 
     def albulaCheckCB(self,state):
       if state != QtCore.Qt.Checked:

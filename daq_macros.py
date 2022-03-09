@@ -3578,7 +3578,9 @@ def anneal(annealTime=1.0):
       daq_lib.gui_message('Not in Governor state SA, exiting')
       return -1
 
-    govStateSet('CB')
+    if govStateSet('CB') == -1:
+      logger.error("not able to get to CB governor state")
+      return -1
 
     annealer.air.put(1)
 
@@ -3593,7 +3595,9 @@ def anneal(annealTime=1.0):
       logger.info(f'anneal state after annealing: {annealer.outStatus.get()}')
       time.sleep(0.1)
 
-    govStateSet('SA')
+    if govStateSet('SA') == -1:
+      logger.error("not able to return to SA governor state")
+      return -1
 
   elif daq_utils.beamline == 'amx':
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))

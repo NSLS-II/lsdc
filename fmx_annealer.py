@@ -14,13 +14,13 @@ def blStrGet():
    
     Beamline is determined by querying hostname
     """
-    hostStr = socket.gethostname()
-    if hostStr == 'xf17id2-ca1':
+    hostStr = socket.gethostname().split('.')[0]
+    if hostStr == 'xf17id2-srv2':  # TODO replace with some kind of less hard-coded name?
         blStr = 'FMX'
     elif hostStr == 'xf17id1-ca1':
         blStr = 'AMX'
     else:
-        logger.error('Error - this code must be executed on one of the -ca1 machines')
+        logger.error('Error - this code must be executed on an LSDC server machine')
         blStr = -1
        
     return blStr
@@ -98,6 +98,7 @@ def govStateSet(stateStr, configStr = 'Robot'):
     devStr = '{Gov:' + configStr + '}'
     cmdStr = 'Cmd:Go-Cmd'
     pvStr = sysStr + devStr + cmdStr
+    logger.debug(f'governor PV: {pvStr}')
     epics.caput(pvStr, stateStr)
     
     while not govStatusGet(stateStr, configStr = configStr):

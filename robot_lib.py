@@ -415,6 +415,8 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       detDist = caget(f'{det_z_pv}.RBV')
     else:
       detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
+      if detDist < ROBOT_MIN_DISTANCE:
+        beamline_lib.mvaDescriptor("detectorDist", ROBOT_MIN_DISTANCE)
     if detDist < ROBOT_MIN_DISTANCE and abs(detDist - ROBOT_MIN_DISTANCE) > ROBOT_DISTANCE_TOLERANCE:
       logger.error(f"ERROR - Detector closer than {ROBOT_MIN_DISTANCE} and move than {ROBOT_DISTANCE_TOLERANCE} from {ROBOT_MIN_DISTANCE}! actual distance: {detDist}. Stopping.")
       return 0

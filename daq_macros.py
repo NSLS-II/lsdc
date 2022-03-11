@@ -3387,11 +3387,11 @@ def lastOnSample():
   if (ednaActiveFlag == 1):
     return False
   current_sample = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']
-  logger.info(f'number of requests for current sample: {len(db_lib.getRequestsBySampleID(current_sample))}')
+  logger.debug(f'number of requests for current sample: {len(db_lib.getRequestsBySampleID(current_sample))}')
   if len(db_lib.getRequestsBySampleID(current_sample)) > 1:  # quickly check if there are other requests for this sample
     r = db_lib.popNextRequest(daq_utils.beamline)  # do comparison above to avoid this time-expensive call
     if (r != {}):
-      logger.info(f'next sample: {r["sample"]} current_sample:{current_sample}')
+      logger.debug(f'next sample: {r["sample"]} current_sample:{current_sample}')
       if (r["sample"] == db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']):
         return False
   return True
@@ -3580,7 +3580,9 @@ def anneal(annealTime=1.0):
       daq_lib.gui_message('Not in Governor state SA, exiting')
       return -1
 
-    govStateSet('CB')
+    if govStateSet('CB') == -1:
+      logger.error("not able to get to CB governor state")
+      return -1
 
     annealer.air.put(1)
 
@@ -3595,7 +3597,9 @@ def anneal(annealTime=1.0):
       logger.info(f'anneal state after annealing: {annealer.outStatus.get()}')
       time.sleep(0.1)
 
-    govStateSet('SA')
+    if govStateSet('SA') == -1:
+      logger.error("not able to return to SA governor state")
+      return -1
 
   elif daq_utils.beamline == 'amx':
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))

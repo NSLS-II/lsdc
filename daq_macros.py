@@ -2435,7 +2435,8 @@ def eScan(energyScanRequest):
     choochResultObj["fprime_peak"] = fprime_peak
     choochResultObj["sample_id"] = sampleID
     if (not os.path.exists(choochOutfileName)):
-      choochOutFile = open("/nfs/skinner/temp/choochData1.efs","r")
+      logger.error(f'chooch could not successfully produce a file called {choochOutfileName}. not drawing a plot.')
+      return
     else:
       choochOutFile = open(choochOutfileName,"r")    
     chooch_graph_x = []

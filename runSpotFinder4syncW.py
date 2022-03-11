@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2021-1.3/bin/python
+#!/opt/conda_envs/lsdc-server-2022-1-latest/bin/python
 import time
 import os
 import sys

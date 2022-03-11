@@ -10,5 +10,5 @@ export LD_LIBRARY_PATH=$matlab_distrib/bin/glnx86:$matlab_distrib/toolbox
 export PINALIGNDIR=${PROJDIR}pinAlign/pin_align-master/
 export MXPROCESSINGSCRIPTSDIR=${PROJDIR}mx-processing/
 # below not idea as environment name also needed by daq_main2
-conda activate lsdc-server-2021-1.3
+conda activate lsdc-server-2022-1-latest
 $LSDCHOME/lsdcServer

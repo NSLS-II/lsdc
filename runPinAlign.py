@@ -1,4 +1,4 @@
-#!/opt/conda_envs/nsls2-collection-2021-2.2/bin/python
+#!/opt/conda_envs/lsdc-server-2022-1-latest/bin/python
 import sys
 import os
 

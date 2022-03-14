@@ -2352,8 +2352,8 @@ def eScan(energyScanRequest):
   targetEnergy = reqObj['scanEnergy'] *1000.0
   stepsize = reqObj['stepsize']
   steps = reqObj['steps']
-  left = -(steps*stepsize)/2
-  right = (steps*stepsize)/2
+  left = -((steps-1)*stepsize)/2  # there are actually (steps-1) intervals
+  right = ((steps-1)*stepsize)/2
   mcaRoiLo = reqObj['mcaRoiLo']
   mcaRoiHi = reqObj['mcaRoiHi']
   setPvDesc("mcaRoiLo",mcaRoiLo)

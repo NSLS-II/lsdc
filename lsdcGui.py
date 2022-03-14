@@ -5409,7 +5409,7 @@ def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sam
     reqObj["scanEnergy"] = targetEnergy
     reqObj["runChooch"] = True  # just hardcode for now
     reqObj["steps"] = int(steps)
-    reqObj["stepsize"] = int(stepsize)
+    reqObj["stepsize"] = float(stepsize)
     return reqObj
 
 def main():

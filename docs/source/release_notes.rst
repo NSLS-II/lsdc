@@ -2,7 +2,7 @@
  Release History
 =================
 
-1.0.0 (2022-02-08)
+1.0.0 (initially 2022-02-08 - final 2022-03-11)
 ==================
 
 Fixes
@@ -12,7 +12,7 @@ Changes
 -------
 
 * Adding documentation that gets published to the NSLS-II site.
-* New version numbering system.
+* New version numbering system starting with 2.0 for fully Bluesky release (expected summer 2022). Working backwards, 1.0 for this version.
 * NYX branch (nyx_ophyd) - not yet merged into master
 
   * LSDC GUI and server starting 
@@ -23,7 +23,7 @@ Changes
 * AMX/FMX branch (master)
 
   * complete changeover to cluster processing including all types of processing
-  * Ordering of pucks by time for easier selection (DK) 
+  * use clean conda environments generated via conda-pack-template and deployed with Explorer using Ansible
 
 * additional work during the last cycle
 
@@ -34,3 +34,5 @@ Changes
   * Fast DP always runs, control option moved to Staff on GUI 
   * GUI - +/- 1 degree buttons 
   * Kafka encryption set up as central cluster had it enabled 
+  * speed up rastering by simplifying lastOnSample() check
+  * FMX annealer code fixed

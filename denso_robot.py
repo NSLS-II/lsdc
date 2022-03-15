@@ -82,7 +82,7 @@ class DensoRobot:
             actual_puck_num = int(self.robot.puck_num_sel.get())
             actual_sample_num = int(self.robot.sample_num_sel.get())
             if actual_spindle_occupied == check_occupied and \
-               actual_puck_num == puck_pos - 1 and \
+               actual_puck_num == puck_pos and \
                actual_sample_num == pin_pos:  # make sure puck number and sample number coming from robot and LSDC are zero- or one-indexed as necessary
                 logger.info('mount/unmount successful!')
                 if mount:
@@ -90,7 +90,7 @@ class DensoRobot:
                 else:
                     return UNMOUNT_STEP_SUCCESSFUL
             else:
-                logger.error(f'Failure during mount/unmount. Spindle_occupied: expected: {check_occupied} actual: {actual_spindle_occupied}. Puck num: expected: {puck_pos - 1} actual: {actual_puck_num} Sample num: expected {pin_pos} actual: {actual_sample_num}')
+                logger.error(f'Failure during mount/unmount. Spindle_occupied: expected: {check_occupied} actual: {actual_spindle_occupied}. Puck num: expected: {puck_pos} actual: {actual_puck_num} Sample num: expected {pin_pos} actual: {actual_sample_num}')
                 if mount:
                     return MOUNT_FAILURE
                 else:

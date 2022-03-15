@@ -5219,7 +5219,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.overlayColorActionGroup.addAction(self.BlackOverlayAction)
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
-        self.overlayMenu.addActions(self.overlayColorActionGroup)
+        self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
         self.BlueOverlayAction.setChecked(True)
         
         fileMenu.addAction(exitAction)
@@ -5228,34 +5228,34 @@ class ControlMain(QtWidgets.QMainWindow):
         self.show()
 
     def blueOverlayTriggeredCB(self):
-        overlayBrush = QtGui.QBrush(QtCore.Qt.blue)                
+        overlayBrush = QtGui.QBrush(QtCore.Qt.blue)
         self.centerMarker.setBrush(overlayBrush)
-        self.imageScale.setBrush(overlayBrush)
-        self.imageScaleText.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def redOverlayTriggeredCB(self):
-        overlayBrush = QtGui.QBrush(QtCore.Qt.red)                
+        overlayBrush = QtGui.QBrush(QtCore.Qt.red)
         self.centerMarker.setBrush(overlayBrush)
-        self.imageScale.setBrush(overlayBrush)
-        self.imageScaleText.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def greenOverlayTriggeredCB(self):
-        overlayBrush = QtGui.QBrush(QtCore.Qt.green)                
+        overlayBrush = QtGui.QBrush(QtCore.Qt.green)
         self.centerMarker.setBrush(overlayBrush)
-        self.imageScale.setBrush(overlayBrush)
-        self.imageScaleText.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def whiteOverlayTriggeredCB(self):
-        overlayBrush = QtGui.QBrush(QtCore.Qt.white)                
+        overlayBrush = QtGui.QBrush(QtCore.Qt.white)
         self.centerMarker.setBrush(overlayBrush)
-        self.imageScale.setBrush(overlayBrush)
-        self.imageScaleText.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def blackOverlayTriggeredCB(self):
-        overlayBrush = QtGui.QBrush(QtCore.Qt.black)                
+        overlayBrush = QtGui.QBrush(QtCore.Qt.black)
         self.centerMarker.setBrush(overlayBrush)
-        self.imageScale.setBrush(overlayBrush)
-        self.imageScaleText.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):

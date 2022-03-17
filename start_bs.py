@@ -6,7 +6,6 @@ from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from mxtools.zebra import Zebra
 from mxtools.vector_program import VectorProgram
 from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
-from embl_robot import EMBLRobot
 import os
 from mxtools.governor import _make_governors
 
@@ -112,6 +111,7 @@ if (beamline=="amx"):
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
     eiger = EigerSingleTriggerV26('', name='eiger')
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
+    from embl_robot import EMBLRobot
     robot = EMBLRobot()
 
 elif beamline == "fmx":  
@@ -122,6 +122,7 @@ elif beamline == "fmx":
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
+    from embl_robot import EMBLRobot
     robot = EMBLRobot()
 
 elif beamline=="nyx":

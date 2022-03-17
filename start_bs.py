@@ -121,7 +121,6 @@ elif beamline == "fmx":
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
-setup_eiger_defaults(eiger)
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     robot = EMBLRobot()
 
@@ -150,3 +149,5 @@ elif beamline=="nyx":
     back_light_range = (back_light_low_limit.get(), back_light_high_limit.get())
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")
+
+setup_eiger_defaults(eiger)

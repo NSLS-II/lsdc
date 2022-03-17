@@ -5,7 +5,7 @@ from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from mxtools.zebra import Zebra
 from mxtools.vector_program import VectorProgram
-from mxtools.eiger import EigerSingleTriggerV26, setup_eiger_defaults
+from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 from embl_robot import EMBLRobot
 import os
 from mxtools.governor import _make_governors
@@ -150,4 +150,5 @@ elif beamline=="nyx":
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")
 
-setup_eiger_defaults(eiger)
+if beamline in ("amx", "fmx"):
+    set_eiger_defaults(eiger)

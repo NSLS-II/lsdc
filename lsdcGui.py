@@ -1673,6 +1673,9 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
           self.motPos = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get(),"fineX":self.sampFineX_pv.get(),"fineY":self.sampFineY_pv.get(),"fineZ":self.sampFineZ_pv.get()}                    
         self.staffScreenDialog = StaffScreenDialog(self, show=False)
+        if daq_utils.beamline == "nyx":  # requires staffScreenDialog to be present
+          self.staffScreenDialog.fastDPCheckBox.setDisabled(True)
+
         self.dewarTree.refreshTreeDewarView()
         if (self.mountedPin_pv.get() == ""):
           mountedPin = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')["sampleID"]
@@ -2633,7 +2636,6 @@ class ControlMain(QtWidgets.QMainWindow):
           self.protoVectorRadio.setDisabled(True)
           self.protoOtherRadio.setDisabled(True)
           self.autoProcessingCheckBox.setDisabled(True)
-          self.fastDPCheckBox.setDisabled(True)
           self.fastEPCheckBox.setDisabled(True)
           self.dimpleCheckBox.setDisabled(True)
           self.centeringComboBox.setDisabled(True)

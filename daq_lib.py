@@ -612,7 +612,11 @@ def collectData(currentRequest):
             return 1
     else: #standard
       logger.info("moving omega to start " + str(time.time()))      
-      beamline_lib.mvaDescriptor("omega",sweep_start)
+      if daq_utils.beamline == "nyx":
+          direction = (sweep_end - sweep_start) / abs(sweep_end - sweep_start)
+          beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
+      else:
+          beamline_lib.mvaDescriptor("omega",sweep_start)
       imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':

@@ -132,10 +132,10 @@ elif beamline=="nyx":
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
-    from nyxtools.pilatus import PilatusBase
-    detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
-    from nyxtools.flyer import NYXFlyer
-    flyer = NYXFlyer(vector, zebra, detector)
+    from nyxtools.pilatus import EigerBaseV26
+    detector = EigerBaseV26("XF:19IDC-ES{Det:Pil6M}", name="detector") # TODO: Update PV Base
+    from nyxtools.flyer_eiger2 import NYXEiger2Flyer
+    flyer = NYXEiger2Flyer(vector, zebra, detector)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

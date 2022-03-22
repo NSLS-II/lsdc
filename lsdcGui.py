@@ -961,7 +961,7 @@ class PuckDialog(QtWidgets.QDialog):
 
     def initData(self):
         puckListUnsorted = db_lib.getAllPucks(daq_utils.owner)
-        puckList = sorted(puckListUnsorted,key=lambda i: i['time'],reverse=True)
+        puckList = sorted(puckListUnsorted,key=lambda i: i['name'],reverse=False)
         dewarObj = db_lib.getPrimaryDewar(daq_utils.beamline)
         pucksInDewar = dewarObj['content']
         data = []

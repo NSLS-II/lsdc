@@ -16,7 +16,6 @@ from threading import Thread
 import logging
 import epics.ca
 import top_view
-from robot_lib import setWorkposThread
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
                           MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
                           UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
@@ -26,6 +25,17 @@ logger = logging.getLogger(__name__)
 
 global retryMountCount
 retryMountCount = 0
+
+def setWorkposThread(init,junk):
+  logger.info("setting work pos in thread")
+  setPvDesc("robotGovActive",1)
+  setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
+  setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
+  setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
+  setPvDesc("robotOmegaWorkPos",90.0)
+  if (init):
+    time.sleep(20)
+    setPvDesc("robotGovActive",0)
 
 class EMBLRobot:
 

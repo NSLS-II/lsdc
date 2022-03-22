@@ -124,6 +124,11 @@ elif beamline == "fmx":
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
+    govs = _make_governors("XF:17IDC-ES:FMX", name="govs")
+    gov_robot = govs.gov.Robot
+
+    back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
+    back_light_range = (0, 100)
 
 elif beamline=="nyx":
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')

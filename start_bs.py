@@ -122,6 +122,9 @@ elif beamline == "fmx":
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
+    from mxtools.flyer import MXFlyer
+    flyer = MXFlyer(vector_program, zebra, eiger)
+
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
     govs = _make_governors("XF:17IDC-ES:FMX", name="govs")

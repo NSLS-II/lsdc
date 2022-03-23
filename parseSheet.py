@@ -73,7 +73,8 @@ def importSpreadsheet(infilename,owner):
     logger.error(f"No data in excel file:  {infilename}")
   except ValueError as e:
     logger.error(f"Bad excel format in file {infilename}, panda raised the following error: {e}")
-
+  except ImportError as e:
+    logger.error(f"Panda raised the following:  {e}")
   
 
     

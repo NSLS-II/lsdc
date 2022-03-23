@@ -318,31 +318,32 @@ class EMBLRobot:
 
     def postMount(self, gov_robot, puck, pinPos, sampID):
       global sampYadjust
-      if (getBlConfig(TOP_VIEW_CHECK) == 1):
-        if daq_utils.beamline == "fmx":
-          try: #make sure workposThread is finished before proceeding to robotGovActive check
-            timeout = 20
-            start_time = time.time()
-            while self.workposThread.isAlive():
-              time.sleep(0.5)
-              if time.time() - start_time > timeout:
-                raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')
-            logger.info(f'Time waiting for workposThread: {time.time() - start_time}s')
-          except Exception as e:
-            daq_lib.gui_message(e)
-            logger.error(e)
-            return MOUNT_FAILURE
-          if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
-                                           #(due to setWorkposThread),
-            logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
-            setPvDesc('robotGovActive', 1) #set it active
-          else:
-            logger.info('not changing anything as governor is active')
-        if (sampYadjust == 0):
-          logger.info("Cannot align pin - Mount next sample.")
-      gov_status = gov_lib.setGovRobot('SA')
-      if not gov_status.success:
-        logger.error('Failure during governor change to SA')
+      if getBlConfig('robot_online'):
+        if (getBlConfig(TOP_VIEW_CHECK) == 1):
+          if daq_utils.beamline == "fmx":
+            try: #make sure workposThread is finished before proceeding to robotGovActive check
+              timeout = 20
+              start_time = time.time()
+              while self.workposThread.isAlive():
+                time.sleep(0.5)
+                if time.time() - start_time > timeout:
+                  raise Exception(f'setWorkposThread failed to finish before {timeout}s timeout')
+              logger.info(f'Time waiting for workposThread: {time.time() - start_time}s')
+            except Exception as e:
+              daq_lib.gui_message(e)
+              logger.error(e)
+              return MOUNT_FAILURE
+            if getPvDesc('robotGovActive') == 0: #HACK, if FMX and top view, if stuck in robot inactive
+                                             #(due to setWorkposThread),
+              logger.info('FMX, top view active, and robot stuck in inactive - restoring to active')
+              setPvDesc('robotGovActive', 1) #set it active
+            else:
+              logger.info('not changing anything as governor is active')
+          if (sampYadjust == 0):
+            logger.info("Cannot align pin - Mount next sample.")
+        gov_status = gov_lib.setGovRobot('SA')
+        if not gov_status.success:
+          logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL
 
  
@@ -393,21 +394,22 @@ class EMBLRobot:
 
     def unmount(self, gov_robot, puckPos, pinPos, sampID):
         absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
-        try:
-          RobotControlLib.unmount2(absPos)
-        except Exception as e:
-          e_s = str(e)
-          if (e_s.find("Fatal") != -1):
-            daq_macros.robotOff()
-            daq_macros.disableMount()
-            daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
+        if getBlConfig('robot_online'):
+          try:
+            RobotControlLib.unmount2(absPos)
+          except Exception as e:
+            e_s = str(e)
+            if (e_s.find("Fatal") != -1):
+              daq_macros.robotOff()
+              daq_macros.disableMount()
+              daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
+              return UNMOUNT_FAILURE
+            message = "ROBOT unmount2 ERROR: " + e_s
+            daq_lib.gui_message(message)
+            logger.error(message)
             return UNMOUNT_FAILURE
-          message = "ROBOT unmount2 ERROR: " + e_s
-          daq_lib.gui_message(message)
-          logger.error(message)
-          return UNMOUNT_FAILURE
-        if (not daq_lib.waitGovRobotSE()):
-          daq_lib.clearMountedSample()
-          logger.info("could not go to SE")
-          return UNMOUNT_FAILURE
+          if (not daq_lib.waitGovRobotSE()):
+            daq_lib.clearMountedSample()
+            logger.info("could not go to SE")
+            return UNMOUNT_FAILURE
         return UNMOUNT_SUCCESSFUL

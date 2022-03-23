@@ -175,7 +175,7 @@ class EMBLRobot:
 
 
     # pin alignment, then dewar alignment done here
-    def preMount(self, puckPos, pinPos, sampID, **kwargs):
+    def preMount(self, gov_robot, puckPos, pinPos, sampID, **kwargs):
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
         desired_gov_state = 'SE'
@@ -237,7 +237,7 @@ class EMBLRobot:
         logger.info("called thread")
 
 
-    def mount(self, puckPos,pinPos,sampID,**kwargs):
+    def mount(self, gov_robot, puckPos,pinPos,sampID,**kwargs):
       global retryMountCount
       init = kwargs.get("init", 0)
       warmup = kwargs.get("warmup", 0)
@@ -313,7 +313,7 @@ class EMBLRobot:
           return MOUNT_FAILURE
       return MOUNT_STEP_SUCCESSFUL
 
-    def postMount(self, puck, pinPos, sampID):
+    def postMount(self, gov_robot, puck, pinPos, sampID):
       global sampYadjust
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         if daq_utils.beamline == "fmx":
@@ -343,7 +343,7 @@ class EMBLRobot:
       return MOUNT_SUCCESSFUL
 
  
-    def preUnmount(self, puckPos,pinPos,sampID): #will somehow know where it came from
+    def preUnmount(self, gov_robot, puckPos,pinPos,sampID): #will somehow know where it came from
       absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
@@ -388,7 +388,7 @@ class EMBLRobot:
           return UNMOUNT_FAILURE
       return UNMOUNT_STEP_SUCCESSFUL
 
-    def unmount(self, puckPos, pinPos, sampID):
+    def unmount(self, gov_robot, puckPos, pinPos, sampID):
         absPos = (PINS_PER_PUCK*(puckPos%3))+pinPos+1
         try:
           RobotControlLib.unmount2(absPos)

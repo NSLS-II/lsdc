@@ -263,7 +263,7 @@ class EMBLRobot:
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
                   return MOUNT_FAILURE
-            self.callAlignPinThread(kwargs)
+            self.callAlignPinThread(**kwargs)
             setPvDesc("boostSelect",0)
             if (getPvDesc("gripTemp")>-170):
               try:
@@ -284,7 +284,7 @@ class EMBLRobot:
                 RobotControlLib._mount(absPos)
             setPvDesc("boostSelect",1)
           else:
-            self.callAlignPinThread(kwargs)
+            self.callAlignPinThread(**kwargs)
             if (warmup):
               RobotControlLib._mount(absPos,warmup=True)
             else:

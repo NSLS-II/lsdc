@@ -185,7 +185,7 @@ class EMBLRobot:
         if kwargs.get('govStatus', None):
           gov_lib.waitGov(kwargs['govStatus'])
         if not kwargs.get('govStatus', None) or not kwargs['govStatus'].success:  # TODO check that we are at desired_gov_state
-          gov_return = gov_lib.setGovRobot(desired_gov_state)
+          gov_return = gov_lib.setGovRobot(gov_robot, desired_gov_state)
           if not gov_return.success:
             logger.error(f'Did not reach {desired_gov_state}')
             return
@@ -260,7 +260,7 @@ class EMBLRobot:
                 if (daq_utils.beamline == "fmx"):
                   daq_macros.homePins()
                   time.sleep(3.0)
-                gov_status = gov_lib.setGovRobot('SE')
+                gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
                   return MOUNT_FAILURE
             self.callAlignPinThread(kwargs)
@@ -342,7 +342,7 @@ class EMBLRobot:
               logger.info('not changing anything as governor is active')
           if (sampYadjust == 0):
             logger.info("Cannot align pin - Mount next sample.")
-        gov_status = gov_lib.setGovRobot('SA')
+        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         if not gov_status.success:
           logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL

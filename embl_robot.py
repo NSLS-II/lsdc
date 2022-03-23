@@ -182,8 +182,9 @@ class EMBLRobot:
       init = kwargs.get("init", 0)
       if (getBlConfig('robot_online')):
         desired_gov_state = 'SE'
-        gov_lib.waitGov(kwargs['govStatus'])
-        if not kwargs['govStatus'].success:  # TODO check that we are at desired_gov_state
+        if kwargs.get('govStatus', None):
+          gov_lib.waitGov(kwargs['govStatus'])
+        if not kwargs.get('govStatus', None) or not kwargs['govStatus'].success:  # TODO check that we are at desired_gov_state
           gov_return = gov_lib.setGovRobot(desired_gov_state)
           if not gov_return.success:
             logger.error(f'Did not reach {desired_gov_state}')

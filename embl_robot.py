@@ -409,7 +409,8 @@ class EMBLRobot:
             daq_lib.gui_message(message)
             logger.error(message)
             return UNMOUNT_FAILURE
-          if (not daq_lib.waitGovRobotSE()):
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
+          if not gov_status.success:
             daq_lib.clearMountedSample()
             logger.info("could not go to SE")
             return UNMOUNT_FAILURE

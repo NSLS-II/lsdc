@@ -44,6 +44,9 @@ class EMBLRobot:
         self.workposThread = None
 
 
+    def control_type(self):
+        return "DIRECT"
+
     def finish(self):
       if (getBlConfig('robot_online')):
         try:

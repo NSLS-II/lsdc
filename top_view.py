@@ -10,7 +10,7 @@ from config_params import TOP_VIEW_CHECK
 
 logger = logging.getLogger(__name__)
 
-def wait90TopviewThread(prefix1,prefix90):
+def wait90TopviewThread(gov_robot, prefix1,prefix90):
   startTime = time.time()
   if (getPvDesc("gripTemp")>-170):
     threadTimeout = 130.0

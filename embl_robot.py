@@ -357,7 +357,7 @@ class EMBLRobot:
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
-          pass#gov_lib.set_detz_out(gov_human, gov_robot, DETECTOR_SAFE_DISTANCE)
+          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
         daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

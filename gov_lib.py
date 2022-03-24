@@ -24,7 +24,7 @@ def setGovRobot(gov_robot, state, wait=True):
       pass #toggleLowMagCameraSettings(state)
     return govStatus
   except Exception as e:
-    logger.info(f"Governor did not reach {state}")
+    logger.info(f"Governor did not reach {state}: exception {e}")
     govStatus = StatusBase()
     govStatus.set_exception(e)
     return govStatus

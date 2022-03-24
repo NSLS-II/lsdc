@@ -26,6 +26,8 @@ logger = logging.getLogger(__name__)
 global retryMountCount
 retryMountCount = 0
 
+setBlConfig('sampYAdjust', 0)
+
 def setWorkposThread(init,junk):
   logger.info("setting work pos in thread")
   setPvDesc("robotGovActive",1)
@@ -318,7 +320,7 @@ class EMBLRobot:
       return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, gov_robot, puck, pinPos, sampID):
-      global sampYadjust
+      sampYadjust = float(getBlConfig('sampYAdjust'))
       if getBlConfig('robot_online'):
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           if daq_utils.beamline == "fmx":

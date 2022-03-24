@@ -1,7 +1,7 @@
 import RobotControlLib
 import daq_utils
 import db_lib
-from daq_utils import getBlConfig
+from daq_utils import getBlConfig, setBlConfig
 import daq_lib
 import beamline_lib
 import time

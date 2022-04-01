@@ -2,6 +2,8 @@
 export PROJDIR=/data/Software/LSDC/
 export CONFIGDIR=${PROJDIR}bnlpx_config/
 export LSDCHOME=${PROJDIR}lsdc
+export EPICS_CA_AUTO_ADDR_LIST=NO
+export EPICS_CA_ADDR_LIST=10.67.147.255
 export PYTHONPATH=".:${CONFIGDIR}:/usr/local/edna-mx/mxv1/src:/usr/local/edna-mx/kernel/src:${LSDCHOME}:${PROJDIR}/RobotControlLib"
 export PATH=/usr/local/bin:/usr/bin:/bin:${PROJDIR}/software/bin:/GPFS/CENTRAL/XF17ID1/usr/local/crys/ccp4-6.5/bin
 source ${CONFIGDIR}daq_env_nyx.txt

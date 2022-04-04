@@ -2636,8 +2636,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomLevelToggledCB("Zoom1")
 
         if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
-          self.setVectorStartButton.setDisabled(True)
-          self.setVectorEndButton.setDisabled(True)
+          self.protoComboBox.setDisabled(True)
+          setVectorStartButton.setDisabled(True)
+          setVectorEndButton.setDisabled(True)
           self.vectorFPP_ledit.setDisabled(True)
           self.protoRasterRadio.setDisabled(True)
           self.protoStandardRadio.setDisabled(True)

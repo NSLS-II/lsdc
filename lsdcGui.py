@@ -2664,6 +2664,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.vidActionRasterExploreRadio.setDisabled(True)
           self.vidActionRasterDefRadio.setDisabled(True)
           self.vidActionDefineCenterRadio.setDisabled(True)
+          self.protoComboBox.setDisabled(True)
         else:
           return
 

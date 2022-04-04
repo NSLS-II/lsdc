@@ -2665,6 +2665,8 @@ class ControlMain(QtWidgets.QMainWindow):
           self.vidActionRasterDefRadio.setDisabled(True)
           self.vidActionDefineCenterRadio.setDisabled(True)
           self.protoComboBox.setDisabled(True)
+          warmupButton.setDisabled(True)
+          annealButton.setDisabled(True)
         else:
           return
 

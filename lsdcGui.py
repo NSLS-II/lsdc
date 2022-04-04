@@ -256,7 +256,7 @@ class StaffScreenDialog(QFrame):
         hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)                        
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
-        hBoxColParams1.addWidget(self.homePinsButton)        
+        hBoxColParams1.addWidget(self.homePinsButton)
         self.setFastDPNodesButton = QtWidgets.QPushButton("Set FastDP Nodes")
         self.setFastDPNodesButton.clicked.connect(self.setFastDPNodesCB)
         hBoxFastDP.addWidget(self.setFastDPNodesButton)        
@@ -330,6 +330,23 @@ class StaffScreenDialog(QFrame):
         self.setLayout(vBoxColParams1)        
         self.show()
 
+	if(daq_utils.beamline=="nyx"):
+	    self.homePinsButton.setDisabled(True)
+	    self.openPort1Button.setDisabled(True)
+	    self.closePortsButton.setDisabled(True)
+	    self.unmountColdButton.setDisabled(True)
+	    self.warmupButton.setDisabled(True)
+	    self.enableTScreenButton.setDisabled(True)
+	    self.parkButton.setDisabled(True)
+	    self.setFastDPNodesButton.setDisabled(True)
+	    self.setSpotNodesButton.setDisabled(True)
+	    self.lockGuiButton.setDisabled(True)
+	    self.unLockGuiButton.setDisabled(True)
+	    self.recoverRobotButton.setDisabled(True)
+	    self.rebootEMBLButton.setDisabled(True)
+	    self.restartEMBLButton.setDisabled(True)
+	    self.openGripperButton.setDisabled(True)
+	    self.closeGripperButton.setDisabled(True)
 
     def getSpotNodeList(self):
       nodeList = []
@@ -2619,6 +2636,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomLevelToggledCB("Zoom1")
 
         if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
+          self.setVectorStartButton.setDisabled(True)
+          self.setVectorEndButton.setDisabled(True)
+          self.vectorFPP_ledit.setDisabled(True)
           self.protoRasterRadio.setDisabled(True)
           self.protoStandardRadio.setDisabled(True)
           self.protoVectorRadio.setDisabled(True)

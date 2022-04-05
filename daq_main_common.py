@@ -174,9 +174,20 @@ def process_input(command_string):
   if (command_string != "pause_data_collection()" and command_string != "continue_data_collection()" and command_string != "abort_data_collection()" and command_string != "unmount_after_abort()" and command_string != "no_unmount_after_abort()"):
     daq_lib.set_field("program_state","Program Ready")
 
+def server_heartbeat(frequency):
+  alive=True
+  beat_memory = 0
+  beamline_support.pvPut(heartbeat_pv, beat_memory)
+  while(alive):
+    beat = beamline_support.pvGet(heartbeat_pv)
+    if(beat!=beat_memory): # case: different lsdc server instance changing value between beats
+      beamline_support.pvPut(program_state_pv,"Multiple Servers")
+    beat_memory = math.randint(1,99)
+    beamline_support.pvPut(heartbeat_pv, beat_memory)
 
 def run_server():
   _thread.start_new_thread(process_immediate_commands,(.25,))  
+  _thread.start_new_thread(server_heartbeat,(1.0,))
   comm_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "command_s")
   beamline_support.pvPut(comm_pv,"\n")
   immediate_comm_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "immediate_command_s")

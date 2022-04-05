@@ -12,6 +12,7 @@ from start_bs import plt
 import config_params
 import atexit
 import traceback
+import math
 
 #imports to get useful things into namespace for server
 from daq_macros import *

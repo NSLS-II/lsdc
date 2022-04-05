@@ -266,6 +266,8 @@ class StaffScreenDialog(QFrame):
           self.fastDPNodeEntryList.append(QtWidgets.QLineEdit())
           self.fastDPNodeEntryList[i].setFixedWidth(30)
           self.fastDPNodeEntryList[i].setText(str(nodeList[i]))
+          if(daq_utils.beamline=="nyx"):
+            self.fastDPNodeEntryList[i].setDisabled(True)
           hBoxFastDP.addWidget(self.fastDPNodeEntryList[i])
         self.setBeamcenterButton = QtWidgets.QPushButton("Set Beamcenter")
         self.setBeamcenterButton.clicked.connect(self.setBeamcenterCB)
@@ -290,6 +292,8 @@ class StaffScreenDialog(QFrame):
         for i in range (0,self.spotNodeCount):
           self.spotNodeEntryList.append(QtWidgets.QLineEdit())
           self.spotNodeEntryList[i].setFixedWidth(30)
+          if(daq_utils.beamline=="nyx"):
+            self.spotNodeEntryList[i].setDisabled(True)
           self.spotNodeEntryList[i].setText(str(nodeList[i]))          
           hBoxSpotfinder.addWidget(self.spotNodeEntryList[i])
         robotGB = QtWidgets.QGroupBox()

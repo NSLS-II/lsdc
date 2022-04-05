@@ -179,7 +179,7 @@ def server_heartbeat(frequency):
   alive=True
   beat_memory = 0
   heartbeat_pv = beamline_support.pvCreate(daq_utils.server_heartbeat)
-  program_state_pv = beamline_support.pvCreate(daq_utils.gui_program_state)
+  program_state_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "program_state")
   beamline_support.pvPut(heartbeat_pv, beat_memory)
   while(alive):
     beat = beamline_support.pvGet(heartbeat_pv)

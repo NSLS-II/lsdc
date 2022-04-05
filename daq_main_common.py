@@ -177,6 +177,8 @@ def process_input(command_string):
 def server_heartbeat(frequency):
   alive=True
   beat_memory = 0
+  heartbeat_pv = beamline_support.pvCreate(daq_utils.server_heartbeat)
+  program_state_pv = beamline_support.pvCreate(daq_utils.gui_program_state)
   beamline_support.pvPut(heartbeat_pv, beat_memory)
   while(alive):
     beat = beamline_support.pvGet(heartbeat_pv)
@@ -184,6 +186,7 @@ def server_heartbeat(frequency):
       beamline_support.pvPut(program_state_pv,"Multiple Servers")
     beat_memory = math.randint(1,99)
     beamline_support.pvPut(heartbeat_pv, beat_memory)
+    time.sleep(frequency)
 
 def run_server():
   _thread.start_new_thread(process_immediate_commands,(.25,))  

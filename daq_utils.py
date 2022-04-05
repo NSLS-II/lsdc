@@ -114,6 +114,8 @@ def init_environment():
   detectorOffline = int(getBlConfig("detector_offline"))
   has_xtalview = int(getBlConfig("has_xtalview"))
   camera_offset = float(getBlConfig("camera_offset"))
+  server_heartbeat = getBlConfig("server_heartbeat")
+  gui_program_state = getBlConfig("gui_program_state")
   if (has_xtalview):
     xtal_url_small = getBlConfig("xtal_url_small")
     xtal_url = getBlConfig("xtal_url")

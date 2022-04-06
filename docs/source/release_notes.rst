@@ -16,8 +16,8 @@ Changes
 * AMX/FMX branch (master)
 
   * Remove ordering of pucks by time (DK) - could not be made to fully work as intended.
-  * use clean conda environments generated via conda-pack-template and deployed with Explorer using Ansible
-  * speed up rastering by simplifying lastOnSample() check
+  * Use clean conda environments generated via conda-pack-template and deployed with Explorer using Ansible
+  * Speed up rastering by simplifying lastOnSample() check
   * FMX annealer code fixed
 
 

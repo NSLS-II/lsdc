@@ -2568,7 +2568,28 @@ def vectorZebraScanNormal(vecRequest):
   expTime = reqObj["exposure_time"]
   numImages = int((sweep_end_angle - sweep_start_angle) / imgWidth)
   scanWidth = float(numImages)*imgWidth
-  zebraDaqBluesky(flyer,sweep_start_angle,range_degrees,imgWidth,expTime,file_prefix,data_directory_name,file_number_start,protocol="vector", vector_params=reqObj["vectorParams"])
+
+  x_beam = getPvDesc("beamCenterX")
+  y_beam = getPvDesc("beamCenterY")
+  if beamline == "nyx":
+    wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+  else:
+    wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
+  det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist")
+  if daq_utils.beamline == "nyx":
+    det_distance_m /= 1000  # convert distance from mm to m on NYX
+  if daq_utils.beamline in ("nyx", "fmx"):
+      transmission = getPvDesc("RI_Atten_SP")
+  else:
+      transmission = getPvDesc("transmissionRBV")
+
+  reqObj["vectorParams"]["x_beam"]=x_beam
+  reqObj["vectorParams"]["y_beam"]=y_beam
+  reqObj["vectorParams"]["wavelength"]=wavelength
+  reqObj["vectorParams"]["det_distance_m"]=det_distance_m
+  reqObj["vectorParams"]["transmission"]=transmission
+
+  zebraDaqBluesky(flyer,swee_start_angle,range_degrees,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, vector_params=reqObj["vectorParams"])
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
 
@@ -3085,29 +3106,19 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   
   setPvDesc("lowMagTrigMode",0)
 
-def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, scanEncoder=3, changeState=True, protocol="standard", vector_params=null):
 
-    logger.info("in Zebra Daq Bluesky #1")
-    gov_lib.setGovRobot(gov_robot, "DA")
 
-    num_images = int(round(scanWidth / imgWidth))
-    if protocol == "vector":
-      x_vec_start=vector_params["vecStart"]["x"]
-      y_vec_start=vector_params["vecStart"]["y"]
-      z_vec_start=vector_params["vecStart"]["z"]
-      x_vec_end=vector_params["vecEnd"]["x"]
-      y_vec_end=vector_params["vecEnd"]["y"]
-      z_vec_end=vector_params["vecEnd"]["z"]
-        if beamline == "nyx":
-          x_vec_start *= 1000
-          y_vec_start *= 1000
-          z_vec_start *= 1000
-          x_vec_end *= 1000
-          y_vec_end *= 1000
-          z_vec_end *= 1000
+def gatherStandardVectorParams():
     current_x = beamline_lib.motorPosFromDescriptor("sampleX")
     current_y = beamline_lib.motorPosFromDescriptor("sampleY")
     current_z = beamline_lib.motorPosFromDescriptor("sampleZ")
+    vector_params["vecStart"]["x"]=current_x
+    vector_params["vecStart"]["y"]=current_y
+    vector_params["vecStart"]["z"]=current_z
+    vector_params["vecEnd"]["x"]=current_x
+    vector_params["vecEnd"]["y"]=current_y
+    vector_params["vecEnd"]["z"]=current_z
+ 
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
     if beamline == "nyx":
@@ -3116,36 +3127,49 @@ def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerIm
       wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
     det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist")
     if daq_utils.beamline == "nyx":
-        current_x *= 1000  # convert translation from mm to microns on NYX
-        current_y *= 1000
-        current_z *= 1000
-        det_distance_m /= 1000  # convert distance from mm to m on NYX
+      det_distance_m /= 1000  # convert distance from mm to m on NYX
     if daq_utils.beamline in ("nyx", "fmx"):
         transmission = getPvDesc("RI_Atten_SP")
     else:
         transmission = getPvDesc("transmissionRBV")
 
+    vector_params["x_beam"]=x_beam
+    vector_params["y_beam"]=y_beam
+    vector_params["wavelength"]=wavelength
+    vector_params["det_distance_m"]=det_distance_m
+    vector_params["transmission"]=transmission
+
+    return vector_params
+
+
+def zebraDaqBluesky(flyer, angle_start, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, scanEncoder=3, changeState=True):
+
+    logger.info("in Zebra Daq Bluesky #1")
+    gov_lib.setGovRobot(gov_robot, "DA")
+
+    num_images = int(round(scanWidth / imgWidth))
+    x_vec_start=vector_params["vecStart"]["x"]
+    y_vec_start=vector_params["vecStart"]["y"]
+    z_vec_start=vector_params["vecStart"]["z"]
+    x_vec_end=vector_params["vecEnd"]["x"]
+    y_vec_end=vector_params["vecEnd"]["y"]
+    z_vec_end=vector_params["vecEnd"]["z"]
+    if beamline == "nyx":
+      x_vec_start *= 1000
+      y_vec_start *= 1000
+      z_vec_start *= 1000
+      x_vec_end *= 1000
+      y_vec_end *= 1000
+      z_vec_end *= 1000
+ 
     numImages = int((sweep_end_angle - sweep_start_angle) / imgWidth)
 
-    if protocol == "standard":
-      flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, protocol=protocol\
-                   x_start_um=current_x, y_start_um=current_y, z_start_um=current_z, \
-                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
-                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState, transmission=transmission)
-    elif protocol == "vector":
-      x_vec_start=vector_params["vecStart"]["x"]
-      y_vec_start=vector_params["vecStart"]["y"]
-      z_vec_start=vector_params["vecStart"]["z"]
-      x_vec_end=vector_params["vecEnd"]["x"]
-      y_vec_end=vector_params["vecEnd"]["y"]
-      z_vec_end=vector_params["vecEnd"]["z"]
-      flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, protocol=protocol\
+    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_vec_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=x_beam, y_beam=y_beam, wavelength=wavelength, det_distance_m=det_distance_m,\
-                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState, transmission=transmission)
+                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
+                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
 
     RE(bp.fly([flyer]))
 

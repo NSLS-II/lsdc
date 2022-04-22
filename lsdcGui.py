@@ -332,6 +332,7 @@ class StaffScreenDialog(QFrame):
         self.closeGripperButton = QtWidgets.QPushButton("Close Gripper")
         self.closeGripperButton.clicked.connect(self.closeGripper_CB)
         hBoxRobot1.addWidget(self.robotOnCheckBox)
+        hBoxRobot1.addWidget(self.beamCheckOnCheckBox)
         hBoxRobot1.addWidget(self.topViewCheckOnCheckBox)
         hBoxRobot1.addWidget(self.enableMountCheckBox)        
         hBoxRobot1.addWidget(self.recoverRobotButton)

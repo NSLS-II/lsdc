@@ -704,8 +704,10 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     daq_macros.vectorSync()
     logger.info("zebraDaq " + str(time.time()))
    
-    vector_params = daq_macros.gatherStandardVectorParams() 
-    daq_macros.zebraDaqBluesky(flyer,angleStart,rang_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, 3,changeState)
+    vector_params = daq_macros.gatherStandardVectorParams()
+    logger.debug(f"vector_params: {vector_params}") 
+    daq_macros.zebraDaqBluesky(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, 3,changeState)
+
   elif (protocol == "vector"):
     daq_macros.vectorZebraScan(currentRequest)  
   elif (protocol == "stepVector"):

@@ -1729,7 +1729,8 @@ class ControlMain(QtWidgets.QMainWindow):
             
     def createSampleTab(self):
 
-        sampleTab= QtWidgets.QWidget()      
+        # sampleTab= QtWidgets.QWidget()      
+        self.sampleFrame = QtWidgets.QFrame()
         splitter1 = QtWidgets.QSplitter(Qt.Horizontal)
         vBoxlayout= QtWidgets.QVBoxLayout()
         self.dewarTreeFrame = QFrame()
@@ -2607,15 +2608,16 @@ class ControlMain(QtWidgets.QMainWindow):
         fileHBoxLayout2.addWidget(self.lastFileRBV2.getEntry())
         vBoxlayout.addLayout(fileHBoxLayout)
         vBoxlayout.addLayout(fileHBoxLayout2)        
-        sampleTab.setLayout(vBoxlayout)   
+        # sampleTab.setLayout(vBoxlayout)   
+        self.sampleFrame.setLayout(vBoxlayout)
         self.XRFTab = QtWidgets.QFrame()        
         XRFhBox = QtWidgets.QHBoxLayout()
         self.mcafit = McaAdvancedFit(self.XRFTab)
         XRFhBox.addWidget(self.mcafit)
         self.XRFTab.setLayout(XRFhBox)
-        self.tabs.addTab(sampleTab,"Collect")
+        # self.tabs.addTab(sampleTab,"Collect")
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
-        self.tabs.addTab(self.XRFTab,"XRF Spectrum")
+        # self.tabs.addTab(self.XRFTab,"XRF Spectrum")
         self.zoomLevelToggledCB("Zoom1")
 
         if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
@@ -5169,10 +5171,11 @@ class ControlMain(QtWidgets.QMainWindow):
         self.progressDialog = QtWidgets.QProgressDialog()
         self.progressDialog.setCancelButtonText(QString())
         self.progressDialog.setModal(False)
-        tab1= QtWidgets.QWidget()
+        # tab1= QtWidgets.QWidget()
         vBoxlayout1= QtWidgets.QVBoxLayout()
         splitter1 = QtWidgets.QSplitter(QtCore.Qt.Vertical,self)
-        splitter1.addWidget(self.tabs)
+        # splitter1.addWidget(self.tabs)
+        splitter1.addWidget(self.sampleFrame)
         self.setCentralWidget(splitter1)
         splitterSizes = [600,100]
         importAction = QtWidgets.QAction('Import Spreadsheet...', self)

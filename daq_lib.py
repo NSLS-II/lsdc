@@ -760,8 +760,8 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
   target = target * daq_utils.unitScaling  # unitScaling multiplier used to adjust units between microns and mm
   logger.info('checkC2C_X target: %s' % target)
-  xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
-  xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
+  xlimLow = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.low.get()
+  xlimHi = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.high.get()
   if (target<xlimLow or target>xlimHi):
     gui_message("Click to Center out of bounds on X move. Please mount next sample.")
     return 0

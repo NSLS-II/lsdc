@@ -44,8 +44,8 @@ def wait90TopviewThread(prefix1,prefix90):
       if (lines[0].find("CANNOT CENTER") == -1):
         offsetTokens = lines[0].split()
         logger.info(offsetTokens[0] + " " + offsetTokens[1] + " " + offsetTokens[2])
-        xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
-        xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
+        xlimLow = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.low.get()
+        xlimHi = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.high.get()
         xpos = beamline_lib.motorPosFromDescriptor("sampleX")          
         target = xpos + float(offsetTokens[0])*1000.0
         if (target<xlimLow or target>xlimHi):

@@ -13,6 +13,9 @@ class DensoRobot:
     def __init__(self, robot):
         self.robot = robot
 
+    def control_type(self):
+        return "Bluesky"
+
     def preMount(self, gov_robot, puck_pos: int, pin_pos: int, samp_id: str, **kwargs):
         try:
             status = gov_lib.setGovRobot(gov_robot, 'SE')

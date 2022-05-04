@@ -1,16 +1,17 @@
-#from daq_lib import gui_message, toggleLowMagCameraSettings
-from config_params import GOVERNOR_TIMEOUT
+from config_params import GOVERNOR_TIMEOUT, LOW_MAG_GAIN, LOW_MAG_EXP_TIME, LOW_MAG_GAIN_DA, LOW_MAG_EXP_TIME_DA
 from ophyd.utils.errors import StatusTimeoutError, WaitTimeoutError
 import ophyd
 from ophyd import StatusBase
+from beamline_support import setPvValFromDescriptor as setPvDesc
+from daq_utils import getBlConfig
 import logging
 logger = logging.getLogger(__name__)
 
 def set_detz_in(gov_robot, distance):
-    gov_robot.dev.dz.target_Work.set(distance)
+    gov_robot.dev.dz.target_In.set(distance)
 
 def set_detz_out(gov_robot, distance):
-    gov_robot.dev.dz.target_Safe.set(distance)
+    gov_robot.dev.dz.target_Out.set(distance)
 
 def setGovRobot(gov_robot, state, wait=True):
   try:
@@ -21,10 +22,10 @@ def setGovRobot(gov_robot, state, wait=True):
     if wait and govStatus.success and gov_robot.state.get() != state:
       raise Exception(f'Did not reach expected state "{state}". actual state is "{gov_robot.state.get()}"')
     if ((wait and govStatus.success) or not wait) and state in ["SA", "DA", "DI", "SE"]:
-      pass #toggleLowMagCameraSettings(state)
+      toggleLowMagCameraSettings(state)
     return govStatus
   except Exception as e:
-    logger.info(f"Governor did not reach {state}")
+    logger.error(f"Governor did not reach {state}: exception {e}")
     govStatus = StatusBase()
     govStatus.set_exception(e)
     return govStatus
@@ -40,3 +41,12 @@ def waitGov(status, timeout=GOVERNOR_TIMEOUT):
 
 def waitGovNoSleep(timeout=GOVERNOR_TIMEOUT):
   pass
+
+def toggleLowMagCameraSettings(stateCode):
+
+  if (stateCode == "DA"):
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
+  else:
+    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
+    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))

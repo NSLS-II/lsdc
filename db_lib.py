@@ -782,7 +782,11 @@ def setBeamlineConfigParam(beamline_id, paramName, paramVal):
     beamlineInfo(beamline_id,paramName,{"val":paramVal})
 
 def getBeamlineConfigParam(beamline_id, paramName):
-    return beamlineInfo(beamline_id,paramName)["val"]
+    try:
+        return beamlineInfo(beamline_id,paramName)["val"]
+    except KeyError as e:
+        logger.error(f'key {paramName} does not exist as part of beamlineInfo')
+        raise e
 
 def getAllBeamlineConfigParams(beamline_id):
   g = configuration_ref.find(key='beamline_info', beamline_id=beamline_id)

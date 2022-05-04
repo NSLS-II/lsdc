@@ -10,7 +10,7 @@ from config_params import TOP_VIEW_CHECK
 
 logger = logging.getLogger(__name__)
 
-def wait90TopviewThread(prefix1,prefix90):
+def wait90TopviewThread(gov_robot, prefix1,prefix90):
   startTime = time.time()
   if (getPvDesc("gripTemp")>-170):
     threadTimeout = 130.0
@@ -54,6 +54,7 @@ def wait90TopviewThread(prefix1,prefix90):
         else:
           sampXadjust = 1000.0*float(offsetTokens[0])
           sampYadjust = 1000.0*float(offsetTokens[1])
+          setBlConfig('sampYAdjust', sampYadjust)
           sampZadjust = 1000.0*float(offsetTokens[2])
           sampXCP = beamline_lib.motorPosFromDescriptor("sampleX")
           sampYCP = beamline_lib.motorPosFromDescriptor("sampleY")

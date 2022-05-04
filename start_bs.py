@@ -109,10 +109,18 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
-    eiger = EigerSingleTriggerV26('', name='eiger')
+    eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger')
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
+    from mxtools.flyer import MXFlyer
+    flyer = MXFlyer(vector_program, zebra, eiger)
+
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
+    govs = _make_governors("XF:17IDB-ES:AMX", name="govs")
+    gov_robot = govs.gov.Robot
+
+    back_light = EpicsSignal(read_pv="XF:17DB-ES:AMX{BL:1}Ch1Value",name="back_light")
+    back_light_range = (0, 100)
 
 elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')

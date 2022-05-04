@@ -1,7 +1,7 @@
 import RobotControlLib
 import daq_utils
 import db_lib
-from daq_utils import getBlConfig
+from daq_utils import getBlConfig, setBlConfig
 import daq_lib
 import beamline_lib
 import time
@@ -25,6 +25,8 @@ logger = logging.getLogger(__name__)
 
 global retryMountCount
 retryMountCount = 0
+
+setBlConfig('sampYAdjust', 0)
 
 def setWorkposThread(init,junk):
   logger.info("setting work pos in thread")
@@ -229,7 +231,7 @@ class EMBLRobot:
       return MOUNT_STEP_SUCCESSFUL, kwargs
 
 
-    def callAlignPinThread(self, **kwargs):
+    def callAlignPinThread(self, gov_robot, **kwargs):
       if (getBlConfig(TOP_VIEW_CHECK) == 1):
         prefix1 = kwargs['prefix1']
         prefix90 = kwargs['prefix90']
@@ -237,7 +239,7 @@ class EMBLRobot:
         if (omegaCP > 89.5 and omegaCP < 90.5):
           beamline_lib.mvrDescriptor("omega", 85.0)
         logger.info("calling thread")
-        _thread.start_new_thread(top_view.wait90TopviewThread,(prefix1,prefix90))
+        _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
         logger.info("called thread")
 
 
@@ -263,7 +265,7 @@ class EMBLRobot:
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
                   return MOUNT_FAILURE
-            self.callAlignPinThread(**kwargs)
+            self.callAlignPinThread(gov_robot, **kwargs)
             setPvDesc("boostSelect",0)
             if (getPvDesc("gripTemp")>-170):
               try:
@@ -284,7 +286,7 @@ class EMBLRobot:
                 RobotControlLib._mount(absPos)
             setPvDesc("boostSelect",1)
           else:
-            self.callAlignPinThread(**kwargs)
+            self.callAlignPinThread(gov_robot, **kwargs)
             if (warmup):
               RobotControlLib._mount(absPos,warmup=True)
             else:
@@ -318,7 +320,7 @@ class EMBLRobot:
       return MOUNT_STEP_SUCCESSFUL
 
     def postMount(self, gov_robot, puck, pinPos, sampID):
-      global sampYadjust
+      sampYadjust = float(getBlConfig('sampYAdjust'))
       if getBlConfig('robot_online'):
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           if daq_utils.beamline == "fmx":
@@ -355,7 +357,7 @@ class EMBLRobot:
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
-          pass#gov_lib.set_detz_out(gov_human, gov_robot, DETECTOR_SAFE_DISTANCE)
+          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
         daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

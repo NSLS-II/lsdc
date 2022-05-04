@@ -236,15 +236,6 @@ def setRobotGovState(stateString):
   else:
     setPvDesc("humanGovGo",stateString)
 
-def toggleLowMagCameraSettings(stateCode):
-
-  if (stateCode == "DA"):
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
-  else:
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
-
 def mountSample(sampID):
   global mountCounter
 
@@ -566,7 +557,7 @@ def collectData(currentRequest):
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
         else:
           imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
-        seqNum = int(detector_get_seqnum())         
+        seqNum = flyer.detector.cam.sequence_id.get()
         node = getBlConfig("spotNode1")
         comm_s = f'ssh -q {node} \"{os.environ["MXPROCESSINGSCRIPTSDIR"]}eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}\"'
         logger.info(comm_s)
@@ -639,7 +630,7 @@ def collectData(currentRequest):
     send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=reqObj["protocol"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
     if daq_utils.beamline != "nyx":
-      seqNum = int(detector_get_seqnum())
+      seqNum = flyer.detector.cam.sequence_id.get()
       comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
       logger.info(comm_s)
       os.system(comm_s)    
@@ -658,7 +649,7 @@ def collectData(currentRequest):
           node = getBlConfig(nodeName)      
           dimpleNode = getBlConfig("dimpleNode")      
           if (daq_utils.detector_id == "EIGER-16"):
-            seqNum = int(detector_get_seqnum())
+            seqNum = flyer.detector.cam.sequence_id.get()
             comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
           else:
             comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"

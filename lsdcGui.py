@@ -1730,7 +1730,6 @@ class ControlMain(QtWidgets.QMainWindow):
     def createSampleTab(self):
 
         # sampleTab= QtWidgets.QWidget()      
-        self.sampleFrame = QtWidgets.QFrame()
         splitter1 = QtWidgets.QSplitter(Qt.Horizontal)
         vBoxlayout= QtWidgets.QVBoxLayout()
         self.dewarTreeFrame = QFrame()
@@ -2624,12 +2623,12 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxlayout.addLayout(fileHBoxLayout)
         vBoxlayout.addLayout(fileHBoxLayout2)        
         # sampleTab.setLayout(vBoxlayout)   
-        self.sampleFrame.setLayout(vBoxlayout)
         self.XRFTab = QtWidgets.QFrame()        
         XRFhBox = QtWidgets.QHBoxLayout()
         self.mcafit = McaAdvancedFit(self.XRFTab)
         XRFhBox.addWidget(self.mcafit)
         self.XRFTab.setLayout(XRFhBox)
+        self.tabs.setLayout(vBoxlayout)
         # self.tabs.addTab(sampleTab,"Collect")
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
         # self.tabs.addTab(self.XRFTab,"XRF Spectrum")
@@ -5201,8 +5200,7 @@ class ControlMain(QtWidgets.QMainWindow):
         # tab1= QtWidgets.QWidget()
         vBoxlayout1= QtWidgets.QVBoxLayout()
         splitter1 = QtWidgets.QSplitter(QtCore.Qt.Vertical,self)
-        # splitter1.addWidget(self.tabs)
-        splitter1.addWidget(self.sampleFrame)
+        splitter1.addWidget(self.tabs)
         self.setCentralWidget(splitter1)
         splitterSizes = [600,100]
         importAction = QtWidgets.QAction('Import Spreadsheet...', self)

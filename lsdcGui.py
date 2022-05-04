@@ -1897,15 +1897,21 @@ class ControlMain(QtWidgets.QMainWindow):
         if (daq_utils.beamline in ("fmx", "nyx")):
           if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (RI) (0.0-1.0):')            
           else:
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (BCU) (0.0-1.0):')            
         else:
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (0.0-1.0):')            
         self.transmissionReadback_ledit = self.transmissionReadback.getEntry()
 
@@ -2486,12 +2492,12 @@ class ControlMain(QtWidgets.QMainWindow):
         clearEnscanPlotButton = QtWidgets.QPushButton("Clear")        
         clearEnscanPlotButton.clicked.connect(self.clearEnScanPlotCB)        
         escanTransmissionLabel = QtWidgets.QLabel("Transmission")
-        self.transmissionReadback_ledit = self.transmissionReadback.getEntry()
+        self.escan_transmissionReadback_ledit = self.transmissionReadback.getEntry()
         escanTransmissionSPLabel = QtWidgets.QLabel("SetPoint:")
-        self.escan_transmission_ledit = self.transmissionSetPoint.getEntry()
+        self.escan_transmission_ledit = self.escan_transmissionSetPoint.getEntry()
         self.escan_transmission_ledit.returnPressed.connect(self.setEScanTransCB)        
         hBoxEScanButtons.addWidget(escanTransmissionLabel)
-        hBoxEScanButtons.addWidget(self.transmissionReadback_ledit)
+        hBoxEScanButtons.addWidget(self.escan_transmissionReadback_ledit)
         hBoxEScanButtons.addWidget(escanTransmissionSPLabel)
         hBoxEScanButtons.addWidget(self.escan_transmission_ledit)
         hBoxEScanButtons.addWidget(clearEnscanPlotButton)

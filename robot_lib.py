@@ -6,17 +6,6 @@ from config_params import MOUNT_STEP_SUCCESSFUL, UNMOUNT_STEP_SUCCESSFUL, MOUNT_
 from denso_robot import DensoRobot
 logger = logging.getLogger(__name__)
 
-def setWorkposThread(init,junk):
-  logger.info("setting work pos in thread")
-  setPvDesc("robotGovActive",1)
-  setPvDesc("robotXWorkPos",getPvDesc("robotXMountPos"))
-  setPvDesc("robotYWorkPos",getPvDesc("robotYMountPos"))
-  setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
-  setPvDesc("robotOmegaWorkPos",90.0)
-  if (init):
-    time.sleep(20)
-    setPvDesc("robotGovActive",0)
-
 def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
   status, kwargs = robot.preMount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
   if status != MOUNT_STEP_SUCCESSFUL:

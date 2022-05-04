@@ -3699,7 +3699,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.sampleLifetimeReadback_ledit.setText(lifeTime_s)
       self.sampleLifetimeReadback_ledit.setStyleSheet("color : green");
       
-    def setEscanTransCB(self): 
+    def setEScanTransCB(self): 
       try:
         if (float(self.escan_transmission_ledit.text()) > 1.0 or float(self.escan_transmission_ledit.text()) < 0.001):
           self.popupServerMessage("Transmission must be 0.001-1.0")

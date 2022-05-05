@@ -2563,7 +2563,6 @@ def vectorZebraScanNormal(vecRequest):
   
   sweep_start_angle = reqObj["sweep_start"]
   sweep_end_angle = reqObj["sweep_end"]
-  range_degrees = int(reqObj["sweep_end"]) - int(reqObj["sweep_start"])
   imgWidth = reqObj["img_width"]
   expTime = reqObj["exposure_time"]
   numImages = int((sweep_end_angle - sweep_start_angle) / imgWidth)
@@ -2589,7 +2588,7 @@ def vectorZebraScanNormal(vecRequest):
   reqObj["vectorParams"]["det_distance_m"]=det_distance_m
   reqObj["vectorParams"]["transmission"]=transmission
 
-  zebraDaqBluesky(flyer,sweep_start_angle,numImages,range_degrees,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"])
+  zebraDaqBluesky(flyer,sweep_start_angle,numImages,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"])
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
 

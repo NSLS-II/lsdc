@@ -5,6 +5,7 @@ import sys
 import os
 import string
 import math
+import time
 import urllib
 import urllib.request
 from io import BytesIO
@@ -5408,7 +5409,7 @@ def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sam
     reqObj["scanEnergy"] = targetEnergy
     reqObj["runChooch"] = True  # just hardcode for now
     reqObj["steps"] = int(steps)
-    reqObj["stepsize"] = int(stepsize)
+    reqObj["stepsize"] = float(stepsize)
     return reqObj
 
 def main():

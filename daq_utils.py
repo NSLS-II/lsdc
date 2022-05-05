@@ -315,6 +315,7 @@ def setProposalID(proposalID,createVisit=True):  # TODO JA proposalID implies a 
      except Exception as e:
        visitName = "999999-1234"
        logger.error("error in set proposal. Error: %s" % e)
+     setVisitName(visitName)
 
 def getProposalID():
   return getBlConfig("proposal")

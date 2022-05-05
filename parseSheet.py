@@ -1,4 +1,5 @@
 import pandas
+from pandas.errors import EmptyDataError
 import db_lib
 import sanitize_sheet
 import logging
@@ -63,10 +64,17 @@ def insertSpreadsheetDict(d,owner):
 
 
 def importSpreadsheet(infilename,owner):
-  d = parseSpreadsheet(infilename)
-  insertSpreadsheetDict(d,owner)
-
-
+  try:
+    d = parseSpreadsheet(infilename)
+    insertSpreadsheetDict(d,owner)    
+  except OSError as e:
+    logger.error(f"Aborting import, bad spreadsheet file:  {infilename}")
+  except EmptyDataError as e:
+    logger.error(f"No data in excel file:  {infilename}")
+  except ValueError as e:
+    logger.error(f"Bad excel format in file {infilename}, panda raised the following error: {e}")
+  except ImportError as e:
+    logger.error(f"Panda raised the following:  {e}")
   
 
     

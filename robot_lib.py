@@ -409,14 +409,14 @@ def unmountRobotSample(puckPos,pinPos,sampID): #will somehow know where it came 
       return 0
     if daq_utils.beamline == "fmx":
       det_z_pv = 'XF:17IDC-ES:FMX{Det-Ax:Z}Mtr'
-      detDist = caget(f'{det_z_pv}.RBV')
-      if detDist < ROBOT_MIN_DISTANCE:
-        caput(f'{det_z_pv}.VAL', ROBOT_MIN_DISTANCE, wait=True)  # TODO shouldn't this wait for SE transition or something??
-      detDist = caget(f'{det_z_pv}.RBV')
+    elif daq_utils.beamline == "amx":
+      det_z_pv = 'XF:17IDB-ES:AMX{Det-Ax:Z}Mtr'
     else:
-      detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-      if detDist < ROBOT_MIN_DISTANCE:
-        beamline_lib.mvaDescriptor("detectorDist", ROBOT_MIN_DISTANCE)
+      raise Exception('unhandled beamline')
+    detDist = caget(f'{det_z_pv}.RBV')
+    if detDist < ROBOT_MIN_DISTANCE:
+      caput(f'{det_z_pv}.VAL', ROBOT_MIN_DISTANCE, wait=True)  # TODO shouldn't this wait for SE transition or something??
+    detDist = caget(f'{det_z_pv}.RBV')
     if detDist < ROBOT_MIN_DISTANCE and abs(detDist - ROBOT_MIN_DISTANCE) > ROBOT_DISTANCE_TOLERANCE:
       logger.error(f"ERROR - Detector closer than {ROBOT_MIN_DISTANCE} and move than {ROBOT_DISTANCE_TOLERANCE} from {ROBOT_MIN_DISTANCE}! actual distance: {detDist}. Stopping.")
       return 0

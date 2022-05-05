@@ -2352,8 +2352,8 @@ def eScan(energyScanRequest):
   targetEnergy = reqObj['scanEnergy'] *1000.0
   stepsize = reqObj['stepsize']
   steps = reqObj['steps']
-  left = -(steps*stepsize)/2
-  right = (steps*stepsize)/2
+  left = -((steps-1)*stepsize)/2  # there are actually (steps-1) intervals
+  right = ((steps-1)*stepsize)/2
   mcaRoiLo = reqObj['mcaRoiLo']
   mcaRoiHi = reqObj['mcaRoiHi']
   setPvDesc("mcaRoiLo",mcaRoiLo)
@@ -2435,7 +2435,8 @@ def eScan(energyScanRequest):
     choochResultObj["fprime_peak"] = fprime_peak
     choochResultObj["sample_id"] = sampleID
     if (not os.path.exists(choochOutfileName)):
-      choochOutFile = open("/nfs/skinner/temp/choochData1.efs","r")
+      logger.error(f'chooch could not successfully produce a file called {choochOutfileName}. not drawing a plot.')
+      return
     else:
       choochOutFile = open(choochOutfileName,"r")    
     chooch_graph_x = []
@@ -3109,9 +3110,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("lowMagJpegFileNumber",1)
   setPvDesc("lowMagJpegCapture",1,wait=False)
   setPvDesc("lowMagAcquire",1,wait=False)
-  time.sleep(0.5)
-  setPvDesc("vectorGo",1)
-  vectorActiveWait()    
+  vectorWaitForGo(source="zebraCamDaq")
   vectorWait()
   if (daq_utils.beamline == "amxz"):  
     setPvDesc("zebraReset",1)      

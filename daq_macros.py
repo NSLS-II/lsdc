@@ -3163,12 +3163,18 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
       y_vec_end *= 1000
       z_vec_end *= 1000
 
+    try: 
+      detectorDeadTime=flyer.detector.cam.dead_time.get()
+    except AttributeError as e:
+      logger.error("Vector Aborted: failed to get dead_time from detector.cam object")
+      return 
+
     flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
                    x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=0.024, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
 
     RE(bp.fly([flyer]))
 

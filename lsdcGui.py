@@ -3061,7 +3061,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
 
     def queueEnScanCB(self):
-      self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))      
+      self.protoComboBox.setCurrentText("eScan")      
       self.addRequestsToAllSelectedCB()
       self.treeChanged_pv.put(1)      
 

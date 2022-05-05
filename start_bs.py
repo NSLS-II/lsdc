@@ -148,10 +148,10 @@ elif beamline=="nyx":
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
-    from nyxtools.pilatus import PilatusBase
-    detector = PilatusBase("XF:19IDC-ES{Det:Pil6M}", name="detector")
-    from nyxtools.flyer import NYXFlyer
-    flyer = NYXFlyer(vector, zebra, detector)
+    from mxtools.eiger import EigerSingleTriggerV26
+    detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector")
+    from nyxtools.flyer_eiger2 import NYXEiger2Flyer
+    flyer = NYXEiger2Flyer(vector, zebra, detector)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

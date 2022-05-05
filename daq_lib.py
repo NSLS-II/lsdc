@@ -611,7 +611,11 @@ def collectData(currentRequest):
             return 1
     else: #standard
       logger.info("moving omega to start " + str(time.time()))      
-      beamline_lib.mvaDescriptor("omega",sweep_start)
+      if daq_utils.beamline == "nyx":
+          direction = (sweep_end - sweep_start) / abs(sweep_end - sweep_start)
+          beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
+      else:
+          beamline_lib.mvaDescriptor("omega",sweep_start)
       imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':
@@ -702,9 +706,12 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "screen" or protocol == "burn"):
     logger.info("vectorSync " + str(time.time()))    
     daq_macros.vectorSync()
-    logger.info("zebraDaq " + str(time.time()))        
-    daq_macros.zebraDaqBluesky(flyer,angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,changeState)
-#    daq_macros.zebraDaq(angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,protocol=protocol)  #?protocol?
+    logger.info("zebraDaq " + str(time.time()))
+   
+    vector_params = daq_macros.gatherStandardVectorParams()
+    logger.debug(f"vector_params: {vector_params}") 
+    daq_macros.zebraDaqBluesky(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, 3,changeState)
+
   elif (protocol == "vector"):
     daq_macros.vectorZebraScan(currentRequest)  
   elif (protocol == "stepVector"):

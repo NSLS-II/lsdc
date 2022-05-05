@@ -2038,7 +2038,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
+        if daq_utils.beamline=="nyx":
+          protoOptionList = ["standard","vector"]
+        else:
+          protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 
@@ -2640,9 +2643,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomLevelToggledCB("Zoom1")
 
         if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
-          self.protoComboBox.setDisabled(True)
-          setVectorStartButton.setDisabled(True)
-          setVectorEndButton.setDisabled(True)
           self.vectorFPP_ledit.setDisabled(True)
           self.protoRasterRadio.setDisabled(True)
           self.protoStandardRadio.setDisabled(True)

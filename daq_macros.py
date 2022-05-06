@@ -1363,7 +1363,33 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   return 1
 
   
+def bsVecRaster(rasterReqID):
+  daq_lib.setRobotGovState("DA")
+  rasterRequest = db_lib.getRequestByID(rasterReqID)
+  reqObj = rasterRequest["request_obj"]
+  parentReqID = reqObj["parentReqID"]
+  parentReqProtocol = ""
 
+  angle_start
+  num_images
+  scan_width
+  img_width = reqObj["img_width"]
+  exptimePerCell = reqObj["exposure_time"]
+  filePrefix = str(reqObj["file_prefix"])
+  data_directory_name = str(reqObj["directory"])
+  file_number_start = reqObj["file_number_start"]  
+  vector_params
+
+  for i in range(len(rasterDef["rowDefs"])):
+    vector_params
+    startX = rasterDef["rowDefs"][i]["start"]["x"]
+    endX = rasterDef["rowDefs"][i]["end"]["x"]
+    startY = rasterDef["rowDefs"][i]["start"]["y"]
+    endY = rasterDef["rowDefs"][i]["end"]["y"]
+    deltaX = abs(endX-startX)
+    deltaY = abs(endY-startY)
+    zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exptimePerCell, filePrefix, data_directory_name, file_number_start, vector_params)
+ 
 def snakeRasterNormal(rasterReqID,grain=""):
   global rasterRowResultsList,processedRasterRowCount
 

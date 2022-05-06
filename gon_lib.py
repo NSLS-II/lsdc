@@ -28,9 +28,14 @@ def lib_gon_center_xtal(x,y,angle_omega,angle_phi):
   setPvDesc("C2C_Go",1)  
   wait_for_goniohead()
   
+def lib_open_shutter_without_pos():
+  beamline_lib.mvaDescriptor("fastShutter",1)    
+
 def lib_open_shutter():
   beamline_lib.mvaDescriptor("fastShutter",getPvDesc("fastShutterOpenPos"))    
 
+def lib_close_shutter_without_pos():
+  beamline_lib.mvaDescriptor("fastShutter",0)
 
 def lib_close_shutter():
   beamline_lib.mvaDescriptor("fastShutter",getPvDesc("fastShutterClosePos"))

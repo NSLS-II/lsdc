@@ -171,11 +171,17 @@ def abort_data_collection(flag):
 
 
 def open_shutter():
-  lib_open_shutter()
+  if daq_utils.beamline=="nyx":
+    lib_open_shutter_without_pos()
+  else:
+    lib_open_shutter()
   set_field("state","Expose")
 
 def close_shutter():
-  lib_close_shutter()
+  if daq_utils.beamline=="nyx":
+    lib_close_shutter_without_pos()
+  else:
+    lib_close_shutter()
   set_field("state","Idle")
   
 def init_diffractometer():

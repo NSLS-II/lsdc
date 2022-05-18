@@ -26,13 +26,10 @@ gs.RE.subscribe('stop', post_run(verify_files_saved))
 import matplotlib.pyplot as plt
 plt.ion()
 
-# import nslsii
-
 # Register bluesky IPython magics.
 #from bluesky.magics import BlueskyMagics
 #get_ipython().register_magics(BlueskyMagics)
 
-#nslsii.configure_base(get_ipython().user_ns, 'amx')
 import bluesky.plans as bp
 
 from bluesky.run_engine import RunEngine
@@ -45,13 +42,6 @@ from databroker import Broker
 db = Broker.named(beamline)
 
 RE.subscribe(db.insert)
-
-#from bluesky.utils import ts_msg_hook
-#RE.msg_hook = ts_msg_hook
-# from bluesky.callbacks.best_effort import BestEffortCallback
-# bec = BestEffortCallback()
-# RE.subscribe(bec)
-
 
 # convenience imports
 # from ophyd.commands import *

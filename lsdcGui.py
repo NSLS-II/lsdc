@@ -3389,6 +3389,8 @@ class ControlMain(QtWidgets.QMainWindow):
       y_vec = y_vec_end - y_vec_start
       z_vec = z_vec_end - z_vec_start
       trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
+      if daq_utils.beamline == "nyx":
+        trans_total *= 1000
       self.vecLenLabelOutput.setText(str(int(trans_total)))
       totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
       speed = trans_total/totalExpTime

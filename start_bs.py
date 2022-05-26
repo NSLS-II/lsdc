@@ -35,6 +35,8 @@ from bluesky.run_engine import RunEngine
 from bluesky.utils import get_history, PersistentDict
 RE = RunEngine()
 beamline = os.environ["BEAMLINE_ID"]
+from nslsii import configure_kafka_publisher
+configure_kafka_publisher(RE, beamline)
 configdir = os.environ['CONFIGDIR']
 RE.md = PersistentDict('%s%s_bluesky_config' % (configdir, beamline))
 from databroker import Broker

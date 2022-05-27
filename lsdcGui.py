@@ -3640,7 +3640,6 @@ class ControlMain(QtWidgets.QMainWindow):
       if (not os.path.exists("2vb1.pdb")):
         os.system("ln -s $CONFIGDIR/2vb1.pdb .")
         os.system("mkdir rd3d")
-        os.system("chmod 777 rd3d")        
       
       energyReadback = self.energy_pv.get()/1000.0
       sampleFlux = self.sampleFluxPV.get()

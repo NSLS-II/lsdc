@@ -585,11 +585,7 @@ def collectData(currentRequest):
     logger.debug(f'creating {data_directory_name}')
     comm_s = "mkdir -p " + data_directory_name
     os.system(comm_s)
-    comm_s = "chmod 777 " + data_directory_name
-    os.system(comm_s)
     comm_s = "mkdir -p " + jpegDirectory
-    os.system(comm_s)
-    comm_s = "chmod 777 " + jpegDirectory
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)

@@ -1022,7 +1022,6 @@ def snakeRasterNoTile(rasterReqID,grain=""):
     detDist = parentReqObj["detDist"]    
   data_directory_name = str(reqObj["directory"])
   os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
   filePrefix = str(reqObj["file_prefix"])
   file_number_start = reqObj["file_number_start"]  
   dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
@@ -1262,7 +1261,6 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
   logger.info("cells per subrasters " + str(cellsPerSubraster))
 
   os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
   
   det_lib.detector_set_num_triggers(totalImages)
   det_lib.detector_set_trigger_mode(3)
@@ -1371,7 +1369,6 @@ def snakeRasterNormal(rasterReqID,grain=""):
 # 2/17/16 - a few things for integrating dials/spotfinding into this routine
   data_directory_name = str(reqObj["directory"])
   os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
   filePrefix = str(reqObj["file_prefix"])
   file_number_start = reqObj["file_number_start"]  
   dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
@@ -1758,7 +1755,6 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
   numImagesPerStep = int((sweep_end_angle - sweep_start_angle) / imgWidth)  
   data_directory_name = str(reqObj["directory"])
   os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
   filePrefix = str(reqObj["file_prefix"])
   file_number_start = reqObj["file_number_start"]  
   dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
@@ -1884,7 +1880,6 @@ def snakeStepRasterSpec(rasterReqID,grain=""): #12/19 - only tested recently, bu
   numImagesPerStep = int((sweep_end_angle - sweep_start_angle) / imgWidth)  
   data_directory_name = str(reqObj["directory"])
   os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
   filePrefix = str(reqObj["file_prefix"])
   file_number_start = reqObj["file_number_start"]  
   dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
@@ -3020,7 +3015,6 @@ def loop_center_xrec():
   global face_on
 
   daq_lib.abort_flag = 0    
-  os.system("chmod 777 .")
   pic_prefix = "findloop"
   output_file = 'xrec_result.txt'
   clean_up_files(pic_prefix, output_file)
@@ -3119,7 +3113,6 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
 
 def topViewSnap(filePrefix,data_directory_name,file_number_start,acquire=1): #if we don't need to stream, then this requires few steps
   os.system("mkdir -p " + data_directory_name)  
-  os.system("chmod 777 " + data_directory_name)  
   setPvDesc("topViewAcquire",0,wait=False)
   time.sleep(1.0) #this sleep definitely needed
   setPvDesc("topViewTrigMode",5)

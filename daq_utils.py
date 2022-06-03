@@ -84,7 +84,7 @@ def init_environment():
   varname = "DETECTOR_OFFLINE"
   if varname in os.environ:
     detectorOffline = int(os.environ[varname])
-
+  setBlConfig("beamCheck",1)
 
 
 def calc_reso(det_radius,detDistance,wave,theta):

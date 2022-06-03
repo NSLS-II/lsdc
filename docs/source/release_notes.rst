@@ -14,6 +14,8 @@ Fixes
   * Fix incorrect number of steps in energy scan and allow non-integer steps
   * Improve handling when no Chooch output during energy scan
   * Ensure startup files point to code deployed on Lustre (/nsls2/software/mx/daq)
+  * Prevent using 777 permissions for visit directory to prevent overriding of
+    folder security
 
 * NYX branch (nyx-one-branch)
 

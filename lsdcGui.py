@@ -214,7 +214,10 @@ class StaffScreenDialog(QFrame):
         self.topViewCheckOnCheckBox.stateChanged.connect(self.topViewOnCheckCB)
         # BeamCheck check box 
         self.beamCheckOnCheckBox = QCheckBox("BeamCheck (On)")
-        self.beamCheckOnCheckBox.setChecked(True)
+        if (getBlConfig("beamCheck") == 1):
+          self.beamCheckOnCheckBox.setChecked(True)
+        else:
+          self.beamCheckOnCheckBox.setChecked(False)
         self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")

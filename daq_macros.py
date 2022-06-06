@@ -1376,12 +1376,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   parentReqID = reqObj["parentReqID"]
   parentReqProtocol = ""
   
-  if (parentReqID != -1):
-    parentRequest = db_lib.getRequestByID(parentReqID)
-    parentReqObj = parentRequest["request_obj"]
-    parentReqProtocol = parentReqObj["protocol"]
-    detDist = parentReqObj["detDist"]    
-# 2/17/16 - a few things for integrating dials/spotfinding into this routine
+ 2/17/16 - a few things for integrating dials/spotfinding into this routine
   data_directory_name = str(reqObj["directory"])
   os.system("mkdir -p " + data_directory_name)
   os.system("chmod -R 777 " + data_directory_name)  
@@ -1411,6 +1406,20 @@ def snakeRasterNormal(rasterReqID,grain=""):
   for i in range(len(rasterDef["rowDefs"])):
     numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
     totalImages = totalImages+numsteps
+
+  data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, totalImages = params_from_raster_req_id(rasterReqID)
+
+  # a couple of items we can get independent of rasterReqID
+  xbeam = getPvDesc("beamCenterX")
+  ybeam = getPvDesc("beamCenterY")
+
+  if (parentReqID != -1):
+    parentRequest = db_lib.getRequestByID(parentReqID)
+    parentReqObj = parentRequest["request_obj"]
+    parentReqProtocol = parentReqObj["protocol"]
+    detDist = parentReqObj["detDist"]    
+
+  # now we do stuff with that info
   rasterFilePrefix = dataFilePrefix + "_Raster"
   total_exposure_time = exptimePerCell*totalImages
   # TODO decide - put everything below here into a function? how should the processing be handled?
@@ -1479,6 +1488,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         yMotAbsoluteMove = yEndSave
         zMotAbsoluteMove = zEndSave
       zebraVecBluesky() # just do the vector scan part
+      numsteps, startX, endX, startY, endY, deltaX, deltaY, xMotAbsoluteMove, yMotAbsoluteMove, zMotAbsoluteMove, xEnd, yEnd, zEnd = raster_positions(rasterdef[i])
       setPvDesc("zebraPulseMax",numsteps) #moved this      
       setPvDesc("vectorStartOmega",omega)
       if (img_width_per_cell != 0):
@@ -1622,6 +1632,83 @@ def snakeRasterNormal(rasterReqID,grain=""):
     setPvDesc("sampleProtect",1)
   return 1
 
+def raster_positions(currentRow):
+      numsteps = int(currentRow["numsteps"])
+      startX = currentRow["start"]["x"]
+      endX = currentRow["end"]["x"]
+      startY = currentRow["start"]["y"]
+      endY = currentRow["end"]["y"]
+      deltaX = abs(endX-startX)
+      deltaY = abs(endY-startY)
+      if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
+        startY = startY + (stepsize/2.0)
+        endY = startY
+      else: #vertical raster
+        startX = startX + (stepsize/2.0)
+        endX = startX
+      
+      xRelativeMove = startX
+
+      yzRelativeMove = startY*math.sin(omegaRad)
+      yyRelativeMove = startY*math.cos(omegaRad)
+      logger.info("x rel move = " + str(xRelativeMove))
+      xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
+      yMotAbsoluteMove = rasterStartY-yyRelativeMove
+      zMotAbsoluteMove = rasterStartZ-yzRelativeMove
+      xRelativeMove = endX-startX
+      yRelativeMove = endY-startY
+ 
+      yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+      yzRelativeMove = yRelativeMove*math.sin(omegaRad)
+
+      xEnd = xMotAbsoluteMove + xRelativeMove
+      yEnd = yMotAbsoluteMove - yyRelativeMove
+      zEnd = zMotAbsoluteMove - yzRelativeMove
+
+      if (i%2 != 0): #this is to scan opposite direction for snaking
+        xEndSave = xEnd
+        yEndSave = yEnd
+        zEndSave = zEnd
+        xEnd = xMotAbsoluteMove
+        yEnd = yMotAbsoluteMove
+        zEnd = zMotAbsoluteMove
+        xMotAbsoluteMove = xEndSave
+        yMotAbsoluteMove = yEndSave
+        zMotAbsoluteMove = zEndSave
+    return 
+
+def params_from_raster_req_id(rasterReqID):
+    rasterRequest = db_lib.getRequestByID(rasterReqID)
+    reqObj = rasterRequest["request_obj"]
+
+    data_directory_name = str(reqObj["directory"])
+    os.system("mkdir -p " + data_directory_name)
+    os.system("chmod -R 777 " + data_directory_name)  
+    filePrefix = str(reqObj["file_prefix"])
+    file_number_start = reqObj["file_number_start"]  
+    dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
+    exptimePerCell = reqObj["exposure_time"]
+    img_width_per_cell = reqObj["img_width"]
+#r  eally should read these two from hardware  
+    wave = reqObj["wavelength"]
+    xbeam = getPvDesc("beamCenterX")
+    ybeam = getPvDesc("beamCenterY")
+    detDist = reqObj["detDist"]
+    rasterDef = reqObj["rasterDef"]
+    stepsize = float(rasterDef["stepsize"])
+    omega = float(rasterDef["omega"])
+    rasterStartX = float(rasterDef["x"]) #these are real sample motor positions
+    rasterStartY = float(rasterDef["y"])
+    rasterStartZ = float(rasterDef["z"])
+    omegaRad = math.radians(omega)
+    rowCount = len(rasterDef["rowDefs"])
+
+    totalImages = 0
+    for i in range(len(rasterDef["rowDefs"])):
+        numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
+        totalImages = totalImages+numsteps
+
+    
 def reprocessRaster(rasterReqID):
   global rasterRowResultsList,processedRasterRowCount
 
@@ -1656,12 +1743,13 @@ def reprocessRaster(rasterReqID):
   procFlag = 1
   
   for i in range(len(rasterDef["rowDefs"])):
+    currentRow = rasterDef["rowDefs"][i]
     time.sleep(0.5) 
-    numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
-    startX = rasterDef["rowDefs"][i]["start"]["x"]
-    endX = rasterDef["rowDefs"][i]["end"]["x"]
-    startY = rasterDef["rowDefs"][i]["start"]["y"]
-    endY = rasterDef["rowDefs"][i]["end"]["y"]
+    numsteps = int(currentRow["numsteps"])
+    startX = currentRow["start"]["x"]
+    endX = currentRow["end"]["x"]
+    startY = currentRow["start"]["y"]
+    endY = currentRow["end"]["y"]
     deltaX = abs(endX-startX)
     deltaY = abs(endY-startY)
     if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
@@ -1748,6 +1836,15 @@ def reprocessRaster(rasterReqID):
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   return 1
 
+def snakeRasterBluesky(rasterReqID, grin=""):
+    params = params_getter(rasterReqID)
+    translational_axis = gonx
+    #TODO decide whether this should be done within LSDC or in the flyer itself. see what Maksim did
+    for x_pos in x_positions:
+        # note: don't re-arm between the various rows! so it will need to be a bit different
+        # maybe flyer.update_parameters_for_raster()?
+        yield from zebraDaqBluesky(params)
+        yield from bps.mv(translation_axis, x_pos)
 
 def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.
   gov_status = gov_lib.setGovRobot(gov_robot, 'DA')

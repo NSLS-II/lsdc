@@ -1413,6 +1413,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     totalImages = totalImages+numsteps
   rasterFilePrefix = dataFilePrefix + "_Raster"
   total_exposure_time = exptimePerCell*totalImages
+  # TODO decide - put everything below here into a function? how should the processing be handled?
   det_lib.detector_set_num_triggers(totalImages)
   det_lib.detector_set_trigger_mode(3)
   det_lib.detector_setImagesPerFile(numsteps)  
@@ -1423,16 +1424,17 @@ def snakeRasterNormal(rasterReqID,grain=""):
       if (daq_utils.beamline == "fmx"):
         setPvDesc("sampleProtect",1)    
       raise Exception('not in DA state')      
-    zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start)
+    zebraVecDaqSetup(omega,img_width_per_cell,exptimePerCell,numsteps,rasterFilePrefix,data_directory_name,file_number_start) #TODO set up a bunch of stuff?
     procFlag = int(getBlConfig("rasterProcessFlag"))    
  
     spotFindThreadList = [] 
     for i in range(len(rasterDef["rowDefs"])):
-      if (daq_lib.abort_flag == 1):
+      if (daq_lib.abort_flag == 1): # TODO better to do this in a catch/finally block?
         gov_lib.setGovRobot(gov_robot, 'SA')
         if (daq_utils.beamline == "fmx"):
           setPvDesc("sampleProtect",1)    
-        raise Exception('raster aborted')
+        raise Exception('raster aborted')a
+      # TODO surprisingly, no direct move to start position
       numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
       startX = rasterDef["rowDefs"][i]["start"]["x"]
       endX = rasterDef["rowDefs"][i]["end"]["x"]
@@ -1446,7 +1448,8 @@ def snakeRasterNormal(rasterReqID,grain=""):
       else: #vertical raster
         startX = startX + (stepsize/2.0)
         endX = startX
-      
+     
+      # TODO move all of this calculation stuff out
       xRelativeMove = startX
 
       yzRelativeMove = startY*math.sin(omegaRad)
@@ -1475,6 +1478,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         xMotAbsoluteMove = xEndSave
         yMotAbsoluteMove = yEndSave
         zMotAbsoluteMove = zEndSave
+      zebraVecBluesky() # just do the vector scan part
       setPvDesc("zebraPulseMax",numsteps) #moved this      
       setPvDesc("vectorStartOmega",omega)
       if (img_width_per_cell != 0):
@@ -1506,7 +1510,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
           seqNum = -1
         logger.info('beginning raster processing with dozor spot_level at %s'
                      % getBlConfig(RASTER_DOZOR_SPOT_LEVEL))
-        spotFindThread = Thread(target=runDozorThread,args=(data_directory_name,
+        spotFindThread = Thread(target=runDozorThread,args=(data_directory_name, #TODO this can't move outside of the thread checking block
                                                             ''.join([filePrefix,"_Raster"]),
                                                             i,
                                                             numsteps,
@@ -1538,10 +1542,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     if not procFlag:
       #must go to known position to account for windup dist. 
       logger.info("moving to raster start")
-      beamline_lib.mvaDescriptor("sampleX",rasterStartX,
-                                 "sampleY",rasterStartY,
-                                 "sampleZ",rasterStartZ,
-                                 "omega",omega)
+      bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
       logger.info("done moving to raster start")
 
     if (procFlag):
@@ -3394,6 +3395,18 @@ def zebraVecDaqSetup(angle_start,imgWidth,exposurePeriodPerImage,numImages,fileP
 
   setPvDesc("vectorHold",0)  
 
+def zebraVecDaqSetupBluesky(angle_start,imgWidth,exposurePeriodPerImage,numImages,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
+  detector_dead_time = det_lib.detector_get_deadtime()
+  total_exposure_time = exposurePeriodPerImage*numImages
+  exposureTimePerImage =  exposurePeriodPerImage - detector_dead_time
+  yield from zebra_daq_prep(zebra)
+
+  yield from setup_zebra_vector_scan_for_raster(zebra=zebra, angle_start=angle_start, image_width=imgWidth, exposure_time_per_image=exposureTimePerImage,
+                                exposure_period_per_image=exposurePeriodPerImage, detector_dead_time=detector_dead_time,
+                                num_images=numImages, scan_encoder=scan_encoder)
+  logger.info("exp tim = " + str(exposureTimePerImage))
+
+  setPvDesc("vectorHold",0)
   
 def setProcRam():
   if (daq_utils.beamline == "amx"):

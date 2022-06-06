@@ -3192,6 +3192,42 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
+def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, scanEncoder=3, changeState=True):  # TODO should be raster flyer
+
+    logger.info("in Zebra Daq Raster Bluesky #1")
+    logger.info(f" with vector: {vector_params}")
+
+    x_vec_start=vector_params["vecStart"]["x"]
+    y_vec_start=vector_params["vecStart"]["y"]
+    z_vec_start=vector_params["vecStart"]["z"]
+    x_vec_end=vector_params["vecEnd"]["x"]
+    y_vec_end=vector_params["vecEnd"]["y"]
+    z_vec_end=vector_params["vecEnd"]["z"]
+    if beamline == "nyx":
+      x_vec_start *= 1000
+      y_vec_start *= 1000
+      z_vec_start *= 1000
+      x_vec_end *= 1000
+      y_vec_end *= 1000
+      z_vec_end *= 1000
+
+    try:
+      detectorDeadTime=flyer.detector.cam.dead_time.get()
+    except AttributeError as e:
+      logger.error("Vector Aborted: failed to get dead_time from detector.cam object")
+      return
+
+    # TODO remove things that are not required for detector arm
+    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
+                   x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
+                   x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
+                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
+                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
+    bp.fly([flyer])
+
+    logger.info("zebraDaqRasterBluesky Done")
+
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 

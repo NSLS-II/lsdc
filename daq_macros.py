@@ -1009,6 +1009,7 @@ def getNodeName(node_type, row_index, num_nodes=8): #calculate node name based o
     return getBlConfig(node_config_name)
 
 def snakeRaster(rasterReqID,grain=""):
+  logger.info("snakeRaster")
   #scannerType = getBlConfig("scannerType")
   #if (scannerType == "PI"):
   #  snakeRasterFine(rasterReqID,grain)
@@ -1365,14 +1366,21 @@ def snakeRasterFine(rasterReqID,grain=""): #12/19 - This is for the PI scanner. 
 
   
 def bsVecRaster(rasterReqID):
+  logger.info("bsVecRaster")
   daq_lib.setRobotGovState("DA")
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
   parentReqID = reqObj["parentReqID"]
   parentReqProtocol = ""
 
+  vector_params = {}
+  vector_params["x_beam"] = getPvDesc("beamCenterX")
+  vector_params["y_beam"] = getPvDesc("beamCenterY")
+  vector_params["wavelength"] = reqObj["wavelength"]
+  vector_params["det_distance_m"] = reqObj["detDist"]
+  vector_params["transmission"] = getPvDesc("RI_Atten_SP") #nyx
   rasterDef = reqObj["rasterDef"]
-  angle_start = float(rasterDef["omega"]
+  angle_start = float(rasterDef["omega"])
   imgWidth = float(reqObj["img_width"])
   exptimePerCell = reqObj["exposure_time"]
   filePrefix = str(reqObj["file_prefix"])
@@ -1380,18 +1388,21 @@ def bsVecRaster(rasterReqID):
   file_number_start = reqObj["file_number_start"]  
 
   for i in range(len(rasterDef["rowDefs"])):
+    logger.info(f"raster row {i}")
     rowDef = rasterDef["rowDefs"][i]
     num_images = rowDef["numsteps"]
-    scanWidth = num_images * img_width
-    vector_params["x_start_um"] = rowDef["start"]["x"]
-    vector_params["x_end_um"] = rowDef["end"]["x"]
-    vector_params["y_start_um"] = rowDef["start"]["y"]
-    vector_params["y_end_um"] = rowDef["end"]["y"]
-    vector_params["z_start_um"] = rowDef["start"]["z"]
-    vector_params["z_end_um"] = rowDef["end"]["z"]
-    deltaX = abs(endX-startX)
-    deltaY = abs(endY-startY)
-    yield from zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exptimePerCell, filePrefix, data_directory_name, file_number_start, vector_params)
+    scanWidth = num_images * imgWidth
+    vector_params["vecStart"] = {}
+    vector_params["vecEnd"] = {}
+
+    vector_params["vecStart"]["x"] = rowDef["start"]["x"]
+    vector_params["vecEnd"]["x"] = rowDef["end"]["x"]
+    vector_params["vecStart"]["y"] = rowDef["start"]["y"]
+    vector_params["vecEnd"]["y"] = rowDef["end"]["y"]
+    vector_params["vecStart"]["z"] = float(rasterDef["z"])
+    vector_params["vecEnd"]["z"] = float(rasterDef["z"]) 
+    zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exptimePerCell, filePrefix, data_directory_name, file_number_start, vector_params)
+  logger.info("bsVecRaster done")
  
 def snakeRasterNormal(rasterReqID,grain=""):
   global rasterRowResultsList,processedRasterRowCount

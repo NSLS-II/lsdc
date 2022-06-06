@@ -502,7 +502,7 @@ def collectData(currentRequest):
   currentRequest['request_obj']['ybeam'] = getPvDesc('beamCenterY')
   db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
-    logger.info('entering raster')
+    logger.info('entering vecraster')
     status = daq_macros.snakeRaster(currentRequest["uid"])
     logger.info('exiting raster')
   elif (prot == "stepRaster"):

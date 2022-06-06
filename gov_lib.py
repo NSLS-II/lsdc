@@ -9,10 +9,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 def set_detz_in(gov_robot, distance):
-    gov_robot.dev.dz.target_Work.set(distance)
+    gov_robot.dev.dz.target_In.set(distance)
 
 def set_detz_out(gov_robot, distance):
-    gov_robot.dev.dz.target_Safe.set(distance)
+    gov_robot.dev.dz.target_Out.set(distance)
 
 def setGovRobot(gov_robot, state, wait=True):
   try:

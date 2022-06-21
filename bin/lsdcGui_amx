@@ -1,4 +1,4 @@
-export PROJDIR=/GPFS/CENTRAL/xf17id1/skinnerProjectsBackup/
+export PROJDIR=/nsls2/software/mx/daq/
 export CONFIGDIR=${PROJDIR}bnlpx_config/
 export LSDCHOME=${PROJDIR}lsdc_amx
 

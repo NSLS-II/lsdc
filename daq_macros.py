@@ -2573,6 +2573,7 @@ def vectorZebraScanNormal(vecRequest):
   reqObj = vecRequest["request_obj"]
   file_prefix = str(reqObj["file_prefix"])
   data_directory_name = str(reqObj["directory"])
+  data_path = str(reqObj["dataPath"])
   file_number_start = reqObj["file_number_start"]
   
   sweep_start_angle = reqObj["sweep_start"]
@@ -2599,7 +2600,7 @@ def vectorZebraScanNormal(vecRequest):
   reqObj["vectorParams"]["det_distance_m"]=det_distance_m
   reqObj["vectorParams"]["transmission"]=transmission
 
-  zebraDaqBluesky(flyer,sweep_start_angle,numImages,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"])
+  zebraDaqBluesky(flyer,sweep_start_angle,numImages,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"], data_path)
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
 
@@ -3147,7 +3148,7 @@ def gatherStandardVectorParams():
     return vectorParams
 
 
-def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, scanEncoder=3, changeState=True):
+def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
@@ -3178,7 +3179,8 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
                    x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
+                   data_path=data_path)
 
     RE(bp.fly([flyer]))
 

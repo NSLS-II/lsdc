@@ -2584,7 +2584,7 @@ def vectorZebraScanNormal(vecRequest):
 
   x_beam = getPvDesc("beamCenterX")
   y_beam = getPvDesc("beamCenterY")
-  if beamline == "nyx":
+  if beamline in ("amx", "nyx"):
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
   else:
     wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
@@ -3136,7 +3136,7 @@ def gatherStandardVectorParams():
  
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
-    if beamline == "nyx":
+    if beamline in ("amx", "nyx"):
       wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
     else:
       wavelength = beamline_lib.motorPosFromDescriptor("wavelength")

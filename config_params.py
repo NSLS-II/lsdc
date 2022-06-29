@@ -27,6 +27,9 @@ LOW_MAG_EXP_TIME = 'lowMagExptime'
 # top view
 TOP_VIEW_CHECK = 'topViewCheck'
 
+# GUI default configuration
+BEAM_CHECK = 'beamCheck'
+
 # raster request status updates
 class RasterStatus(Enum):
     """The lsdc server can keep GUI clients updated on the status of

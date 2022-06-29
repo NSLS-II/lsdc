@@ -446,10 +446,10 @@ class StaffScreenDialog(QFrame):
     def beamCheckOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
          setBlConfig("beamCheck",1)
-         logger.debug("beamcheck on")
+         logger.debug("beamCheck on")
       else:
          setBlConfig("beamCheck",0)
-         logger.debug("beamcheck off")
+         logger.debug("beamCheck off")
 
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:

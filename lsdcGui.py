@@ -4391,9 +4391,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.selectedSampleID = itemData
           if (getBlConfig("queueCollect") == 0):
             if (self.mountedPin_pv.get() != self.selectedSampleID):                    
-              self.popupServerMessage("You can only add requests to a mounted sample, for now.")
-              self.progressDialog.close()              
-              return
+              self.selectedSampleID = self.mountedPin_pv.get()
 
         try:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
@@ -4427,8 +4425,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
       if (getBlConfig("queueCollect") == 0):
         if (self.mountedPin_pv.get() != self.selectedSampleID):                    
-          self.popupServerMessage("You can only add requests to a mounted sample, for now.")
-          return
+          self.selectedSampleID = self.mountedPin_pv.get()
       
       if not self.validateAllFields():
         return

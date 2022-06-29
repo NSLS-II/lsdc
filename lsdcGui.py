@@ -4392,7 +4392,6 @@ class ControlMain(QtWidgets.QMainWindow):
           if (getBlConfig("queueCollect") == 0):
             if (self.mountedPin_pv.get() != self.selectedSampleID):                    
               self.selectedSampleID = self.mountedPin_pv.get()
-              self.popupServerMessage("You can only add requests to a mounted sample, for now.")
 
         try:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
@@ -4427,7 +4426,6 @@ class ControlMain(QtWidgets.QMainWindow):
       if (getBlConfig("queueCollect") == 0):
         if (self.mountedPin_pv.get() != self.selectedSampleID):                    
           self.selectedSampleID = self.mountedPin_pv.get()
-          self.popupServerMessage("You can only add requests to a mounted sample, for now.")
       
       if not self.validateAllFields():
         return

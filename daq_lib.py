@@ -442,7 +442,7 @@ def unmountCold():
 def waitBeam():
   waiting = 0
   while (1):
-    if (getPvDesc("beamAvailable") or getBlConfig("beamCheck") == 0):
+    if (getPvDesc("beamAvailable") or getBlConfig(BEAM_CHECK) == 0):
       if (waiting):
         waiting = 0
         destroy_gui_message()          
@@ -459,7 +459,7 @@ def runDCQueue(): #maybe don't run rasters from here???
   autoMounted = 0 #this means the mount was performed from a runQueue, as opposed to a manual mount button push
   logger.info("running queue in daq server")
   while (1):
-    if (getBlConfig("queueCollect") == 1 and getBlConfig("beamCheck") == 1):
+    if (getBlConfig("queueCollect") == 1 and getBlConfig(BEAM_CHECK) == 1):
       waitBeam()
     if (abort_flag):
       abort_flag =  0 #careful about when to reset this

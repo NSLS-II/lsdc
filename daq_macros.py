@@ -3625,10 +3625,10 @@ def lockGUI():
   daq_lib.lockGUI()
   
 def beamCheckOn():
-  setBlConfig("beamCheck",1)
+  setBlConfig(BEAM_CHECK,1)
 
 def beamCheckOff():
-  setBlConfig("beamCheck",0)
+  setBlConfig(BEAM_CHECK,0)
 
 def HePathOff():
   setBlConfig("HePath",0)

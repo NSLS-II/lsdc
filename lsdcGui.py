@@ -212,6 +212,14 @@ class StaffScreenDialog(QFrame):
         else:
           self.topViewCheckOnCheckBox.setChecked(False)            
         self.topViewCheckOnCheckBox.stateChanged.connect(self.topViewOnCheckCB)
+        # BeamCheck check box 
+        self.beamCheckOnCheckBox = QCheckBox("BeamCheck (On)")
+        if (getBlConfig(BEAM_CHECK) == 1):
+          self.beamCheckOnCheckBox.setChecked(True)
+        else:
+          self.beamCheckOnCheckBox.setChecked(False)
+        self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
+
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
         if (getBlConfig("queueCollect") == 1):
@@ -327,6 +335,7 @@ class StaffScreenDialog(QFrame):
         self.closeGripperButton = QtWidgets.QPushButton("Close Gripper")
         self.closeGripperButton.clicked.connect(self.closeGripper_CB)
         hBoxRobot1.addWidget(self.robotOnCheckBox)
+        hBoxRobot1.addWidget(self.beamCheckOnCheckBox)
         hBoxRobot1.addWidget(self.topViewCheckOnCheckBox)
         hBoxRobot1.addWidget(self.enableMountCheckBox)        
         hBoxRobot1.addWidget(self.recoverRobotButton)
@@ -433,6 +442,14 @@ class StaffScreenDialog(QFrame):
         setBlConfig("robot_online",1)
       else:
         setBlConfig("robot_online",0)
+
+    def beamCheckOnCheckCB(self,state):
+      if state == QtCore.Qt.Checked:
+         setBlConfig(BEAM_CHECK,1)
+         logger.debug(f"{BEAM_CHECK} on")
+      else:
+         setBlConfig(BEAM_CHECK,0)
+         logger.debug(f"{BEAM_CHECK} off")
 
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:

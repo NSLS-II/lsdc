@@ -4358,23 +4358,29 @@ class ControlMain(QtWidgets.QMainWindow):
       reqObj = colRequest["request_obj"]
       if not self.validateAllFields():
         return
-      reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-      reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-      reqObj["img_width"] = float(self.osc_range_ledit.text())
-      reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-      reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())      
-      reqObj["resolution"] = float(self.resolution_ledit.text())
-      if (singleRequest == 1): # a touch kludgy, but I want to be able to edit parameters for multiple requests w/o screwing the data loc info
-        reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
-        reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-        reqObj["directory"] = str(self.dataPathGB.dataPath_ledit.text())
-        reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-      reqObj["attenuation"] = float(self.transmission_ledit.text())
-      reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-      reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-      reqObj["energy"] = float(self.energy_ledit.text())
-      wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
-      reqObj["wavelength"] = wave
+      try:
+        reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+        reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+        reqObj["img_width"] = float(self.osc_range_ledit.text())
+        reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+        reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())      
+        reqObj["resolution"] = float(self.resolution_ledit.text())
+        if (singleRequest == 1): # a touch kludgy, but I want to be able to edit parameters for multiple requests w/o screwing the data loc info
+          reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
+          reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+          reqObj["directory"] = str(self.dataPathGB.dataPath_ledit.text())
+          reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+        reqObj["attenuation"] = float(self.transmission_ledit.text())
+        reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+        reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+        reqObj["energy"] = float(self.energy_ledit.text())
+        wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+        reqObj["wavelength"] = wave
+      except ValueError:
+        message = "Please ensure that all boxes that expect numerical values have numbers in them"
+        logger.error(message)
+        self.popupServerMessage(f'{message}')
+        return
       reqObj["fastDP"] =(self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
       reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
       reqObj["dimple"] =self.dimpleCheckBox.isChecked()      
@@ -4450,8 +4456,14 @@ class ControlMain(QtWidgets.QMainWindow):
       if not self.validateAllFields():
         return
 #skinner, not pretty below the way stuff is duplicated.
-      if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
-        self.popupServerMessage("Osc range less than Osc width")
+      try:
+        if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
+          self.popupServerMessage("Osc range less than Osc width")
+          return
+      except ValueError:
+        message = "Please ensure oscillation end and oscillation range are valid numbers"
+        logger.error(message)
+        self.popupServerMessage(f'{message}')
         return
 
       if (self.periodicTable.isVisible()):
@@ -4500,26 +4512,32 @@ class ControlMain(QtWidgets.QMainWindow):
              runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
              (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])                   
              reqObj = colRequest["request_obj"]
-             reqObj["runNum"] = runNum
-             reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-             reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-             reqObj["img_width"] = float(self.osc_range_ledit.text())
-             setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
-             setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
-             setBlConfig("stdTrans",float(self.transmission_ledit.text()))
-             setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
-             reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-             reqObj["resolution"] = float(self.resolution_ledit.text())
-             reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text()+"_C"+str(i+1))
-             reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-             reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"             
-             reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-             reqObj["attenuation"] = float(self.transmission_ledit.text())
-             reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-             reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-             reqObj["energy"] = float(self.energy_ledit.text())             
-             wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
-             reqObj["wavelength"] = wave
+             try:
+               reqObj["runNum"] = runNum
+               reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+               reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+               reqObj["img_width"] = float(self.osc_range_ledit.text())
+               setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+               setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+               setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+               setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
+               reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+               reqObj["resolution"] = float(self.resolution_ledit.text())
+               reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text()+"_C"+str(i+1))
+               reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+               reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"             
+               reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+               reqObj["attenuation"] = float(self.transmission_ledit.text())
+               reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+               reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+               reqObj["energy"] = float(self.energy_ledit.text())             
+               wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+               reqObj["wavelength"] = wave
+             except ValueError:
+               message = "Please ensure that all boxes that expect numerical values have numbers in them"
+               logger.error(message)
+               self.popupServerMessage(f'{message}')
+               return
              reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())             
              reqObj["protocol"] = str(self.protoComboBox.currentText())
              reqObj["pos_x"] = float(self.centeringMarksList[i]["sampCoords"]["x"])
@@ -4558,33 +4576,39 @@ class ControlMain(QtWidgets.QMainWindow):
           reqObj["pos_y"] = float(self.sampy_pv.get())
           reqObj["pos_z"] = float(self.sampz_pv.get())
         reqObj["runNum"] = runNum
-        reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-        reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-        reqObj["img_width"] = float(self.osc_range_ledit.text())
-        reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-        if (rasterDef == None and reqObj["protocol"] != "burn"):        
-          setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
-          setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
-          setBlConfig("stdTrans",float(self.transmission_ledit.text()))
-          setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
-        reqObj["resolution"] = float(self.resolution_ledit.text())
-        reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+ "/" + str(daq_utils.getVisitName()) + "/" +str(self.dataPathGB.prefix_ledit.text())+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
-        reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-        reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
-        reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-        if (abs(reqObj["sweep_end"]-reqObj["sweep_start"])<5.0):
-          reqObj["fastDP"] = False
-          reqObj["fastEP"] = False
-          reqObj["dimple"] = False          
-        else:
-          reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
-          reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
-          reqObj["dimple"] =self.dimpleCheckBox.isChecked()          
-        reqObj["xia2"] =self.xia2CheckBox.isChecked()
-        reqObj["attenuation"] = float(self.transmission_ledit.text())
-        reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-        reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-        reqObj["energy"] = float(self.energy_ledit.text())                  
+        try:
+          reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+          reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+          reqObj["img_width"] = float(self.osc_range_ledit.text())
+          reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+          if (rasterDef == None and reqObj["protocol"] != "burn"):        
+            setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+            setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+            setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+            setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
+          reqObj["resolution"] = float(self.resolution_ledit.text())
+          reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+ "/" + str(daq_utils.getVisitName()) + "/" +str(self.dataPathGB.prefix_ledit.text())+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
+          reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+          reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
+          reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+          if (abs(reqObj["sweep_end"]-reqObj["sweep_start"])<5.0):
+            reqObj["fastDP"] = False
+            reqObj["fastEP"] = False
+            reqObj["dimple"] = False          
+          else:
+            reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
+            reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
+            reqObj["dimple"] =self.dimpleCheckBox.isChecked()          
+          reqObj["xia2"] =self.xia2CheckBox.isChecked()
+          reqObj["attenuation"] = float(self.transmission_ledit.text())
+          reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+          reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+          reqObj["energy"] = float(self.energy_ledit.text())                  
+        except ValueError:
+          message = "Please ensure that all boxes that expect numerical values have numbers in them"
+          logger.error(message)
+          self.popupServerMessage(f'{message}')
+          return
         try:        
           wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
         except ValueError:

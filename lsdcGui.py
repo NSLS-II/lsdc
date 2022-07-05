@@ -3655,7 +3655,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def calcLifetimeCB(self):
       if (not os.path.exists("2vb1.pdb")):
-        os.system("ln -s $CONFIGDIR/2vb1.pdb .")
+        os.system("cp -a $CONFIGDIR/2vb1.pdb .")
         os.system("mkdir rd3d")
       
       energyReadback = self.energy_pv.get()/1000.0

@@ -2584,10 +2584,7 @@ def vectorZebraScanNormal(vecRequest):
 
   x_beam = getPvDesc("beamCenterX")
   y_beam = getPvDesc("beamCenterY")
-  if beamline in ("amx", "nyx"):
-    wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
-  else:
-    wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
+  wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
   det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist")
   if daq_utils.beamline == "nyx":
     det_distance_m /= 1000  # convert distance from mm to m on NYX
@@ -3136,10 +3133,7 @@ def gatherStandardVectorParams():
  
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
-    if beamline in ("amx", "nyx"):
-      wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
-    else:
-      wavelength = beamline_lib.motorPosFromDescriptor("wavelength")
+    wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
     det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist") / 1000
     if daq_utils.beamline in ("nyx", "fmx"):
         transmission = getPvDesc("RI_Atten_SP")

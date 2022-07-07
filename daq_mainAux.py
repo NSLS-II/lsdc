@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2022-1-latest/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2022-2.3/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """

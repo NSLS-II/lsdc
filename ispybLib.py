@@ -20,13 +20,13 @@ visit = 'mx99999-1'
 #request_dicts = lsdb2.getColRequestsByTimeInterval('2018-02-14T00:00:00','2018-02-15T00:00:00')
 
 # Connect to ISPyB, get the relevant data area objects
-#conn = ispyb.open(conf_file)
-#core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
-#mxacquisition = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXACQUISITION, conn)
-#mxprocessing = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXPROCESSING, conn)
-#mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREENING, conn)
-#cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db-dev.nsls2.bnl.local',database='ispyb')
-#cursor = cnx.cursor()
+conn = ispyb.open(credentials=conf_file)
+core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
+mxacquisition = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXACQUISITION, conn)
+mxprocessing = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXPROCESSING, conn)
+mxscreening = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXSCREENING, conn)
+cnx = mysql.connector.connect(user='ispyb_api', password=os.environ['ISPYB_PASSWORD'],host='ispyb-db.nsls2.bnl.local',database='ispyb')
+cursor = cnx.cursor()
 beamline = os.environ["BEAMLINE_ID"]
 
   # Find the id for a particular

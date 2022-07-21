@@ -1376,38 +1376,11 @@ def snakeRasterNormal(rasterReqID,grain=""):
   parentReqID = reqObj["parentReqID"]
   parentReqProtocol = ""
   
- 2/17/16 - a few things for integrating dials/spotfinding into this routine
-  data_directory_name = str(reqObj["directory"])
-  os.system("mkdir -p " + data_directory_name)
-  os.system("chmod -R 777 " + data_directory_name)  
-  filePrefix = str(reqObj["file_prefix"])
-  file_number_start = reqObj["file_number_start"]  
-  dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
-  exptimePerCell = reqObj["exposure_time"]
-  img_width_per_cell = reqObj["img_width"]
-#really should read these two from hardware  
-  wave = reqObj["wavelength"]
-  xbeam = getPvDesc("beamCenterX")
-  ybeam = getPvDesc("beamCenterY")
-  detDist = reqObj["detDist"]
-  rasterDef = reqObj["rasterDef"]
-  stepsize = float(rasterDef["stepsize"])
-  omega = float(rasterDef["omega"])
-  rasterStartX = float(rasterDef["x"]) #these are real sample motor positions
-  rasterStartY = float(rasterDef["y"])
-  rasterStartZ = float(rasterDef["z"])
-  omegaRad = math.radians(omega)
-  rowCount = len(rasterDef["rowDefs"])
+  data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages = params_from_raster_req_id(rasterReqID)
+
   rasterRowResultsList = [{} for i in range(0,rowCount)]    
   processedRasterRowCount = 0
   rasterEncoderMap = {}
-
-  totalImages = 0
-  for i in range(len(rasterDef["rowDefs"])):
-    numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
-    totalImages = totalImages+numsteps
-
-  data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, totalImages = params_from_raster_req_id(rasterReqID)
 
   # a couple of items we can get independent of rasterReqID
   xbeam = getPvDesc("beamCenterX")
@@ -1691,8 +1664,6 @@ def params_from_raster_req_id(rasterReqID):
     img_width_per_cell = reqObj["img_width"]
 #r  eally should read these two from hardware  
     wave = reqObj["wavelength"]
-    xbeam = getPvDesc("beamCenterX")
-    ybeam = getPvDesc("beamCenterY")
     detDist = reqObj["detDist"]
     rasterDef = reqObj["rasterDef"]
     stepsize = float(rasterDef["stepsize"])
@@ -1704,9 +1675,10 @@ def params_from_raster_req_id(rasterReqID):
     rowCount = len(rasterDef["rowDefs"])
 
     totalImages = 0
-    for i in range(len(rasterDef["rowDefs"])):
+    for i in range(len(rasterDef["rowDefs"])):  # TODO assume rectangular for current hardware?
         numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
         totalImages = totalImages+numsteps
+    return data_directory_name, filePrefix, file_number_start, dataFilePrefix, extimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages
 
     
 def reprocessRaster(rasterReqID):
@@ -1836,14 +1808,56 @@ def reprocessRaster(rasterReqID):
     daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
   return 1
 
+def zebraDaqRasterBluesky():
+
+    logger.info("in Zebra Daq Raster Bluesky #1")
+    logger.info(f" with vector: {vector_params}")
+
+    x_vec_start=vector_params["vecStart"]["x"]
+    y_vec_start=vector_params["vecStart"]["y"]
+    z_vec_start=vector_params["vecStart"]["z"]
+    x_vec_end=vector_params["vecEnd"]["x"]
+    y_vec_end=vector_params["vecEnd"]["y"]
+    z_vec_end=vector_params["vecEnd"]["z"]
+    if beamline == "nyx":
+      x_vec_start *= 1000
+      y_vec_start *= 1000
+      z_vec_start *= 1000
+      x_vec_end *= 1000
+      y_vec_end *= 1000
+      z_vec_end *= 1000
+
+    try: 
+      detectorDeadTime=flyer.detector.cam.dead_time.get()
+    except AttributeError as e:
+      logger.error("Vector Aborted: failed to get dead_time from detector.cam object")
+      return 
+
+    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, totalImages=totalImages, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
+                   x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
+                   x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
+                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
+                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
+
+    RE(bp.fly([flyer]))
+
+    logger.info("vector Done")
+    logger.info("stop det acquire")
+    flyer.detector.cam.acquire.put(0, wait=True)
+    logger.info("zebraDaq Done")
+
+
 def snakeRasterBluesky(rasterReqID, grin=""):
-    params = params_getter(rasterReqID)
+    data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages = params_from_raster_req_id(rasterReqID)
     translational_axis = gonx
     #TODO decide whether this should be done within LSDC or in the flyer itself. see what Maksim did
+    flyer.detector_arm(totalImages)
     for x_pos in x_positions:
         # note: don't re-arm between the various rows! so it will need to be a bit different
         # maybe flyer.update_parameters_for_raster()?
-        yield from zebraDaqBluesky(params)
+        yield from zebraDaqBluesky(flyer, sweep_start_angle, numImages, scanWidth, imgWidth, expTime, file_prefix,
+            data_directory_name, file_number_start, reqObj["vectorParams"])
         yield from bps.mv(translation_axis, x_pos)
 
 def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.

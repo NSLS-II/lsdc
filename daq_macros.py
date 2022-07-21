@@ -1415,7 +1415,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         gov_lib.setGovRobot(gov_robot, 'SA')
         if (daq_utils.beamline == "fmx"):
           setPvDesc("sampleProtect",1)    
-        raise Exception('raster aborted')a
+        raise Exception('raster aborted')
       # TODO surprisingly, no direct move to start position
       numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
       startX = rasterDef["rowDefs"][i]["start"]["x"]
@@ -1606,39 +1606,39 @@ def snakeRasterNormal(rasterReqID,grain=""):
   return 1
 
 def raster_positions(currentRow):
-      numsteps = int(currentRow["numsteps"])
-      startX = currentRow["start"]["x"]
-      endX = currentRow["end"]["x"]
-      startY = currentRow["start"]["y"]
-      endY = currentRow["end"]["y"]
-      deltaX = abs(endX-startX)
-      deltaY = abs(endY-startY)
-      if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
+    numsteps = int(currentRow["numsteps"])
+    startX = currentRow["start"]["x"]
+    endX = currentRow["end"]["x"]
+    startY = currentRow["start"]["y"]
+    endY = currentRow["end"]["y"]
+    deltaX = abs(endX-startX)
+    deltaY = abs(endY-startY)
+    if ((deltaX != 0) and (deltaX>deltaY or not getBlConfig("vertRasterOn"))): #horizontal raster
         startY = startY + (stepsize/2.0)
         endY = startY
-      else: #vertical raster
+    else: #vertical raster
         startX = startX + (stepsize/2.0)
         endX = startX
       
-      xRelativeMove = startX
+    xRelativeMove = startX
 
-      yzRelativeMove = startY*math.sin(omegaRad)
-      yyRelativeMove = startY*math.cos(omegaRad)
-      logger.info("x rel move = " + str(xRelativeMove))
-      xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
-      yMotAbsoluteMove = rasterStartY-yyRelativeMove
-      zMotAbsoluteMove = rasterStartZ-yzRelativeMove
-      xRelativeMove = endX-startX
-      yRelativeMove = endY-startY
- 
-      yyRelativeMove = yRelativeMove*math.cos(omegaRad)
-      yzRelativeMove = yRelativeMove*math.sin(omegaRad)
+    yzRelativeMove = startY*math.sin(omegaRad)
+    yyRelativeMove = startY*math.cos(omegaRad)
+    logger.info("x rel move = " + str(xRelativeMove))
+    xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
+    yMotAbsoluteMove = rasterStartY-yyRelativeMove
+    zMotAbsoluteMove = rasterStartZ-yzRelativeMove
+    xRelativeMove = endX-startX
+    yRelativeMove = endY-startY
 
-      xEnd = xMotAbsoluteMove + xRelativeMove
-      yEnd = yMotAbsoluteMove - yyRelativeMove
-      zEnd = zMotAbsoluteMove - yzRelativeMove
+    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
+    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
 
-      if (i%2 != 0): #this is to scan opposite direction for snaking
+    xEnd = xMotAbsoluteMove + xRelativeMove
+    yEnd = yMotAbsoluteMove - yyRelativeMove
+    zEnd = zMotAbsoluteMove - yzRelativeMove
+
+    if (i%2 != 0): #this is to scan opposite direction for snaking
         xEndSave = xEnd
         yEndSave = yEnd
         zEndSave = zEnd

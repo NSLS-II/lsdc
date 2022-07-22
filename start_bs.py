@@ -115,6 +115,8 @@ if (beamline=="amx"):
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -134,6 +136,8 @@ elif beamline == "fmx":
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -154,6 +158,8 @@ elif beamline=="nyx":
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector")
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector, zebra, eiger)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

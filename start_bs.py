@@ -111,7 +111,7 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
-    eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger')
+    eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger', beamline=beamline)
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
@@ -130,7 +130,7 @@ elif beamline == "fmx":
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
-    eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
+    eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger', beamline=beamline)
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
@@ -151,7 +151,7 @@ elif beamline=="nyx":
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
     from mxtools.eiger import EigerSingleTriggerV26
-    detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector")
+    detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
 

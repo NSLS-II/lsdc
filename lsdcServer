@@ -1,3 +1,4 @@
 pkill -KILL -f daq_main2.py
 source /opt/conda_envs/lsdc-server-2022-2.3/bin/activate
+export PYTHONPATH=/nsls2/data/amx/shared/config/bluesky_overlay/lsdc-server-2022-2.3/lib/python3.9/site-packages:$PYTHONPATH
 $LSDCHOME/daq_main2.py

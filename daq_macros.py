@@ -1914,46 +1914,41 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-  except Exception as e:
-    logger.error(f'Exception while rastering: {e}')
-    return
-  finally:
-  #use this required pause to allow GUI time to fill map and for db update
     logger.info('stopping detector')
     det_lib.detector_stop_acquire()
-  det_lib.detector_wait()  
-  logger.info('detector finished waiting')
+    det_lib.detector_wait()  
+    logger.info('detector finished waiting')
 
-  """change request status so that GUI only takes a snapshot of
-  sample plus heat map for ispyb when xrecRasterFlag PV is set"""
-  rasterRequestID = rasterRequest["uid"]
-  rasterRequest["request_obj"]["rasterDef"]["status"] = (
-      RasterStatus.READY_FOR_SNAPSHOT.value
-  )
-  db_lib.updateRequest(rasterRequest)  
-  db_lib.updatePriority(rasterRequestID,-1)
+    """change request status so that GUI only takes a snapshot of
+    sample plus heat map for ispyb when xrecRasterFlag PV is set"""
+    rasterRequestID = rasterRequest["uid"]
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_SNAPSHOT.value
+    )
+    db_lib.updateRequest(rasterRequest)  
+    db_lib.updatePriority(rasterRequestID,-1)
 
-  #ensure gov transitions have completed successfully
-  timeout = 20
-  gov_lib.waitGov(govStatus, timeout)
-  if not(govStatus.success) or not(govs.gov.robot.state == targetGovState):
-    logger.error(f"gov status check failed, did not achieve {targetGovState}")
+    #ensure gov transitions have completed successfully
+    timeout = 20
+    gov_lib.waitGov(govStatus, timeout)
+    if not(govStatus.success) or not(govs.gov.robot.state == targetGovState):
+      logger.error(f"gov status check failed, did not achieve {targetGovState}")
 
-  if (procFlag):
-    """if sleep too short then black ispyb image, timing affected by speed
-    of governor transition. Sleep constraint can be relaxed with gov
-    transitions and concomitant GUI moved to an earlier stage."""
-    if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
-        > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
-      #larger rasters can delay GUI scene update
-      time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
-    else:
-      time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
-    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
-    time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
-  if (daq_utils.beamline == "fmx"):
-    setPvDesc("sampleProtect",1)
-  return 1
+    if (procFlag):
+      """if sleep too short then black ispyb image, timing affected by speed
+      of governor transition. Sleep constraint can be relaxed with gov
+      transitions and concomitant GUI moved to an earlier stage."""
+      if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
+          > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
+        #larger rasters can delay GUI scene update
+        time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
+      else:
+        time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
+      daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+      time.sleep(getBlConfig(RASTER_POST_SNAPSHOT_DELAY))
+    if (daq_utils.beamline == "fmx"):
+      setPvDesc("sampleProtect",1)
+    return 1
 
 
 def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.

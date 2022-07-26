@@ -1841,7 +1841,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist)
     for row in rows:  # since we have vectors in rastering, don't move between each row
-        yield from zebraDaqRasterBluesky(flyer, omega, numImages, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, file_prefix,
+        yield from zebraDaqRasterBluesky(flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row)
         # processing
         if (procFlag):    

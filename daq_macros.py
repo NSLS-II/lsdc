@@ -1875,13 +1875,13 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     #    a position with backlight in) and aligned
 
     #data acquisition is finished, now processing and sample positioning
-    if not procFlag:
+    if not procFlag:  # no, no processing. just move to raster start
       #must go to known position to account for windup dist. 
       logger.info("moving to raster start")
       yield from bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
       logger.info("done moving to raster start")
 
-    if (procFlag):
+    else:  # yes, do row processing
       if daq_lib.abort_flag != 1:
         [thread.join(timeout=120) for thread in spotFindThreadList]
       else:

@@ -1878,7 +1878,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if not procFlag:
       #must go to known position to account for windup dist. 
       logger.info("moving to raster start")
-      bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
+      yield from bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
       logger.info("done moving to raster start")
 
     if (procFlag):
@@ -1903,10 +1903,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         except ValueError:
           #must go to known position to account for windup dist.
           logger.info("moving to raster start")
-          beamline_lib.mvaDescriptor("sampleX",rasterStartX,
-                                     "sampleY",rasterStartY,
-                                     "sampleZ",rasterStartZ,
-                                     "omega",omega)
+          yield from bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
           logger.info("done moving to raster start")
 
       """change request status so that GUI only fills heat map when

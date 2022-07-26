@@ -1678,7 +1678,7 @@ def params_from_raster_req_id(rasterReqID):
     for i in range(len(rasterDef["rowDefs"])):  # TODO assume rectangular for current hardware?
         numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
         totalImages = totalImages+numsteps
-    return data_directory_name, filePrefix, file_number_start, dataFilePrefix, extimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rasterDef["rowDefs"]
+    return data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rasterDef["rowDefs"]
 
     
 def reprocessRaster(rasterReqID):
@@ -1815,6 +1815,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
     daq_lib.setRobotGovState("DA")    
+    data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
     rasterEncoderMap = {}
@@ -1823,22 +1824,24 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     xbeam = getPvDesc("beamCenterX")
     ybeam = getPvDesc("beamCenterY")
     # now we do stuff with that info
- 
+
+    rasterRequest = db_lib.getRequestByID(rasterReqID)
+    reqObj = rasterRequest["request_obj"]
+    parentReqID = reqObj["parentReqID"]
+    parentReqProtocol = ""
     if (parentReqID != -1):
       parentRequest = db_lib.getRequestByID(parentReqID)
       parentReqObj = parentRequest["request_obj"]
       parentReqProtocol = parentReqObj["protocol"]
       detDist = parentReqObj["detDist"]    
 
-    data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
-
     rasterFilePrefix = dataFilePrefix + "_Raster"
     total_exposure_time = exptimePerCell*totalImages
  
-    yield from flyer.detector_arm(angle_start=sweep_start_angle, img_width=scanWidth, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
+    flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist)
     for row in rows:  # since we have vectors in rastering, don't move between each row
-        yield from zebraDaqRasterBluesky(flyer, sweep_start_angle, numImages, scanWidth, imgWidth, expTime, file_prefix,
+        yield from zebraDaqRasterBluesky(flyer, omega, numImages, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, file_prefix,
             data_directory_name, file_number_start, row)
         # processing
         if (procFlag):    

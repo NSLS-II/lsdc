@@ -3397,17 +3397,17 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
-def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, scanEncoder=3, changeState=True):  # TODO should be raster flyer
+def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, row, scanEncoder=3, changeState=True):  # TODO should be raster flyer
 
     logger.info("in Zebra Daq Raster Bluesky #1")
     logger.info(f" with vector: {vector_params}")
 
-    x_vec_start=vector_params["vecStart"]["x"]
-    y_vec_start=vector_params["vecStart"]["y"]
-    z_vec_start=vector_params["vecStart"]["z"]
-    x_vec_end=vector_params["vecEnd"]["x"]
-    y_vec_end=vector_params["vecEnd"]["y"]
-    z_vec_end=vector_params["vecEnd"]["z"]
+    x_vec_start=row["start"]["x"]
+    y_vec_start=row["start"]["y"]
+    z_vec_start=0
+    x_vec_end=row["end"]["x"]
+    y_vec_end=row["end"]["y"]
+    z_vec_end=0
     if beamline == "nyx":
       x_vec_start *= 1000
       y_vec_start *= 1000

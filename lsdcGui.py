@@ -221,10 +221,13 @@ class StaffScreenDialog(QFrame):
         self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
 
         self.gripperUnmountColdCheckBox = QCheckBox("Unmount Cold")
-        self.gripperUnmountColdCheckBox.setChecked(False)
-        self.gripperUnmountColdCheckBox.setEnabled(False)
         self.gripperUnmountColdCheckBox.stateChanged.connect(self.unmountColdCheckCB)
-        setBlConfig(UNMOUNT_COLD_CHECK,0)
+        if (getBlConfig(UNMOUNT_COLD_CHECK) == 1):
+          self.gripperUnmountColdCheckBox.setEnabled(True)
+          self.gripperUnmountColdCheckBox.setChecked(True)
+        else:
+          self.gripperUnmountColdCheckBox.setEnabled(False)
+          self.gripperUnmountColdCheckBox.setChecked(False)
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
@@ -233,6 +236,7 @@ class StaffScreenDialog(QFrame):
           self.gripperUnmountColdCheckBox.setEnabled(True)
         else:
           self.queueCollectOnCheckBox.setChecked(False)            
+          self.gripperUnmountColdCheckBox.setEnabled(False)
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        

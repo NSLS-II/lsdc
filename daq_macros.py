@@ -1919,7 +1919,8 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    logger.info('stopping detector - should have been done already')
+    raster_flyer.detector.cam.acquire.put(0, wait=True)
+    logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of
     sample plus heat map for ispyb when xrecRasterFlag PV is set"""
@@ -3430,8 +3431,6 @@ def zebraDaqRasterBluesky(raster_flyer, angle_start, num_images, scanWidth, imgW
     yield from bp.fly([raster_flyer])
 
     logger.info("vector Done")
-    logger.info("stop det acquire")
-    raster_flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaqRasterBluesky Done")
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega

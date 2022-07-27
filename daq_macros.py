@@ -1840,27 +1840,29 @@ def snakeRasterBluesky(rasterReqID, grain=""):
  
     raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist)
-    for row in rows:  # since we have vectors in rastering, don't move between each row
+    procFlag = int(getBlConfig("rasterProcessFlag"))
+    spotFindThreadList = []
+    for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row)
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):
-            seqNum = int(det_lib.detector_get_seqnum())
+            seqNum = int(raster_flyer.detector.file.sequence_id.get())
           else:
             seqNum = -1
           logger.info('beginning raster processing with dozor spot_level at %s'
                        % getBlConfig(RASTER_DOZOR_SPOT_LEVEL))
           spotFindThread = Thread(target=runDozorThread,args=(data_directory_name, #TODO this can't move outside of the thread checking block
                                                               ''.join([filePrefix,"_Raster"]),
-                                                              i,
+                                                              row_index,
                                                               numsteps,
                                                               seqNum,
                                                               reqObj,
                                                               rasterReqID))
           spotFindThread.start()
           spotFindThreadList.append(spotFindThread)
-        send_kafka_message(f'{daq_utils.beamline}.lsdc.documents', event='event', uuid=rasterReqID, protocol="raster", row=i, proc_flag=procFlag)
+        send_kafka_message(f'{daq_utils.beamline}.lsdc.documents', event='event', uuid=rasterReqID, protocol="raster", row=row_index, proc_flag=procFlag)
     """governor transitions:
     initiate transitions here allows for GUI sample/heat map image to update
     after moving to known position"""
@@ -1917,10 +1919,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    logger.info('stopping detector')
-    det_lib.detector_stop_acquire()
-    det_lib.detector_wait()  
-    logger.info('detector finished waiting')
+    logger.info('stopping detector - should have been done already')
 
     """change request status so that GUI only takes a snapshot of
     sample plus heat map for ispyb when xrecRasterFlag PV is set"""

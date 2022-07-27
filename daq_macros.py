@@ -3422,14 +3422,12 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
       logger.error("Vector Aborted: failed to get dead_time from detector.cam object")
       return
 
-    # TODO remove things that are not required for detector arm
     yield from flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
                    num_images_per_file=num_images, \
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
-                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"])
+                   file_prefix=filePrefix, data_directory_name=data_directory_name,\
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=1)
     yield from bp.fly([flyer])
 
     logger.info("vector Done")

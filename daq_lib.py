@@ -498,7 +498,10 @@ def runDCQueue(): #maybe don't run rasters from here???
     colStatus = collectData(currentRequest)
     logger.info("done collecting data")
     if (autoMounted and db_lib.queueDone(daq_utils.beamline)):
-      unmountSample()
+      if (getBlConfig(UNMOUNT_COLD_CHECK)):
+        unmountCold()
+      else:
+        unmountSample()
 
     
 

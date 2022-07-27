@@ -1461,7 +1461,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         yMotAbsoluteMove = yEndSave
         zMotAbsoluteMove = zEndSave
       zebraVecBluesky() # just do the vector scan part
-      numsteps, startX, endX, startY, endY, deltaX, deltaY, xMotAbsoluteMove, yMotAbsoluteMove, zMotAbsoluteMove, xEnd, yEnd, zEnd = raster_positions(rasterdef[i])
+      xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(rasterdef[i])
       setPvDesc("zebraPulseMax",numsteps) #moved this      
       setPvDesc("vectorStartOmega",omega)
       if (img_width_per_cell != 0):
@@ -1648,7 +1648,7 @@ def raster_positions(currentRow):
         xMotAbsoluteMove = xEndSave
         yMotAbsoluteMove = yEndSave
         zMotAbsoluteMove = zEndSave
-    return 
+    return xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd
 
 def params_from_raster_req_id(rasterReqID):
     rasterRequest = db_lib.getRequestByID(rasterReqID)
@@ -1843,8 +1843,10 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
     for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row
+        xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row)
+        vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
-            data_directory_name, file_number_start, row)
+            data_directory_name, file_number_start, vector)
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):
@@ -3397,17 +3399,17 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
-def zebraDaqRasterBluesky(raster_flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, row, scanEncoder=3, changeState=True):
+def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
 
     logger.info("in Zebra Daq Raster Bluesky #1")
-    logger.info(f" with vector: {row}")
+    logger.info(f" with vector: {vector_params}")
 
-    x_vec_start=row["start"]["x"]
-    y_vec_start=row["start"]["y"]
-    z_vec_start=0
-    x_vec_end=row["end"]["x"]
-    y_vec_end=row["end"]["y"]
-    z_vec_end=0
+    x_vec_start=vector["x"][0]
+    y_vec_start=vector["y"][0]
+    z_vec_start=vector["z"][0]
+    x_vec_end=vector["x"][1]
+    y_vec_end=vectors["y"][1]
+    z_vec_end=vectors["z"][1]
     if beamline == "nyx":
       x_vec_start *= 1000
       y_vec_start *= 1000

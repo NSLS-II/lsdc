@@ -29,6 +29,7 @@ TOP_VIEW_CHECK = 'topViewCheck'
 
 # GUI default configuration
 BEAM_CHECK = 'beamCheck'
+UNMOUNT_COLD_CHECK = 'unmountColdCheck'
 
 # raster request status updates
 class RasterStatus(Enum):

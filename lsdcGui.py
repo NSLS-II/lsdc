@@ -220,12 +220,23 @@ class StaffScreenDialog(QFrame):
           self.beamCheckOnCheckBox.setChecked(False)
         self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
 
+        self.gripperUnmountColdCheckBox = QCheckBox("Unmount Cold")
+        self.gripperUnmountColdCheckBox.stateChanged.connect(self.unmountColdCheckCB)
+        if (getBlConfig(UNMOUNT_COLD_CHECK) == 1):
+          self.gripperUnmountColdCheckBox.setEnabled(True)
+          self.gripperUnmountColdCheckBox.setChecked(True)
+        else:
+          self.gripperUnmountColdCheckBox.setEnabled(False)
+          self.gripperUnmountColdCheckBox.setChecked(False)
+
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
         if (getBlConfig("queueCollect") == 1):
           self.queueCollectOnCheckBox.setChecked(True)
+          self.gripperUnmountColdCheckBox.setEnabled(True)
         else:
           self.queueCollectOnCheckBox.setChecked(False)            
+          self.gripperUnmountColdCheckBox.setEnabled(False)
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        
@@ -336,6 +347,7 @@ class StaffScreenDialog(QFrame):
         self.closeGripperButton.clicked.connect(self.closeGripper_CB)
         hBoxRobot1.addWidget(self.robotOnCheckBox)
         hBoxRobot1.addWidget(self.beamCheckOnCheckBox)
+        hBoxRobot1.addWidget(self.gripperUnmountColdCheckBox)
         hBoxRobot1.addWidget(self.topViewCheckOnCheckBox)
         hBoxRobot1.addWidget(self.enableMountCheckBox)        
         hBoxRobot1.addWidget(self.recoverRobotButton)
@@ -451,6 +463,14 @@ class StaffScreenDialog(QFrame):
          setBlConfig(BEAM_CHECK,0)
          logger.debug(f"{BEAM_CHECK} off")
 
+    def unmountColdCheckCB(self,state):
+      if state == QtCore.Qt.Checked:
+        logger.info("unmountColdCheckCB On")
+        setBlConfig(UNMOUNT_COLD_CHECK,1)
+      else:
+        logger.info("unmountColdCheckCB Off")
+        setBlConfig(UNMOUNT_COLD_CHECK,0)
+
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
         setBlConfig(TOP_VIEW_CHECK,1)
@@ -478,8 +498,11 @@ class StaffScreenDialog(QFrame):
     def queueCollectOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
         setBlConfig("queueCollect",1)
+        self.gripperUnmountColdCheckBox.setEnabled(True)
       else:
         setBlConfig("queueCollect",0)
+        self.gripperUnmountColdCheckBox.setEnabled(False)
+        self.gripperUnmountColdCheckBox.setChecked(False)
 
     def enableMountCheckCB(self,state):
       if state == QtCore.Qt.Checked:
@@ -4821,7 +4844,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def unmountSampleCB(self):
       logger.info("unmount sample")
-      self.eraseCB()      
       self.send_to_server("unmountSample()")
 
 

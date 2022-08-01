@@ -1921,7 +1921,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    raster_flyer.detector.cam.acquire.put(0, wait=True)
+    yield from raster_flyer.detector.collect()
     logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of

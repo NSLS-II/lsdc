@@ -105,6 +105,12 @@ def filter_camera_data(camera):
     camera.stats1.read_attrs = ['total', 'centroid']
     camera.stats5.read_attrs = ['total', 'centroid']
 
+class SampleXYZ(Device):
+    x = Cpt(EpicsMotor, ':GX}Mtr')
+    y = Cpt(EpicsMotor, ':PY}Mtr')
+    z = Cpt(EpicsMotor, ':PZ}Mtr')
+    omega = Cpt(EpicsMotor, ':O}Mtr')
+
 if (beamline=="amx"):
     mercury = ABBIXMercury('XF:17IDB-ES:AMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
@@ -117,6 +123,7 @@ if (beamline=="amx"):
     flyer = MXFlyer(vector_program, zebra, eiger)
     from mxtools.raster_flyer import MXRasterFlyer
     raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
+    samplexyz = SampleXYZ("XF:17IDB-ES:AMX{Gon:1-Ax", name="samplexyz")
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -138,6 +145,7 @@ elif beamline == "fmx":
     flyer = MXFlyer(vector_program, zebra, eiger)
     from mxtools.raster_flyer import MXRasterFlyer
     raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
+    samplexyz = SampleXYZ("XF:17IDC-ES:FMX{Gon:1-Ax", name="samplexyz")
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()

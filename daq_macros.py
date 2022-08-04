@@ -3403,14 +3403,14 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
 
     logger.info("in Zebra Daq Raster Bluesky #1")
-    logger.info(f" with vector: {vector_params}")
+    logger.info(f" with vector: {vector}")
 
     x_vec_start=vector["x"][0]
     y_vec_start=vector["y"][0]
     z_vec_start=vector["z"][0]
     x_vec_end=vector["x"][1]
-    y_vec_end=vectors["y"][1]
-    z_vec_end=vectors["z"][1]
+    y_vec_end=vector["y"][1]
+    z_vec_end=vector["z"][1]
     if beamline == "nyx":
       x_vec_start *= 1000
       y_vec_start *= 1000

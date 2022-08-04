@@ -1839,7 +1839,8 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     total_exposure_time = exptimePerCell*totalImages
  
     raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
-                       data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist)
+                       data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
+                       num_images_per_file=numsteps)
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
     for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row

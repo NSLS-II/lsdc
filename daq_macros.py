@@ -1461,7 +1461,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
         yMotAbsoluteMove = yEndSave
         zMotAbsoluteMove = zEndSave
       zebraVecBluesky() # just do the vector scan part
-      xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(rasterdef[i])
+      xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(rasterdef[i], stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, i)
       setPvDesc("zebraPulseMax",numsteps) #moved this      
       setPvDesc("vectorStartOmega",omega)
       if (img_width_per_cell != 0):
@@ -1605,7 +1605,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     setPvDesc("sampleProtect",1)
   return 1
 
-def raster_positions(currentRow):
+def raster_positions(currentRow, stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, index):
     numsteps = int(currentRow["numsteps"])
     startX = currentRow["start"]["x"]
     endX = currentRow["end"]["x"]
@@ -1638,7 +1638,7 @@ def raster_positions(currentRow):
     yEnd = yMotAbsoluteMove - yyRelativeMove
     zEnd = zMotAbsoluteMove - yzRelativeMove
 
-    if (i%2 != 0): #this is to scan opposite direction for snaking
+    if (index%2 != 0): #this is to scan opposite direction for snaking
         xEndSave = xEnd
         yEndSave = yEnd
         zEndSave = zEnd
@@ -1844,7 +1844,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
     for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row
-        xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row)
+        xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row, stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, row_index)
         vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, vector)

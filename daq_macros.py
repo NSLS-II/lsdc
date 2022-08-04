@@ -1525,7 +1525,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     if not procFlag:
       #must go to known position to account for windup dist. 
       logger.info("moving to raster start")
-      bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
+      samplexyz.put(rasterStartX, rasterStartY, rasterStartZ, omega)
       logger.info("done moving to raster start")
 
     if (procFlag):
@@ -1888,7 +1888,10 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if not procFlag:  # no, no processing. just move to raster start
       #must go to known position to account for windup dist. 
       logger.info("moving to raster start")
-      yield from bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
+      yield from bps.mv(samplexyz.x, rasterStartX)
+      yield from bps.mv(samplexyz.y, rasterStartY)
+      yield from bps.mv(samplexyz.z, rasterStartZ)
+      yield from bps.mv(samplexyz.omega, omega)
       logger.info("done moving to raster start")
 
     else:  # yes, do row processing
@@ -1913,7 +1916,10 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         except ValueError:
           #must go to known position to account for windup dist.
           logger.info("moving to raster start")
-          yield from bps.mv("samplexyz", (rasterStartX, rasterStartY, rasterStartZ, omega))
+          yield from bps.mv(samplexyz.x, rasterStartX)
+          yield from bps.mv(samplexyz.y, rasterStartY)
+          yield from bps.mv(samplexyz.z, rasterStartZ)
+          yield from bps.mv(samplexyz.omega, omega)
           logger.info("done moving to raster start")
 
       """change request status so that GUI only fills heat map when

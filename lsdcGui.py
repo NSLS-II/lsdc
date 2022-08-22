@@ -83,7 +83,7 @@ cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
 VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}, 'nyx':{'min':0.01, 'max':10, 'digits':3}}
 VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}, 'nyx':{'min':100, 'max':500, 'digits':3}}
-VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':300, 'digits':3}}
+VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':1000, 'digits':3}}
 VALID_PREFIX_LENGTH = 25 #TODO centralize with spreadsheet validation?
 VALID_PREFIX_NAME = '[0-9a-zA-Z-_]{0,%s}' % VALID_PREFIX_LENGTH
 
@@ -3389,6 +3389,8 @@ class ControlMain(QtWidgets.QMainWindow):
       y_vec = y_vec_end - y_vec_start
       z_vec = z_vec_end - z_vec_start
       trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
+      if daq_utils.beamline == "nyx":
+        trans_total *= 1000
       self.vecLenLabelOutput.setText(str(int(trans_total)))
       totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
       speed = trans_total/totalExpTime

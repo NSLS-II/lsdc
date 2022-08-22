@@ -10,9 +10,11 @@ def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
   status, kwargs = robot.preMount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)  # TODO return governor status, send to mount function so embl robot can use it if necessary
   if status != MOUNT_STEP_SUCCESSFUL:
       return status
-  if robot.control_type == "Bluesky":
+  if robot.control_type() == "Bluesky":
+    logger.info('bluesky robot')
     RE(robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs))
   else:
+    logger.info('regular robot')
     robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)
   if isinstance(robot, DensoRobot):
     status = robot.check_sample_mounted(mount=True, puck_pos=puck_pos, pin_pos=pin_pos)
@@ -27,7 +29,7 @@ def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
   status = robot.preUnmount(gov_robot, puck_pos, pin_pos, samp_id)
   if status != UNMOUNT_STEP_SUCCESSFUL:
       return status
-  if robot.control_type == "Bluesky":
+  if robot.control_type() == "Bluesky":
     RE(robot.unmount(gov_robot, puck_pos, pin_pos, samp_id))
   else:
     robot.unmount(gov_robot, puck_pos, pin_pos, samp_id)

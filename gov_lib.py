@@ -3,6 +3,7 @@ from ophyd.utils.errors import StatusTimeoutError, WaitTimeoutError
 import ophyd
 from ophyd import StatusBase
 from beamline_support import setPvValFromDescriptor as setPvDesc
+import daq_utils
 from daq_utils import getBlConfig
 import logging
 logger = logging.getLogger(__name__)
@@ -44,9 +45,10 @@ def waitGovNoSleep(timeout=GOVERNOR_TIMEOUT):
 
 def toggleLowMagCameraSettings(stateCode):
 
-  if (stateCode == "DA"):
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
-  else:
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
+  if daq_utils.beamline != "nyx":
+    if (stateCode == "DA"):
+      setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
+      setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
+    else:
+      setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
+      setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))

@@ -4,7 +4,6 @@ from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
 from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
 from mxtools.zebra import Zebra
-from mxtools.vector_program import VectorProgram
 from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
@@ -26,13 +25,10 @@ gs.RE.subscribe('stop', post_run(verify_files_saved))
 import matplotlib.pyplot as plt
 plt.ion()
 
-# import nslsii
-
 # Register bluesky IPython magics.
 #from bluesky.magics import BlueskyMagics
 #get_ipython().register_magics(BlueskyMagics)
 
-#nslsii.configure_base(get_ipython().user_ns, 'amx')
 import bluesky.plans as bp
 
 from bluesky.run_engine import RunEngine
@@ -45,13 +41,6 @@ from databroker import Broker
 db = Broker.named(beamline)
 
 RE.subscribe(db.insert)
-
-#from bluesky.utils import ts_msg_hook
-#RE.msg_hook = ts_msg_hook
-# from bluesky.callbacks.best_effort import BestEffortCallback
-# bec = BestEffortCallback()
-# RE.subscribe(bec)
-
 
 # convenience imports
 # from ophyd.commands import *
@@ -110,6 +99,7 @@ if (beamline=="amx"):
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
     eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger')
+    from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
@@ -129,6 +119,7 @@ elif beamline == "fmx":
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
     eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
+    from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
@@ -147,6 +138,7 @@ elif beamline=="nyx":
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
+    from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
     from mxtools.eiger import EigerSingleTriggerV26
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector")

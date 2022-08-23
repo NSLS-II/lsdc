@@ -2,6 +2,47 @@
  Release History
 =================
 
+1.0.3 (2022-09-05, a.k.a. 2022-3)
+=================================
+
+Fixes
+-----
+* AMX/FMX branch (master)
+
+  * Make a copy of the lysozyme PDB file for Raddose instead of a symlink to prevent Globus issues
+  * More handling of ValueErrors from bad input on GUI fields
+
+* AMX/FMX branch (amx-fmx-one-branch-fixes)
+
+  * Calculate wavelength from energy on all beamlines
+  * Add Bluesky logging
+  * Use new ISPyB database hostname
+  * Fix detector distance in flyer
+  * Vector data collection working on AMX/FMX
+
+* NYX branch (nyx-one-branch)
+
+  * Do not update gain/acquire time for sample camera upon zoom change on NYX
+  * Point to new location of LSDC and updated conda environment
+  * Ensure correct VectorProgram used for NYX
+  * Fix detector Z value going into Eiger metadata
+
+Changes
+-------
+* AMX/FMX branch (master)
+
+  * Add beamCheck box to GUI
+
+* NYX branch (nyx-one-branch)
+
+  * Openpyxl added to conda environment, allowing xlsx spreadsheet import
+  * Vector data collection working in LSDC
+  * Longer total exposure time (1000 sec) for NYX
+
+Note
+----
+AMX/FMX will still be using the master branch as rastering was not fully transitioned to Bluesky before the end of the cycle. Thus, 2022-3 will still be using the original code for standard, vector, and rastering collections.
+
 1.0.2 (2022-05-25, a.k.a. 2022-2)
 =================================
 

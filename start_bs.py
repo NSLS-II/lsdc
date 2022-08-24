@@ -108,11 +108,13 @@ if (beamline=="amx"):
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:AMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra')
-    eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger')
+    eiger = EigerSingleTriggerV26('XF:17IDB-ES:AMX{Det:Eig9M}', name='eiger', beamline=beamline)
     from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDB-ES:AMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -128,11 +130,13 @@ elif beamline == "fmx":
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     zebra = Zebra('XF:17IDC-ES:FMX{Zeb:3}:', name='zebra')
-    eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger')
+    eiger = EigerSingleTriggerV26('XF:17IDC-ES:FMX{Det:Eig16M}', name='eiger', beamline=beamline)
     from mxtools.vector_program import VectorProgram
     vector_program = VectorProgram('XF:17IDC-ES:FMX{Gon:1-Vec}', name='vector_program')
     from mxtools.flyer import MXFlyer
     flyer = MXFlyer(vector_program, zebra, eiger)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector_program, zebra, eiger)
 
     from embl_robot import EMBLRobot
     robot = EMBLRobot()
@@ -151,9 +155,11 @@ elif beamline=="nyx":
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
     from mxtools.eiger import EigerSingleTriggerV26
-    detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector")
+    detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
+    from mxtools.raster_flyer import MXRasterFlyer
+    raster_flyer = MXRasterFlyer(vector, zebra, eiger)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

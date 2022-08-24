@@ -41,7 +41,7 @@ Changes
 
 Note
 ----
-AMX/FMX will still be using the master branch as rastering was not fully transitioned to Bluesky before the end of the cycle. Thus, 2022-3 will still be using the original code for standard, vector, and rastering collections.
+AMX/FMX will still be using the master branch (instead of a one-branch derivative) as rastering was not fully transitioned to Bluesky before the end of the cycle - note that additional testing time will be necessary once rastering is complete before being suitable for production.
 
 1.0.2 (2022-05-25, a.k.a. 2022-2)
 =================================

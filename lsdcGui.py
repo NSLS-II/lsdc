@@ -212,12 +212,31 @@ class StaffScreenDialog(QFrame):
         else:
           self.topViewCheckOnCheckBox.setChecked(False)            
         self.topViewCheckOnCheckBox.stateChanged.connect(self.topViewOnCheckCB)
+        # BeamCheck check box 
+        self.beamCheckOnCheckBox = QCheckBox("BeamCheck (On)")
+        if (getBlConfig(BEAM_CHECK) == 1):
+          self.beamCheckOnCheckBox.setChecked(True)
+        else:
+          self.beamCheckOnCheckBox.setChecked(False)
+        self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
+
+        self.gripperUnmountColdCheckBox = QCheckBox("Unmount Cold")
+        self.gripperUnmountColdCheckBox.stateChanged.connect(self.unmountColdCheckCB)
+        if (getBlConfig(UNMOUNT_COLD_CHECK) == 1):
+          self.gripperUnmountColdCheckBox.setEnabled(True)
+          self.gripperUnmountColdCheckBox.setChecked(True)
+        else:
+          self.gripperUnmountColdCheckBox.setEnabled(False)
+          self.gripperUnmountColdCheckBox.setChecked(False)
+
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
         if (getBlConfig("queueCollect") == 1):
           self.queueCollectOnCheckBox.setChecked(True)
+          self.gripperUnmountColdCheckBox.setEnabled(True)
         else:
           self.queueCollectOnCheckBox.setChecked(False)            
+          self.gripperUnmountColdCheckBox.setEnabled(False)
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        
@@ -327,6 +346,8 @@ class StaffScreenDialog(QFrame):
         self.closeGripperButton = QtWidgets.QPushButton("Close Gripper")
         self.closeGripperButton.clicked.connect(self.closeGripper_CB)
         hBoxRobot1.addWidget(self.robotOnCheckBox)
+        hBoxRobot1.addWidget(self.beamCheckOnCheckBox)
+        hBoxRobot1.addWidget(self.gripperUnmountColdCheckBox)
         hBoxRobot1.addWidget(self.topViewCheckOnCheckBox)
         hBoxRobot1.addWidget(self.enableMountCheckBox)        
         hBoxRobot1.addWidget(self.recoverRobotButton)
@@ -434,6 +455,22 @@ class StaffScreenDialog(QFrame):
       else:
         setBlConfig("robot_online",0)
 
+    def beamCheckOnCheckCB(self,state):
+      if state == QtCore.Qt.Checked:
+         setBlConfig(BEAM_CHECK,1)
+         logger.debug(f"{BEAM_CHECK} on")
+      else:
+         setBlConfig(BEAM_CHECK,0)
+         logger.debug(f"{BEAM_CHECK} off")
+
+    def unmountColdCheckCB(self,state):
+      if state == QtCore.Qt.Checked:
+        logger.info("unmountColdCheckCB On")
+        setBlConfig(UNMOUNT_COLD_CHECK,1)
+      else:
+        logger.info("unmountColdCheckCB Off")
+        setBlConfig(UNMOUNT_COLD_CHECK,0)
+
     def topViewOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
         setBlConfig(TOP_VIEW_CHECK,1)
@@ -461,8 +498,11 @@ class StaffScreenDialog(QFrame):
     def queueCollectOnCheckCB(self,state):
       if state == QtCore.Qt.Checked:
         setBlConfig("queueCollect",1)
+        self.gripperUnmountColdCheckBox.setEnabled(True)
       else:
         setBlConfig("queueCollect",0)
+        self.gripperUnmountColdCheckBox.setEnabled(False)
+        self.gripperUnmountColdCheckBox.setChecked(False)
 
     def enableMountCheckCB(self,state):
       if state == QtCore.Qt.Checked:
@@ -3691,9 +3731,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def calcLifetimeCB(self):
       if (not os.path.exists("2vb1.pdb")):
-        os.system("ln -s $CONFIGDIR/2vb1.pdb .")
+        os.system("cp -a $CONFIGDIR/2vb1.pdb .")
         os.system("mkdir rd3d")
-        os.system("chmod 777 rd3d")        
       
       energyReadback = self.energy_pv.get()/1000.0
       sampleFlux = self.sampleFluxPV.get()
@@ -4428,23 +4467,29 @@ class ControlMain(QtWidgets.QMainWindow):
       reqObj = colRequest["request_obj"]
       if not self.validateAllFields():
         return
-      reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-      reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-      reqObj["img_width"] = float(self.osc_range_ledit.text())
-      reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-      reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())      
-      reqObj["resolution"] = float(self.resolution_ledit.text())
-      if (singleRequest == 1): # a touch kludgy, but I want to be able to edit parameters for multiple requests w/o screwing the data loc info
-        reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
-        reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-        reqObj["directory"] = str(self.dataPathGB.dataPath_ledit.text())
-        reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-      reqObj["attenuation"] = float(self.transmission_ledit.text())
-      reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-      reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-      reqObj["energy"] = float(self.energy_ledit.text())
-      wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
-      reqObj["wavelength"] = wave
+      try:
+        reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+        reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+        reqObj["img_width"] = float(self.osc_range_ledit.text())
+        reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+        reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())      
+        reqObj["resolution"] = float(self.resolution_ledit.text())
+        if (singleRequest == 1): # a touch kludgy, but I want to be able to edit parameters for multiple requests w/o screwing the data loc info
+          reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
+          reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+          reqObj["directory"] = str(self.dataPathGB.dataPath_ledit.text())
+          reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+        reqObj["attenuation"] = float(self.transmission_ledit.text())
+        reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+        reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+        reqObj["energy"] = float(self.energy_ledit.text())
+        wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+        reqObj["wavelength"] = wave
+      except ValueError:
+        message = "Please ensure that all boxes that expect numerical values have numbers in them"
+        logger.error(message)
+        self.popupServerMessage(f'{message}')
+        return
       reqObj["fastDP"] =(self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
       reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
       reqObj["dimple"] =self.dimpleCheckBox.isChecked()      
@@ -4478,9 +4523,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.selectedSampleID = itemData
           if (getBlConfig("queueCollect") == 0):
             if (self.mountedPin_pv.get() != self.selectedSampleID):                    
-              self.popupServerMessage("You can only add requests to a mounted sample, for now.")
-              self.progressDialog.close()              
-              return
+              self.selectedSampleID = self.mountedPin_pv.get()
 
         try:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
@@ -4514,14 +4557,19 @@ class ControlMain(QtWidgets.QMainWindow):
 
       if (getBlConfig("queueCollect") == 0):
         if (self.mountedPin_pv.get() != self.selectedSampleID):                    
-          self.popupServerMessage("You can only add requests to a mounted sample, for now.")
-          return
+          self.selectedSampleID = self.mountedPin_pv.get()
       
       if not self.validateAllFields():
         return
 #skinner, not pretty below the way stuff is duplicated.
-      if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
-        self.popupServerMessage("Osc range less than Osc width")
+      try:
+        if ((float(self.osc_end_ledit.text()) < float(self.osc_range_ledit.text())) and str(self.protoComboBox.currentText()) != "eScan"):
+          self.popupServerMessage("Osc range less than Osc width")
+          return
+      except ValueError:
+        message = "Please ensure oscillation end and oscillation range are valid numbers"
+        logger.error(message)
+        self.popupServerMessage(f'{message}')
         return
 
       if (self.periodicTable.isVisible()):
@@ -4570,26 +4618,32 @@ class ControlMain(QtWidgets.QMainWindow):
              runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])
              (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,colRequest["sample"])                   
              reqObj = colRequest["request_obj"]
-             reqObj["runNum"] = runNum
-             reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-             reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-             reqObj["img_width"] = float(self.osc_range_ledit.text())
-             setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
-             setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
-             setBlConfig("stdTrans",float(self.transmission_ledit.text()))
-             setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
-             reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-             reqObj["resolution"] = float(self.resolution_ledit.text())
-             reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text()+"_C"+str(i+1))
-             reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-             reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"             
-             reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-             reqObj["attenuation"] = float(self.transmission_ledit.text())
-             reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-             reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-             reqObj["energy"] = float(self.energy_ledit.text())             
-             wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
-             reqObj["wavelength"] = wave
+             try:
+               reqObj["runNum"] = runNum
+               reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+               reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+               reqObj["img_width"] = float(self.osc_range_ledit.text())
+               setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+               setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+               setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+               setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))
+               reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+               reqObj["resolution"] = float(self.resolution_ledit.text())
+               reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text()+"_C"+str(i+1))
+               reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+               reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+"/"+ str(daq_utils.getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"             
+               reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+               reqObj["attenuation"] = float(self.transmission_ledit.text())
+               reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+               reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+               reqObj["energy"] = float(self.energy_ledit.text())             
+               wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+               reqObj["wavelength"] = wave
+             except ValueError:
+               message = "Please ensure that all boxes that expect numerical values have numbers in them"
+               logger.error(message)
+               self.popupServerMessage(f'{message}')
+               return
              reqObj["detDist"] = float(self.detDistMotorEntry.getEntry().text())             
              reqObj["protocol"] = str(self.protoComboBox.currentText())
              reqObj["pos_x"] = float(self.centeringMarksList[i]["sampCoords"]["x"])
@@ -4628,33 +4682,39 @@ class ControlMain(QtWidgets.QMainWindow):
           reqObj["pos_y"] = float(self.sampy_pv.get())
           reqObj["pos_z"] = float(self.sampz_pv.get())
         reqObj["runNum"] = runNum
-        reqObj["sweep_start"] = float(self.osc_start_ledit.text())
-        reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
-        reqObj["img_width"] = float(self.osc_range_ledit.text())
-        reqObj["exposure_time"] = float(self.exp_time_ledit.text())
-        if (rasterDef == None and reqObj["protocol"] != "burn"):        
-          setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
-          setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
-          setBlConfig("stdTrans",float(self.transmission_ledit.text()))
-          setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
-        reqObj["resolution"] = float(self.resolution_ledit.text())
-        reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+ "/" + str(daq_utils.getVisitName()) + "/" +str(self.dataPathGB.prefix_ledit.text())+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
-        reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
-        reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
-        reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
-        if (abs(reqObj["sweep_end"]-reqObj["sweep_start"])<5.0):
-          reqObj["fastDP"] = False
-          reqObj["fastEP"] = False
-          reqObj["dimple"] = False          
-        else:
-          reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
-          reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
-          reqObj["dimple"] =self.dimpleCheckBox.isChecked()          
-        reqObj["xia2"] =self.xia2CheckBox.isChecked()
-        reqObj["attenuation"] = float(self.transmission_ledit.text())
-        reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-        reqObj["slit_height"] = float(self.beamHeight_ledit.text())
-        reqObj["energy"] = float(self.energy_ledit.text())                  
+        try:
+          reqObj["sweep_start"] = float(self.osc_start_ledit.text())
+          reqObj["sweep_end"] = float(self.osc_end_ledit.text())+float(self.osc_start_ledit.text())
+          reqObj["img_width"] = float(self.osc_range_ledit.text())
+          reqObj["exposure_time"] = float(self.exp_time_ledit.text())
+          if (rasterDef == None and reqObj["protocol"] != "burn"):        
+            setBlConfig("screen_default_width",float(self.osc_range_ledit.text()))
+            setBlConfig("screen_default_time",float(self.exp_time_ledit.text()))
+            setBlConfig("stdTrans",float(self.transmission_ledit.text()))
+            setBlConfig("screen_default_dist",float(self.detDistMotorEntry.getEntry().text()))          
+          reqObj["resolution"] = float(self.resolution_ledit.text())
+          reqObj["directory"] = str(self.dataPathGB.base_path_ledit.text())+ "/" + str(daq_utils.getVisitName()) + "/" +str(self.dataPathGB.prefix_ledit.text())+"/" + str(runNum) + "/"+db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/"
+          reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+          reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
+          reqObj["file_number_start"] = int(self.dataPathGB.file_numstart_ledit.text())
+          if (abs(reqObj["sweep_end"]-reqObj["sweep_start"])<5.0):
+            reqObj["fastDP"] = False
+            reqObj["fastEP"] = False
+            reqObj["dimple"] = False          
+          else:
+            reqObj["fastDP"] = (self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())
+            reqObj["fastEP"] =self.fastEPCheckBox.isChecked()
+            reqObj["dimple"] =self.dimpleCheckBox.isChecked()          
+          reqObj["xia2"] =self.xia2CheckBox.isChecked()
+          reqObj["attenuation"] = float(self.transmission_ledit.text())
+          reqObj["slit_width"] = float(self.beamWidth_ledit.text())
+          reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+          reqObj["energy"] = float(self.energy_ledit.text())                  
+        except ValueError:
+          message = "Please ensure that all boxes that expect numerical values have numbers in them"
+          logger.error(message)
+          self.popupServerMessage(f'{message}')
+          return
         try:        
           wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
         except ValueError:
@@ -4894,7 +4954,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def unmountSampleCB(self):
       logger.info("unmount sample")
-      self.eraseCB()      
       self.send_to_server("unmountSample()")
 
 
@@ -5217,8 +5276,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.immediate_comm_pv = PV(daq_utils.beamlineComm + "immediate_command_s")
         self.stillModeStatePV = PV(daq_utils.pvLookupDict["stillModeStatus"])        
         self.progressDialog = QtWidgets.QProgressDialog()
-        self.progressDialog.setCancelButtonText(QString())
+        self.progressDialog.setCancelButtonText(QString("Cancel"))
         self.progressDialog.setModal(False)
+        self.progressDialog.reset()
         tab1= QtWidgets.QWidget()
         vBoxlayout1= QtWidgets.QVBoxLayout()
         splitter1 = QtWidgets.QSplitter(QtCore.Qt.Vertical,self)

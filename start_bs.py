@@ -44,6 +44,14 @@ db = Broker.named(beamline)
 
 RE.subscribe(db.insert)
 
+from bluesky.log import config_bluesky_logging
+config_bluesky_logging()
+#from bluesky.utils import ts_msg_hook
+#RE.msg_hook = ts_msg_hook
+# from bluesky.callbacks.best_effort import BestEffortCallback
+# bec = BestEffortCallback()
+# RE.subscribe(bec)
+
 # convenience imports
 # from ophyd.commands import *
 from bluesky.callbacks import *

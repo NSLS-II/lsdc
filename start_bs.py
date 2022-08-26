@@ -159,7 +159,7 @@ elif beamline=="nyx":
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
     from mxtools.raster_flyer import MXRasterFlyer
-    raster_flyer = MXRasterFlyer(vector, zebra, eiger)
+    raster_flyer = MXRasterFlyer(vector, zebra, detector)
 
     from nyxtools.robot import DensoOphydRobot
     from denso_robot import DensoRobot

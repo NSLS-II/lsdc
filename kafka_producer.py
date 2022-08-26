@@ -7,14 +7,14 @@ from time import sleep
 import certifi
 import yaml
 
-with open(f"{os.environ['CONFIGDIR']}/nsls2-kafka-config.yml") as f:
+with open(f"/etc/bluesky/kafka.yml") as f:
     kafka_config = yaml.safe_load(f)
 
 bootstrap_servers = ",".join(kafka_config["bootstrap_servers"])
-lsdc_producer_config = kafka_config["lsdc_producer_config"]
+lsdc_producer_config = kafka_config["runengine_producer_config"]  # for now, use the same kafka configuration as runengine
 
 conf = {'bootstrap.servers':bootstrap_servers,
-        'ssl.ca.location': certifi.where()}
+        'ssl.ca.location': lsdc_producer_config["ssl.ca.location"]}
 conf.update(lsdc_producer_config)
 
 p = Producer(**conf)

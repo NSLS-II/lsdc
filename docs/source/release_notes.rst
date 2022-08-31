@@ -11,6 +11,7 @@ Fixes
 
   * Make a copy of the lysozyme PDB file for Raddose instead of a symlink to prevent Globus issues
   * More handling of ValueErrors from bad input on GUI fields
+  * Remove extra popup dialog on startup (progress bar)
 
 * AMX/FMX branch (amx-fmx-one-branch-fixes)
 
@@ -23,7 +24,6 @@ Fixes
 * NYX branch (nyx-one-branch)
 
   * Do not update gain/acquire time for sample camera upon zoom change on NYX
-  * Point to new location of LSDC and updated conda environment
   * Ensure correct VectorProgram used for NYX
   * Fix detector Z value going into Eiger metadata
 

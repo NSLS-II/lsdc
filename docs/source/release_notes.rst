@@ -5,13 +5,14 @@
 1.0.3 (2022-09-05, a.k.a. 2022-3)
 =================================
 
-Fixes
------
+Fixes and other changes
+-----------------------
 * AMX/FMX branch (master)
 
   * Make a copy of the lysozyme PDB file for Raddose instead of a symlink to prevent Globus issues
   * More handling of ValueErrors from bad input on GUI fields
   * Remove extra popup dialog on startup (progress bar)
+  * Add beamCheck box to GUI
 
 * AMX/FMX branch (amx-fmx-one-branch-fixes)
 
@@ -20,24 +21,16 @@ Fixes
   * Use new ISPyB database hostname
   * Fix detector distance in flyer
   * Vector data collection working on AMX/FMX
+  * Initial code for rastering for AMX/FMX
+  * Use system Kafka configuration
 
 * NYX branch (nyx-one-branch)
 
   * Do not update gain/acquire time for sample camera upon zoom change on NYX
   * Ensure correct VectorProgram used for NYX
-  * Fix detector Z value going into Eiger metadata
-
-Changes
--------
-* AMX/FMX branch (master)
-
-  * Add beamCheck box to GUI
-
-* NYX branch (nyx-one-branch)
-
-  * Openpyxl added to conda environment, allowing xlsx spreadsheet import
-  * Vector data collection working in LSDC
+  * Generally make sure vector collection works for NYX
   * Longer total exposure time (1000 sec) for NYX
+  * Fix detector Z value going into Eiger metadata
 
 Note
 ----

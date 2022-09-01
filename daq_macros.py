@@ -1930,7 +1930,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    yield from raster_flyer.detector.collect()
+    #yield from raster_flyer.detector.collect()
     logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of
@@ -1945,7 +1945,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     #ensure gov transitions have completed successfully
     timeout = 20
     gov_lib.waitGov(govStatus, timeout)
-    if not(govStatus.success) or not(govs.gov.robot.state == targetGovState):
+    if not(govStatus.success) or not(govs.gov.Robot.state.get() == targetGovState):
       logger.error(f"gov status check failed, did not achieve {targetGovState}")
 
     if (procFlag):

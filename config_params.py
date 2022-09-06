@@ -30,6 +30,9 @@ TOP_VIEW_CHECK = 'topViewCheck'
 CRYOSTREAM_ONLINE = 'cryostream_online'  # consistent naming with hardware, such as robot_online
 
 # constant values below
+# GUI default configuration
+BEAM_CHECK = 'beamCheck'
+UNMOUNT_COLD_CHECK = 'unmountColdCheck'
 
 # raster request status updates
 class RasterStatus(Enum):

@@ -1402,11 +1402,7 @@ class DewarTree(QtWidgets.QTreeView):
 
     def confirmDelete(self):
       quit_msg = "Are you sure you want to delete all requests?"
-      self.parent.timerHutch.stop()
-      self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-      self.parent.timerSample.start(SAMPLE_TIMER_DELAY)            
-      self.parent.timerHutch.start(HUTCH_TIMER_DELAY)      
       if reply == QtWidgets.QMessageBox.Yes:
         return(1)
       else:
@@ -2291,13 +2287,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         self.capture = self.captureLowMag
-        self.timerHutch = QTimer()
-        #self.timerHutch.timeout.connect(self.timerHutchRefresh)
-        self.timerHutch.start(1000)
-
-        self.timerSample = QTimer()
-        self.timerSample.timeout.connect(self.timerSampleRefresh)
-        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        
         self.centeringMarksList = []
         self.rasterList = []
         self.rasterDefList = []
@@ -2659,15 +2649,19 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomLevelToggledCB("Zoom1")
 
         hutchCornerCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchCornerCamURL'))
-        hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchCorner, frame))
+        hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchCorner, frame))
         hutchCornerCamThread.start()
 
         hutchTopCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchTopCamURL'))
-        hutchTopCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchTop, frame))
-        hutchTopCamThread.start()        
+        hutchTopCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame))
+        hutchTopCamThread.start()
 
-    def updateHutchCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
-      pixmapItem.setPixmap = frame      
+        sampleCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, camera_object=self.capture)
+        sampleCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item, frame))
+        sampleCamThread.start()
+
+    def updateCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
+      pixmapItem.setPixmap(frame)      
 
     def albulaCheckCB(self,state):
       if state != QtCore.Qt.Checked:
@@ -3583,11 +3577,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def popImportDialogCB(self):
-      self.timerHutch.stop()
-      self.timerSample.stop()            
       fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose Spreadsheet File', '',filter="*.xls *.xlsx",options=QtWidgets.QFileDialog.DontUseNativeDialog)
-      self.timerSample.start(SAMPLE_TIMER_DELAY)            
-      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       if (fname != ""):
         logger.info(fname)
         comm_s = "importSpreadsheet(\""+str(fname[0])+"\")"
@@ -4268,40 +4258,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.rasterList.append(newRasterGraphicsDesc)
 
 
-    def timerHutchRefresh(self):
-      try:
-        # instead of the previous StringIO, use BytesIO:
-        # https://stackoverflow.com/questions/41340296/how-can-pillow-open-uploaded-image-file-from-stringio-directly
-        file = BytesIO(urllib.request.urlopen(getBlConfig("hutchCornerCamURL")).read())
-        img = Image.open(file)
-        qimage = ImageQt.ImageQt(img)
-        pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        self.pixmap_item_HutchCorner.setPixmap(pixmap_orig)        
-      except Exception as e:
-        logger.error('Exception during hutch corner cam handling: %s URL: %s' % (e, getBlConfig('hutchCornerCamURL')))
-      try:
-        file = BytesIO(urllib.request.urlopen(getBlConfig("hutchTopCamURL")).read())
-        img = Image.open(file)
-        qimage = ImageQt.ImageQt(img)
-        pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        self.pixmap_item_HutchTop.setPixmap(pixmap_orig)
-      except Exception as e:
-        logger.error('Exception during hutch top cam handling: %s URL: %s' % (e, getBlConfig('hutchTopCamURL')))
-      
-
-    def timerSampleRefresh(self):
-      if self.capture is None:
-        return 
-      retval,self.currentFrame = self.capture.read()
-      if self.currentFrame is None:
-        logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
-        return #maybe stop the timer also???
-      height,width=self.currentFrame.shape[:2]
-      qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
-      qimage = qimage.rgbSwapped()
-      pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-      self.pixmap_item.setPixmap(pixmap_orig)
-
+    
 
     def sceneKey(self, event):
         if (event.key() == QtCore.Qt.Key_Delete or event.key() == QtCore.Qt.Key_Backspace):
@@ -4726,11 +4683,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def restartServerCB(self):
       if (self.controlEnabled()):
         msg = "Desperation move. Are you sure?"
-        self.timerHutch.stop()
-        self.timerSample.stop()      
         reply = QtWidgets.QMessageBox.question(self, 'Message',msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-        self.timerSample.start(0)            
-        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if reply == QtWidgets.QMessageBox.Yes:
           if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
             restart_pv = PV(daq_utils.beamlineComm + "RestartServerSignal")
@@ -4758,11 +4711,7 @@ class ControlMain(QtWidgets.QMainWindow):
   
 
     def removePuckCB(self):
-      self.timerHutch.stop()
-      self.timerSample.stop()                    
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
-      self.timerSample.start(SAMPLE_TIMER_DELAY)            
-      self.timerHutch.start(HUTCH_TIMER_DELAY)            
       
 
     def getVectorObject(self):
@@ -4830,17 +4779,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def puckToDewarCB(self):
       while (1):
-        self.timerHutch.stop()
-        self.timerSample.stop()      
         puckName, ok = PuckDialog.getPuckName()
-        self.timerSample.start(SAMPLE_TIMER_DELAY)            
-        self.timerHutch.start(HUTCH_TIMER_DELAY)      
         if (ok):
-          self.timerHutch.stop()
-          self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
-          self.timerSample.start(SAMPLE_TIMER_DELAY)            
-          self.timerHutch.start(HUTCH_TIMER_DELAY)      
           ipos = int(dewarPos)+1
           if (ok):
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))

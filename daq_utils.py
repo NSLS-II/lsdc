@@ -199,6 +199,7 @@ def createDefaultRequest(sample_id,createVisit=True):
                "detDist": screenDist,
                "parentReqID": -1,
                "basePath": basePath,
+               "dataPath": getBlConfig("data_path"),
                "file_prefix": sampleName,
                "directory": basePath+"/" + str(getVisitName()) + "/"+sampleName+"/" + str(runNum) + "/" +db_lib.getContainerNameByID(containerID)+"_"+str(samplePositionInContainer+1)+"/",
                "file_number_start": 1,

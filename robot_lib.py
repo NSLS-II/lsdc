@@ -36,6 +36,7 @@ sampZadjust = 0
 global retryMountCount
 retryMountCount = 0
 
+
 def finish():
   if (getBlConfig('robot_online')):  
     try:
@@ -151,6 +152,41 @@ def dryGripper():
     daq_lib.gui_message("Dry gripper failed! " + e_s)
     setPvDesc("warmupThreshold",saveThreshold)          
     
+def DewarRefill(hours):
+  global _dewarRefillThread
+  seconds = int((hours * 60 * 60))
+  if _dewarRefillThread is not None:
+    if _dewarRefillThread.is_alive():
+      logger.info("An existing DewarRefillTask is already running.")
+      return
+  _dewarRefillThread = Thread(target=_dewarRefillTask, args=(seconds,))
+  _dewarRefillThread.start()
+
+def _dewarRefillTask(seconds):
+  global dewarRefillStop
+  DewarAutoFillOff()
+  DewarHeaterOn()
+  dewarRefillStop = 0
+  start_time = time.time()
+  goal_time = time.time() + (seconds)
+  while not dewarRefillStop:
+    if time.time() < goal_time:
+      time_remaining = round(((goal_time - time.time()) / 60), 1)
+      logger.info(f"DewarRefillTask: Time remaining until auto fill on... {time_remaining} minutes")
+      time.sleep(60)
+    else:
+      logger.info("Dewar refill task running.")
+      DewarAutoFillOn()
+      DewarHeaterOn()
+      return
+  logger.info("DewarRefill task cancelled.")
+  dewarRefillStop = 0
+
+def DewarRefillCancel():
+  global dewarRefillStop
+  logger.info("DewarRefillTask cancelling...")
+  dewarRefillStop = 1
+
 def DewarAutoFillOn():
   RobotControlLib.runCmd("turnOnAutoFill")
 

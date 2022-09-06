@@ -38,7 +38,7 @@ from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
-
+from threads import VideoThread
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
@@ -2292,8 +2292,8 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()
-        self.timerHutch.timeout.connect(self.timerHutchRefresh)
-        self.timerHutch.start(HUTCH_TIMER_DELAY)
+        #self.timerHutch.timeout.connect(self.timerHutchRefresh)
+        self.timerHutch.start(1000)
 
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
@@ -2656,7 +2656,18 @@ class ControlMain(QtWidgets.QMainWindow):
         self.tabs.addTab(sampleTab,"Collect")
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
         self.tabs.addTab(self.XRFTab,"XRF Spectrum")
-        self.zoomLevelToggledCB("Zoom1")        
+        self.zoomLevelToggledCB("Zoom1")
+
+        hutchCornerCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchCornerCamURL'))
+        hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchCorner, frame))
+        hutchCornerCamThread.start()
+
+        hutchTopCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchTopCamURL'))
+        hutchTopCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchTop, frame))
+        hutchTopCamThread.start()        
+
+    def updateHutchCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
+      pixmapItem.setPixmap = frame      
 
     def albulaCheckCB(self,state):
       if state != QtCore.Qt.Checked:

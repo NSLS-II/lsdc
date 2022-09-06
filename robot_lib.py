@@ -159,10 +159,10 @@ def DewarRefill(hours):
     if _dewarRefillThread.is_alive():
       logger.info("An existing DewarRefillTask is already running.")
       return
-  _dewarRefillThread = Thread(target=_dewarRefillTask, args=(seconds,0))
+  _dewarRefillThread = Thread(target=_dewarRefillTask, args=(seconds,))
   _dewarRefillThread.start()
 
-def _dewarRefillTask(seconds, flag):
+def _dewarRefillTask(seconds):
   global dewarRefillStop
   DewarAutoFillOff()
   DewarHeaterOn()

@@ -14,7 +14,7 @@ Fixes and other changes
   * Remove extra popup dialog on startup (progress bar)
   * Add beamCheck box to GUI
   * Add DewarRefill function on the server-side
-  * Refactor hutch camera code to stop LSDC GUI from crashing when broken/absent and update quicker
+  * Refactor hutch camera code to stop GUI from crashing when cameras are broken/absent and to update quicker
 
 * AMX/FMX branch (amx-fmx-one-branch-fixes)
 

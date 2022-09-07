@@ -39,6 +39,7 @@ def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
     status = UNMOUNT_STEP_SUCCESSFUL  # TODO assume embl robot is successful
   return UNMOUNT_SUCCESSFUL  # TODO hard-coded for testing
 
+
 def finish():
     robot.finish()
 
@@ -49,6 +50,32 @@ def dryGripper():
     robot.dryGripper()
 
 # TODO ask Edwin about these Dewar functions
+
+def _dewarRefillTask(seconds):
+  global dewarRefillStop
+  DewarAutoFillOff()
+  DewarHeaterOn()
+  dewarRefillStop = 0
+  start_time = time.time()
+  goal_time = time.time() + (seconds)
+  while not dewarRefillStop:
+    if time.time() < goal_time:
+      time_remaining = round(((goal_time - time.time()) / 60), 1)
+      logger.info(f"DewarRefillTask: Time remaining until auto fill on... {time_remaining} minutes")
+      time.sleep(60)
+    else:
+      logger.info("Dewar refill task running.")
+      DewarAutoFillOn()
+      DewarHeaterOn()
+      return
+  logger.info("DewarRefill task cancelled.")
+  dewarRefillStop = 0
+
+def DewarRefillCancel():
+  global dewarRefillStop
+  logger.info("DewarRefillTask cancelling...")
+  dewarRefillStop = 1
+
 def DewarAutoFillOn():
     robot.DewarAutoFillOn()
 

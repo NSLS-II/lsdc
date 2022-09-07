@@ -10,5 +10,5 @@ export matlab_distrib=${PROJDIR}/software/c3d/matlab_distrib
 export LD_LIBRARY_PATH=$matlab_distrib/bin/glnx86:$matlab_distrib/toolbox
 export PINALIGNDIR=${PROJDIR}pinAlign/pin_align-master/
 export MXPROCESSINGSCRIPTSDIR=${PROJDIR}lsdc-processing/
-conda activate lsdc-server-2022-3.1
+conda activate lsdc-server-2022-3.2
 $LSDCHOME/lsdcServer

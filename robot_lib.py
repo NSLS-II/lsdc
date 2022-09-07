@@ -75,11 +75,11 @@ def _dewarRefillTask(seconds):
       logger.info(f"DewarRefillTask: Time remaining until auto fill on... {time_remaining} minutes")
       time.sleep(60)
     else:
-      logger.info("Dewar refill task running.")
+      logger.info("DewarRefillTask running.")
       DewarAutoFillOn()
       DewarHeaterOn()
       return
-  logger.info("DewarRefill task cancelled.")
+  logger.info("DewarRefillTask cancelled.")
   dewarRefillStop = 0
 
 def DewarRefillCancel():

@@ -155,10 +155,13 @@ def dryGripper():
 def DewarRefill(hours):
   global _dewarRefillThread
   seconds = int((hours * 60 * 60))
-  if _dewarRefillThread is not None:
-    if _dewarRefillThread.is_alive():
-      logger.info("An existing DewarRefillTask is already running.")
-      return
+  try:
+    if _dewarRefillThread is not None:
+      if _dewarRefillThread.is_alive():
+        logger.info("An existing DewarRefillTask is already running.")
+        return
+  except NameError:
+    logger.info("_dewarRefillThread not defined - this is ok, conntinuing with dewar refill task")
   _dewarRefillThread = Thread(target=_dewarRefillTask, args=(seconds,))
   _dewarRefillThread.start()
 

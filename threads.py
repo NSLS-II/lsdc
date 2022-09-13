@@ -22,7 +22,7 @@ class VideoThread(QThread):
                 retval,self.currentFrame = self.camera_object.read()
                 if self.currentFrame is None:
                     logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
-                    return #maybe stop the timer also???
+                    return
                 height,width=self.currentFrame.shape[:2]
                 qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
                 qimage = qimage.rgbSwapped()
@@ -36,6 +36,9 @@ class VideoThread(QThread):
         self.url = url
         self.camera_object = camera_object
         QThread.__init__(self, *args, **kwargs)
+    
+    def updateCam(self, camera_object):
+        self.camera_object = camera_object
         
     def run(self):
         while True:

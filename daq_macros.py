@@ -2953,7 +2953,7 @@ def loop_center_mask():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   beamline_lib.mvrDescriptor("omega",90.0)
   daq_utils.take_crystal_picture(filename="findslice_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopslice.txt"
+  comm_s = os.environ["PROJDIR"] + "/software/c3d/c3d_search -p=$CONFIGDIR/find_loopslice.txt"
   os.system(comm_s)
   os.system("dos2unix res0.txt")
   os.system("echo \"\n\">>res0.txt")    
@@ -2977,7 +2977,7 @@ def loop_center_mask():
 def getLoopSize():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   daq_utils.take_crystal_picture(filename="findsize_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopSize.txt"
+  comm_s = os.environ["PROJDIR"] + "/software/c3d/c3d_search -p=$CONFIGDIR/find_loopSize.txt"
   os.system(comm_s)
   os.system("dos2unix loopSizeOut0.txt")
   os.system("echo \"\n\">>loopSizeOut0.txt")    

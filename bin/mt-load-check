@@ -1,0 +1,23 @@
+#$/usr/bin/bash
+hostname=`hostname -s | sed 's/xf//' | sed 's/-[a-z0-9]*//'`
+servorws=`hostname -s | sed 's/[a-z0-9]*-//' | sed 's/[0-9]*//'`
+case $hostname in
+	17id1)
+		beamline="amx"
+		;;
+	17id2)
+		beamline="fmx"
+		;;
+esac
+case $servorws in
+	ws*)
+		echo Workstation - activating GUI env
+		conda activate lsdc-gui-2022-1.1
+		;;
+	*)
+		echo Server - activating server env
+		conda activate lsdc-server-2022-3.2
+		;;
+esac
+echo Running MT_LoadCheck script
+/nsls2/software/mx/daq/lsdc_$beamline/bin/MT_LoadCheck.py

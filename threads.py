@@ -18,15 +18,6 @@ class VideoThread(QThread):
                 img = Image.open(file)
                 qimage = ImageQt.ImageQt(img)
                 pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-            if self.camera_object:
-                retval,self.currentFrame = self.camera_object.read()
-                if self.currentFrame is None:
-                    logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
-                    return #maybe stop the timer also???
-                height,width=self.currentFrame.shape[:2]
-                qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
-                qimage = qimage.rgbSwapped()
-                pixmap_orig = QtGui.QPixmap.fromImage(qimage)
             self.frame_ready.emit(pixmap_orig)
         except Exception as e:
             logger.error(f'Exception during hutch cam handling: {e} URL: {self.url}')

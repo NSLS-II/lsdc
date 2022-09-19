@@ -38,7 +38,7 @@ from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
-from threads import VideoThread
+
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
@@ -2308,8 +2308,8 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         self.capture = self.captureLowMag
         self.timerHutch = QTimer()
-        #self.timerHutch.timeout.connect(self.timerHutchRefresh)
-        self.timerHutch.start(1000)
+        self.timerHutch.timeout.connect(self.timerHutchRefresh)
+        self.timerHutch.start(HUTCH_TIMER_DELAY)
 
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)

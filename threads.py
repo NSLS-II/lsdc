@@ -24,15 +24,19 @@ class VideoThread(QThread):
                     logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
                     return
                 height,width=self.currentFrame.shape[:2]
-                qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
+                qimage= QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
                 qimage = qimage.rgbSwapped()
                 pixmap_orig = QtGui.QPixmap.fromImage(qimage)
+                if self.width and self.height:
+                    pixmap_orig = pixmap_orig.scaled(self.width, self.height)
             self.frame_ready.emit(pixmap_orig)
         except Exception as e:
             logger.error(f'Exception during hutch cam handling: {e} URL: {self.url}')
         
-    def __init__(self, *args, delay=1000, url='', camera_object=None, **kwargs,):
+    def __init__(self, *args, delay=1000, url='', camera_object=None, width=None, height=None,**kwargs):
         self.delay = delay
+        self.width = width
+        self.height = height
         self.url = url
         self.camera_object = camera_object
         QThread.__init__(self, *args, **kwargs)

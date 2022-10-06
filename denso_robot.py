@@ -7,7 +7,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_denso_puck_pin(puck_number, pin_number):
-    return (chr(ord('A') + int(puck_number)), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
+    #return (chr(ord('A') + int(puck_number)), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
+    return (puck_number+1, pin_number+1)
 
 class DensoRobot:
     def __init__(self, robot):
@@ -30,7 +31,7 @@ class DensoRobot:
             try:
                 denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
                 logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
-                yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
+                self.robot.mount(denso_puck_pos, denso_pin_pos)
             except Exception as e:
                 logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
                 return MOUNT_FAILURE
@@ -62,7 +63,7 @@ class DensoRobot:
             denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
             try:
                 logger.info(f'dismount {denso_puck_pos} {denso_pin_pos}')
-                yield from self.robot.dismount(denso_puck_pos, denso_pin_pos)
+                self.robot.dismount(denso_puck_pos, denso_pin_pos)
             except Exception as e:
                 logger.error(f'Exception while unmounting sample: {e}')
                 return UNMOUNT_FAILURE
@@ -76,27 +77,27 @@ class DensoRobot:
         ...
 
     def check_sample_mounted(self, mount, puck_pos, pin_pos):  # is the correct sample present/absent as expected during a mount/unmount?
-        #if getBlConfig('robot_online'):
-        #    if mount:
-        #        check_occupied = 1
-        #    else:
-        #        check_occupied = 0
-        #    actual_spindle_occupied = int(self.robot.spindle_occupied_sts.get())
-        #    actual_puck_num = int(self.robot.puck_num_sel.get())
-        #    actual_sample_num = int(self.robot.sample_num_sel.get())
-        #    if actual_spindle_occupied == check_occupied and \
-        #       actual_puck_num == puck_pos and \
-        #       actual_sample_num == pin_pos:  # make sure puck number and sample number coming from robot and LSDC are zero- or one-indexed as necessary
-        #        logger.info('mount/unmount successful!')
-        #        if mount:
-        #            return MOUNT_STEP_SUCCESSFUL
-        #        else:
-        #            return UNMOUNT_STEP_SUCCESSFUL
-        #    else:
-        #        logger.error(f'Failure during mount/unmount. Spindle_occupied: expected: {check_occupied} actual: {actual_spindle_occupied}. Puck num: expected: {puck_pos} actual: {actual_puck_num} Sample num: expected {pin_pos} actual: {actual_sample_num}')
-        #        if mount:
-        #            return MOUNT_FAILURE
-        #        else:
-        #            return UNMOUNT_FAILURE
-        #else:
-        return MOUNT_STEP_SUCCESSFUL  # always successful if robot is not online
+        if getBlConfig('robot_online'):
+            if mount:
+                check_occupied = 1
+            else:
+                check_occupied = 0
+            actual_spindle_occupied = int(self.robot.spindle_occupied_sts.get())
+            actual_puck_num = int(self.robot.puck_num_sel.get())
+            actual_sample_num = int(self.robot.sample_num_sel.get())
+            if actual_spindle_occupied == check_occupied and \
+               actual_puck_num == puck_pos and \
+               actual_sample_num == pin_pos:  # make sure puck number and sample number coming from robot and LSDC are zero- or one-indexed as necessary
+                logger.info('mount/unmount successful!')
+                if mount:
+                    return MOUNT_STEP_SUCCESSFUL
+                else:
+                    return UNMOUNT_STEP_SUCCESSFUL
+            else:
+                logger.error(f'Failure during mount/unmount. Spindle_occupied: expected: {check_occupied} actual: {actual_spindle_occupied}. Puck num: expected: {puck_pos} actual: {actual_puck_num} Sample num: expected {pin_pos} actual: {actual_sample_num}')
+                if mount:
+                    return MOUNT_FAILURE
+                else:
+                    return UNMOUNT_FAILURE
+        else:
+          return MOUNT_STEP_SUCCESSFUL  # always successful if robot is not online

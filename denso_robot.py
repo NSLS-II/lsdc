@@ -31,7 +31,8 @@ class DensoRobot:
             try:
                 denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
                 logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
-                self.robot.mount(denso_puck_pos, denso_pin_pos)
+                yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
+                logger.info(f"Done Mounting")
             except Exception as e:
                 logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
                 return MOUNT_FAILURE
@@ -63,7 +64,7 @@ class DensoRobot:
             denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
             try:
                 logger.info(f'dismount {denso_puck_pos} {denso_pin_pos}')
-                self.robot.dismount(denso_puck_pos, denso_pin_pos)
+                yield from self.robot.dismount(denso_puck_pos, denso_pin_pos)
             except Exception as e:
                 logger.error(f'Exception while unmounting sample: {e}')
                 return UNMOUNT_FAILURE

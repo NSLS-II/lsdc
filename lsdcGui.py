@@ -2662,10 +2662,12 @@ class ControlMain(QtWidgets.QMainWindow):
         hutchTopCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame))
         hutchTopCamThread.start()
 
+        """
         self.sampleCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, camera_object=self.capture)
         self.sampleCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item, frame))
         self.sampleZoomChangeSignal.connect(self.sampleCamThread.updateCam)
         self.sampleCamThread.start()
+        """
 
     def updateCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
       pixmapItem.setPixmap(frame)      
@@ -2801,7 +2803,7 @@ class ControlMain(QtWidgets.QMainWindow):
       zoomedCursorX = daq_utils.screenPixCenterX-self.centerMarkerCharOffsetX
       zoomedCursorY = daq_utils.screenPixCenterY-self.centerMarkerCharOffsetY
       if (self.zoom2Radio.isChecked()):
-        #self.flushBuffer(self.captureLowMagZoom)
+        self.flushBuffer(self.captureLowMagZoom)
         self.capture = self.captureLowMagZoom
         fov["x"] = daq_utils.lowMagFOVx/2.0
         fov["y"] = daq_utils.lowMagFOVy/2.0
@@ -2820,7 +2822,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
       elif (self.zoom1Radio.isChecked()):
-        #self.flushBuffer(self.captureLowMag)
+        self.flushBuffer(self.captureLowMag)
         self.capture = self.captureLowMag
         fov["x"] = daq_utils.lowMagFOVx
         fov["y"] = daq_utils.lowMagFOVy
@@ -2829,7 +2831,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
       elif (self.zoom4Radio.isChecked()):
-        #self.flushBuffer(self.captureHighMagZoom)
+        self.flushBuffer(self.captureHighMagZoom)
         self.capture = self.captureHighMagZoom
         fov["x"] = daq_utils.highMagFOVx/2.0
         fov["y"] = daq_utils.highMagFOVy/2.0
@@ -2848,7 +2850,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
       elif (self.zoom3Radio.isChecked()):
-        #self.flushBuffer(self.captureHighMag)
+        self.flushBuffer(self.captureHighMag)
         self.capture = self.captureHighMag
         fov["x"] = daq_utils.highMagFOVx
         fov["y"] = daq_utils.highMagFOVy

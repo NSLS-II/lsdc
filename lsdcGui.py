@@ -2662,12 +2662,6 @@ class ControlMain(QtWidgets.QMainWindow):
         hutchTopCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame))
         hutchTopCamThread.start()
 
-        """
-        self.sampleCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, camera_object=self.capture)
-        self.sampleCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item, frame))
-        self.sampleZoomChangeSignal.connect(self.sampleCamThread.updateCam)
-        self.sampleCamThread.start()
-        """
 
     def updateCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
       pixmapItem.setPixmap(frame)      

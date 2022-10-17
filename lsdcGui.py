@@ -4496,9 +4496,9 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["energy"] = float(self.energy_ledit.text())
         wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
         reqObj["wavelength"] = wave
-      except ValueError:
-        message = "Please ensure that all boxes that expect numerical values have numbers in them"
-        logger.error(message)
+      except ValueError as e:
+        message = "Please ensure that all boxes that expect numerical values have numbers in them. Error: {e}"
+        logger.error(f'{message}')
         self.popupServerMessage(f'{message}')
         return
       reqObj["fastDP"] =(self.staffScreenDialog.fastDPCheckBox.isChecked() or self.fastEPCheckBox.isChecked() or self.dimpleCheckBox.isChecked())

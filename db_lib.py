@@ -94,7 +94,11 @@ def createContainer(name, capacity, owner, kind, **kwargs): #16_pin_puck, automo
     
     if capacity is not None:
         kwargs['content'] = [""]*capacity
-    uid = container_ref.create(name=name, owner=owner, kind=kind, **kwargs)
+    uid = container_ref.create(name=name, 
+                            owner=owner, 
+                            kind=kind,
+                            modified_time=time.time(), 
+                            **kwargs)
     return uid
 
 
@@ -102,7 +106,8 @@ def updateContainer(cont_info): #really updating the contents
     cont = cont_info['uid']
     q = {'uid': cont_info.pop('uid', '')}
     cont_info.pop('time', '')
-    container_ref.update(q, {'content':cont_info['content']}) 
+    container_ref.update(q, {'content':cont_info['content'], 
+                             'modified_time': time.time()})  
 
     return cont
 

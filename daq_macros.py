@@ -1866,6 +1866,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
           spotFindThread.start()
           spotFindThreadList.append(spotFindThread)
         send_kafka_message(f'{daq_utils.beamline}.lsdc.documents', event='event', uuid=rasterReqID, protocol="raster", row=row_index, proc_flag=procFlag)
+        logger.info('row complete')
     """governor transitions:
     initiate transitions here allows for GUI sample/heat map image to update
     after moving to known position"""

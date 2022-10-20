@@ -1930,6 +1930,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
     raster_flyer.detector.cam.acquire.put(0)
+    raster_flyer.detector.super_unstage()
     logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of

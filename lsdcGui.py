@@ -1058,7 +1058,10 @@ class PuckDialog(QtWidgets.QDialog):
     def getPuckName(parent = None):
         dialog = PuckDialog(parent)
         result = dialog.exec_()
-        return (dialog.puckName, result == QDialog.Accepted)
+        if hasattr(dialog, 'puckName'):
+            return (dialog.puckName, result == QDialog.Accepted)
+        else:
+            return None, False
 
 
 class DewarDialog(QtWidgets.QDialog):
@@ -1133,8 +1136,10 @@ class DewarDialog(QtWidgets.QDialog):
     def getDewarPos(parent = None,action="add"):
         dialog = DewarDialog(parent,action)
         result = dialog.exec_()
-        return (dialog.dewarPos, result == QDialog.Accepted)
-
+        if hasattr(dialog, 'dewarPos'):
+            return (dialog.dewarPos, result == QDialog.Accepted)
+        else:
+            return None, False
 
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
@@ -4782,8 +4787,8 @@ class ControlMain(QtWidgets.QMainWindow):
         puckName, ok = PuckDialog.getPuckName()
         if (ok):
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
-          ipos = int(dewarPos)+1
           if (ok):
+            ipos = int(dewarPos)+1
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))
             self.treeChanged_pv.put(1)
         else:

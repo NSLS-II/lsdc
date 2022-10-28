@@ -14,6 +14,13 @@ class DensoRobot:
     def __init__(self, robot):
         self.robot = robot
 
+    def warmupGripper(self):
+        try:
+            logger.info('drying gripper')
+            self.robot.dryGripper()
+        except Exception as e:
+            logger.error(f'Failed to dry gripper: {e}')
+
     def control_type(self):
         return "Bluesky"
 

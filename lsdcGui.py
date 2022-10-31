@@ -2197,9 +2197,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vectorParamsFrame = QFrame()
         hBoxVectorLayout1= QtWidgets.QHBoxLayout() 
         setVectorStartButton = QtWidgets.QPushButton("Vector\nStart") 
-        setVectorStartButton.clicked.connect(self.setVectorStartCB)
+        setVectorStartButton.clicked.connect(lambda: self.setVectorPointCB("vectorStart"))
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd") 
-        setVectorEndButton.clicked.connect(self.setVectorEndCB)
+        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
         vecLenLabel = QtWidgets.QLabel("    Length(microns):")
@@ -2354,7 +2355,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.imageScaleText.setPen(scaleTextPen)
         self.imageScaleText.setPos(10,450)
         self.click_positions = []
-        self.vectorStartFlag = 0
         hBoxHutchVidsLayout.addWidget(self.viewHutchTop)
         hBoxHutchVidsLayout.addWidget(self.viewHutchCorner)        
         vBoxVidLayout.addLayout(hBoxHutchVidsLayout)
@@ -4714,30 +4714,90 @@ class ControlMain(QtWidgets.QMainWindow):
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
       
 
-    def getVectorObject(self):
+    def transform_vector_coords(self, prev_coords, current_raw_coords):
+      """Updates y and z co-ordinates of vector points when they are moved
+
+      This function tweaks the y and z co-ordinates such that when a vector start or
+      end point is adjusted in the 2-D plane of the screen, it maintains the points' location
+      in the 3rd dimension perpendicular to the screen
+      
+      Args:
+        prev_coords: Dictionary with x,y and z co-ordinates of the previous location of the sample
+        current_raw_coords: Dictionary with x, y and z co-ordinates of the sample derived from the goniometer
+          PVs
+        omega: Omega of the Goniometer (usually RBV)
+
+      Returns:
+        A dictionary mapping x, y and z to tweaked coordinates 
+      """
+      omegaRad = math.radians(current_raw_coords['omega'])
+      cosO = math.cos(omegaRad)
+      sinO = math.sin(omegaRad)
+
+      # Transform z from prev point and y from current point to lab coordinate system
+      zLabPrev = - (sinO * prev_coords['y']) + (cosO * prev_coords['z'])
+      yLabCurrent = (cosO * current_raw_coords['y']) + (sinO * current_raw_coords['z'])
+
+      # Take vertical lab from point 1 and depth from microscope point 0 and transform back
+      yTweakedCurrent = (cosO * yLabCurrent) - (sinO * zLabPrev)
+      zTweakedCurrent = (sinO * yLabCurrent) + (cosO * zLabPrev)
+      return {"x": current_raw_coords["x"], "y": yTweakedCurrent, "z": zTweakedCurrent}
+
+    def getVectorObject(self, prevVectorPoint=None):
+      """Creates and returns a vector start or end point
+      
+      Places a start or end vector marker wherever the crosshair is located in
+      the sample camera view and returns a dictionary of metadata related to that point
+
+      Args:
+        prevVectorPoint: Dictionary of metadata related to a point being adjusted. For example,
+            a previously placed vectorStart point is moved, its old position is used to determine
+            its new co-ordinates in 3D space
+      Returns:
+        A dict mapping the following keys
+            "coords": A dictionary of tweaked x, y and z positions of the Goniometer
+            "raw_coords": A dictionary of x, y, z co-ordinates obtained from the Goniometer PVs
+            "graphicsitem": Qt object referring to the marker on the sample camera
+            "centerCursorX" and "centerCursorY": Location of the center marker when this marker was placed 
+      """
       pen = QtGui.QPen(QtCore.Qt.blue)
       brush = QtGui.QBrush(QtCore.Qt.blue)
       markWidth = 10
-      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
-      vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      return {"coords":vectorCoords,"graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
- 
-    def setVectorStartCB(self): #save sample x,y,z
-      if (self.vectorStart != None):
-        self.scene.removeItem(self.vectorStart["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # liekly due to vecLine not being defined yet
-          pass
-        self.vectorStart = None
-      self.vectorStart = self.getVectorObject()
+      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,
+                                        self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,
+                                        markWidth,markWidth,pen,brush)
+      current_raw_coords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),
+                            "z":self.sampz_pv.get(), "omega":self.omegaRBV_pv.get()}
+      if prevVectorPoint:
+        vectorCoords = self.transform_vector_coords(prevVectorPoint["coords"], current_raw_coords)
+      else:
+        vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
+      return {"coords":vectorCoords, "raw_coords":current_raw_coords, 
+              "graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),
+              "centerCursorY":self.centerMarker.y()}
 
+    def setVectorPointCB(self, pointName):
+      """Callback function to update a vector point
+
+      Callback to remove or add the appropriate vector start or end point on the sample camera. 
+      Calls getVectorObject to generate metadata related to this point. Draws a vector line if 
+      both start and end is defined
+
+      Args:
+          point: Point to be placed (Either vectorStart or vectorEnd)
+      """
+      point = getattr(self, pointName)
+      if point:
+        self.scene.removeItem(point['graphicsitem'])
+        if self.vecLine:
+          self.scene.removeItem(self.vecLine)
+      point = self.getVectorObject(point)
+      setattr(self, pointName, point)
       if self.vectorStart and self.vectorEnd:
         self.drawVector()
-
+              
     def drawVector(self):
       pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
       try:
         self.updateVectorLengthAndSpeed()
       except:
@@ -4749,34 +4809,19 @@ class ControlMain(QtWidgets.QMainWindow):
                                         self.centerMarker.y()+self.vectorEnd["graphicsitem"].y()+self.centerMarkerCharOffsetY, pen)
       self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
 
-    def setVectorEndCB(self): #save sample x,y,z
-      if (self.vectorEnd != None):
-        self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # likely due to self.vecLine not being defined yet
-          pass
-        self.vectorEnd = None
-      self.vectorEnd = self.getVectorObject()
-
-      if self.vectorStart and self.vectorEnd:
-        self.drawVector()        
-
     def clearVectorCB(self):
-      if (self.vectorStart != None):
+      if self.vectorStart:
         self.scene.removeItem(self.vectorStart["graphicsitem"])
         self.vectorStart = None
-      if (self.vectorEnd != None):
+      if self.vectorEnd:
         self.scene.removeItem(self.vectorEnd["graphicsitem"])
         self.vectorEnd = None
         self.vecLenLabelOutput.setText("---")
         self.vecSpeedLabelOutput.setText("---")        
-      try:
-        if self.vecLine != None:
-          self.scene.removeItem(self.vecLine)
-      except AttributeError: # likely due to self.vecLine not defined yet
-        pass
-
+      if self.vecLine:
+        self.scene.removeItem(self.vecLine)
+        self.vecLine = None
+      
     def puckToDewarCB(self):
       while (1):
         puckName, ok = PuckDialog.getPuckName()

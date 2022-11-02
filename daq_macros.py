@@ -1847,7 +1847,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row, stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, row_index)
         vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
-            data_directory_name, file_number_start, vector)
+            data_directory_name, file_number_start, row_index, vector)
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):
@@ -3403,7 +3403,7 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
-def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
+def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, row_index, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
 
     logger.info("in Zebra Daq Raster Bluesky #1")
     logger.info(f" with vector: {vector}")
@@ -3433,7 +3433,8 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name,\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=1)
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState,\
+                   row_index=row_index, transmission=1)
     yield from bp.fly([raster_flyer])
 
     logger.info("vector Done")

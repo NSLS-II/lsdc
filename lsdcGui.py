@@ -2709,14 +2709,6 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
           return
 
-        hutchCornerCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchCornerCamURL'))
-        hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchCorner, frame))
-        hutchCornerCamThread.start()
-
-        hutchTopCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchTopCamURL'))
-        hutchTopCamThread.frame_ready.connect(lambda frame: self.updateHutchCam(self.pixmap_item_HutchTop, frame))
-        hutchTopCamThread.start()        
-
     def updateHutchCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
       pixmapItem.setPixmap = frame      
 

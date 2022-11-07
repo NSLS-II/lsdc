@@ -82,6 +82,9 @@ def _dewarRefillTask(seconds):
   logger.info("DewarRefillTask cancelled.")
   dewarRefillStop = 0
 
+def robotCanExchangeSamples():
+    return robot.robotCanExchangeSamples()
+
 def DewarRefillCancel():
   global dewarRefillStop
   logger.info("DewarRefillTask cancelling...")

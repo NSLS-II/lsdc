@@ -998,6 +998,7 @@ class PuckDialog(QtWidgets.QDialog):
         self.proxyModel = QtCore.QSortFilterProxyModel(self)
         labels = QStringList(("Name"))
         self.model.setHorizontalHeaderLabels(labels)
+        self.puckName = None
         for puck in puckList:
           if puck['uid'] not in pucksInDewar:
             item = QtGui.QStandardItem(puck["name"])
@@ -1076,6 +1077,7 @@ class DewarDialog(QtWidgets.QDialog):
       dewarObj = db_lib.getPrimaryDewar(daq_utils.beamline)
       puckLocs = dewarObj['content']
       self.data = []
+      self.dewarPos = None
       for i in range(len(puckLocs)):
         if (puckLocs[i] != ""):
           owner = db_lib.getContainerByID(puckLocs[i])["owner"]
@@ -1134,7 +1136,6 @@ class DewarDialog(QtWidgets.QDialog):
         dialog = DewarDialog(parent,action)
         result = dialog.exec_()
         return (dialog.dewarPos, result == QDialog.Accepted)
-
 
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
@@ -4782,8 +4783,8 @@ class ControlMain(QtWidgets.QMainWindow):
         puckName, ok = PuckDialog.getPuckName()
         if (ok):
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
-          ipos = int(dewarPos)+1
-          if (ok):
+          if ok and dewarPos is not None and puckName is not None:
+            ipos = int(dewarPos)+1
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))
             self.treeChanged_pv.put(1)
         else:

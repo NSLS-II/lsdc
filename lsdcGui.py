@@ -2197,8 +2197,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vectorParamsFrame = QFrame()
         hBoxVectorLayout1= QtWidgets.QHBoxLayout() 
         setVectorStartButton = QtWidgets.QPushButton("Vector\nStart") 
+        setVectorStartButton.setStyleSheet("background-color: blue") 
         setVectorStartButton.clicked.connect(lambda: self.setVectorPointCB("vectorStart"))
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd") 
+        setVectorEndButton.setStyleSheet("background-color: red") 
         setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
@@ -4730,20 +4732,16 @@ class ControlMain(QtWidgets.QMainWindow):
       Returns:
         A dictionary mapping x, y and z to tweaked coordinates 
       """
-      omegaRad = math.radians(current_raw_coords['omega'])
-      cosO = math.cos(omegaRad)
-      sinO = math.sin(omegaRad)
 
       # Transform z from prev point and y from current point to lab coordinate system
-      zLabPrev = - (sinO * prev_coords['y']) + (cosO * prev_coords['z'])
-      yLabCurrent = (cosO * current_raw_coords['y']) + (sinO * current_raw_coords['z'])
+      _, _, zLabPrev, _ = daq_utils.gonio2lab(prev_coords['x'], prev_coords['y'], prev_coords['z'], current_raw_coords['omega'])
+      _, yLabCurrent, _, _ = daq_utils.gonio2lab(current_raw_coords['x'], current_raw_coords['y'], current_raw_coords['z'], current_raw_coords['omega']) 
 
-      # Take vertical lab from point 1 and depth from microscope point 0 and transform back
-      yTweakedCurrent = (cosO * yLabCurrent) - (sinO * zLabPrev)
-      zTweakedCurrent = (sinO * yLabCurrent) + (cosO * zLabPrev)
+      # Take y co-ordinate from current point and z-coordinate from prev point and transform back to gonio co-ordinates
+      _, yTweakedCurrent, zTweakedCurrent, _ = daq_utils.lab2gonio(prev_coords['x'], yLabCurrent, zLabPrev, current_raw_coords['omega']) 
       return {"x": current_raw_coords["x"], "y": yTweakedCurrent, "z": zTweakedCurrent}
 
-    def getVectorObject(self, prevVectorPoint=None):
+    def getVectorObject(self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None):
       """Creates and returns a vector start or end point
       
       Places a start or end vector marker wherever the crosshair is located in
@@ -4760,19 +4758,24 @@ class ControlMain(QtWidgets.QMainWindow):
             "graphicsitem": Qt object referring to the marker on the sample camera
             "centerCursorX" and "centerCursorY": Location of the center marker when this marker was placed 
       """
-      pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
+      if not pen:
+        pen = QtGui.QPen(QtCore.Qt.blue)
+      if not brush:
+        brush = QtGui.QBrush(QtCore.Qt.blue)
       markWidth = 10
+      # TODO: Place vecMarker in such a way that it matches any arbitrary gonioCoords given to this function
+      # currently vecMarker will be placed at the center of the sample cam
       vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,
                                         self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,
                                         markWidth,markWidth,pen,brush)
-      current_raw_coords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),
-                            "z":self.sampz_pv.get(), "omega":self.omegaRBV_pv.get()}
+      if not gonioCoords:
+        gonioCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),
+                       "z":self.sampz_pv.get(), "omega":self.omegaRBV_pv.get()}
       if prevVectorPoint:
-        vectorCoords = self.transform_vector_coords(prevVectorPoint["coords"], current_raw_coords)
+        vectorCoords = self.transform_vector_coords(prevVectorPoint["coords"], gonioCoords)
       else:
-        vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      return {"coords":vectorCoords, "raw_coords":current_raw_coords, 
+        vectorCoords = {k:v for k, v in gonioCoords.items() if k in ['x', 'y', 'z']}
+      return {"coords":vectorCoords, "gonioCoords":gonioCoords, 
               "graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),
               "centerCursorY":self.centerMarker.y()}
 
@@ -4791,7 +4794,11 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scene.removeItem(point['graphicsitem'])
         if self.vecLine:
           self.scene.removeItem(self.vecLine)
-      point = self.getVectorObject(point)
+      if pointName == 'vectorEnd':
+        brush = QtGui.QBrush(QtCore.Qt.red)
+      else:
+        brush = QtGui.QBrush(QtCore.Qt.blue) 
+      point = self.getVectorObject(prevVectorPoint=point, brush=brush)
       setattr(self, pointName, point)
       if self.vectorStart and self.vectorEnd:
         self.drawVector()

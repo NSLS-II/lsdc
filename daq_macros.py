@@ -3434,7 +3434,7 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name,\
                    detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState,\
-                   row_index=row_index, transmission=1)
+                   row_index=row_index, transmission=1, protocol="raster")
     yield from bp.fly([raster_flyer])
 
     logger.info("vector Done")

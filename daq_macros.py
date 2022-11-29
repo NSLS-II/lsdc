@@ -37,6 +37,7 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_vector_program)
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
+from bluesky.utils import ts_msg_hook
 
 try:
   import ispybLib
@@ -3391,7 +3392,8 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                    x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
                    detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
                    data_path=data_path)
-
+    logger.info("testing here")
+    RE.msg_hook = ts_msg_hook
     RE(bp.fly([flyer]))
 
     logger.info("vector Done")
@@ -3432,6 +3434,9 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name,\
                    detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=1)
+    logger.info("testing msg hook")
+    RE.msg_hook = ts_msg_hook
+    logger.info(f"hook:  {RE.msg_hook}")
     yield from bp.fly([raster_flyer])
 
     logger.info("vector Done")

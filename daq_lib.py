@@ -260,7 +260,7 @@ def mountSample(sampID):
     setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
     setPvDesc("robotOmegaWorkPos",90.0)    
     logger.info("done setting work pos")  
-  if (currentMountedSampleID != ""): #then unmount what's there
+  '''if (currentMountedSampleID != ""): #then unmount what's there
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
@@ -289,15 +289,15 @@ def mountSample(sampID):
         return 0
     else: #desired sample is mounted, nothing to do
       return 1
-  else: #nothing mounted
-    (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
-    mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
-    if (mountStat == 1):
-      set_field("mounted_pin",sampID)
-    elif(mountStat == 2):
-      return 2
-    else:
-      return 0
+  '''#else: #nothing mounted
+  (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
+  mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
+  if (mountStat == 1):
+    set_field("mounted_pin",sampID)
+  elif(mountStat == 2):
+    return 2
+  else:
+    return 0
   db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':puckPos,'pinPos':pinPos,'sampleID':sampID})
   return 1
 

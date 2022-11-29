@@ -1,0 +1,25 @@
+digraph D {
+    node [shape=record]
+    //add legend box. put in current revision/file that this applies to
+    a [label="ccp4"]
+    b [label="phenix"]
+    c [label="xds"]
+    d [label="eiger2cbf"]
+    e [label="fast DP"]
+
+    f [label="dozor"]
+    g [label="dials"]
+   
+    h [label="hdf5"]
+    i [label="cbflib"]
+    a -> e
+    b -> e
+    c -> e
+    d -> e
+
+    d -> g
+
+    h -> f
+    i -> d
+    h -> d
+}

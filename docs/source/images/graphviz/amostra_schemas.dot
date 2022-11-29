@@ -1,0 +1,23 @@
+digraph D {
+    node [shape=record]
+    //add legend box. put in current revision/file that this applies to
+    subgraph cluster_0 { a; label="container"; color=blue}
+    a [label="content"] //container 
+   
+    subgraph cluster_1 { b -> c; label="request"; color=blue;}
+    b [label="project"] //request
+    c [label="sample"]
+
+    subgraph cluster_2 { d -> e; label="sample"; color=blue}
+    d [label="project"] //sample
+    e [label="container"]
+
+    subgraph cluster_3 { f -> g; label="sample2"; color=blue}
+    f [label="project"] //sample
+    g [label="container"]
+
+    c -> d
+    c -> e
+    a -> d
+    a -> f
+}

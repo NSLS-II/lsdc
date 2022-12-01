@@ -1848,6 +1848,8 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row_index, vector)
+        raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
+        time.sleep(0.2)
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):

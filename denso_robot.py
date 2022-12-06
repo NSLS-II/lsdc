@@ -92,8 +92,8 @@ class DensoRobot:
                 check_occupied = 1
             else:
                 check_occupied = 0
-            puck_pos+=1
-            pin_pos+=1
+            puck_pos+=1 # these two are to correct an off-by-one issue caused by-
+            pin_pos+=1 # the denso robot being 0-indexed
             actual_spindle_occupied = int(self.robot.spindle_occupied_sts.get())
             actual_puck_num = int(self.robot.puck_num_sel.get())
             actual_sample_num = int(self.robot.sample_num_sel.get())

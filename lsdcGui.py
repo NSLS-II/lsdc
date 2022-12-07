@@ -5336,7 +5336,10 @@ class ControlMain(QtWidgets.QMainWindow):
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
-        self.BlueOverlayAction.setChecked(True)
+        if daq_utils.beamline == "nyx":
+            self.GreenOverlayAction.setChcked(True)
+        else:
+            self.BlueOverlayAction.setChecked(True)
         
         fileMenu.addAction(exitAction)
         self.setGeometry(300, 300, 1550, 1000) #width and height here. 

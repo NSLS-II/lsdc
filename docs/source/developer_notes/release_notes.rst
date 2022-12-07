@@ -2,6 +2,28 @@
  Release History
 =================
 
+1.1.0 (2023-01-xx, a.k.a. 2023-1)
+=================================
+
+Fixes and other changes
+-----------------------
+* AMX/FMX branch (master)
+
+  * Vector tweak - more intuitive editing of vector start/end points 
+
+* AMX/FMX branch (one-branch)
+
+  * Further work to get rastering working
+
+* NYX branch (nyx-one-branch)
+
+  * Isara robot in nyxtools
+  * Isara robot integration into LSDC
+
+* Documentation
+
+  * 
+
 1.0.3 (2022-09-06, a.k.a. 2022-3)
 =================================
 

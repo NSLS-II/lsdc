@@ -768,7 +768,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
 
         hBoxColParams2 = QtWidgets.QHBoxLayout()
         colRangeLabel = QtWidgets.QLabel('Oscillation Width:')
-        colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
+        colRangeLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.osc_range_ledit = QtWidgets.QLineEdit() # note, this is for rastering! same name used for data collections
         self.setGuiValues({'osc_range':getBlConfig("rasterDefaultWidth")})
         self.osc_range_ledit.returnPressed.connect(self.screenDefaultsOKCB)                        
@@ -1946,12 +1946,14 @@ class ControlMain(QtWidgets.QMainWindow):
         colStartLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_start_ledit = QtWidgets.QLineEdit()
         self.osc_start_ledit.setFixedWidth(60)
+        self.osc_start_ledit.setValidator(QDoubleValidator(self))
         self.colEndLabel = QtWidgets.QLabel('Oscillation Range:')
         self.colEndLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.colEndLabel.setFixedWidth(140)
         self.osc_end_ledit = QtWidgets.QLineEdit()
         self.setGuiValues({'osc_end':"180.0"})
         self.osc_end_ledit.setFixedWidth(60)
+        self.osc_end_ledit.setValidator(QDoubleValidator(self))
         self.osc_end_ledit.textChanged[str].connect(functools.partial(self.totalExpChanged,"oscEnd"))        
         hBoxColParams1.addWidget(colStartLabel)
         hBoxColParams1.addWidget(self.osc_start_ledit)
@@ -1963,6 +1965,7 @@ class ControlMain(QtWidgets.QMainWindow):
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_range_ledit = QtWidgets.QLineEdit()
         self.osc_range_ledit.setFixedWidth(60)
+        self.osc_range_ledit.setValidator(QDoubleValidator(self))
         self.stillModeCheckBox = QCheckBox("Stills")
         self.stillModeCheckBox.setEnabled(False)
         if (self.stillModeStatePV.get()):
@@ -2035,6 +2038,7 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
+        self.transmission_ledit.setValidator(QDoubleValidator(self))
         self.setGuiValues({'transmission':getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)        
         setTransButton = QtWidgets.QPushButton("Set Trans")
@@ -2055,6 +2059,7 @@ class ControlMain(QtWidgets.QMainWindow):
         energySPLabel = QtWidgets.QLabel("SetPoint:")
         self.energyMoveLedit = QtEpicsPVEntry(daq_utils.motor_dict["energy"] + ".VAL",self,75,2)
         self.energy_ledit = self.energyMoveLedit.getEntry()
+        self.energy_ledit.setValidator(QDoubleValidator(self))
         self.energy_ledit.returnPressed.connect(self.moveEnergyCB)        
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)        
@@ -2089,6 +2094,7 @@ class ControlMain(QtWidgets.QMainWindow):
         colResoLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.resolution_ledit = QtWidgets.QLineEdit()
         self.resolution_ledit.setFixedWidth(60)
+        self.resolution_ledit.setValidator(QDoubleValidator(self))
         self.resolution_ledit.textEdited[str].connect(self.resoTextChanged)
         if (daq_utils.beamline == "nyx"):
             self.resolution_ledit.setEnabled(False)
@@ -2280,6 +2286,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
+        self.vectorFPP_ledit.setValidator(QIntValidator(self))
         vecLenLabel = QtWidgets.QLabel("    Length(microns):")
         self.vecLenLabelOutput = QtWidgets.QLabel("---")
         vecSpeedLabel = QtWidgets.QLabel("    Speed(microns/s):")

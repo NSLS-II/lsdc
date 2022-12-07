@@ -4348,8 +4348,13 @@ class ControlMain(QtWidgets.QMainWindow):
       try:
         # instead of the previous StringIO, use BytesIO:
         # https://stackoverflow.com/questions/41340296/how-can-pillow-open-uploaded-image-file-from-stringio-directly
-        file = BytesIO(urllib.request.urlopen(getBlConfig("hutchCornerCamURL")).read())
-        img = Image.open(file)
+        if daq_utils.beamline == 'nyx':
+            file = "/nsls2/software/mx/daq/lsdc_nyx/img-assets/19-ID_TopAlign.png"
+            img = Image.open(file)
+            img = img.resize((320,180))
+        else:
+            file = BytesIO(urllib.request.urlopen(getBlConfig("hutchCornerCamURL")).read())
+            img = Image.open(file)
         qimage = ImageQt.ImageQt(img)
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item_HutchCorner.setPixmap(pixmap_orig)        

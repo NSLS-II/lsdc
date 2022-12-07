@@ -1878,7 +1878,7 @@ class ControlMain(QtWidgets.QMainWindow):
         deQueueSelectedButton = QtWidgets.QPushButton("deQueue All Selected")        
         deQueueSelectedButton.clicked.connect(self.dewarTree.deQueueAllSelectedCB)
         runQueueButton = QtWidgets.QPushButton("Collect Queue")
-        runQueueButton.setStyleSheet("background-color: yellow")
+        runQueueButton.setStyleSheet("background-color: green")
         runQueueButton.clicked.connect(self.collectQueueCB)
         stopRunButton = QtWidgets.QPushButton("Stop Collection")
         stopRunButton.setStyleSheet("background-color: red")

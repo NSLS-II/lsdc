@@ -12,8 +12,10 @@ LSDC GUI
 LSDC Server
     The server script that runs on specific machines that co-ordinates with the GUI and other systems. 
 
-MX Tools
-    Set of scripts that are developed in conjunction with beamline scientists and DSSI developers
+mxtools
+    These are scripts that are to be shared between AMX and FMX, but are not common with NYX, which has its own nyxtools.
+    Scripts initially developed for the Jupyter notebooks can be brought into mxtools then made available in both Jupyter notebooks and LSDC.
+    The other main use case is for defining Ophyd objects and Bluesky scan objects that are different between AMX/FMX and NYX due to hardware differences.
 
 Microservices
     A set of microservices that support LSDC with sample management (Amostra) and configuration management (Conftrak)
@@ -34,7 +36,7 @@ Conftrak
     Configuration management tool for beamlines based on Amostra. For more information, `see conftrak source <https://github.com/NSLS-II/conftrak>`_
 
 Analysisstore
-
+    Used to store analysis results. For example, raster results and Chooch (energy scan) results go in here
 
 LSDC Server
 -----------

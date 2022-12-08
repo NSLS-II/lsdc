@@ -878,8 +878,6 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxDialsParams.addLayout(self.hBoxRasterLayout3)
         dialsGB.setLayout(vBoxDialsParams)
 
-        reprocessRasterButton = QtWidgets.QPushButton("ReProcessRaster") 
-        reprocessRasterButton.clicked.connect(self.reprocessRasterRequestCB)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Apply | QDialogButtonBox.Cancel,
             Qt.Horizontal, self)
@@ -888,7 +886,6 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxColParams1.addWidget(collectionGB)
         vBoxColParams1.addWidget(dozorGB)
         vBoxColParams1.addWidget(dialsGB)
-        vBoxColParams1.addWidget(reprocessRasterButton)                        
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
 
@@ -904,16 +901,6 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         else:
           logger.error('setGuiValues unknown item: %s value: %s' % (item, value))
 
-    def reprocessRasterRequestCB(self):
-      self.parent.eraseCB()
-      try:      
-        reqID = self.parent.selectedSampleRequest["uid"]
-        self.parent.drawPolyRaster(db_lib.getRequestByID(reqID))
-        self.parent.send_to_server("reprocessRaster(\""+str(reqID)+"\")")
-      except:
-        pass
-      
-        
     def screenDefaultsCancelCB(self):
       self.done(QDialog.Rejected)
 
@@ -1891,6 +1878,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popUserScreen.clicked.connect(self.popUserScreenCB)
         self.closeShutterButton = QtWidgets.QPushButton("Close Photon Shutter")        
         self.closeShutterButton.clicked.connect(self.closePhotonShutterCB)
+        self.closeShutterButton.setStyleSheet("background-color: red")
         hBoxTreeButtsLayout = QtWidgets.QHBoxLayout()
         vBoxTreeButtsLayoutLeft = QtWidgets.QVBoxLayout()
         vBoxTreeButtsLayoutRight = QtWidgets.QVBoxLayout()
@@ -1900,9 +1888,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(queueSelectedButton)
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)        
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)        
-        vBoxTreeButtsLayoutRight.addWidget(stopRunButton)
-        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
+        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)        
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
         vBoxTreeButtsLayoutRight.addWidget(restartServerButton)        

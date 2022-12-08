@@ -12,11 +12,6 @@ LSDC GUI
 LSDC Server
     The server script that runs on specific machines that co-ordinates with the GUI and other systems. 
 
-mxtools
-    These are scripts that are to be shared between AMX and FMX, but are not common with NYX, which has its own nyxtools.
-    Scripts initially developed for the Jupyter notebooks can be brought into mxtools then made available in both Jupyter notebooks and LSDC.
-    The other main use case is for defining Ophyd objects and Bluesky scan objects that are different between AMX/FMX and NYX due to hardware differences.
-
 Microservices
     A set of microservices that support LSDC with sample management (Amostra) and configuration management (Conftrak)
 
@@ -57,8 +52,15 @@ FastDP
     Details of Fast DP here...
 
 
-MX Tools
+mxtools
 --------
+
+mxtools
+    This library contains scripts that are to be shared between AMX and FMX, but are not common with NYX, which has its own nyxtools.
+    Scripts initially developed for the Jupyter notebooks can be brought into mxtools then made available in both Jupyter notebooks and LSDC.
+    The other main use case is for defining Ophyd objects and Bluesky scan objects that are different between AMX/FMX and NYX due to hardware differences.
+    This library is made available by adding it to the `PYTHONPATH` when starting up LSDC. By adding mxtools in front of LSDC in `PYTHONPATH`, scripts and definitions defined in mxtools have priority over the default ones in LSDC.
+
 
 ISPyB
 -------

@@ -4659,8 +4659,8 @@ class ControlMain(QtWidgets.QMainWindow):
       self.eraseCB()
       colRequest=self.selectedSampleRequest
       reqObj = colRequest["request_obj"]
-      rasterDef = reqObj["rasterDef"]
-      self.addSampleRequestCB(rasterDef)      
+      if 'rasterDef' in reqObj:
+        self.addSampleRequestCB(reqObj["rasterDef"])
 
 
       

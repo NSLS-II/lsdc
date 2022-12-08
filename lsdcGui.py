@@ -1545,10 +1545,9 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         super(RasterGroup, self).__init__()
         self.parent=parent
         self.setAcceptHoverEvents(True)
-
+        self.currentSelectedCell = None
 
     def mousePressEvent(self, e):
-      super(RasterGroup, self).mousePressEvent(e)
       logger.info("mouse pressed on group")
       for i in range(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
@@ -1558,8 +1557,11 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             self.parent.treeChanged_pv.put(1)
       if (self.parent.vidActionRasterExploreRadio.isChecked()):
           for cell in self.childItems():
-              if isInCell(e.pos(), cell):
+              if cell.contains(e.pos()):
                   if (cell.data(0) != None):
+                      if self.currentSelectedCell:
+                        self.currentSelectedCell.setPen(self.parent.redPen)
+                        self.currentSelectedCell.setZValue(0)
                       spotcount = cell.data(0)
                       filename = cell.data(1)
                       d_min = cell.data(2)
@@ -1573,10 +1575,10 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       self.parent.rasterExploreDialog.setTotalIntensity(intensity)
                       self.parent.rasterExploreDialog.setResolution(d_min)
                       groupList = self.childItems()
-                      for i in range (0,len(groupList)):
-                          groupList[i].setPen(self.parent.redPen)
                       cell.setPen(self.parent.yellowPen)
-
+                      cell.setZValue(1)
+                      self.currentSelectedCell = cell
+                      break
       else:
         super(RasterGroup, self).mousePressEvent(e)
 

@@ -1148,6 +1148,48 @@ class DewarTree(QtWidgets.QTreeView):
         self.model = QtGui.QStandardItemModel()
         self.model.itemChanged.connect(self.queueSelectedSample)
         self.isExpanded = 1
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openMenu)
+
+    def openMenu(self, position):
+      indexes = self.selectedIndexes()
+      selectedLevels = set()
+      if indexes:
+        for index in indexes:
+          level = 0
+          while index.parent().isValid():
+            index = index.parent()
+            level += 1
+          selectedLevels.add(level)
+        if len(selectedLevels) == 1:
+          level = list(selectedLevels)[0]
+          menu = QMenu()
+          if level == 2: # This is usually a request
+            deleteReqAction = QtWidgets.QAction('Delete selected request(s)', self)
+            deleteReqAction.triggered.connect(self.deleteSelectedCB)
+            cloneReqAction = QtWidgets.QAction('Clone selected request', self)
+            cloneReqAction.triggered.connect(self.cloneRequestCB)
+            queueSelAction = QtWidgets.QAction('Queue selected request(s)', self)
+            queueSelAction.triggered.connect(self.queueAllSelectedCB)
+            dequeueSelAction = QtWidgets.QAction('Dequeue selected request(s)', self)
+            dequeueSelAction.triggered.connect(self.deQueueAllSelectedCB)
+            menu.addAction(cloneReqAction)
+            menu.addAction(queueSelAction)
+            menu.addAction(dequeueSelAction)
+            menu.addSeparator()
+            menu.addAction(deleteReqAction)
+          menu.exec_(self.viewport().mapToGlobal(position))
+
+    def cloneRequestCB(self):
+      # Only the first selected request is cloned (If multiple are chosen)
+      index = self.selectedIndexes()[0]
+      item = self.model.itemFromIndex(index)
+      requestData = db_lib.getRequestByID(item.data(32))
+      protocol = requestData['request_obj']['protocol']
+      if 'raster' in protocol.lower(): # Will cover specRaster and stepRaster as well
+        self.parent.cloneRequestCB()
+      elif 'standard' in protocol.lower():
+        self.parent.addRequestsToAllSelectedCB()
 
     def keyPressEvent(self, event):
       if (event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace):
@@ -1401,9 +1443,16 @@ class DewarTree(QtWidgets.QTreeView):
       self.parent.treeChanged_pv.put(1)
 
 
-    def confirmDelete(self):
-      quit_msg = "Are you sure you want to delete all requests?"
+    def confirmDelete(self, numReq):
+      if numReq:
+        quit_msg = f"Are you sure you want to delete {numReq} requests?"
+      else:
+        quit_msg = "Are you sure you want to delete all requests?"
+      self.parent.timerHutch.stop()
+      self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+      self.parent.timerSample.start(SAMPLE_TIMER_DELAY)            
+      self.parent.timerHutch.start(HUTCH_TIMER_DELAY)      
       if reply == QtWidgets.QMessageBox.Yes:
         return(1)
       else:
@@ -1412,12 +1461,15 @@ class DewarTree(QtWidgets.QTreeView):
 
     def deleteSelectedCB(self,deleteAll):
       if (deleteAll):
-        if (not self.confirmDelete()):
+        if (not self.confirmDelete(0)):
           return 
         self.selectAll()            
       selmod = self.selectionModel()
       selection = selmod.selection()
       indexes = selection.indexes()
+      if len(indexes) > 1:
+        if (not self.confirmDelete(len(indexes))):
+          return
       progressInc = 100.0/float(len(indexes))
       self.parent.progressDialog.setWindowTitle("Deleting Requests")
       self.parent.progressDialog.show()

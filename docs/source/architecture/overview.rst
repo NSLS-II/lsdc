@@ -33,10 +33,10 @@ Amostra
     projects. For more documentation, `see amostra docs <https://nsls-ii.github.io/amostra/>`_
 
 Conftrak
-    Configuration management tool for beamlines based on Amostra. For more information, `see conftrak source <https://github.com/NSLS-II/conftrak>`_
+    Configuration management tool for beamlines based on Amostra. For more information, `see conftrak docs <https://github.com/NSLS-II/conftrak>`_
 
 Analysisstore
-    Used to store analysis results. For example, raster results and Chooch (energy scan) results go in here
+    Used to store analysis results. For example, raster results and Chooch (energy scan) results go in here. For more information, `see analysisstore docs <https://nsls-ii.github.io/analysisstore/>`_
 
 LSDC Server
 -----------

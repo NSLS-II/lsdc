@@ -2198,9 +2198,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vectorParamsFrame = QFrame()
         hBoxVectorLayout1= QtWidgets.QHBoxLayout() 
         setVectorStartButton = QtWidgets.QPushButton("Vector\nStart") 
-        setVectorStartButton.clicked.connect(self.setVectorStartCB)
+        setVectorStartButton.setStyleSheet("background-color: blue") 
+        setVectorStartButton.clicked.connect(lambda: self.setVectorPointCB("vectorStart"))
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd") 
-        setVectorEndButton.clicked.connect(self.setVectorEndCB)
+        setVectorEndButton.setStyleSheet("background-color: red") 
+        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
         vecLenLabel = QtWidgets.QLabel("    Length(microns):")
@@ -2355,7 +2358,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.imageScaleText.setPen(scaleTextPen)
         self.imageScaleText.setPos(10,450)
         self.click_positions = []
-        self.vectorStartFlag = 0
         hBoxHutchVidsLayout.addWidget(self.viewHutchTop)
         hBoxHutchVidsLayout.addWidget(self.viewHutchCorner)        
         vBoxVidLayout.addLayout(hBoxHutchVidsLayout)
@@ -2998,98 +3000,84 @@ class ControlMain(QtWidgets.QMainWindow):
     def processSampMove(self,posRBV,motID):
 #      print "new " + motID + " pos=" + str(posRBV)
       self.motPos[motID] = posRBV
-      if (len(self.centeringMarksList)>0):
-        for i in range(len(self.centeringMarksList)):
-          if (self.centeringMarksList[i] != None):
-            centerMarkerOffsetX = self.centeringMarksList[i]["centerCursorX"]-self.centerMarker.x()
-            centerMarkerOffsetY = self.centeringMarksList[i]["centerCursorY"]-self.centerMarker.y()
-            if (motID == "x"):
-              startX = self.centeringMarksList[i]["sampCoords"]["x"]
-              delta = startX-posRBV
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.centeringMarksList[i]["graphicsItem"].setPos(newX-centerMarkerOffsetX,self.centeringMarksList[i]["graphicsItem"].y())
-            if (motID == "y" or motID == "z" or motID == "omega"):
-              startYY = self.centeringMarksList[i]["sampCoords"]["z"]
-              startYX = self.centeringMarksList[i]["sampCoords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.centeringMarksList[i]["graphicsItem"].setPos(self.centeringMarksList[i]["graphicsItem"].x(),newY-centerMarkerOffsetY)
-      if (len(self.rasterList)>0):
-        for i in range(len(self.rasterList)):
-          if (self.rasterList[i] != None):
-            if (motID == "x"):
-              startX = self.rasterList[i]["coords"]["x"]
-              delta = startX-posRBV
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.rasterList[i]["graphicsItem"].setPos(newX,self.rasterList[i]["graphicsItem"].y())
-            if (motID == "y" or motID == "z"):
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
+      if self.centeringMarksList:
+        for mark in self.centeringMarksList:
+          if mark is None:
+            continue
+          centerMarkerOffsetX = mark["centerCursorX"]-self.centerMarker.x()
+          centerMarkerOffsetY = mark["centerCursorY"]-self.centerMarker.y()
+          if (motID == "x"):
+            startX = mark["sampCoords"]["x"]
+            delta = startX-posRBV
+            newX = float(self.screenXmicrons2pixels(delta))
+            mark["graphicsItem"].setPos(newX-centerMarkerOffsetX,mark["graphicsItem"].y())
+          if (motID == "y" or motID == "z" or motID == "omega"):
+            startYY = mark["sampCoords"]["z"]
+            startYX = mark["sampCoords"]["y"]
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            mark["graphicsItem"].setPos(mark["graphicsItem"].x(),newY-centerMarkerOffsetY)
+      if self.rasterList:
+        for raster in self.rasterList:
+          if raster is None:
+            continue
+          startX = raster["coords"]["x"]
+          startYY = raster["coords"]["z"]
+          startYX = raster["coords"]["y"]
+          if (motID == "x"):
+            delta = startX-posRBV
+            newX = float(self.screenXmicrons2pixels(delta))
+            raster["graphicsItem"].setPos(newX,raster["graphicsItem"].y())
+          if (motID == "y" or motID == "z"):
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
+          if (motID == "fineX"):
+            delta = startX-posRBV-self.motPos["x"]
+            newX = float(self.screenXmicrons2pixels(delta))
+            raster["graphicsItem"].setPos(newX,raster["graphicsItem"].y())              
+          if (motID == "fineY" or motID == "fineZ"):
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
+          if (motID == "omega"):
+            if (abs(posRBV-raster["coords"]["omega"])%360.0 > 5.0):                  
+              raster["graphicsItem"].setVisible(False)
+            else:
+              raster["graphicsItem"].setVisible(True)                  
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
 
-            if (motID == "fineX"):
-              startX = self.rasterList[i]["coords"]["x"]
-              delta = startX-posRBV-self.motPos["x"]
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.rasterList[i]["graphicsItem"].setPos(newX,self.rasterList[i]["graphicsItem"].y())              
-            if (motID == "fineY" or motID == "fineZ"):
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
-              
-            if (motID == "omega"):
-              if (abs(posRBV-self.rasterList[i]["coords"]["omega"])%360.0 > 5.0):                  
-                self.rasterList[i]["graphicsItem"].setVisible(False)
-              else:
-                self.rasterList[i]["graphicsItem"].setVisible(True)                  
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
-            
-      if (self.vectorStart != None):
-        centerMarkerOffsetX = self.vectorStart["centerCursorX"]-self.centerMarker.x()
-        centerMarkerOffsetY = self.vectorStart["centerCursorY"]-self.centerMarker.y()
-          
-        if (motID == "omega"):
-          startYY = self.vectorStart["coords"]["z"]
-          startYX = self.vectorStart["coords"]["y"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-        if (motID == "x"):
-          startX = self.vectorStart["coords"]["x"]
-          delta = startX-posRBV
-          newX = float(self.screenXmicrons2pixels(delta))
-          self.vectorStart["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorStart["graphicsitem"].y())
-        if (motID == "y" or motID == "z"):
-          startYX = self.vectorStart["coords"]["y"]
-          startYY = self.vectorStart["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-      if (self.vectorEnd != None):
-        centerMarkerOffsetX = self.vectorEnd["centerCursorX"]-self.centerMarker.x()
-        centerMarkerOffsetY = self.vectorEnd["centerCursorY"]-self.centerMarker.y()
-
-        if (motID == "omega"):
-          startYX = self.vectorEnd["coords"]["y"]
-          startYY = self.vectorEnd["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
-        if (motID == "x"):
-          startX = self.vectorEnd["coords"]["x"]
-          delta = startX-posRBV
-          newX = float(self.screenXmicrons2pixels(delta))
-          self.vectorEnd["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorEnd["graphicsitem"].y())
-        if (motID == "y" or motID == "z"):
-          startYX = self.vectorEnd["coords"]["y"]
-          startYY = self.vectorEnd["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
-
-
+      self.vectorStart = self.updatePoint(self.vectorStart, posRBV, motID)
+      self.vectorEnd = self.updatePoint(self.vectorEnd, posRBV, motID)  
       if (self.vectorStart != None and self.vectorEnd != None):
-        self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
+        self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,
+                             self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,
+                             self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,
+                             self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
+
+    def updatePoint(self, point, posRBV, motID):
+      """Updates a point on the screen
+
+      Updates the position of a point (e.g. self.vectorStart) drawn on the screen based on
+      which motor was moved (motID) using gonio position (posRBV)
+      """
+      if point is None:
+        return point
+      centerMarkerOffsetX = point["centerCursorX"]-self.centerMarker.x()
+      centerMarkerOffsetY = point["centerCursorY"]-self.centerMarker.y()
+      startYY = point["coords"]["z"]
+      startYX = point["coords"]["y"]
+      startX = point["coords"]["x"]
+
+      if (motID == "omega"):
+        newY = self.calculateNewYCoordPos(startYX, startYY)
+        point["graphicsitem"].setPos(point["graphicsitem"].x(), newY - centerMarkerOffsetY)
+      if (motID == "x"):
+        delta = startX - posRBV
+        newX = float(self.screenXmicrons2pixels(delta))
+        point["graphicsitem"].setPos(newX - centerMarkerOffsetX, point["graphicsitem"].y())
+      if (motID == "y" or motID == "z"):
+        newY = self.calculateNewYCoordPos(startYX, startYY)
+        point["graphicsitem"].setPos(point["graphicsitem"].x(), newY - centerMarkerOffsetY)
+      return point
 
     def queueEnScanCB(self):
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))      
@@ -4715,30 +4703,98 @@ class ControlMain(QtWidgets.QMainWindow):
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
       
 
-    def getVectorObject(self):
-      pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
-      markWidth = 10
-      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
-      vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      return {"coords":vectorCoords,"graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
- 
-    def setVectorStartCB(self): #save sample x,y,z
-      if (self.vectorStart != None):
-        self.scene.removeItem(self.vectorStart["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # liekly due to vecLine not being defined yet
-          pass
-        self.vectorStart = None
-      self.vectorStart = self.getVectorObject()
+    def transform_vector_coords(self, prev_coords, current_raw_coords):
+      """Updates y and z co-ordinates of vector points when they are moved
 
+      This function tweaks the y and z co-ordinates such that when a vector start or
+      end point is adjusted in the 2-D plane of the screen, it maintains the points' location
+      in the 3rd dimension perpendicular to the screen
+      
+      Args:
+        prev_coords: Dictionary with x,y and z co-ordinates of the previous location of the sample
+        current_raw_coords: Dictionary with x, y and z co-ordinates of the sample derived from the goniometer
+          PVs
+        omega: Omega of the Goniometer (usually RBV)
+
+      Returns:
+        A dictionary mapping x, y and z to tweaked coordinates 
+      """
+
+      # Transform z from prev point and y from current point to lab coordinate system
+      _, _, zLabPrev, _ = daq_utils.gonio2lab(prev_coords['x'], prev_coords['y'], prev_coords['z'], current_raw_coords['omega'])
+      _, yLabCurrent, _, _ = daq_utils.gonio2lab(current_raw_coords['x'], current_raw_coords['y'], current_raw_coords['z'], current_raw_coords['omega']) 
+
+      # Take y co-ordinate from current point and z-coordinate from prev point and transform back to gonio co-ordinates
+      _, yTweakedCurrent, zTweakedCurrent, _ = daq_utils.lab2gonio(prev_coords['x'], yLabCurrent, zLabPrev, current_raw_coords['omega']) 
+      return {"x": current_raw_coords["x"], "y": yTweakedCurrent, "z": zTweakedCurrent}
+
+    def getVectorObject(self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None):
+      """Creates and returns a vector start or end point
+      
+      Places a start or end vector marker wherever the crosshair is located in
+      the sample camera view and returns a dictionary of metadata related to that point
+
+      Args:
+        prevVectorPoint: Dictionary of metadata related to a point being adjusted. For example,
+            a previously placed vectorStart point is moved, its old position is used to determine
+            its new co-ordinates in 3D space
+        gonioCoords: Dictionary of gonio coordinates. If not provided will retrieve current PV values
+        pen: QPen object that defines the color of the point's outline
+        brush: QBrush object that defines the color of the point's fill color
+      Returns:
+        A dict mapping the following keys
+            "coords": A dictionary of tweaked x, y and z positions of the Goniometer
+            "raw_coords": A dictionary of x, y, z co-ordinates obtained from the Goniometer PVs
+            "graphicsitem": Qt object referring to the marker on the sample camera
+            "centerCursorX" and "centerCursorY": Location of the center marker when this marker was placed 
+      """
+      if not pen:
+        pen = QtGui.QPen(QtCore.Qt.blue)
+      if not brush:
+        brush = QtGui.QBrush(QtCore.Qt.blue)
+      markWidth = 10
+      # TODO: Place vecMarker in such a way that it matches any arbitrary gonioCoords given to this function
+      # currently vecMarker will be placed at the center of the sample cam
+      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,
+                                        self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,
+                                        markWidth,markWidth,pen,brush)
+      if not gonioCoords:
+        gonioCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),
+                       "z":self.sampz_pv.get(), "omega":self.omegaRBV_pv.get()}
+      if prevVectorPoint:
+        vectorCoords = self.transform_vector_coords(prevVectorPoint["coords"], gonioCoords)
+      else:
+        vectorCoords = {k:v for k, v in gonioCoords.items() if k in ['x', 'y', 'z']}
+      return {"coords":vectorCoords, "gonioCoords":gonioCoords, 
+              "graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),
+              "centerCursorY":self.centerMarker.y()}
+
+    def setVectorPointCB(self, pointName):
+      """Callback function to update a vector point
+
+      Callback to remove or add the appropriate vector start or end point on the sample camera. 
+      Calls getVectorObject to generate metadata related to this point. Draws a vector line if 
+      both start and end is defined
+
+      Args:
+          point: Point to be placed (Either vectorStart or vectorEnd)
+      """
+      point = getattr(self, pointName)
+      if point:
+        self.scene.removeItem(point['graphicsitem'])
+        if self.vecLine:
+          self.scene.removeItem(self.vecLine)
+      if pointName == 'vectorEnd':
+        brush = QtGui.QBrush(QtCore.Qt.red)
+      else:
+        brush = QtGui.QBrush(QtCore.Qt.blue) 
+      point = self.getVectorObject(prevVectorPoint=point, brush=brush)
+      setattr(self, pointName, point)
       if self.vectorStart and self.vectorEnd:
         self.drawVector()
-
+              
     def drawVector(self):
       pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
       try:
         self.updateVectorLengthAndSpeed()
       except:
@@ -4750,34 +4806,19 @@ class ControlMain(QtWidgets.QMainWindow):
                                         self.centerMarker.y()+self.vectorEnd["graphicsitem"].y()+self.centerMarkerCharOffsetY, pen)
       self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
 
-    def setVectorEndCB(self): #save sample x,y,z
-      if (self.vectorEnd != None):
-        self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # likely due to self.vecLine not being defined yet
-          pass
-        self.vectorEnd = None
-      self.vectorEnd = self.getVectorObject()
-
-      if self.vectorStart and self.vectorEnd:
-        self.drawVector()        
-
     def clearVectorCB(self):
-      if (self.vectorStart != None):
+      if self.vectorStart:
         self.scene.removeItem(self.vectorStart["graphicsitem"])
         self.vectorStart = None
-      if (self.vectorEnd != None):
+      if self.vectorEnd:
         self.scene.removeItem(self.vectorEnd["graphicsitem"])
         self.vectorEnd = None
         self.vecLenLabelOutput.setText("---")
         self.vecSpeedLabelOutput.setText("---")        
-      try:
-        if self.vecLine != None:
-          self.scene.removeItem(self.vecLine)
-      except AttributeError: # likely due to self.vecLine not defined yet
-        pass
-
+      if self.vecLine:
+        self.scene.removeItem(self.vecLine)
+        self.vecLine = None
+      
     def puckToDewarCB(self):
       while (1):
         puckName, ok = PuckDialog.getPuckName()

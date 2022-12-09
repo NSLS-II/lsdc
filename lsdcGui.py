@@ -1945,15 +1945,21 @@ class ControlMain(QtWidgets.QMainWindow):
         if (daq_utils.beamline == "fmx"):
           if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (RI) (0.0-1.0):')            
           else:
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (BCU) (0.0-1.0):')            
         else:
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
+            self.escan_transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["transmissionRBV"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
+            self.escan_transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["transmissionSet"],self,60,3)
             colTransmissionLabel = QtWidgets.QLabel('Transmission (0.0-1.0):')            
         self.transmissionReadback_ledit = self.transmissionReadback.getEntry()
 
@@ -2066,7 +2072,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
+        protoOptionList = ["standard","screen","raster","vector","burn","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 
@@ -2523,6 +2529,15 @@ class ControlMain(QtWidgets.QMainWindow):
         tempPlotButton.clicked.connect(self.queueEnScanCB)
         clearEnscanPlotButton = QtWidgets.QPushButton("Clear")        
         clearEnscanPlotButton.clicked.connect(self.clearEnScanPlotCB)        
+        escanTransmissionLabel = QtWidgets.QLabel("Transmission")
+        self.escan_transmissionReadback_ledit = self.transmissionReadback.getEntry()
+        escanTransmissionSPLabel = QtWidgets.QLabel("SetPoint:")
+        self.escan_transmission_ledit = self.escan_transmissionSetPoint.getEntry()
+        self.escan_transmission_ledit.returnPressed.connect(self.setEScanTransCB)        
+        hBoxEScanButtons.addWidget(escanTransmissionLabel)
+        hBoxEScanButtons.addWidget(self.escan_transmissionReadback_ledit)
+        hBoxEScanButtons.addWidget(escanTransmissionSPLabel)
+        hBoxEScanButtons.addWidget(self.escan_transmission_ledit)
         hBoxEScanButtons.addWidget(clearEnscanPlotButton)
         hBoxEScanButtons.addWidget(tempPlotButton)
         escanStepsLabel = QtWidgets.QLabel("Steps")        
@@ -3080,7 +3095,7 @@ class ControlMain(QtWidgets.QMainWindow):
       return point
 
     def queueEnScanCB(self):
-      self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))      
+      self.protoComboBox.setCurrentText("eScan")      
       self.addRequestsToAllSelectedCB()
       self.treeChanged_pv.put(1)      
 
@@ -3691,6 +3706,18 @@ class ControlMain(QtWidgets.QMainWindow):
       self.sampleLifetimeReadback_ledit.setText(lifeTime_s)
       self.sampleLifetimeReadback_ledit.setStyleSheet("color : green");
       
+    def setEScanTransCB(self): 
+      try:
+        if (float(self.escan_transmission_ledit.text()) > 1.0 or float(self.escan_transmission_ledit.text()) < 0.001):
+          self.popupServerMessage("Transmission must be 0.001-1.0")
+          return
+      except ValueError as e:
+        self.popupServerMessage("Please enter a valid number")
+        return
+      comm_s = "setTrans(" + str(self.escan_transmission_ledit.text()) + ")"
+      logger.info(comm_s)
+      self.send_to_server(comm_s)
+
 
     def setTransCB(self):
       if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):

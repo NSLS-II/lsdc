@@ -172,7 +172,7 @@ elif beamline=="nyx":
     from nyxtools.isara_robot import IsaraRobotDevice
     from denso_robot import OphydRobot
     ophyd_robot = IsaraRobotDevice("XF19IDC-ES{Rbt:1}", name="robot")
-    robot = OphydRobot(ophyd_robot) # DensoRobot is the robot_lib API-compatible object
+    robot = OphydRobot(ophyd_robot) # OphydRobot is the robot_lib API-compatible object
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
 

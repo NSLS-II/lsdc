@@ -170,9 +170,9 @@ elif beamline=="nyx":
     raster_flyer = MXRasterFlyer(vector, zebra, detector)
 
     from nyxtools.isara_robot import IsaraRobotDevice
-    from denso_robot import DensoRobot
-    denso_ophyd_robot = IsaraRobotDevice("XF19IDC-ES{Rbt:1}", name="robot")
-    robot = DensoRobot(denso_ophyd_robot) # DensoRobot is the robot_lib API-compatible object
+    from denso_robot import OphydRobot
+    ophyd_robot = IsaraRobotDevice("XF19IDC-ES{Rbt:1}", name="robot")
+    robot = OphydRobot(ophyd_robot) # DensoRobot is the robot_lib API-compatible object
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
 

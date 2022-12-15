@@ -113,3 +113,8 @@ class DensoRobot:
                     return UNMOUNT_FAILURE
         else:
             return MOUNT_STEP_SUCCESSFUL  # always successful if robot is not online
+
+# This is a generic interface to give robots access to the robot_lib api
+class OphydRobot(DensoRobot):
+    def __init__(self):
+        self.robot = robot

@@ -2343,7 +2343,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
-        centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)                
+        if(daq_utils.defaultOverlayColor == 'GREEN'):
+          centerMarkBrush = QtGui.QBrush(QtCore.Qt.green)
+        else:
+          centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)
         self.centerMarker = QtWidgets.QGraphicsSimpleTextItem("+")
         self.centerMarker.setZValue(10.0)
@@ -2381,7 +2384,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scene.addItem(self.beamSizeOverlay)
         self.beamSizeOverlay.setVisible(False)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
-        scaleBrush = QtGui.QBrush(QtCore.Qt.blue)        
+        if(daq_utils.defaultOverlayColor == 'GREEN'):
+          scaleBrush = QtGui.QBrush(QtCore.Qt.green) 
+        else:
+          scaleBrush = QtGui.QBrush(QtCore.Qt.blue) 
         scalePen = QtGui.QPen(scaleBrush,2.0)
         scaleTextPen = QtGui.QPen(scaleBrush,1.0)
         self.imageScaleLineLen = 50
@@ -5349,8 +5355,8 @@ class ControlMain(QtWidgets.QMainWindow):
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
-        if daq_utils.beamline == "nyx":
-            self.GreenOverlayAction.setChcked(True)
+        if (daq_utils.defaultOverlayColor == 'GREEN'):
+            self.GreenOverlayAction.setChecked(True)
         else:
             self.BlueOverlayAction.setChecked(True)
         

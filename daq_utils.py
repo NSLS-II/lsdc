@@ -72,6 +72,7 @@ def init_environment():
   highMagPixY = float(getBlConfig("highMagPixY"))
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
+  defaultOverlayColor = "GREEN"
   try: 
     unitScaling = float(getBlConfig("unitScaling"))
     sampleCameraCount = float(getBlConfig("sampleCameraCount"))

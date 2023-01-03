@@ -29,7 +29,7 @@ from threading import Thread
 from config_params import *
 from kafka_producer import send_kafka_message
 
-from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX
+from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
 
 try:
   import ispybLib
@@ -3565,11 +3565,13 @@ def topViewCheckOn():
   setBlConfig(TOP_VIEW_CHECK,1)
 
 def anneal(annealTime=1.0):
-  if daq_utils.beamline == 'fmx' or daq_utils.beamline == 'amx':
     if daq_utils.beamline == 'fmx':
       annealer = fmxAnnealer
-    else:
+    elif daq_utils.beamline == 'amx':
       annealer = amxAnnealer
+    else:
+      daq_lib.gui_message('Annealer code only available in AMX, FMX')
+      return -1
 
     if not govStatusGet('SA'):
       daq_lib.gui_message('Not in Governor state SA, exiting')
@@ -3579,23 +3581,7 @@ def anneal(annealTime=1.0):
       logger.error("not able to get to CB governor state")
       return -1
 
-    annealer.air.put(1)
-
-    while not annealer.inStatus.get():
-      logger.info(f'anneal state before annealing: {annealer.inStatus.get()}')
-      time.sleep(0.1)
-
-    time.sleep(annealTime)
-    annealer.air.put(0)
-    if daq_utils.beamline == 'fmx':
-      while not annealer.outStatus.get():
-        logger.info(f'anneal state after annealing: {annealer.outStatus.get()}')
-        time.sleep(0.1)
-
-    elif daq_utils.beamline == 'amx':
-      while annealer.inStatus.get():
-        logger.info(f'anneal state after annealing: {annealer.inStatus.get()}')
-        time.sleep(0.1)
+    annealer.anneal(annealTime)
 
     if govStateSet('SA') == -1:
       logger.error("not able to return to SA governor state")

@@ -4,7 +4,6 @@ logger = logging.getLogger(__name__)
 import epics
 import time
 
-import socket
 import daq_utils
 
 def blStrGet():
@@ -25,7 +24,7 @@ def blStrGet():
 
     return blStr
 
-def govMsgGet(configStr = 'Robot'):
+def govMsgGet(configStr = 'Robot'): #TODO Replace these functions with the Ophyd versions
     """
     Returns Governor message
 
@@ -106,6 +105,7 @@ def govStateSet(stateStr, configStr = 'Robot'):
     return
 
 from ophyd import PVPositioner, PVPositionerPC, Device, Component as Cpt, EpicsMotor, EpicsSignal, EpicsSignalRO
+from ophyd import Status
 
 # XF:17IDC-ES:FMX{Wago:1}AnnealerIn-Sts
 # XF:17IDC-ES:FMX{Wago:1}AnnealerAir-Sel
@@ -116,9 +116,51 @@ class FmxAnnealer(Device):
     inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
     outStatus = Cpt(EpicsSignalRO, '2}AnnealerOut-Sts') # status: 0 (Not In), 1 (In)
 
+    def anneal(self, anneal_time):
+        def status_callback(value, old_value, **kwargs):
+            if old_value == 0 and value == 1:
+                return True
+            else:
+                return False
+
+        status = SubscriptionStatus(self.inStatus, status_callback, run=False)
+        self.air.put(1)
+        status.wait(5)
+        time.sleep(anneal_time)
+
+        status = SubscriptionStatus(self.outStatus, status_callback, run=False)
+        self.air.put(0)
+        status.wait(5)
+
+
 class AmxAnnealer(Device):
     air = Cpt(EpicsSignal, '1}AnnealerAir-Sel')
     inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
+
+    def anneal(self, anneal_time):
+        def in_callback(value, old_value, **kwargs):
+            if old_value == 0 and value == 1:
+                logger.info(f'anneal state while annealing: {annealer.inStatus.get()}')
+                return True
+            else:
+                logger.debug(f'anneal state before annealing: {annealer.inStatus.get()}')
+                return False
+        def out_callback(value, old_value, **kwargs):
+            if old_value == 1 and value == 0:
+                logger.info(f'anneal state while annealing: {annealer.inStatus.get()}')
+                return True
+            else:
+                logger.debug(f'anneal state before annealing: {annealer.inStatus.get()}')
+                return False
+
+        status = SubscriptionStatus(self.inStatus, in_callback, run=False)
+        self.air.put(1)
+        status.wait(5)
+        time.sleep(anneal_time)
+
+        status = SubscriptionStatus(self.inStatus, out_callback, run=False)
+        self.air.put(0)
+        status.wait(5)
 
 ## FMX annealer aka cryo blocker
 fmxAnnealer = FmxAnnealer('XF:17IDC-ES:FMX{Wago:', name='annealer',

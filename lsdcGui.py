@@ -39,6 +39,7 @@ import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
 from threads import VideoThread
+
 import socket
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
@@ -2303,7 +2304,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         self.capture = self.captureLowMag
-        
         self.centeringMarksList = []
         self.rasterList = []
         self.rasterDefList = []
@@ -4451,7 +4451,7 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["slit_width"] = float(self.beamWidth_ledit.text())
         reqObj["slit_height"] = float(self.beamHeight_ledit.text())
         reqObj["energy"] = float(self.energy_ledit.text())
-        wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+        wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
         reqObj["wavelength"] = wave
       except ValueError:
         message = "Please ensure that all boxes that expect numerical values have numbers in them"
@@ -4605,7 +4605,7 @@ class ControlMain(QtWidgets.QMainWindow):
                reqObj["slit_width"] = float(self.beamWidth_ledit.text())
                reqObj["slit_height"] = float(self.beamHeight_ledit.text())
                reqObj["energy"] = float(self.energy_ledit.text())             
-               wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+               wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
                reqObj["wavelength"] = wave
              except ValueError:
                message = "Please ensure that all boxes that expect numerical values have numbers in them"
@@ -4684,7 +4684,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.popupServerMessage(f'{message}')
           return
         try:        
-          wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+          wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
         except ValueError:
           wave = 1.1
 
@@ -4937,7 +4937,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.xia2CheckBox.setChecked(reqObj["xia2"])
       reqObj["energy"] = float(self.energy_ledit.text())
       self.energy_ledit.setText(str(reqObj["energy"]))                        
-      energy_s = str(daq_utils.wave2energy(reqObj["wavelength"]))
+      energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))
       dist_s = str(reqObj["detDist"])
       self.detDistMotorEntry.getEntry().setText(str(dist_s))
       self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))

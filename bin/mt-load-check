@@ -12,12 +12,12 @@ esac
 case $servorws in
 	ws*)
 		echo Workstation - activating GUI env
-		PYTHONTOUSE=/opt/conda_envs/lsdc-gui-2022-1.1/bin/python
+		CONDA_ENV_BASE=/opt/conda_envs/lsdc-gui-2022-1.1
 		;;
 	*)
 		echo Server - activating server env
-		PYTHONTOUSE=/opt/conda_envs/lsdc-server-2022-3.2/bin/python
+		CONDA_ENV_BASE=/opt/conda_envs/lsdc-server-2022-3.2
 		;;
 esac
 echo Running MT_LoadCheck script
-$PYTHONTOUSE /nsls2/software/mx/daq/lsdc_$beamline/bin/MT_LoadCheck.py
+$CONDA_ENV_BASE/bin/python /nsls2/software/mx/daq/lsdc_$beamline/bin/MT_LoadCheck.py

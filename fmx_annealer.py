@@ -5,6 +5,7 @@ import epics
 import time
 
 import socket
+import daq_utils
 
 def blStrGet():
     """
@@ -14,15 +15,14 @@ def blStrGet():
    
     Beamline is determined by querying hostname
     """
-    hostStr = socket.gethostname().split('.')[0]
-    if hostStr == 'xf17id2-srv2':  # TODO replace with some kind of less hard-coded name?
-        blStr = 'FMX'
-    elif hostStr == 'xf17id1-ca1':
-        blStr = 'AMX'
+    if daq_utils.beamline == 'fmx':
+        blStr = 'XF:17IDC-ES:FMX'
+    elif daq_utils.beamline == 'amx':
+        blStr = 'XF:17IDB-ES:AMX'
     else:
-        logger.error('Error - this code must be executed on an LSDC server machine')
+        logger.error('Error - this code is only available in AMX and FMX')
         blStr = -1
-       
+
     return blStr
 
 def govMsgGet(configStr = 'Robot'):
@@ -40,10 +40,9 @@ def govMsgGet(configStr = 'Robot'):
     blStr = blStrGet()
     if blStr == -1: return -1
 
-    sysStr = 'XF:17IDC-ES:' + blStr
     devStr = '{Gov:' + configStr + '}'
     stsStr = 'Sts:Msg-Sts'
-    pvStr = sysStr + devStr + stsStr
+    pvStr = blStr + devStr + stsStr
     govMsg = epics.caget(pvStr)
 
     return govMsg
@@ -66,11 +65,10 @@ def govStatusGet(stateStr, configStr = 'Robot'):
     if stateStr not in ['M', 'SE', 'SA', 'DA', 'XF', 'BL', 'BS', 'AB', 'CB', 'DI']:
         logger.error('stateStr must be one of: M, SE, SA, DA, XF, BL, BS, AB, CB, DI]')
         return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
+
     devStr = '{Gov:' + configStr + '-St:' + stateStr + '}'
     stsStr = 'Sts:Active-Sts'
-    pvStr = sysStr + devStr + stsStr
+    pvStr = blStr + devStr + stsStr
     govStatus = epics.caget(pvStr)
     
     return govStatus
@@ -93,14 +91,13 @@ def govStateSet(stateStr, configStr = 'Robot'):
     if stateStr not in ['M', 'SE', 'SA', 'DA', 'XF', 'BL', 'BS', 'AB', 'CB', 'DI']:
         logger.error('stateStr must be one of: M, SE, SA, DA, XF, BL, BS, AB, CB, DI]')
         return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
+
     devStr = '{Gov:' + configStr + '}'
     cmdStr = 'Cmd:Go-Cmd'
-    pvStr = sysStr + devStr + cmdStr
+    pvStr = blStr + devStr + cmdStr
     logger.debug(f'governor PV: {pvStr}')
     epics.caput(pvStr, stateStr)
-    
+
     while not govStatusGet(stateStr, configStr = configStr):
         print(govMsgGet(configStr = configStr))
         time.sleep(2)
@@ -114,12 +111,20 @@ from ophyd import PVPositioner, PVPositionerPC, Device, Component as Cpt, EpicsM
 # XF:17IDC-ES:FMX{Wago:1}AnnealerAir-Sel
         
 ## DONE Redo ophyd object with proper PV
-class Annealer(Device):
+class FmxAnnealer(Device):
     air = Cpt(EpicsSignal, '1}AnnealerAir-Sel')
     inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
     outStatus = Cpt(EpicsSignalRO, '2}AnnealerOut-Sts') # status: 0 (Not In), 1 (In)
 
+class AmxAnnealer(Device):
+    air = Cpt(EpicsSignal, '1}AnnealerAir-Sel')
+    inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
+
 ## FMX annealer aka cryo blocker
-annealer = Annealer('XF:17IDC-ES:FMX{Wago:', name='annealer',
+fmxAnnealer = FmxAnnealer('XF:17IDC-ES:FMX{Wago:', name='annealer',
                         read_attrs=[],
                         labels=['fmx'])
+
+amxAnnealer = AmxAnnealer('XF:17IDB-ES:AMX{Wago:', name='annealer',
+                        read_attrs=[],
+                        labels=['amx'])

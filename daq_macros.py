@@ -1812,7 +1812,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    daq_lib.setRobotGovState("DA")    
+    gov_lib.setGovRobot(gov_robot, "DA")
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -1835,7 +1835,8 @@ def snakeRasterBluesky(rasterReqID, grain=""):
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
     total_exposure_time = exptimePerCell*totalImages
- 
+
+    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
@@ -1847,7 +1848,9 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row, stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, row_index)
         vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
-            data_directory_name, file_number_start, vector)
+            data_directory_name, file_number_start, row_index, vector)
+        raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
+        time.sleep(0.2)  # necessary for reliable row processing - see comment in commit 6793f4
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):
@@ -1866,6 +1869,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
           spotFindThread.start()
           spotFindThreadList.append(spotFindThread)
         send_kafka_message(f'{daq_utils.beamline}.lsdc.documents', event='event', uuid=rasterReqID, protocol="raster", row=row_index, proc_flag=procFlag)
+        logger.info('row complete')
     """governor transitions:
     initiate transitions here allows for GUI sample/heat map image to update
     after moving to known position"""
@@ -1928,7 +1932,8 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    #yield from raster_flyer.detector.collect()
+    raster_flyer.detector.cam.acquire.put(0)
+    raster_flyer.detector.super_unstage()
     logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of
@@ -3401,7 +3406,7 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
-def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
+def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, row_index, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer
 
     logger.info("in Zebra Daq Raster Bluesky #1")
     logger.info(f" with vector: {vector}")
@@ -3431,7 +3436,8 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
                    x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
                    file_prefix=filePrefix, data_directory_name=data_directory_name,\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=1)
+                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState,\
+                   row_index=row_index, transmission=1, protocol="raster")
     yield from bp.fly([raster_flyer])
 
     logger.info("vector Done")

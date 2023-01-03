@@ -4808,8 +4808,8 @@ class ControlMain(QtWidgets.QMainWindow):
           self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
           self.timerSample.start(SAMPLE_TIMER_DELAY) 
-          ipos = int(dewarPos)+1
-          if (ok):
+          if ok and dewarPos is not None and puckName is not None:
+            ipos = int(dewarPos)+1
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))
             self.treeChanged_pv.put(1)
         else:

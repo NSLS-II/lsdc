@@ -10,19 +10,24 @@ Fixes and other changes
 * AMX/FMX branch (master)
 
   * Vector tweak - more intuitive editing of vector start/end points 
+  * Puck list in order of modification
+  * Crashes in puck/dewar position dialog boxes fixed
+  * c3d location fixed
 
 * AMX/FMX branch (one-branch)
 
+  * Fix energy being incorrect for rasters
   * Further work to get rastering working
 
 * NYX branch (nyx-one-branch)
 
-  * Isara robot in nyxtools
+  * Isara robot (in nyxtools)
   * Isara robot integration into LSDC
 
 * Documentation
 
-  * 
+  * Architecture diagram and description added
+  * Graphviz files can now be used in documentation and are compiled during the build process
 
 1.0.3 (2022-09-06, a.k.a. 2022-3)
 =================================

@@ -140,17 +140,13 @@ class AmxAnnealer(Device):
     def anneal(self, anneal_time):
         def in_callback(value, old_value, **kwargs):
             if old_value == 0 and value == 1:
-                logger.info(f'anneal state while annealing: {value.get()}')
                 return True
             else:
-                logger.debug(f'anneal state before annealing: {value.get()}')
                 return False
         def out_callback(value, old_value, **kwargs):
             if old_value == 1 and value == 0:
-                logger.info(f'anneal state while annealing: {value.get()}')
                 return True
             else:
-                logger.debug(f'anneal state before annealing: {value.get()}')
                 return False
 
         status = SubscriptionStatus(self.inStatus, in_callback, run=False)

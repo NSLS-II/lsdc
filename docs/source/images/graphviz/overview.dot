@@ -1,0 +1,22 @@
+digraph D {
+    compound=true
+    subgraph cluster_apis {
+        node [style=filled,color=white];
+        style=filled;
+        color=lightgrey;
+        servers -> mongo_db [dir=both];
+    }
+
+  lsdc_server [shape=box, label="LSDC Server"]
+  lsdc_gui [shape=box, label="LSDC GUI"]
+  epics_ca [label="EPICS CA"]
+  servers [label="amostra\nconftrak\nanalysisstore"]
+  mongo_db [label="MongoDB"]
+  mx_tools [shape=box, label="MX Tools"]
+  
+  lsdc_gui -> epics_ca [color=black, label="send_to_server()\naux_send_to_server()"]
+  epics_ca-> lsdc_server [color=black, label="PV = \n command_s \n immediate_command_s"]
+  lsdc_gui -> servers [dir=both]
+  lsdc_server -> servers [dir=both]
+  lsdc_server -> mx_tools
+}

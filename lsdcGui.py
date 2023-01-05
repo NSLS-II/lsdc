@@ -1410,7 +1410,7 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,5000)
       self.parent.treeChanged_pv.put(1)
@@ -1424,7 +1424,7 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,0)
       self.parent.treeChanged_pv.put(1)

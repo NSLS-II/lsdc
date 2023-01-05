@@ -13,6 +13,7 @@ Fixes and other changes
   * Puck list in order of modification
   * Crashes in puck/dewar position dialog boxes fixed
   * c3d location fixed
+  * Hutch cameras run on independent QThreads, shows message when feed is unavailable
 
 * AMX/FMX branch (one-branch)
 

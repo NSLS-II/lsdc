@@ -49,7 +49,7 @@ def start():
 def check_working_directory():
     working_dir = Path.cwd()
     home_dir = Path.home()
-    if home_dir in working_dir.parents:
+    if home_dir in working_dir.parents or home_dir == working_dir:
         return False
     else:
         return True

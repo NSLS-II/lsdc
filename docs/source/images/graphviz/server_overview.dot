@@ -1,0 +1,42 @@
+digraph D {
+    node [shape=record]
+
+    a [label="PyQT GUI"]
+    b [label="EPICS Soft IOC (Middleware)"]
+    c [label="database\nlib"]
+    d [label="Control\nMain Shell"]
+    e [label="Amostra\nAnalysisStore\nConfTrak"]
+    f [label="ISPyB"]
+    g [label="SynchWeb Web\nInterface"]
+    h [label="Auto Process"]
+    i [label="goniometer\nlib"]
+    j [label="detector\nlib"]
+    k [label="beamline\nlib"]
+    l [label="robot\nlib"]
+    m [label="areaDetector\nEPICS"]
+    n [label="Ophyd\nBlueSky"]
+    o [label="EMBL\nJLIB"]
+    p [label="Delta Tau"]
+
+    a -> b [label="channel access"]
+    b -> a
+    d -> c [color="red"]
+    c -> e [color="red"]
+    e -> c
+    b -> d [label="channel access"]
+    d -> b
+
+    d -> f [label="Inserts", color="red"]
+    f -> g
+    d -> h
+    h -> d [color="red"]
+
+    d -> i
+    d -> j
+    j -> m
+    d -> k
+    k -> n
+    n -> p
+    d -> l
+    l -> o
+}

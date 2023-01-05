@@ -2758,8 +2758,6 @@ class ControlMain(QtWidgets.QMainWindow):
           self.vidActionRasterExploreRadio.setDisabled(True)
           self.vidActionRasterDefRadio.setDisabled(True)
           self.vidActionDefineCenterRadio.setDisabled(True)
-        else:
-          return
 
         hutchCornerCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchCornerCamURL'))
         hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchCorner, frame))

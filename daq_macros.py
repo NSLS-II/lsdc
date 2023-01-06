@@ -3586,9 +3586,6 @@ def anneal(annealTime=1.0):
     if govStateSet('SA') == -1:
       logger.error("not able to return to SA governor state")
       return -1
-
-  else:
-    daq_lib.gui_message(f'Anneal not implemented for beamline {daq_utils.beamline}! Doing nothing')
   
 def topViewCheckOff():
   setBlConfig(TOP_VIEW_CHECK,0)

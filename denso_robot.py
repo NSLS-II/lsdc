@@ -83,7 +83,7 @@ class OphydRobot:
     def finish(self):
         ...
 
-    def robotCanExchangeSamples():
+    def multiSampleGripper():
         return True
 
     def check_sample_mounted(self, mount, puck_pos, pin_pos):  # is the correct sample present/absent as expected during a mount/unmount?

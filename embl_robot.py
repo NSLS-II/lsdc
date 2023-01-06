@@ -171,7 +171,7 @@ class EMBLRobot:
         logger.error(message)
 
 
-    def robotCanExchangeSamples():
+    def multiSampleGripper():
       return False
 
     def openGripper(self):

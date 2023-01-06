@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 def get_denso_puck_pin(puck_number, pin_number):
     return (puck_number+1, pin_number+1)
 
-class DensoRobot:
+class OphydRobot:
     def __init__(self, robot):
         self.robot = robot
 
@@ -113,8 +113,3 @@ class DensoRobot:
                     return UNMOUNT_FAILURE
         else:
             return MOUNT_STEP_SUCCESSFUL  # always successful if robot is not online
-
-# This is a generic interface to give robots access to the robot_lib api
-class OphydRobot(DensoRobot):
-    def __init__(self):
-        self.robot = robot

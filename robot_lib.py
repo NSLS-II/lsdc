@@ -3,7 +3,7 @@ from beamline_support import getPvValFromDescriptor as getPvDesc, setPvValFromDe
 import logging
 from start_bs import robot, RE
 from config_params import MOUNT_STEP_SUCCESSFUL, UNMOUNT_STEP_SUCCESSFUL, MOUNT_SUCCESSFUL, UNMOUNT_SUCCESSFUL
-from denso_robot import DensoRobot
+from denso_robot import OphydRobot
 from threading import Thread
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
   else:
     logger.info('regular robot')
     robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)
-  if isinstance(robot, DensoRobot):
+  if isinstance(robot, OphydRobot):
     status = robot.check_sample_mounted(mount=True, puck_pos=puck_pos, pin_pos=pin_pos)
   else:
     status = MOUNT_STEP_SUCCESSFUL  # TODO assume embl robot is successful
@@ -34,7 +34,7 @@ def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
     RE(robot.unmount(gov_robot, puck_pos, pin_pos, samp_id))
   else:
     robot.unmount(gov_robot, puck_pos, pin_pos, samp_id)
-  if isinstance(robot, DensoRobot):
+  if isinstance(robot, OphydRobot):
     status = robot.check_sample_mounted(mount=False, puck_pos=puck_pos, pin_pos=pin_pos)
   else:
     status = UNMOUNT_STEP_SUCCESSFUL  # TODO assume embl robot is successful

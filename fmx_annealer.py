@@ -135,7 +135,7 @@ class FmxAnnealer(Device):
 
 class AmxAnnealer(Device):
     air = Cpt(EpicsSignal, '1}AnnealerAir-Sel')
-    inStatus = Cpt(EpicsSignalRO, '2}AnnealerIn-Sts') # status: 0 (Not In), 1 (In)
+    inStatus = Cpt(EpicsSignalRO, '1}AnnealerAir-Sts') # status: 0 (Not In), 1 (In)
 
     def anneal(self, anneal_time):
         def in_callback(value, old_value, **kwargs):

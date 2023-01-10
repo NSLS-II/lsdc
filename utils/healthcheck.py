@@ -72,7 +72,10 @@ def handle_fail(check):
     check.passed = False
     logger.error(f'Check {check.name} failed')
     if check.fatal:
+        print("End checks")
+        print(u'\u2500' * 20)
         sys.exit('Fatal error, exiting...')
+        
 
 def perform_checks():
     """Call this function to contruct a DAG where each node is evaluated using 
@@ -83,7 +86,8 @@ def perform_checks():
     for c in [check_working_directory, check_db]:
         for d in c.depends:
             checks.add_edge(d, c)
-
+    print(u'\u2500' * 20)
+    print("Begin checks")
     for check in bfs_tree(checks, start):
         try:
             if all([parent.passed for parent in checks.predecessors(check)]):
@@ -96,4 +100,6 @@ def perform_checks():
             print(f'Exception: {e}')
             logger.error(f'Exception during checks {e}')
             handle_fail(check)
-            
+    print("End checks")
+    print(u'\u2500' * 20)
+    

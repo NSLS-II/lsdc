@@ -9,6 +9,7 @@ Fixes and other changes
 -----------------------
 * AMX/FMX branch (master)
 
+  * Annealer working on both beamlines
   * Vector tweak - more intuitive editing of vector start/end points 
   * Puck list in order of modification
   * Crashes in puck/dewar position dialog boxes fixed

@@ -37,6 +37,7 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_vector_program)
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
+from bluesky.preprocessors import finalize_wrapper
 
 try:
   import ispybLib
@@ -1013,7 +1014,9 @@ def snakeRaster(rasterReqID,grain=""):
   if (scannerType == "PI"):
     snakeRasterFine(rasterReqID,grain)
   else:
-    RE(snakeRasterBluesky(rasterReqID,grain))
+    finalize_plan = finalize_wrapper(snakeRasterBluesky(rasterReqID,grain), bps.mv(raster_flyer.detector.cam.acquire, 0))
+    yield from finalize_plan
+    #RE(snakeRasterBluesky(rasterReqID,grain))
 
 def snakeRasterNoTile(rasterReqID,grain=""):
   global dialsResultDict,rasterRowResultsList,processedRasterRowCount
@@ -1932,8 +1935,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       db_lib.updateRequest(rasterRequest)
       daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
       logger.info(f'setting xrecRasterFlag to: {rasterRequest["uid"]}')
-    raster_flyer.detector.cam.acquire.put(0)
-    raster_flyer.detector.super_unstage()
+    raster_flyer.detector.unstage()
     logger.info('stopping detector')
 
     """change request status so that GUI only takes a snapshot of
@@ -3397,13 +3399,12 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                    detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
                    data_path=data_path)
 
-    RE(bp.fly([flyer]))
+    yield from bp.fly([flyer])
 
     logger.info("vector Done")
     if lastOnSample() and changeState:
         gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
     logger.info("stop det acquire")
-    flyer.detector.cam.acquire.put(0, wait=True)
     logger.info("zebraDaq Done")
 
 def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, row_index, vector, scanEncoder=3, changeState=True):  # TODO should be raster flyer

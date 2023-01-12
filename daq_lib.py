@@ -16,8 +16,9 @@ import db_lib
 from daq_utils import getBlConfig
 from config_params import *
 from kafka_producer import send_kafka_message
-from start_bs import govs, gov_robot, flyer
+from start_bs import govs, gov_robot, flyer, RE
 import gov_lib
+from bluesky.preprocessors import finalize_wrapper
 import logging
 logger = logging.getLogger(__name__)
 
@@ -502,7 +503,8 @@ def collectData(currentRequest):
   db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
     logger.info('entering raster')
-    status = daq_macros.snakeRaster(currentRequest["uid"])
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
+    status = 0
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    

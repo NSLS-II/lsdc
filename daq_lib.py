@@ -19,6 +19,7 @@ from kafka_producer import send_kafka_message
 from start_bs import govs, gov_robot, flyer, RE
 import gov_lib
 from bluesky.preprocessors import finalize_wrapper
+import bluesky.plan_stubs as bps
 import logging
 logger = logging.getLogger(__name__)
 
@@ -617,7 +618,10 @@ def collectData(currentRequest):
           beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
       else:
           beamline_lib.mvaDescriptor("omega",sweep_start)
-      imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+      def standard_plan():
+        final_plan = finalize_wrapper(collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest), bps.mv(flyer.detector.cam.acquire, 0))
+        yield from final_plan
+      RE(standard_plan)
   try:
     if (logMe) and prot == 'raster':
       logMxRequestParams(currentRequest,wait=False)

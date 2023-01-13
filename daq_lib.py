@@ -618,10 +618,7 @@ def collectData(currentRequest):
           beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
       else:
           beamline_lib.mvaDescriptor("omega",sweep_start)
-      def standard_plan():
-        final_plan = finalize_wrapper(collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest), bps.mv(flyer.detector.cam.acquire, 0))
-        yield from final_plan
-      RE(standard_plan)
+      collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':
       logMxRequestParams(currentRequest,wait=False)
@@ -715,7 +712,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
    
     vector_params = daq_macros.gatherStandardVectorParams()
     logger.debug(f"vector_params: {vector_params}") 
-    daq_macros.zebraDaqBluesky(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, 3,changeState)
+    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
   elif (protocol == "vector"):
     daq_macros.vectorZebraScan(currentRequest)  

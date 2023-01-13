@@ -3364,6 +3364,9 @@ def gatherStandardVectorParams():
     vectorParams["transmission"]=transmission
     return vectorParams
 
+def standard_plan(flyer,angle_start,num_images,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start, vector_params, data_path):
+    final_plan = finalize_wrapper(zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path), bps.mv(flyer.detector.cam.acquire, 0))
+    yield from final_plan
 
 def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):
 

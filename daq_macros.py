@@ -2687,7 +2687,8 @@ def vectorZebraScan(vecRequest):
   if (scannerType == "PI"):
     vectorZebraScanFine(vecRequest)
   else:
-    vectorZebraScanNormal(vecRequest)
+    finalize_plan = finalize_wrapper(vectorZebraScanNormal(vecRequest), bps.mv(flyer.detector.cam.acquire, 0))
+    yield from finalize_plan
 
     
 def vectorZebraScanFine(vecRequest):
@@ -2820,7 +2821,7 @@ def vectorZebraScanNormal(vecRequest):
   reqObj["vectorParams"]["det_distance_m"]=det_distance_m
   reqObj["vectorParams"]["transmission"]=transmission
 
-  zebraDaqBluesky(flyer,sweep_start_angle,numImages,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"], data_path)
+  yield from zebraDaqBluesky(flyer,sweep_start_angle,numImages,scanWidth,imgWidth,expTime,file_prefix,data_directory_name,file_number_start, reqObj["vectorParams"], data_path)
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
 

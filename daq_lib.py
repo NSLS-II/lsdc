@@ -715,7 +715,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
   elif (protocol == "vector"):
-    daq_macros.vectorZebraScan(currentRequest)  
+    RE(daq_macros.vectorZebraScan(currentRequest))
   elif (protocol == "stepVector"):
     daq_macros.vectorZebraStepScan(currentRequest)
   else:

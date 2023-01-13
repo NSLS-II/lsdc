@@ -880,7 +880,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxDialsParams.addLayout(self.hBoxRasterLayout3)
         dialsGB.setLayout(vBoxDialsParams)
 
-        reprocessRasterButton = QtWidgets.QPushButton("ReProcessRaster") 
+        reprocessRasterButton = QtWidgets.QPushButton("ReProcessRaster")
         reprocessRasterButton.clicked.connect(self.reprocessRasterRequestCB)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Apply | QDialogButtonBox.Cancel,
@@ -890,7 +890,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxColParams1.addWidget(collectionGB)
         vBoxColParams1.addWidget(dozorGB)
         vBoxColParams1.addWidget(dialsGB)
-        vBoxColParams1.addWidget(reprocessRasterButton)                        
+        # vBoxColParams1.addWidget(reprocessRasterButton)
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
 
@@ -914,8 +914,8 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.parent.send_to_server("reprocessRaster(\""+str(reqID)+"\")")
       except:
         pass
-      
-        
+
+
     def screenDefaultsCancelCB(self):
       self.done(QDialog.Rejected)
 
@@ -1150,6 +1150,48 @@ class DewarTree(QtWidgets.QTreeView):
         self.model = QtGui.QStandardItemModel()
         self.model.itemChanged.connect(self.queueSelectedSample)
         self.isExpanded = 1
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openMenu)
+
+    def openMenu(self, position):
+      indexes = self.selectedIndexes()
+      selectedLevels = set()
+      if indexes:
+        for index in indexes:
+          level = 0
+          while index.parent().isValid():
+            index = index.parent()
+            level += 1
+          selectedLevels.add(level)
+        if len(selectedLevels) == 1:
+          level = list(selectedLevels)[0]
+          menu = QMenu()
+          if level == 2: # This is usually a request
+            deleteReqAction = QtWidgets.QAction('Delete selected request(s)', self)
+            deleteReqAction.triggered.connect(self.deleteSelectedCB)
+            cloneReqAction = QtWidgets.QAction('Clone selected request', self)
+            cloneReqAction.triggered.connect(self.cloneRequestCB)
+            queueSelAction = QtWidgets.QAction('Queue selected request(s)', self)
+            queueSelAction.triggered.connect(self.queueAllSelectedCB)
+            dequeueSelAction = QtWidgets.QAction('Dequeue selected request(s)', self)
+            dequeueSelAction.triggered.connect(self.deQueueAllSelectedCB)
+            menu.addAction(cloneReqAction)
+            menu.addAction(queueSelAction)
+            menu.addAction(dequeueSelAction)
+            menu.addSeparator()
+            menu.addAction(deleteReqAction)
+          menu.exec_(self.viewport().mapToGlobal(position))
+
+    def cloneRequestCB(self):
+      # Only the first selected request is cloned (If multiple are chosen)
+      index = self.selectedIndexes()[0]
+      item = self.model.itemFromIndex(index)
+      requestData = db_lib.getRequestByID(item.data(32))
+      protocol = requestData['request_obj']['protocol']
+      if 'raster' in protocol.lower(): # Will cover specRaster and stepRaster as well
+        self.parent.cloneRequestCB()
+      elif 'standard' in protocol.lower():
+        self.parent.addRequestsToAllSelectedCB()
 
     def keyPressEvent(self, event):
       if (event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace):
@@ -1383,7 +1425,7 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,5000)
       self.parent.treeChanged_pv.put(1)
@@ -1397,15 +1439,18 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,0)
       self.parent.treeChanged_pv.put(1)
 
 
-    def confirmDelete(self):
-      quit_msg = "Are you sure you want to delete all requests?"
-      self.parent.timerSample.stop()
+    def confirmDelete(self, numReq):
+      if numReq:
+        quit_msg = f"Are you sure you want to delete {numReq} requests?"
+      else:
+        quit_msg = "Are you sure you want to delete all requests?"
+      self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
       self.parent.timerSample.start(SAMPLE_TIMER_DELAY)
       if reply == QtWidgets.QMessageBox.Yes:
@@ -1416,12 +1461,15 @@ class DewarTree(QtWidgets.QTreeView):
 
     def deleteSelectedCB(self,deleteAll):
       if (deleteAll):
-        if (not self.confirmDelete()):
+        if (not self.confirmDelete(0)):
           return 
         self.selectAll()            
       selmod = self.selectionModel()
       selection = selmod.selection()
       indexes = selection.indexes()
+      if len(indexes) > 1:
+        if (not self.confirmDelete(len(indexes))):
+          return
       progressInc = 100.0/float(len(indexes))
       self.parent.progressDialog.setWindowTitle("Deleting Requests")
       self.parent.progressDialog.show()
@@ -1549,10 +1597,9 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         super(RasterGroup, self).__init__()
         self.parent=parent
         self.setAcceptHoverEvents(True)
-
+        self.currentSelectedCell = None
 
     def mousePressEvent(self, e):
-      super(RasterGroup, self).mousePressEvent(e)
       logger.info("mouse pressed on group")
       for i in range(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
@@ -1562,8 +1609,11 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             self.parent.treeChanged_pv.put(1)
       if (self.parent.vidActionRasterExploreRadio.isChecked()):
           for cell in self.childItems():
-              if isInCell(e.pos(), cell):
+              if cell.contains(e.pos()):
                   if (cell.data(0) != None):
+                      if self.currentSelectedCell:
+                        self.currentSelectedCell.setPen(self.parent.redPen)
+                        self.currentSelectedCell.setZValue(0)
                       spotcount = cell.data(0)
                       filename = cell.data(1)
                       d_min = cell.data(2)
@@ -1577,10 +1627,10 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       self.parent.rasterExploreDialog.setTotalIntensity(intensity)
                       self.parent.rasterExploreDialog.setResolution(d_min)
                       groupList = self.childItems()
-                      for i in range (0,len(groupList)):
-                          groupList[i].setPen(self.parent.redPen)
                       cell.setPen(self.parent.yellowPen)
-
+                      cell.setZValue(1)
+                      self.currentSelectedCell = cell
+                      break
       else:
         super(RasterGroup, self).mousePressEvent(e)
 
@@ -1842,6 +1892,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popUserScreen.clicked.connect(self.popUserScreenCB)
         self.closeShutterButton = QtWidgets.QPushButton("Close Photon Shutter")        
         self.closeShutterButton.clicked.connect(self.closePhotonShutterCB)
+        self.closeShutterButton.setStyleSheet("background-color: red")
         hBoxTreeButtsLayout = QtWidgets.QHBoxLayout()
         vBoxTreeButtsLayoutLeft = QtWidgets.QVBoxLayout()
         vBoxTreeButtsLayoutRight = QtWidgets.QVBoxLayout()
@@ -1851,9 +1902,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(queueSelectedButton)
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)        
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)        
-        vBoxTreeButtsLayoutRight.addWidget(stopRunButton)
-        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
+        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)        
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
         vBoxTreeButtsLayoutRight.addWidget(restartServerButton)        
@@ -4664,8 +4714,8 @@ class ControlMain(QtWidgets.QMainWindow):
       self.eraseCB()
       colRequest=self.selectedSampleRequest
       reqObj = colRequest["request_obj"]
-      rasterDef = reqObj["rasterDef"]
-      self.addSampleRequestCB(rasterDef)      
+      if 'rasterDef' in reqObj:
+        self.addSampleRequestCB(reqObj["rasterDef"])
 
 
       

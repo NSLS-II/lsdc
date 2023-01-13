@@ -40,6 +40,8 @@ import _thread #TODO python document suggests using threading! make this chance 
 import lsdcOlog
 from threads import VideoThread
 import socket
+from utils.healthcheck import perform_checks
+
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
 logging_file = 'lsdcGuiLog.txt'
@@ -5493,42 +5495,17 @@ def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sam
     return reqObj
 
 def main():
+    logger.info('Starting LSDC...')
+    perform_checks()
     daq_utils.init_environment()
-    daq_utils.readPVDesc()    
+    daq_utils.readPVDesc()
     app = QtWidgets.QApplication(sys.argv)
     ex = ControlMain()
     sys.exit(app.exec_())
 
 #skinner - I think Matt did a lot of what's below and I have no idea what it is. 
 if __name__ == '__main__':
-    if '-pc' in sys.argv or '-p' in sys.argv:
-        logger.info('cProfile not working yet :(')
-        #print 'starting cProfile profiler...'
-        #import cProfile, pstats, io
-        #pr = cProfile.Profile()
-        #pr.enable()
-
-    elif '-py' in sys.argv:
-        logger.info('starting yappi profiler...')
-        import yappi
-        yappi.start(True)
-
     try:
-        main()    
-
-    finally:
-        if '-pc' in sys.argv or '-p' in sys.argv:
-            pass
-            #pr.disable()
-            #s = StringIO()
-            #sortby = 'cumulative'
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats()  # dies here, expected unicode, got string, need unicode io stream?
-            #logger.info(s.getvalue())
-
-        elif '-py' in sys.argv:
-            # stop profiler and print results
-            yappi.stop()
-            yappi.get_func_stats().print_all()
-            yappi.get_thread_stats().print_all()
-            logger.info('memory usage: {0}'.format(yappi.get_mem_usage()))
+        main()
+    except Exception as e:
+        logger.error(f'Exception occured: {e}')    

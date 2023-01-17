@@ -1815,9 +1815,9 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    gov_status = gov_lib.setGovRobot(gov_robot, "DA")
-    if gov_status.exception():
-      logger.error(f"Problem during initial governor move, aborting! exception: {gov_status.exception()}")
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
       return
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
@@ -1883,14 +1883,14 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (lastOnSample() and not autoRasterFlag):
       govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
       if govStatus.exception():
-        logger.error(f"Problem during final governor move, aborting! exception: {govStatus.exception()}")
+        logger.error(f"Problem during end-of-raster governor move, aborting! exception: {govStatus.exception()}")
         return
 
       targetGovState = 'SA'
     else:
       govStatus = gov_lib.setGovRobot(gov_robot, 'DI')
       if govStatus.exception():
-        logger.error(f"Problem during final governor move, aborting! exception: {govStatus.exception()}")
+        logger.error(f"Problem during end-of-raster governor move, aborting! exception: {govStatus.exception()}")
         return
 
       targetGovState = 'DI'
@@ -3384,9 +3384,9 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
-    status = gov_lib.setGovRobot(gov_robot, "DA")
-    if status.exception():
-      logger.error(f"Problem during initial governor move, aborting! exception: {status.exception()}")
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
       return
 
     x_vec_start=vector_params["vecStart"]["x"]
@@ -3421,9 +3421,9 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("vector Done")
     if lastOnSample() and changeState:
-        status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
-        if status.exception():
-          logger.error(f"Problem during final governor move, aborting! exception: {status.exception()}")
+        govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
+        if govStatus.exception():
+          logger.error(f"Problem during end-of-collection governor move, aborting! exception: {govStatus.exception()}")
           return
 
     logger.info("stop det acquire")

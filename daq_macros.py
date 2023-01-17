@@ -1840,6 +1840,14 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     total_exposure_time = exptimePerCell*totalImages
 
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
+    if raster_flyer.detector.cam.armed.get() == 1:
+        daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
+                            'should check the most recent collection to determine if it was successful. Cancelling'
+                            'this collection, retry when ready.')
+        raster_flyer.detector.cam.acquire.put(0)
+        logger.warning("Detector was in the armed state prior to this attempted collection.")
+        return 0
+        #raise RuntimeError("Detector is armed, cannot continue in current state.")
     raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
@@ -3394,6 +3402,15 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
     except AttributeError as e:
       logger.error("Vector Aborted: failed to get dead_time from detector.cam object")
       return 
+
+    if flyer.detector.cam.armed.get() == 1:
+        daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
+                            'should check the most recent collection to determine if it was successful. Cancelling'
+                            'this collection, retry when ready.')
+        flyer.detector.cam.acquire.put(0)
+        logger.warning("Detector was in the armed state prior to this attempted collection.")
+        return 0
+        #raise RuntimeError("Detector is armed, cannot continue in current state.")
 
     flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
                    x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \

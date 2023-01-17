@@ -1965,14 +1965,16 @@ class ControlMain(QtWidgets.QMainWindow):
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_range_ledit = QtWidgets.QLineEdit()
         self.osc_range_ledit.setFixedWidth(60)
-        self.osc_range_ledit.setValidator(QDoubleValidator(self))
+        self.osc_range_ledit.setValidator(QDoubleValidator(self,0.001,3600,3))
         self.stillModeCheckBox = QCheckBox("Stills")
         self.stillModeCheckBox.setEnabled(False)
         if (self.stillModeStatePV.get()):
           self.stillModeCheckBox.setChecked(True)
           self.setGuiValues({'osc_range':"0.0"})
+          self.osc_range_ledit.setEnabled(False)
         else:
-          self.stillModeCheckBox.setChecked(False)          
+          self.stillModeCheckBox.setChecked(False)
+          self.osc_range_ledit.setEnabled(True)
         colExptimeLabel = QtWidgets.QLabel('ExposureTime:')
         self.stillModeCheckBox.clicked.connect(self.stillModeUserPushCB)        
         self.osc_range_ledit.textChanged[str].connect(functools.partial(self.totalExpChanged,"oscRange"))

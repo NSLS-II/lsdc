@@ -16,8 +16,10 @@ import db_lib
 from daq_utils import getBlConfig
 from config_params import *
 from kafka_producer import send_kafka_message
-from start_bs import govs, gov_robot, flyer
+from start_bs import govs, gov_robot, flyer, RE
 import gov_lib
+from bluesky.preprocessors import finalize_wrapper
+import bluesky.plan_stubs as bps
 import logging
 logger = logging.getLogger(__name__)
 
@@ -502,7 +504,8 @@ def collectData(currentRequest):
   db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
     logger.info('entering raster')
-    status = daq_macros.snakeRaster(currentRequest["uid"])
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
+    status = 0
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
@@ -615,7 +618,7 @@ def collectData(currentRequest):
           beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
       else:
           beamline_lib.mvaDescriptor("omega",sweep_start)
-      imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+      collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':
       logMxRequestParams(currentRequest,wait=False)
@@ -709,10 +712,10 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
    
     vector_params = daq_macros.gatherStandardVectorParams()
     logger.debug(f"vector_params: {vector_params}") 
-    daq_macros.zebraDaqBluesky(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, 3,changeState)
+    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
   elif (protocol == "vector"):
-    daq_macros.vectorZebraScan(currentRequest)  
+    RE(daq_macros.vectorZebraScan(currentRequest))
   elif (protocol == "stepVector"):
     daq_macros.vectorZebraStepScan(currentRequest)
   else:

@@ -18,7 +18,7 @@ def setGovRobot(gov_robot, state, wait=True):
   try:
     logger.info(f"setGovRobot{state}")
     if gov_robot.state.get() == state:
-        logger.info(f'governor already in state:  {state}')
+        logger.warning(f'governor already in state:  {state}')
     if gov_robot.state.get() == "M" and state != "SE":
         raise Exception(f'Governor can not transition from M to {state}')
     govStatus = gov_robot.set(state)

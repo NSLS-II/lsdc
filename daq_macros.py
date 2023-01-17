@@ -1815,7 +1815,10 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    gov_lib.setGovRobot(gov_robot, "DA")
+    status = gov_lib.setGovRobot(gov_robot, "DA")
+    if status.exception():
+      logger.error(f"Problem during initial governor move, aborting! exception: {status.exception()}")
+      return
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0

@@ -3373,7 +3373,10 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
-    gov_lib.setGovRobot(gov_robot, "DA")
+    status = gov_lib.setGovRobot(gov_robot, "DA")
+    if status.exception():
+      logger.error(f"Problem during initial governor move, aborting! exception: {status.exception()}")
+      return
 
     x_vec_start=vector_params["vecStart"]["x"]
     y_vec_start=vector_params["vecStart"]["y"]

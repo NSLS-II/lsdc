@@ -1511,7 +1511,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
     after moving to known position"""
     logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
     if (lastOnSample() and not autoRasterFlag):
-      govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
+      govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)  # TODO standardize naming of govStatus and gov_status objects
       targetGovState = 'SA'
     else:
       govStatus = gov_lib.setGovRobot(gov_robot, 'DI')

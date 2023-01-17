@@ -23,6 +23,7 @@ def setGovRobot(gov_robot, state, wait=True):
     if gov_robot.state.get() == "M" and state != "SE":
         raise Exception(f'Governor can not transition from M to {state}')
     govStatus = gov_robot.set(state)
+    # TODO ophyd object should check that the request is a valid state transition
     if wait:
       waitGov(govStatus)
     if wait and govStatus.success and gov_robot.state.get() != state:

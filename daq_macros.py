@@ -1882,9 +1882,17 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
     if (lastOnSample() and not autoRasterFlag):
       govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
+      if govStatus.exception():
+        logger.error(f"Problem during final governor move, aborting! exception: {govStatus.exception()}")
+        return
+
       targetGovState = 'SA'
     else:
       govStatus = gov_lib.setGovRobot(gov_robot, 'DI')
+      if govStatus.exception():
+        logger.error(f"Problem during final governor move, aborting! exception: {govStatus.exception()}")
+        return
+
       targetGovState = 'DI'
 
     # priorities:
@@ -3413,7 +3421,11 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("vector Done")
     if lastOnSample() and changeState:
-        gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
+        status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
+        if status.exception():
+          logger.error(f"Problem during final governor move, aborting! exception: {status.exception()}")
+          return
+
     logger.info("stop det acquire")
     logger.info("zebraDaq Done")
 

@@ -20,6 +20,9 @@ jobs:
         shell: bash -l {0}
 
     steps:
+      - name: Setup Graphviz
+        uses: ts-graphviz/setup-graphviz@v1
+
       - name: Set env vars
         run: |
           export REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}  # just the repo, as opposed to org/repo

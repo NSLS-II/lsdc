@@ -41,6 +41,8 @@ import lsdcOlog
 from threads import VideoThread
 
 import socket
+from utils.healthcheck import perform_checks
+
 hostname = socket.gethostname()
 ws_split = hostname.split('ws')
 logging_file = 'lsdcGuiLog.txt'
@@ -890,7 +892,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxDialsParams.addLayout(self.hBoxRasterLayout3)
         dialsGB.setLayout(vBoxDialsParams)
 
-        reprocessRasterButton = QtWidgets.QPushButton("ReProcessRaster") 
+        reprocessRasterButton = QtWidgets.QPushButton("ReProcessRaster")
         reprocessRasterButton.clicked.connect(self.reprocessRasterRequestCB)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Apply | QDialogButtonBox.Cancel,
@@ -900,7 +902,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         vBoxColParams1.addWidget(collectionGB)
         vBoxColParams1.addWidget(dozorGB)
         vBoxColParams1.addWidget(dialsGB)
-        vBoxColParams1.addWidget(reprocessRasterButton)                        
+        # vBoxColParams1.addWidget(reprocessRasterButton)
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
 
@@ -924,8 +926,8 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         self.parent.send_to_server("reprocessRaster(\""+str(reqID)+"\")")
       except:
         pass
-      
-        
+
+
     def screenDefaultsCancelCB(self):
       self.done(QDialog.Rejected)
 
@@ -1005,66 +1007,67 @@ class PuckDialog(QtWidgets.QDialog):
         puckListUnsorted = db_lib.getAllPucks(daq_utils.owner)
         puckList = sorted(puckListUnsorted,key=lambda i: i['name'],reverse=False)
         dewarObj = db_lib.getPrimaryDewar(daq_utils.beamline)
-        pucksInDewar = dewarObj['content']
-        data = []
-#if you have to, you could store the puck_id in the item data
-        for i in range(len(puckList)):
-          if (puckList[i]["uid"] not in pucksInDewar):
-            data.append(puckList[i]["name"])
-        self.model = QtGui.QStandardItemModel()
+        pucksInDewar = set(dewarObj['content'])
+        self.model = QtGui.QStandardItemModel(self)
+        self.proxyModel = QtCore.QSortFilterProxyModel(self)
         labels = QStringList(("Name"))
         self.model.setHorizontalHeaderLabels(labels)
-        for i in range(len(data)):
-            name = QtGui.QStandardItem(data[i])
-            self.model.appendRow(name)
+        self.puckName = None
+        for puck in puckList:
+          if puck['uid'] not in pucksInDewar:
+            item = QtGui.QStandardItem(puck["name"])
+            # Adding meta data to the puck. Each piece of meta data is identified using 
+            # an int value, in this case is Qt.UserRole for puck modified time. This metadata is used
+            # to sort pucks
+            item.setData(puck.get('modified_time',0), Qt.UserRole)
+            self.model.appendRow(item)
 
 
     def initUI(self):
         self.tv = QtWidgets.QListView(self)
-        self.tv.setModel(self.model)
+        
         self.tv.doubleClicked[QModelIndex].connect(self.containerOKCB)
         behavior = QtWidgets.QAbstractItemView.SelectRows
         self.tv.setSelectionBehavior(behavior)
-        
+        self.proxyModel.setSourceModel(self.model)
+        self.proxyModel.setSortRole(Qt.UserRole)
+        self.proxyModel.sort(0, order=Qt.DescendingOrder)
+        self.tv.setModel(self.proxyModel)
         self.label = QtWidgets.QLabel(self)
         self.buttons = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel,
             Qt.Horizontal, self)
         self.buttons.buttons()[0].clicked.connect(self.containerOKCB)
         self.buttons.buttons()[1].clicked.connect(self.containerCancelCB)
+        self.searchBox = QtWidgets.QLineEdit(self)
+        self.searchBox.setPlaceholderText('Filter pucks...')
+        self.searchBox.textChanged.connect(self.filterPucks)
         layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(self.searchBox)
         layout.addWidget(self.tv) 
         layout.addWidget(self.label)
         layout.addWidget(self.buttons)
-        self.setLayout(layout)        
-        self.tv.clicked.connect(self.onClicked)
+        self.setLayout(layout)
+
+    def filterPucks(self, a0: str):
+      self.proxyModel.setFilterFixedString(a0)       
             
     def containerOKCB(self):
-      selmod = self.tv.selectionModel()
-      selection = selmod.selection()
-      indexes = selection.indexes()
-      if (indexes != []):
-        i = 0
-        item = self.model.itemFromIndex(indexes[i])
-        text = str(item.text())
+      indexes = self.tv.selectedIndexes()
+      if indexes:
+        text = indexes[0].data()
         self.label.setText(text)      
-        self.accept()
         self.puckName = text
+        self.accept()
       else:
         text = ""
-        self.reject()
         self.puckName = text
-      
+        self.reject()
 
     def containerCancelCB(self):
       text = ""
       self.reject()
       self.puckName = text
-
-        
-    def onClicked(self, idx):
-      item = self.model.itemFromIndex(idx)        
-      text = str(item.text())
 
     @staticmethod
     def getPuckName(parent = None):
@@ -1088,6 +1091,7 @@ class DewarDialog(QtWidgets.QDialog):
       dewarObj = db_lib.getPrimaryDewar(daq_utils.beamline)
       puckLocs = dewarObj['content']
       self.data = []
+      self.dewarPos = None
       for i in range(len(puckLocs)):
         if (puckLocs[i] != ""):
           owner = db_lib.getContainerByID(puckLocs[i])["owner"]
@@ -1147,7 +1151,6 @@ class DewarDialog(QtWidgets.QDialog):
         result = dialog.exec_()
         return (dialog.dewarPos, result == QDialog.Accepted)
 
-
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
         super(DewarTree, self).__init__(parent)
@@ -1159,6 +1162,48 @@ class DewarTree(QtWidgets.QTreeView):
         self.model = QtGui.QStandardItemModel()
         self.model.itemChanged.connect(self.queueSelectedSample)
         self.isExpanded = 1
+        self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.openMenu)
+
+    def openMenu(self, position):
+      indexes = self.selectedIndexes()
+      selectedLevels = set()
+      if indexes:
+        for index in indexes:
+          level = 0
+          while index.parent().isValid():
+            index = index.parent()
+            level += 1
+          selectedLevels.add(level)
+        if len(selectedLevels) == 1:
+          level = list(selectedLevels)[0]
+          menu = QMenu()
+          if level == 2: # This is usually a request
+            deleteReqAction = QtWidgets.QAction('Delete selected request(s)', self)
+            deleteReqAction.triggered.connect(self.deleteSelectedCB)
+            cloneReqAction = QtWidgets.QAction('Clone selected request', self)
+            cloneReqAction.triggered.connect(self.cloneRequestCB)
+            queueSelAction = QtWidgets.QAction('Queue selected request(s)', self)
+            queueSelAction.triggered.connect(self.queueAllSelectedCB)
+            dequeueSelAction = QtWidgets.QAction('Dequeue selected request(s)', self)
+            dequeueSelAction.triggered.connect(self.deQueueAllSelectedCB)
+            menu.addAction(cloneReqAction)
+            menu.addAction(queueSelAction)
+            menu.addAction(dequeueSelAction)
+            menu.addSeparator()
+            menu.addAction(deleteReqAction)
+          menu.exec_(self.viewport().mapToGlobal(position))
+
+    def cloneRequestCB(self):
+      # Only the first selected request is cloned (If multiple are chosen)
+      index = self.selectedIndexes()[0]
+      item = self.model.itemFromIndex(index)
+      requestData = db_lib.getRequestByID(item.data(32))
+      protocol = requestData['request_obj']['protocol']
+      if 'raster' in protocol.lower(): # Will cover specRaster and stepRaster as well
+        self.parent.cloneRequestCB()
+      elif 'standard' in protocol.lower():
+        self.parent.addRequestsToAllSelectedCB()
 
     def keyPressEvent(self, event):
       if (event.key() == Qt.Key_Delete or event.key() == Qt.Key_Backspace):
@@ -1392,7 +1437,7 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,5000)
       self.parent.treeChanged_pv.put(1)
@@ -1406,15 +1451,20 @@ class DewarTree(QtWidgets.QTreeView):
         item = self.model.itemFromIndex(indexes[i])
         itemData = str(item.data(32))
         itemDataType = str(item.data(33))
-        if (itemDataType == "request"): 
+        if (itemDataType == "request") and item.isCheckable(): 
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           db_lib.updatePriority(itemData,0)
       self.parent.treeChanged_pv.put(1)
 
 
-    def confirmDelete(self):
-      quit_msg = "Are you sure you want to delete all requests?"
+    def confirmDelete(self, numReq):
+      if numReq:
+        quit_msg = f"Are you sure you want to delete {numReq} requests?"
+      else:
+        quit_msg = "Are you sure you want to delete all requests?"
+      self.parent.timerSample.stop()      
       reply = QtWidgets.QMessageBox.question(self, 'Message',quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+      self.parent.timerSample.start(SAMPLE_TIMER_DELAY)
       if reply == QtWidgets.QMessageBox.Yes:
         return(1)
       else:
@@ -1423,12 +1473,15 @@ class DewarTree(QtWidgets.QTreeView):
 
     def deleteSelectedCB(self,deleteAll):
       if (deleteAll):
-        if (not self.confirmDelete()):
+        if (not self.confirmDelete(0)):
           return 
         self.selectAll()            
       selmod = self.selectionModel()
       selection = selmod.selection()
       indexes = selection.indexes()
+      if len(indexes) > 1:
+        if (not self.confirmDelete(len(indexes))):
+          return
       progressInc = 100.0/float(len(indexes))
       self.parent.progressDialog.setWindowTitle("Deleting Requests")
       self.parent.progressDialog.show()
@@ -1557,10 +1610,9 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         super(RasterGroup, self).__init__()
         self.parent=parent
         self.setAcceptHoverEvents(True)
-
+        self.currentSelectedCell = None
 
     def mousePressEvent(self, e):
-      super(RasterGroup, self).mousePressEvent(e)
       logger.info("mouse pressed on group")
       for i in range(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
@@ -1570,8 +1622,11 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
             self.parent.treeChanged_pv.put(1)
       if (self.parent.vidActionRasterExploreRadio.isChecked()):
           for cell in self.childItems():
-              if isInCell(e.pos(), cell):
+              if cell.contains(e.pos()):
                   if (cell.data(0) != None):
+                      if self.currentSelectedCell:
+                        self.currentSelectedCell.setPen(self.parent.redPen)
+                        self.currentSelectedCell.setZValue(0)
                       spotcount = cell.data(0)
                       filename = cell.data(1)
                       d_min = cell.data(2)
@@ -1585,10 +1640,10 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       self.parent.rasterExploreDialog.setTotalIntensity(intensity)
                       self.parent.rasterExploreDialog.setResolution(d_min)
                       groupList = self.childItems()
-                      for i in range (0,len(groupList)):
-                          groupList[i].setPen(self.parent.redPen)
                       cell.setPen(self.parent.yellowPen)
-
+                      cell.setZValue(1)
+                      self.currentSelectedCell = cell
+                      break
       else:
         super(RasterGroup, self).mousePressEvent(e)
 
@@ -1664,6 +1719,7 @@ class ControlMain(QtWidgets.QMainWindow):
     highMagCursorChangeSignal = QtCore.Signal(int, str)
     lowMagCursorChangeSignal = QtCore.Signal(int, str)
     cryostreamTempSignal = QtCore.Signal(str)
+    sampleZoomChangeSignal = QtCore.Signal(object)
 
     def __init__(self):
         super(ControlMain, self).__init__()
@@ -1853,6 +1909,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popUserScreen.clicked.connect(self.popUserScreenCB)
         self.closeShutterButton = QtWidgets.QPushButton("Close Photon Shutter")        
         self.closeShutterButton.clicked.connect(self.closePhotonShutterCB)
+        self.closeShutterButton.setStyleSheet("background-color: red")
         hBoxTreeButtsLayout = QtWidgets.QHBoxLayout()
         vBoxTreeButtsLayoutLeft = QtWidgets.QVBoxLayout()
         vBoxTreeButtsLayoutRight = QtWidgets.QVBoxLayout()
@@ -1862,9 +1919,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(queueSelectedButton)
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)        
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)        
-        vBoxTreeButtsLayoutRight.addWidget(stopRunButton)
-        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
+        vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)        
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)        
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
         vBoxTreeButtsLayoutRight.addWidget(restartServerButton)        
@@ -2214,9 +2270,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vectorParamsFrame = QFrame()
         hBoxVectorLayout1= QtWidgets.QHBoxLayout() 
         setVectorStartButton = QtWidgets.QPushButton("Vector\nStart") 
-        setVectorStartButton.clicked.connect(self.setVectorStartCB)
+        setVectorStartButton.setStyleSheet("background-color: blue") 
+        setVectorStartButton.clicked.connect(lambda: self.setVectorPointCB("vectorStart"))
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd") 
-        setVectorEndButton.clicked.connect(self.setVectorEndCB)
+        setVectorEndButton.setStyleSheet("background-color: red") 
+        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
         vecLenLabel = QtWidgets.QLabel("    Length(microns):")
@@ -2304,6 +2363,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.captureLowMag=cv2.VideoCapture(daq_utils.lowMagCamURL)
             logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
         self.capture = self.captureLowMag
+        self.timerSample = QTimer()
+        self.timerSample.timeout.connect(self.timerSampleRefresh)
+        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        
         self.centeringMarksList = []
         self.rasterList = []
         self.rasterDefList = []
@@ -2373,7 +2436,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.imageScaleText.setPen(scaleTextPen)
         self.imageScaleText.setPos(10,450)
         self.click_positions = []
-        self.vectorStartFlag = 0
         hBoxHutchVidsLayout.addWidget(self.viewHutchTop)
         hBoxHutchVidsLayout.addWidget(self.viewHutchCorner)        
         vBoxVidLayout.addLayout(hBoxHutchVidsLayout)
@@ -2707,9 +2769,6 @@ class ControlMain(QtWidgets.QMainWindow):
         hutchTopCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame))
         hutchTopCamThread.start()
 
-        sampleCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, camera_object=self.capture)
-        sampleCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item, frame))
-        sampleCamThread.start()
 
     def updateCam(self, pixmapItem:"QGraphicsPixmapItem", frame):
       pixmapItem.setPixmap(frame)      
@@ -2901,6 +2960,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
       self.adjustGraphics4ZoomChange(fov)
+      self.sampleZoomChangeSignal.emit(self.capture)
       
 
     def saveVidSnapshotButtonCB(self): 
@@ -3048,98 +3108,84 @@ class ControlMain(QtWidgets.QMainWindow):
     def processSampMove(self,posRBV,motID):
 #      print "new " + motID + " pos=" + str(posRBV)
       self.motPos[motID] = posRBV
-      if (len(self.centeringMarksList)>0):
-        for i in range(len(self.centeringMarksList)):
-          if (self.centeringMarksList[i] != None):
-            centerMarkerOffsetX = self.centeringMarksList[i]["centerCursorX"]-self.centerMarker.x()
-            centerMarkerOffsetY = self.centeringMarksList[i]["centerCursorY"]-self.centerMarker.y()
-            if (motID == "x"):
-              startX = self.centeringMarksList[i]["sampCoords"]["x"]
-              delta = startX-posRBV
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.centeringMarksList[i]["graphicsItem"].setPos(newX-centerMarkerOffsetX,self.centeringMarksList[i]["graphicsItem"].y())
-            if (motID == "y" or motID == "z" or motID == "omega"):
-              startYY = self.centeringMarksList[i]["sampCoords"]["z"]
-              startYX = self.centeringMarksList[i]["sampCoords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.centeringMarksList[i]["graphicsItem"].setPos(self.centeringMarksList[i]["graphicsItem"].x(),newY-centerMarkerOffsetY)
-      if (len(self.rasterList)>0):
-        for i in range(len(self.rasterList)):
-          if (self.rasterList[i] != None):
-            if (motID == "x"):
-              startX = self.rasterList[i]["coords"]["x"]
-              delta = startX-posRBV
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.rasterList[i]["graphicsItem"].setPos(newX,self.rasterList[i]["graphicsItem"].y())
-            if (motID == "y" or motID == "z"):
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
+      if self.centeringMarksList:
+        for mark in self.centeringMarksList:
+          if mark is None:
+            continue
+          centerMarkerOffsetX = mark["centerCursorX"]-self.centerMarker.x()
+          centerMarkerOffsetY = mark["centerCursorY"]-self.centerMarker.y()
+          if (motID == "x"):
+            startX = mark["sampCoords"]["x"]
+            delta = startX-posRBV
+            newX = float(self.screenXmicrons2pixels(delta))
+            mark["graphicsItem"].setPos(newX-centerMarkerOffsetX,mark["graphicsItem"].y())
+          if (motID == "y" or motID == "z" or motID == "omega"):
+            startYY = mark["sampCoords"]["z"]
+            startYX = mark["sampCoords"]["y"]
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            mark["graphicsItem"].setPos(mark["graphicsItem"].x(),newY-centerMarkerOffsetY)
+      if self.rasterList:
+        for raster in self.rasterList:
+          if raster is None:
+            continue
+          startX = raster["coords"]["x"]
+          startYY = raster["coords"]["z"]
+          startYX = raster["coords"]["y"]
+          if (motID == "x"):
+            delta = startX-posRBV
+            newX = float(self.screenXmicrons2pixels(delta))
+            raster["graphicsItem"].setPos(newX,raster["graphicsItem"].y())
+          if (motID == "y" or motID == "z"):
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
+          if (motID == "fineX"):
+            delta = startX-posRBV-self.motPos["x"]
+            newX = float(self.screenXmicrons2pixels(delta))
+            raster["graphicsItem"].setPos(newX,raster["graphicsItem"].y())              
+          if (motID == "fineY" or motID == "fineZ"):
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
+          if (motID == "omega"):
+            if (abs(posRBV-raster["coords"]["omega"])%360.0 > 5.0):                  
+              raster["graphicsItem"].setVisible(False)
+            else:
+              raster["graphicsItem"].setVisible(True)                  
+            newY = self.calculateNewYCoordPos(startYX,startYY)
+            raster["graphicsItem"].setPos(raster["graphicsItem"].x(),newY)
 
-            if (motID == "fineX"):
-              startX = self.rasterList[i]["coords"]["x"]
-              delta = startX-posRBV-self.motPos["x"]
-              newX = float(self.screenXmicrons2pixels(delta))
-              self.rasterList[i]["graphicsItem"].setPos(newX,self.rasterList[i]["graphicsItem"].y())              
-            if (motID == "fineY" or motID == "fineZ"):
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
-              
-            if (motID == "omega"):
-              if (abs(posRBV-self.rasterList[i]["coords"]["omega"])%360.0 > 5.0):                  
-                self.rasterList[i]["graphicsItem"].setVisible(False)
-              else:
-                self.rasterList[i]["graphicsItem"].setVisible(True)                  
-              startYY = self.rasterList[i]["coords"]["z"]
-              startYX = self.rasterList[i]["coords"]["y"]
-              newY = self.calculateNewYCoordPos(startYX,startYY)
-              self.rasterList[i]["graphicsItem"].setPos(self.rasterList[i]["graphicsItem"].x(),newY)
-            
-      if (self.vectorStart != None):
-        centerMarkerOffsetX = self.vectorStart["centerCursorX"]-self.centerMarker.x()
-        centerMarkerOffsetY = self.vectorStart["centerCursorY"]-self.centerMarker.y()
-          
-        if (motID == "omega"):
-          startYY = self.vectorStart["coords"]["z"]
-          startYX = self.vectorStart["coords"]["y"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-        if (motID == "x"):
-          startX = self.vectorStart["coords"]["x"]
-          delta = startX-posRBV
-          newX = float(self.screenXmicrons2pixels(delta))
-          self.vectorStart["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorStart["graphicsitem"].y())
-        if (motID == "y" or motID == "z"):
-          startYX = self.vectorStart["coords"]["y"]
-          startYY = self.vectorStart["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorStart["graphicsitem"].setPos(self.vectorStart["graphicsitem"].x(),newY-centerMarkerOffsetY)
-      if (self.vectorEnd != None):
-        centerMarkerOffsetX = self.vectorEnd["centerCursorX"]-self.centerMarker.x()
-        centerMarkerOffsetY = self.vectorEnd["centerCursorY"]-self.centerMarker.y()
-
-        if (motID == "omega"):
-          startYX = self.vectorEnd["coords"]["y"]
-          startYY = self.vectorEnd["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
-        if (motID == "x"):
-          startX = self.vectorEnd["coords"]["x"]
-          delta = startX-posRBV
-          newX = float(self.screenXmicrons2pixels(delta))
-          self.vectorEnd["graphicsitem"].setPos(newX-centerMarkerOffsetX,self.vectorEnd["graphicsitem"].y())
-        if (motID == "y" or motID == "z"):
-          startYX = self.vectorEnd["coords"]["y"]
-          startYY = self.vectorEnd["coords"]["z"]
-          newY = self.calculateNewYCoordPos(startYX,startYY)
-          self.vectorEnd["graphicsitem"].setPos(self.vectorEnd["graphicsitem"].x(),newY-centerMarkerOffsetY)
-
-
+      self.vectorStart = self.updatePoint(self.vectorStart, posRBV, motID)
+      self.vectorEnd = self.updatePoint(self.vectorEnd, posRBV, motID)  
       if (self.vectorStart != None and self.vectorEnd != None):
-        self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
+        self.vecLine.setLine(self.vectorStart["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,
+                             self.vectorStart["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY,
+                             self.vectorEnd["graphicsitem"].x()+self.vectorStart["centerCursorX"]+self.centerMarkerCharOffsetX,
+                             self.vectorEnd["graphicsitem"].y()+self.vectorStart["centerCursorY"]+self.centerMarkerCharOffsetY)
+
+    def updatePoint(self, point, posRBV, motID):
+      """Updates a point on the screen
+
+      Updates the position of a point (e.g. self.vectorStart) drawn on the screen based on
+      which motor was moved (motID) using gonio position (posRBV)
+      """
+      if point is None:
+        return point
+      centerMarkerOffsetX = point["centerCursorX"]-self.centerMarker.x()
+      centerMarkerOffsetY = point["centerCursorY"]-self.centerMarker.y()
+      startYY = point["coords"]["z"]
+      startYX = point["coords"]["y"]
+      startX = point["coords"]["x"]
+
+      if (motID == "omega"):
+        newY = self.calculateNewYCoordPos(startYX, startYY)
+        point["graphicsitem"].setPos(point["graphicsitem"].x(), newY - centerMarkerOffsetY)
+      if (motID == "x"):
+        delta = startX - posRBV
+        newX = float(self.screenXmicrons2pixels(delta))
+        point["graphicsitem"].setPos(newX - centerMarkerOffsetX, point["graphicsitem"].y())
+      if (motID == "y" or motID == "z"):
+        newY = self.calculateNewYCoordPos(startYX, startYY)
+        point["graphicsitem"].setPos(point["graphicsitem"].x(), newY - centerMarkerOffsetY)
+      return point
 
     def queueEnScanCB(self):
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))      
@@ -3630,7 +3676,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def popImportDialogCB(self):
+      self.timerSample.stop()
       fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Choose Spreadsheet File', '',filter="*.xls *.xlsx",options=QtWidgets.QFileDialog.DontUseNativeDialog)
+      self.timerSample.start(SAMPLE_TIMER_DELAY)
       if (fname != ""):
         logger.info(fname)
         comm_s = "importSpreadsheet(\""+str(fname[0])+"\")"
@@ -4334,7 +4382,18 @@ class ControlMain(QtWidgets.QMainWindow):
       newRasterGraphicsDesc = {"uid":rasterReq["uid"],"coords":{"x":rasterDef["x"],"y":rasterDef["y"],"z":rasterDef["z"],"omega":rasterDef["omega"]},"graphicsItem":newItemGroup}
       self.rasterList.append(newRasterGraphicsDesc)
 
-
+    def timerSampleRefresh(self):
+      if self.capture is None:
+        return 
+      retval,self.currentFrame = self.capture.read()
+      if self.currentFrame is None:
+        logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
+        return #maybe stop the timer also???
+      height,width=self.currentFrame.shape[:2]
+      qimage=QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
+      qimage = qimage.rgbSwapped()
+      pixmap_orig = QtGui.QPixmap.fromImage(qimage)
+      self.pixmap_item.setPixmap(pixmap_orig)
     
 
     def sceneKey(self, event):
@@ -4742,8 +4801,8 @@ class ControlMain(QtWidgets.QMainWindow):
       self.eraseCB()
       colRequest=self.selectedSampleRequest
       reqObj = colRequest["request_obj"]
-      rasterDef = reqObj["rasterDef"]
-      self.addSampleRequestCB(rasterDef)      
+      if 'rasterDef' in reqObj:
+        self.addSampleRequestCB(reqObj["rasterDef"])
 
 
       
@@ -4769,7 +4828,9 @@ class ControlMain(QtWidgets.QMainWindow):
     def restartServerCB(self):
       if (self.controlEnabled()):
         msg = "Desperation move. Are you sure?"
+        self.timerSample.stop()      
         reply = QtWidgets.QMessageBox.question(self, 'Message',msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        self.timerSample.start(SAMPLE_TIMER_DELAY)
         if reply == QtWidgets.QMessageBox.Yes:
           if daq_utils.beamline == "fmx" or daq_utils.beamline == 'amx':
             restart_pv = PV(daq_utils.beamlineComm + "RestartServerSignal")
@@ -4797,33 +4858,104 @@ class ControlMain(QtWidgets.QMainWindow):
   
 
     def removePuckCB(self):
+      self.timerSample.stop()                    
       dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="remove")
+      self.timerSample.start(SAMPLE_TIMER_DELAY) 
+      
       
 
-    def getVectorObject(self):
-      pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
-      markWidth = 10
-      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,markWidth,markWidth,pen,brush)
-      vectorCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get()}
-      return {"coords":vectorCoords,"graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),"centerCursorY":self.centerMarker.y()}
- 
-    def setVectorStartCB(self): #save sample x,y,z
-      if (self.vectorStart != None):
-        self.scene.removeItem(self.vectorStart["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # liekly due to vecLine not being defined yet
-          pass
-        self.vectorStart = None
-      self.vectorStart = self.getVectorObject()
+    def transform_vector_coords(self, prev_coords, current_raw_coords):
+      """Updates y and z co-ordinates of vector points when they are moved
 
+      This function tweaks the y and z co-ordinates such that when a vector start or
+      end point is adjusted in the 2-D plane of the screen, it maintains the points' location
+      in the 3rd dimension perpendicular to the screen
+      
+      Args:
+        prev_coords: Dictionary with x,y and z co-ordinates of the previous location of the sample
+        current_raw_coords: Dictionary with x, y and z co-ordinates of the sample derived from the goniometer
+          PVs
+        omega: Omega of the Goniometer (usually RBV)
+
+      Returns:
+        A dictionary mapping x, y and z to tweaked coordinates 
+      """
+
+      # Transform z from prev point and y from current point to lab coordinate system
+      _, _, zLabPrev, _ = daq_utils.gonio2lab(prev_coords['x'], prev_coords['y'], prev_coords['z'], current_raw_coords['omega'])
+      _, yLabCurrent, _, _ = daq_utils.gonio2lab(current_raw_coords['x'], current_raw_coords['y'], current_raw_coords['z'], current_raw_coords['omega']) 
+
+      # Take y co-ordinate from current point and z-coordinate from prev point and transform back to gonio co-ordinates
+      _, yTweakedCurrent, zTweakedCurrent, _ = daq_utils.lab2gonio(prev_coords['x'], yLabCurrent, zLabPrev, current_raw_coords['omega']) 
+      return {"x": current_raw_coords["x"], "y": yTweakedCurrent, "z": zTweakedCurrent}
+
+    def getVectorObject(self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None):
+      """Creates and returns a vector start or end point
+      
+      Places a start or end vector marker wherever the crosshair is located in
+      the sample camera view and returns a dictionary of metadata related to that point
+
+      Args:
+        prevVectorPoint: Dictionary of metadata related to a point being adjusted. For example,
+            a previously placed vectorStart point is moved, its old position is used to determine
+            its new co-ordinates in 3D space
+        gonioCoords: Dictionary of gonio coordinates. If not provided will retrieve current PV values
+        pen: QPen object that defines the color of the point's outline
+        brush: QBrush object that defines the color of the point's fill color
+      Returns:
+        A dict mapping the following keys
+            "coords": A dictionary of tweaked x, y and z positions of the Goniometer
+            "raw_coords": A dictionary of x, y, z co-ordinates obtained from the Goniometer PVs
+            "graphicsitem": Qt object referring to the marker on the sample camera
+            "centerCursorX" and "centerCursorY": Location of the center marker when this marker was placed 
+      """
+      if not pen:
+        pen = QtGui.QPen(QtCore.Qt.blue)
+      if not brush:
+        brush = QtGui.QBrush(QtCore.Qt.blue)
+      markWidth = 10
+      # TODO: Place vecMarker in such a way that it matches any arbitrary gonioCoords given to this function
+      # currently vecMarker will be placed at the center of the sample cam
+      vecMarker = self.scene.addEllipse(self.centerMarker.x()-(markWidth/2.0)-1+self.centerMarkerCharOffsetX,
+                                        self.centerMarker.y()-(markWidth/2.0)-1+self.centerMarkerCharOffsetY,
+                                        markWidth,markWidth,pen,brush)
+      if not gonioCoords:
+        gonioCoords = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),
+                       "z":self.sampz_pv.get(), "omega":self.omegaRBV_pv.get()}
+      if prevVectorPoint:
+        vectorCoords = self.transform_vector_coords(prevVectorPoint["coords"], gonioCoords)
+      else:
+        vectorCoords = {k:v for k, v in gonioCoords.items() if k in ['x', 'y', 'z']}
+      return {"coords":vectorCoords, "gonioCoords":gonioCoords, 
+              "graphicsitem":vecMarker,"centerCursorX":self.centerMarker.x(),
+              "centerCursorY":self.centerMarker.y()}
+
+    def setVectorPointCB(self, pointName):
+      """Callback function to update a vector point
+
+      Callback to remove or add the appropriate vector start or end point on the sample camera. 
+      Calls getVectorObject to generate metadata related to this point. Draws a vector line if 
+      both start and end is defined
+
+      Args:
+          point: Point to be placed (Either vectorStart or vectorEnd)
+      """
+      point = getattr(self, pointName)
+      if point:
+        self.scene.removeItem(point['graphicsitem'])
+        if self.vecLine:
+          self.scene.removeItem(self.vecLine)
+      if pointName == 'vectorEnd':
+        brush = QtGui.QBrush(QtCore.Qt.red)
+      else:
+        brush = QtGui.QBrush(QtCore.Qt.blue) 
+      point = self.getVectorObject(prevVectorPoint=point, brush=brush)
+      setattr(self, pointName, point)
       if self.vectorStart and self.vectorEnd:
         self.drawVector()
-
+              
     def drawVector(self):
       pen = QtGui.QPen(QtCore.Qt.blue)
-      brush = QtGui.QBrush(QtCore.Qt.blue)
       try:
         self.updateVectorLengthAndSpeed()
       except:
@@ -4835,41 +4967,30 @@ class ControlMain(QtWidgets.QMainWindow):
                                         self.centerMarker.y()+self.vectorEnd["graphicsitem"].y()+self.centerMarkerCharOffsetY, pen)
       self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
 
-    def setVectorEndCB(self): #save sample x,y,z
-      if (self.vectorEnd != None):
-        self.scene.removeItem(self.vectorEnd["graphicsitem"])
-        try:
-          self.scene.removeItem(self.vecLine)
-        except AttributeError: # likely due to self.vecLine not being defined yet
-          pass
-        self.vectorEnd = None
-      self.vectorEnd = self.getVectorObject()
-
-      if self.vectorStart and self.vectorEnd:
-        self.drawVector()        
-
     def clearVectorCB(self):
-      if (self.vectorStart != None):
+      if self.vectorStart:
         self.scene.removeItem(self.vectorStart["graphicsitem"])
         self.vectorStart = None
-      if (self.vectorEnd != None):
+      if self.vectorEnd:
         self.scene.removeItem(self.vectorEnd["graphicsitem"])
         self.vectorEnd = None
         self.vecLenLabelOutput.setText("---")
         self.vecSpeedLabelOutput.setText("---")        
-      try:
-        if self.vecLine != None:
-          self.scene.removeItem(self.vecLine)
-      except AttributeError: # likely due to self.vecLine not defined yet
-        pass
-
+      if self.vecLine:
+        self.scene.removeItem(self.vecLine)
+        self.vecLine = None
+      
     def puckToDewarCB(self):
       while (1):
+        self.timerSample.stop()
         puckName, ok = PuckDialog.getPuckName()
+        self.timerSample.start(SAMPLE_TIMER_DELAY) 
         if (ok):
+          self.timerSample.stop()      
           dewarPos, ok = DewarDialog.getDewarPos(parent=self,action="add")
-          ipos = int(dewarPos)+1
-          if (ok):
+          self.timerSample.start(SAMPLE_TIMER_DELAY) 
+          if ok and dewarPos is not None and puckName is not None:
+            ipos = int(dewarPos)+1
             db_lib.insertIntoContainer(daq_utils.primaryDewarName,daq_utils.beamline,ipos,db_lib.getContainerIDbyName(puckName,daq_utils.owner))
             self.treeChanged_pv.put(1)
         else:
@@ -5571,42 +5692,17 @@ def get_request_object_escan(reqObj, symbol, runNum, file_prefix, base_path, sam
     return reqObj
 
 def main():
+    logger.info('Starting LSDC...')
+    perform_checks()
     daq_utils.init_environment()
-    daq_utils.readPVDesc()    
+    daq_utils.readPVDesc()
     app = QtWidgets.QApplication(sys.argv)
     ex = ControlMain()
     sys.exit(app.exec_())
 
 #skinner - I think Matt did a lot of what's below and I have no idea what it is. 
 if __name__ == '__main__':
-    if '-pc' in sys.argv or '-p' in sys.argv:
-        logger.info('cProfile not working yet :(')
-        #print 'starting cProfile profiler...'
-        #import cProfile, pstats, io
-        #pr = cProfile.Profile()
-        #pr.enable()
-
-    elif '-py' in sys.argv:
-        logger.info('starting yappi profiler...')
-        import yappi
-        yappi.start(True)
-
     try:
-        main()    
-
-    finally:
-        if '-pc' in sys.argv or '-p' in sys.argv:
-            pass
-            #pr.disable()
-            #s = StringIO()
-            #sortby = 'cumulative'
-            #ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-            #ps.print_stats()  # dies here, expected unicode, got string, need unicode io stream?
-            #logger.info(s.getvalue())
-
-        elif '-py' in sys.argv:
-            # stop profiler and print results
-            yappi.stop()
-            yappi.get_func_stats().print_all()
-            yappi.get_thread_stats().print_all()
-            logger.info('memory usage: {0}'.format(yappi.get_mem_usage()))
+        main()
+    except Exception as e:
+        logger.error(f'Exception occured: {e}')    

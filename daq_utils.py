@@ -168,6 +168,28 @@ def wave2energy(w, digits=2):
   else:
     return float(f"%.{digits}f" % (EV_ANGSTROM_CONSTANT/w))
 
+def gonio2lab(x_gonio, y_gonio, z_gonio, omega_deg):
+  """Utility function to convert gonio co-ordinates to lab co-ordinates
+  """
+  #YL = cO*YP + sO*ZP 
+  #ZL = -sO*YP + cO*ZP  
+  cosO = math.cos(math.radians(omega_deg))
+  sinO = math.sin(math.radians(omega_deg))
+  y_lab = (cosO * y_gonio) + (sinO * z_gonio)
+  z_lab = -(sinO * y_gonio) + (cosO * z_gonio)
+  return x_gonio, y_lab, z_lab, omega_deg
+
+def lab2gonio(x_lab, y_lab, z_lab, omega_deg):
+  """Utility function to convert lab co-ordinates to gonio co-ordinates
+  """
+  #YP = cO*YL - sO*ZL
+  #ZP = sO*YL + cO*ZL
+  cosO = math.cos(math.radians(omega_deg))
+  sinO = math.sin(math.radians(omega_deg))
+  y_gonio = (cosO * y_lab) - (sinO * z_lab)
+  z_gonio = (sinO * y_lab) + (cosO * z_lab)
+  return x_lab, y_gonio, z_gonio, omega_deg
+
 def createDefaultRequest(sample_id,createVisit=True):
     """
     Doesn't really create a request, just returns a dictionary

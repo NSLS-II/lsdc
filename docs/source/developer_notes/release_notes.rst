@@ -2,7 +2,7 @@
  Release History
 =================
 
-2.0.0 (2023-01-xx, a.k.a. 2023-1)
+2.0.0 (2023-01-18, a.k.a. 2023-1)
 =================================
 
 Fixes and other changes
@@ -20,9 +20,11 @@ Fixes and other changes
 
 * AMX/FMX branch (one-branch)
 
-  * Fix energy being incorrect for rasters
-  * Rastering looks like it is now working - will be tested once beam is available
-  * Always stop the detector acquisition at the end of standard, vector, and raster collections
+  * Check for detector arming (part of SB-166)
+  * Fix issues with governor moves at beginning and toward end of collections SB-165
+  * Always stop the detector acquisition at the end of standard, vector, and raster collections SB-166
+  * Fix energy being incorrect for rasters SB-184
+  * Rastering looks like it is now working - will be tested once beam is available SB-168
 
 * NYX branch (nyx-one-branch)
 

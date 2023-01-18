@@ -263,7 +263,7 @@ def mountSample(sampID):
     setPvDesc("robotOmegaWorkPos",90.0)    
     logger.info("done setting work pos")  
   if (currentMountedSampleID != ""): #then unmount what's there
-    if (sampID!=currentMountedSampleID):
+    if (sampID!=currentMountedSampleID and !robot_lib.multiSampleGripper()):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
       if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):

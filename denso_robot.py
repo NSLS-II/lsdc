@@ -7,11 +7,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 def get_denso_puck_pin(puck_number, pin_number):
-    return (chr(ord('A') + int(puck_number)), str(pin_number + 1))  # input value is zero-indexed, Denso pin is one-indexed
+    return (puck_number+1, pin_number+1)
 
-class DensoRobot:
+class OphydRobot:
     def __init__(self, robot):
         self.robot = robot
+
+    def warmupGripper(self):
+        try:
+            logger.info('drying gripper')
+            self.robot.dryGripper()
+        except Exception as e:
+            logger.error(f'Failed to dry gripper: {e}')
 
     def control_type(self):
         return "Bluesky"
@@ -31,6 +38,7 @@ class DensoRobot:
                 denso_puck_pos, denso_pin_pos = get_denso_puck_pin(puck_pos, pin_pos)
                 logger.info(f'Mounting: {denso_puck_pos} {denso_pin_pos}')
                 yield from self.robot.mount(denso_puck_pos, denso_pin_pos)
+                logger.info(f"Done Mounting")
             except Exception as e:
                 logger.error(f'Exception during mount step: {e}: traceback: {traceback.format_exc()}')
                 return MOUNT_FAILURE
@@ -75,12 +83,17 @@ class DensoRobot:
     def finish(self):
         ...
 
+    def multiSampleGripper():
+        return True
+
     def check_sample_mounted(self, mount, puck_pos, pin_pos):  # is the correct sample present/absent as expected during a mount/unmount?
         if getBlConfig('robot_online'):
             if mount:
                 check_occupied = 1
             else:
                 check_occupied = 0
+            puck_pos+=1 # these two are to correct an off-by-one issue caused by-
+            pin_pos+=1 # the denso robot being 0-indexed
             actual_spindle_occupied = int(self.robot.spindle_occupied_sts.get())
             actual_puck_num = int(self.robot.puck_num_sel.get())
             actual_sample_num = int(self.robot.sample_num_sel.get())

@@ -372,7 +372,7 @@ def rasterScreen(currentRequest):
     rasterH = 510
   rasterReqID = defineRectRaster(currentRequest,rasterW,rasterH,gridStep)     
   db_lib.updatePriority(rasterReqID, -1)
-  snakeRaster(rasterReqID)
+  RE(snakeRaster(rasterReqID))
   
 
 def multiCol(currentRequest):
@@ -2246,7 +2246,7 @@ def gridRaster(currentRequest):
       beamline_lib.mvaDescriptor("sampleX",rasterStartX+(j*xsep),"sampleY",rasterStartY+(i*yyRelativeMove),"sampleZ",rasterStartZ+(i*yzRelativeMove))
       beamline_lib.mvaDescriptor("omega",omega)      
       rasterReqID = defineRectRaster(currentRequest,sizex,sizey,stepsize)      
-      snakeRaster(rasterReqID)
+      RE(snakeRaster(rasterReqID))
 
 
 def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs

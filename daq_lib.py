@@ -514,7 +514,7 @@ def collectData(currentRequest):
   elif (prot == "vector" or prot == "stepVector"):
     imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):
-    daq_macros.snakeRaster(currentRequest["uid"])    
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
   elif (prot == "rasterScreen"):
     daq_macros.rasterScreen(currentRequest)    
   elif (prot == "multiColQ"):

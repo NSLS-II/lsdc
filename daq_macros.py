@@ -2254,26 +2254,26 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
   if (rasterType=="Fine"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,90,90,10)
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Coarse"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,630,390,30)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="autoVector"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,615,375,15)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Line"):  
     daq_lib.set_field("xrecRasterFlag","100")    
     beamline_lib.mvrDescriptor("omega",90)
     rasterReqID = defineRectRaster(currentRequest,10,290,10)    
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
     daq_lib.set_field("xrecRasterFlag","100")    
   else:
     rasterReqID = getXrecLoopShape(currentRequest)
     logger.info("snake raster " + str(rasterReqID))
     time.sleep(1) #I think I really need this, not sure why
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
 
 def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag

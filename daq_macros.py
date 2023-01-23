@@ -3315,7 +3315,7 @@ def loop_center_xrec():
 
   
 
-def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
+def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 
 #imgWidth will be something like 40 for xtalCenter
@@ -3328,7 +3328,7 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep(zebra)
+  zebra_daq_prep()
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)

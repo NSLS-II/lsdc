@@ -3150,6 +3150,19 @@ def setAttens(transmission): #where transmission = 0.0-1.0
 def importSpreadsheet(fname):
   parseSheet.importSpreadsheet(fname,daq_utils.owner)
 
+
+def zebraDaqPrep():
+
+  setPvDesc("zebraReset",1)
+  time.sleep(2.0)
+  setPvDesc("zebraTTlSel",31)
+
+  setPvDesc("zebraM1SetPosProc",1)
+  setPvDesc("zebraM2SetPosProc",1)
+  setPvDesc("zebraM3SetPosProc",1)
+  setPvDesc("zebraArmTrigSource",1)
+
+
 def zebraArm():
   setPvDesc("zebraArm",1)
   while(1):
@@ -3328,7 +3341,7 @@ def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  zebra_daq_prep()
+  zebraDaqPrep()
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)

@@ -16,11 +16,13 @@ def mountRobotSample(gov_robot, puck_pos, pin_pos, samp_id, **kwargs):
     RE(robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs))
   else:
     logger.info('regular robot')
-    robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)
+    status = robot.mount(gov_robot, puck_pos, pin_pos, samp_id, **kwargs)
+    if status is not MOUNT_STEP_SUCCESSFUL:
+        return status
   if isinstance(robot, OphydRobot):
     status = robot.check_sample_mounted(mount=True, puck_pos=puck_pos, pin_pos=pin_pos)
   else:
-    status = MOUNT_STEP_SUCCESSFUL  # TODO assume embl robot is successful
+    status = MOUNT_STEP_SUCCESSFUL
   if status != MOUNT_STEP_SUCCESSFUL:
       return status
   status = robot.postMount(gov_robot, puck_pos, pin_pos, samp_id)

@@ -29,25 +29,13 @@ range_degrees = abs(sweep_end-sweep_start)
 numimages = round(range_degrees/img_width)
 numstart = reqObj["file_number_start"]
 
-dialsComm = getBlConfig("dialsComm")
-dialsTuneLowRes = getBlConfig(RASTER_TUNE_LOW_RES)
-dialsTuneHighRes = getBlConfig(RASTER_TUNE_HIGH_RES)
-dialsTuneIceRingFlag = getBlConfig(RASTER_TUNE_ICE_RING_FLAG)
-dialsTuneResoFlag = getBlConfig(RASTER_TUNE_RESO_FLAG)  
-dialsTuneIceRingWidth = getBlConfig(RASTER_TUNE_ICE_RING_WIDTH)
-if (dialsTuneIceRingFlag):
-  iceRingParams = " ice_rings.filter=true ice_rings.width=" + str(dialsTuneIceRingWidth)
-else:
-  iceRingParams = ""
-if (dialsTuneResoFlag):
-  resoParams = " d_min=" + str(dialsTuneLowRes) + " d_max=" + str(dialsTuneHighRes)
-else:
-  resoParams = ""
-dialsCommWithParams = dialsComm + resoParams + iceRingParams
-print(dialsCommWithParams)
 for i in range (numstart,numimages,10):
   comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}eiger2cbf.sh {request_id} {i} {i} 0 {seqNum}\""
   os.system(comm_s)
+# now handle the cbfs with dials
+# prerequisite: dials.spot_server running on the host where the processing is to occur, owned by the user who runs LSDC server
+comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dials_spotfind.sh {request_id} 0 {seqNum} per_image\""
+print(comm_s)
 
 retry = 3
 localDialsResultDict = {}

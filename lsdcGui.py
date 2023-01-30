@@ -3969,7 +3969,6 @@ class ControlMain(QtWidgets.QMainWindow):
       jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
       logger.info("saving raster snapshot")
       self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
-      self.saveVidSnapshotCB("Raster Result from sample " + str(rasterReq["request_obj"]["file_prefix"]),useOlog=False,reqID=rasterReq["uid"],rasterHeatJpeg=jpegImageFilename)
       try:
         ispybLib.insertRasterResult(rasterReq,visitName)
       except Exception as e:

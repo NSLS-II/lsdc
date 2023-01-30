@@ -347,6 +347,11 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
     params['datacollection_number'] = request_obj['runNum']
     if request_obj['img_width'] > 0:
       params['n_images'] = int(round((request_obj['sweep_end'] - request_obj['sweep_start']) / request_obj['img_width']))
+      if request_obj['protocol'] == "raster":
+        row_defs = request_obj['rasterDef']['rowDefs']
+        num_rows = len(row_defs)
+        num_images_per_row = row_defs[0]['numsteps']
+        params['n_images'] = int(num_images_per_row * num_rows)
     else:
       params['n_images'] = 1 # stills mode
     params['exp_time'] = request_obj['exposure_time']

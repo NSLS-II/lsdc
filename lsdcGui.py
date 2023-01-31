@@ -70,10 +70,6 @@ handler1.setFormatter(myformat)
 #handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 #logger.addHandler(handler2)
-try:
-  import ispybLib
-except Exception as e:
-  logger.error("lsdcGui: ISPYB import error, %s" % e)
 import raddoseLib
 
 global sampleNameDict

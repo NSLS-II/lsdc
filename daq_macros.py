@@ -372,7 +372,7 @@ def rasterScreen(currentRequest):
     rasterH = 510
   rasterReqID = defineRectRaster(currentRequest,rasterW,rasterH,gridStep)     
   db_lib.updatePriority(rasterReqID, -1)
-  snakeRaster(rasterReqID)
+  RE(snakeRaster(rasterReqID))
   
 
 def multiCol(currentRequest):
@@ -2246,7 +2246,7 @@ def gridRaster(currentRequest):
       beamline_lib.mvaDescriptor("sampleX",rasterStartX+(j*xsep),"sampleY",rasterStartY+(i*yyRelativeMove),"sampleZ",rasterStartZ+(i*yzRelativeMove))
       beamline_lib.mvaDescriptor("omega",omega)      
       rasterReqID = defineRectRaster(currentRequest,sizex,sizey,stepsize)      
-      snakeRaster(rasterReqID)
+      RE(snakeRaster(rasterReqID))
 
 
 def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
@@ -2254,26 +2254,26 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
   if (rasterType=="Fine"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,90,90,10)
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Coarse"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,630,390,30)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="autoVector"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,615,375,15)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Line"):  
     daq_lib.set_field("xrecRasterFlag","100")    
     beamline_lib.mvrDescriptor("omega",90)
     rasterReqID = defineRectRaster(currentRequest,10,290,10)    
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
     daq_lib.set_field("xrecRasterFlag","100")    
   else:
     rasterReqID = getXrecLoopShape(currentRequest)
     logger.info("snake raster " + str(rasterReqID))
     time.sleep(1) #I think I really need this, not sure why
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
 
 def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag
@@ -3150,6 +3150,19 @@ def setAttens(transmission): #where transmission = 0.0-1.0
 def importSpreadsheet(fname):
   parseSheet.importSpreadsheet(fname,daq_utils.owner)
 
+
+def zebraDaqPrep():
+
+  setPvDesc("zebraReset",1)
+  time.sleep(2.0)
+  setPvDesc("zebraTTlSel",31)
+
+  setPvDesc("zebraM1SetPosProc",1)
+  setPvDesc("zebraM2SetPosProc",1)
+  setPvDesc("zebraM3SetPosProc",1)
+  setPvDesc("zebraArmTrigSource",1)
+
+
 def zebraArm():
   setPvDesc("zebraArm",1)
   while(1):
@@ -3315,7 +3328,7 @@ def loop_center_xrec():
 
   
 
-def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
+def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 
 #imgWidth will be something like 40 for xtalCenter
@@ -3328,7 +3341,7 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep(zebra)
+  zebraDaqPrep()
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)

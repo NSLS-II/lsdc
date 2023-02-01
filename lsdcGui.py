@@ -4986,8 +4986,14 @@ class ControlMain(QtWidgets.QMainWindow):
       if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
         if ("priority" in selectedSampleRequest):
           if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
-            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
-            albulaUtils.albulaDispFile(firstFilename)            
+            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)
+            if albulaUtils.validate_master_HDF5_file(firstFilename):            
+              albulaUtils.albulaDispFile(firstFilename)
+            else:
+              QtWidgets.QMessageBox.information(self, 
+                                                'Error', 
+                                                'Master HDF5 file could not be validated',
+                                                QtWidgets.QMessageBox.Ok)
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
       if (reqObj["gridStep"] == self.rasterStepDefs["Coarse"]):
         self.rasterGrainCoarseRadio.setChecked(True)

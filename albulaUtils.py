@@ -7,6 +7,8 @@ logger = logging.getLogger(__name__)
 logger.info('reading albulaUtils')
 from functools import singledispatch
 from time import sleep
+import h5py
+from pathlib import Path
 global albulaFrame, albulaSubFrame, currentMasterH5
 albulaFrame = None
 albulaSubframeFrame = None
@@ -98,3 +100,18 @@ def _albulaDispFile(filename):
         albulaSubFrame.loadImage(imgSeries[filename[1]])
         currentMasterH5 = filename[0]
 
+def validate_master_HDF5_file(filename):
+  """
+  Check if H5 file is valid 
+  """
+  path = Path(filename)
+  try:
+    if 'master' in path.stem and path.suffix == '.h5':
+      with h5py.File(path) as f:
+        for key in f['entry']['data'].keys():
+          f['entry']['data'][key]
+      return True
+    else:
+      return False
+  except KeyError:
+    return False

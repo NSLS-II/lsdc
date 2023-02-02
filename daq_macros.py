@@ -1841,6 +1841,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
     total_exposure_time = exptimePerCell*totalImages
+    detDist /= 1000
 
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     if raster_flyer.detector.cam.armed.get() == 1:

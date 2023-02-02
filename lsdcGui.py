@@ -4992,7 +4992,7 @@ class ControlMain(QtWidgets.QMainWindow):
             else:
               QtWidgets.QMessageBox.information(self, 
                                                 'Error', 
-                                                'Master HDF5 file could not be validated',
+                                                f'Master HDF5 file {firstFilename} could not be validated',
                                                 QtWidgets.QMessageBox.Ok)
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
       if (reqObj["gridStep"] == self.rasterStepDefs["Coarse"]):

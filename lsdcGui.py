@@ -1274,7 +1274,7 @@ class DewarTree(QtWidgets.QTreeView):
                     selectedIndex = self.model.indexFromItem(col_item) ##attempt to leave it on the request after collection
                     
                     collectionRunning = True
-                    self.parent.refreshCollectionParams(sampleRequestList[k])
+                    self.parent.refreshCollectionParams(sampleRequestList[k], validate_hdf5=False)
                   elif (sampleRequestList[k]["priority"] > 0):
                     col_item.setCheckState(Qt.Checked)
                     col_item.setBackground(QtGui.QColor('white'))
@@ -1374,7 +1374,7 @@ class DewarTree(QtWidgets.QTreeView):
                 col_item.setCheckState(Qt.Checked)
                 col_item.setBackground(QtGui.QColor('green'))
                 collectionRunning = True
-                self.parent.refreshCollectionParams(self.orderedRequests[k])
+                self.parent.refreshCollectionParams(self.orderedRequests[k], validate_hdf5=False)
 
               elif (self.orderedRequests[k]["priority"] > 0):
                 col_item.setCheckState(Qt.Checked)
@@ -4943,7 +4943,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.send_to_server("unmountSample()")
 
 
-    def refreshCollectionParams(self,selectedSampleRequest):
+    def refreshCollectionParams(self,selectedSampleRequest, validate_hdf5=True):
       reqObj = selectedSampleRequest["request_obj"]
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str(reqObj["protocol"])))
       protocol = str(reqObj["protocol"])
@@ -4987,13 +4987,14 @@ class ControlMain(QtWidgets.QMainWindow):
         if ("priority" in selectedSampleRequest):
           if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
             firstFilename = daq_utils.create_filename(prefix_long,fnumstart)
-            if albulaUtils.validate_master_HDF5_file(firstFilename):            
-              albulaUtils.albulaDispFile(firstFilename)
-            else:
-              QtWidgets.QMessageBox.information(self, 
-                                                'Error', 
-                                                f'Master HDF5 file {firstFilename} could not be validated',
-                                                QtWidgets.QMessageBox.Ok)
+            if validate_hdf5:
+              if albulaUtils.validate_master_HDF5_file(firstFilename):            
+                albulaUtils.albulaDispFile(firstFilename)
+              else:
+                QtWidgets.QMessageBox.information(self, 
+                                                  'Error', 
+                                                  f'Master HDF5 file {firstFilename} could not be validated',
+                                                  QtWidgets.QMessageBox.Ok)
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
       if (reqObj["gridStep"] == self.rasterStepDefs["Coarse"]):
         self.rasterGrainCoarseRadio.setChecked(True)

@@ -1600,7 +1600,6 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         self.currentSelectedCell = None
 
     def mousePressEvent(self, e):
-      logger.info("mouse pressed on group")
       for i in range(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
           if (self.parent.rasterList[i]["graphicsItem"].isSelected()):
@@ -1620,6 +1619,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       intensity = cell.data(3)
                       if (self.parent.staffScreenDialog.albulaDispCheckBox.isChecked()):
                           if (filename != "empty"):
+                              logger.debug(f"filename to display: {filename} spotcount: {spotcount} dmin: {d_min} intensity: {intensity}")
                               albulaUtils.albulaDispFile(filename)
                       if not (self.parent.rasterExploreDialog.isVisible()):
                           self.parent.rasterExploreDialog.show()
@@ -1644,7 +1644,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
           pass
 
         super(RasterGroup, self).mouseMoveEvent(e)
-        logger.info("pos " + str(self.pos()))
+        logger.debug(f"pos:{self.pos()} event:{e}") # TODO: Add event description 
 
     def mouseReleaseEvent(self, e):
         super(RasterGroup, self).mouseReleaseEvent(e)

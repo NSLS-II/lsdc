@@ -89,16 +89,17 @@ def _albulaDispFile(filename):
         if not (currentMasterH5 == filename[0]):
             logger.info('reading file: %s' % filename[0])
             albulaSubFrame.loadFile(filename[0])
-            imgSeries = dectris.albula.DImageSeries(filename[0])
             currentMasterH5 = filename[0]
         logger.debug('reading image number %s' % filename[1])
-        albulaSubFrame.loadImage(imgSeries[filename[1]])
+        albulaSubFrame.goTo(filename[1])
     except dectris.albula.DNoObject:
         albulaFrame = dectris.albula.openMainFrame()
         albulaSubFrame = albulaFrame.openSubFrame()
         imgSeries = dectris.albula.DimageSeries(filename[0])
         albulaSubFrame.loadImage(imgSeries[filename[1]])
         currentMasterH5 = filename[0]
+    except Exception as e:
+        logger.error(f'Albula exception: {e}')
 
 def validate_master_HDF5_file(filename):
   """

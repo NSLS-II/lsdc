@@ -1494,7 +1494,7 @@ class DewarTree(QtWidgets.QTreeView):
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.selectedSampleID = selectedSampleRequest["sample"]
           db_lib.deleteRequest(selectedSampleRequest["uid"])
-          if (selectedSampleRequest["request_obj"]["protocol"] == "raster" or selectedSampleRequest["request_obj"]["protocol"] == "stepRaster" or selectedSampleRequest["request_obj"]["protocol"] == "specRaster"):
+          if (selectedSampleRequest["request_obj"]["protocol"] == "raster" or selectedSampleRequest["request_obj"]["protocol"] == "stepRaster"):
             for i in range(len(self.parent.rasterList)):
               if (self.parent.rasterList[i] != None):
                 if (self.parent.rasterList[i]["uid"] == selectedSampleRequest["uid"]):
@@ -2138,7 +2138,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
+        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 
@@ -2849,7 +2849,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.showProtParams()
       if (self.vidActionC2CRadio.isChecked()):        
         self.click_positions = []
-        if (self.protoComboBox.findText(str("raster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("stepRaster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("specRaster")) == self.protoComboBox.currentIndex()):
+        if (self.protoComboBox.findText(str("raster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("stepRaster")) == self.protoComboBox.currentIndex()):
           self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
           self.protoComboActivatedCB("standard")          
         self.showProtParams()
@@ -3443,7 +3443,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
         
-      elif (protocol == "stepRaster" or protocol == "specRaster"):
+      elif (protocol == "stepRaster"):
         self.rasterParamsFrame.show()
         self.processingOptionsFrame.show()        
       elif (protocol == "multiCol" or protocol == "multiColQ"):
@@ -3621,7 +3621,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def protoComboActivatedCB(self, text):
       self.showProtParams()
       protocol = str(self.protoComboBox.currentText())
-      if (protocol == "raster" or protocol == "stepRaster" or protocol == "rasterScreen" or protocol == "specRaster"):
+      if (protocol == "raster" or protocol == "stepRaster" or protocol == "rasterScreen"):
         self.vidActionRasterDefRadio.setChecked(True)
       else:
         self.vidActionC2CRadio.setChecked(True)
@@ -4527,7 +4527,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.treeChanged_pv.put(1)
 
     def addRequestsToAllSelectedCB(self):
-      if (self.protoComboBox.currentText() == "raster" or self.protoComboBox.currentText() == "stepRaster" or self.protoComboBox.currentText() == "specRaster"): #it confused people when they didn't need to add rasters explicitly
+      if (self.protoComboBox.currentText() == "raster" or self.protoComboBox.currentText() == "stepRaster"): #it confused people when they didn't need to add rasters explicitly
         return
       selmod = self.dewarTree.selectionModel()
       selection = selmod.selection()
@@ -5083,7 +5083,7 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.rasterGrainCustomRadio.setChecked(True)          
       rasterStep = int(reqObj["gridStep"])
-      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster" or str(reqObj["protocol"])== "specRaster")):
+      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster")):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
           self.fillPolyRaster(selectedSampleRequest)

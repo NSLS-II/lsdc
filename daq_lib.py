@@ -495,7 +495,7 @@ def collectData(currentRequest):
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
-  if not prot in ["eScan", "specRaster"]:
+  if not prot in ["eScan"]:
     beamline_lib.mvaDescriptor("detectorDist",colDist)  
   logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
@@ -509,8 +509,6 @@ def collectData(currentRequest):
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
-  elif (prot == "specRaster"):
-    status = daq_macros.snakeStepRasterSpec(currentRequest["uid"])    
   elif (prot == "vector" or prot == "stepVector"):
     imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):

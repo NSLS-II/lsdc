@@ -2138,7 +2138,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
+        protoOptionList = ["standard","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 
@@ -3449,8 +3449,6 @@ class ControlMain(QtWidgets.QMainWindow):
       elif (protocol == "multiCol" or protocol == "multiColQ"):
         self.rasterParamsFrame.show()
         self.multiColParamsFrame.show()
-      elif (protocol == "screen"):
-        pass
       elif (protocol == "vector" or protocol == "stepVector"):
         self.vectorParamsFrame.show()
         self.processingOptionsFrame.show()        
@@ -5161,11 +5159,6 @@ class ControlMain(QtWidgets.QMainWindow):
           if (self.vidActionRasterDefRadio.isChecked()):
             self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("raster")))
             self.showProtParams()
-        elif (str(self.protoComboBox.currentText()) == "screen"):
-          self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
-          self.refreshCollectionParams(self.selectedSampleRequest)
-          if (self.stillModeStatePV.get()):
-            self.setGuiValue({'osc_range':"0.0"})
         else:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           reqObj = self.selectedSampleRequest["request_obj"]

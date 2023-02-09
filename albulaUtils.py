@@ -24,6 +24,7 @@ def startup_albula():
     albulaFrame = dectris.albula.openMainFrame()
     albulaFrame.disableClose()
     albulaSubFrame = albulaFrame.openSubFrame()
+    albulaSubFrame.setColorMode("Heat")
 
 def albulaClose(): #not used
   global albulaFrame,albulaSubFrame
@@ -90,6 +91,7 @@ def _albulaDispFile(filename):
             logger.info('reading file: %s' % filename[0])
             albulaSubFrame.loadFile(filename[0])
             currentMasterH5 = filename[0]
+            sleep(0.3) # Sleep to allow Albula to load file. Otherwise the following goTo() is ignored
         logger.debug('reading image number %s' % filename[1])
         albulaSubFrame.goTo(filename[1])
     except dectris.albula.DNoObject:

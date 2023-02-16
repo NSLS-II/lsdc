@@ -28,7 +28,8 @@ def healthcheck(name:str='',
     """
     def dec(f):
         f.name = name
-        f.remediation = remediation
+        if not hasattr(f, remediation):
+            f.remediation = remediation
         f.fatal = fatal
         f.passed = True
         f.depends = depends if depends is not None else [start]
@@ -40,6 +41,18 @@ def healthcheck(name:str='',
 def start():
     return True
 
+@healthcheck(
+    name='import daq_utils',
+    remediation='Error importing daq_lib',
+    fatal=True
+)
+def check_daq_utils():
+    try:
+        import daq_utils
+        return True
+    except Exception as e:
+        check_daq_utils.remediation = f'Error importing daq_utils: {e}'
+        return False
 
 @healthcheck(
     name='working directory',
@@ -47,9 +60,15 @@ def start():
     fatal=True
 )
 def check_working_directory():
+    import daq_utils
     working_dir = Path.cwd()
     home_dir = Path.home()
     if home_dir in working_dir.parents or home_dir == working_dir:
+        check_working_directory.remediation = f'Please start LSDC in {daq_utils.beamline} data directory, not home directory'
+        return False
+    if daq_utils.beamline not in working_dir.parts: 
+        # Hacky way to check if amx or fmx is in path. Unless server can tell GUI where its running?
+        check_working_directory.remediation = f'Please start LSDC in {daq_utils.beamline} data directory. Current directory: {working_dir}'
         return False
     else:
         return True
@@ -83,7 +102,7 @@ def perform_checks():
     specific tests. For example
     """
     checks = DiGraph()
-    for c in [check_working_directory, check_db]:
+    for c in [check_daq_utils, check_working_directory, check_db]:
         for d in c.depends:
             checks.add_edge(d, c)
     print(u'\u2500' * 20)

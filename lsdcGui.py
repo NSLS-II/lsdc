@@ -5018,8 +5018,8 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.error('unable to get sample')
         return
       self.send_to_server("mountSample(\""+str(self.selectedSampleID)+"\")")
-      self.zoom1Radio.setChecked(True)      
-      self.zoomLevelToggledCB("Zoom1")
+      self.zoom2Radio.setChecked(True)      
+      self.zoomLevelToggledCB("Zoom2")
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
       self.protoComboActivatedCB("standard")
 

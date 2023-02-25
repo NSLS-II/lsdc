@@ -1152,6 +1152,7 @@ class DewarTree(QtWidgets.QTreeView):
         self.isExpanded = 1
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openMenu)
+        self.setStyleSheet("QTreeView::item:hover{background-color: #999966;}")
 
     def openMenu(self, position):
       indexes = self.selectedIndexes()
@@ -1167,6 +1168,8 @@ class DewarTree(QtWidgets.QTreeView):
           level = list(selectedLevels)[0]
           menu = QMenu()
           if level == 2: # This is usually a request
+            useParamsAction = QtWidgets.QAction('Use Request Parameters', self)
+            useParamsAction.triggered.connect(self.useParamsCB)
             deleteReqAction = QtWidgets.QAction('Delete selected request(s)', self)
             deleteReqAction.triggered.connect(self.deleteSelectedCB)
             cloneReqAction = QtWidgets.QAction('Clone selected request', self)
@@ -1175,12 +1178,20 @@ class DewarTree(QtWidgets.QTreeView):
             queueSelAction.triggered.connect(self.queueAllSelectedCB)
             dequeueSelAction = QtWidgets.QAction('Dequeue selected request(s)', self)
             dequeueSelAction.triggered.connect(self.deQueueAllSelectedCB)
+            menu.addAction(useParamsAction)
             menu.addAction(cloneReqAction)
             menu.addAction(queueSelAction)
             menu.addAction(dequeueSelAction)
             menu.addSeparator()
             menu.addAction(deleteReqAction)
           menu.exec_(self.viewport().mapToGlobal(position))
+
+    def useParamsCB(self):
+      index = self.selectedIndexes()[0]
+      item = self.model.itemFromIndex(index)
+      requestData = db_lib.getRequestByID(item.data(32))
+      reqObj = requestData['request_obj']
+      self.parent.fillRequestParameters(reqObj)
 
     def cloneRequestCB(self):
       # Only the first selected request is cloned (If multiple are chosen)
@@ -1284,6 +1295,7 @@ class DewarTree(QtWidgets.QTreeView):
                   else:
                     col_item.setCheckState(Qt.Unchecked)
                     col_item.setBackground(QtGui.QColor('white'))
+                  col_item.setToolTip(self.fillTooltip(sampleRequestList[k]))
                   item.appendRow(col_item)
                   if (sampleRequestList[k]["uid"] == self.parent.SelectedItemData): #looking for the selected item, this is a request
                     selectedIndex = self.model.indexFromItem(col_item)
@@ -1328,6 +1340,26 @@ class DewarTree(QtWidgets.QTreeView):
         self.scrollTo(self.currentIndex(),QAbstractItemView.PositionAtCenter)
         logger.info("refresh time = " + str(time.time()-startTime))
 
+    def fillTooltip(self, data):
+      text = ""
+      table_data = {}
+      if 'request_obj' in data:
+        req_data = data['request_obj']
+        table_data['Oscillation Start'] = req_data['sweep_start']
+        table_data['Oscillation Range'] = req_data['sweep_end'] - req_data['sweep_start']
+        table_data['Oscillation Width'] = req_data['img_width']
+        table_data['Exposure Time'] = req_data['exposure_time']
+        table_data['Detector Distance'] = req_data['detDist']
+        table_data['Energy (eV)'] = req_data['energy']
+        table_data['Wavelength'] = req_data['wavelength']
+        table_data['Resolution'] = req_data['resolution']
+        table_data['Transmission'] = req_data['attenuation']
+
+        text = "<table><tr><th>Parameter</th><th>Value</th></tr>"
+        for key, value in table_data.items():
+          text += f"<tr><td>{key}</td><td>{value}</td></tr>"
+        text = text + "</table>" 
+      return text  
 
     def refreshTreePriorityView(self): #"item" is a sample, "col_items" are requests which are children of samples.
         collectionRunning = False
@@ -4945,6 +4977,37 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def refreshCollectionParams(self,selectedSampleRequest):
       reqObj = selectedSampleRequest["request_obj"]
+      
+      if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol"): 
+        prefix_long = str(reqObj["directory"])+"/ref-"+str(reqObj["file_prefix"])
+      else:
+        prefix_long = str(reqObj["directory"])+"/"+str(reqObj["file_prefix"])
+      fnumstart=reqObj["file_number_start"]
+      
+
+      if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
+        if ("priority" in selectedSampleRequest):
+          if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
+            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
+            albulaUtils.albulaDispFile(firstFilename)            
+             
+      rasterStep = int(reqObj["gridStep"])
+      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster" or str(reqObj["protocol"])== "specRaster")):
+        if (not self.rasterIsDrawn(selectedSampleRequest)):
+          self.drawPolyRaster(selectedSampleRequest)
+          self.fillPolyRaster(selectedSampleRequest)
+        self.processSampMove(self.sampx_pv.get(),"x")
+        self.processSampMove(self.sampy_pv.get(),"y")
+        self.processSampMove(self.sampz_pv.get(),"z")
+        if (abs(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]-self.omega_pv.get()) > 5.0):
+          comm_s = "mvaDescriptor(\"omega\"," + str(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]) + ")"
+          self.send_to_server(comm_s)
+      
+      self.showProtParams()
+    
+
+    def fillRequestParameters(self, reqObj):
+      """Fills UI elements based on the reqObj dictionary passed to the function"""
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str(reqObj["protocol"])))
       protocol = str(reqObj["protocol"])
       if (protocol == "raster"):
@@ -4977,17 +5040,8 @@ class ControlMain(QtWidgets.QMainWindow):
       self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))
       self.dataPathGB.setBasePath_ledit(str(reqObj["basePath"]))
       self.dataPathGB.setDataPath_ledit(str(reqObj["directory"]))
-      if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol"): 
-        prefix_long = str(reqObj["directory"])+"/ref-"+str(reqObj["file_prefix"])
-      else:
-        prefix_long = str(reqObj["directory"])+"/"+str(reqObj["file_prefix"])
-      fnumstart=reqObj["file_number_start"]
-
-      if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
-        if ("priority" in selectedSampleRequest):
-          if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
-            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
-            albulaUtils.albulaDispFile(firstFilename)            
+      
+      
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
       if (reqObj["gridStep"] == self.rasterStepDefs["Coarse"]):
         self.rasterGrainCoarseRadio.setChecked(True)
@@ -4996,18 +5050,8 @@ class ControlMain(QtWidgets.QMainWindow):
       elif (reqObj["gridStep"] == self.rasterStepDefs["VFine"]):
         self.rasterGrainVFineRadio.setChecked(True)
       else:
-        self.rasterGrainCustomRadio.setChecked(True)          
-      rasterStep = int(reqObj["gridStep"])
-      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster" or str(reqObj["protocol"])== "specRaster")):
-        if (not self.rasterIsDrawn(selectedSampleRequest)):
-          self.drawPolyRaster(selectedSampleRequest)
-          self.fillPolyRaster(selectedSampleRequest)
-        self.processSampMove(self.sampx_pv.get(),"x")
-        self.processSampMove(self.sampy_pv.get(),"y")
-        self.processSampMove(self.sampz_pv.get(),"z")
-        if (abs(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]-self.omega_pv.get()) > 5.0):
-          comm_s = "mvaDescriptor(\"omega\"," + str(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]) + ")"
-          self.send_to_server(comm_s)
+        self.rasterGrainCustomRadio.setChecked(True)
+      
       if (str(reqObj["protocol"])== "eScan"):
         try:
           self.escan_steps_ledit.setText(str(reqObj["steps"]))
@@ -5027,8 +5071,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.characterizeMultiplicityEdit.setText(str(characterizationParams["aimed_multiplicity"]))
       else: #for now, erase the rasters if a non-raster is selected, need to rationalize later
         pass
-      self.showProtParams()
-      
 
 
     def row_clicked(self,index): #I need "index" here? seems like I get it from selmod, but sometimes is passed

@@ -1730,6 +1730,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.yellowPen = QtGui.QPen(QtCore.Qt.yellow)                                
         albulaUtils.startup_albula()
         self.initUI()
+        self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])
         self.zoom1FrameRatePV = PV(daq_utils.pvLookupDict["zoom1FrameRate"])
         self.zoom2FrameRatePV = PV(daq_utils.pvLookupDict["zoom2FrameRate"])
         self.zoom3FrameRatePV = PV(daq_utils.pvLookupDict["zoom3FrameRate"])
@@ -5002,12 +5003,17 @@ class ControlMain(QtWidgets.QMainWindow):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
           self.fillPolyRaster(selectedSampleRequest)
-        self.processSampMove(self.sampx_pv.get(),"x")
-        self.processSampMove(self.sampy_pv.get(),"y")
-        self.processSampMove(self.sampz_pv.get(),"z")
-        if (abs(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]-self.omega_pv.get()) > 5.0):
-          comm_s = "mvaDescriptor(\"omega\"," + str(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]) + ")"
-          self.send_to_server(comm_s)
+        
+        if (str(self.govStateMessagePV.get(as_string=True)) == 'state SA' and # Move only in SA (Any other way for GUI to detect governor state?)
+            self.controlEnabled() and # with control enabled
+            self.selectedSampleRequest['sample'] == self.mountedPin_pv.get()) : # And the sample of the selected request is mounted
+
+          self.processSampMove(self.sampx_pv.get(),"x")
+          self.processSampMove(self.sampy_pv.get(),"y")
+          self.processSampMove(self.sampz_pv.get(),"z")
+          if (abs(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]-self.omega_pv.get()) > 5.0):
+            comm_s = "mvaDescriptor(\"omega\"," + str(selectedSampleRequest["request_obj"]["rasterDef"]["omega"]) + ")"
+            self.send_to_server(comm_s)
       if (str(reqObj["protocol"])== "eScan"):
         try:
           self.escan_steps_ledit.setText(str(reqObj["steps"]))

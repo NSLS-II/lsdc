@@ -105,7 +105,7 @@ def _albulaDispFile(filename):
 
 def validate_master_HDF5_file(filename):
   """
-  Check if H5 file is valid 
+  Validate master HDF5 by checking if data files exist and can be read
   """
   path = Path(filename)
   try:

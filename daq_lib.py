@@ -495,7 +495,7 @@ def collectData(currentRequest):
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
-  if not prot in ["eScan", "specRaster"]:
+  if not prot in ["eScan"]:
     beamline_lib.mvaDescriptor("detectorDist",colDist)  
   logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
@@ -509,8 +509,6 @@ def collectData(currentRequest):
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
-  elif (prot == "specRaster"):
-    status = daq_macros.snakeStepRasterSpec(currentRequest["uid"])    
   elif (prot == "vector" or prot == "stepVector"):
     imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):
@@ -544,28 +542,8 @@ def collectData(currentRequest):
           reqObj["sweep_start"] = beamline_lib.motorPosFromDescriptor("omega") - 90.0 #%360.0?
           sweep_start = reqObj["sweep_start"]
       daq_macros.setTrans(attenuation)      
-    if (reqObj["protocol"] == "screen"):
-      screenImages = 2
-      screenRange = 90
-      range_degrees = img_width
-      for i in range (0,screenImages):
-        sweep_start = reqObj["sweep_start"]+(i*screenRange)
-        sweep_end = sweep_start+screenRange
-        file_prefix = str(reqObj["file_prefix"]+"_"+str(i*screenRange))
-        data_directory_name = str(reqObj["directory"]) # for now
-        file_number_start = reqObj["file_number_start"]
-        beamline_lib.mvaDescriptor("omega",sweep_start)
-        if (i==0):
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
-        else:
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
-        seqNum = flyer.detector.cam.sequence_id.get()
-        node = getBlConfig("spotNode1")
-        comm_s = f'ssh -q {node} \"{os.environ["MXPROCESSINGSCRIPTSDIR"]}eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}\"'
-        logger.info(comm_s)
-        os.system(comm_s)
-          
-    elif (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
+
+    if (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
       characterizationParams = reqObj["characterizationParams"]
       index_success = daq_macros.dna_execute_collection3(0.0,img_width,2,exposure_period,data_directory_name+"/",file_prefix,1,-89.0,1,currentRequest)
       if (index_success):        
@@ -705,7 +683,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   except ValueError: 
     pass
   logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "screen" or protocol == "burn"):
+  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
     logger.info("vectorSync " + str(time.time()))    
     daq_macros.vectorSync()
     logger.info("zebraDaq " + str(time.time()))

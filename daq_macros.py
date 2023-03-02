@@ -2092,7 +2092,7 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
       beamline_lib.mvaDescriptor("sampleX",xMotAbsoluteMove+(j*stepX)+(stepX/2.0),"sampleY",yMotAbsoluteMove-(j*stepY)-(stepY/2.0),"sampleZ",zMotAbsoluteMove-(j*stepZ)-(stepZ/2.0))
       vectorSync()
       if (j == 0):
-        zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3)
+        RE(zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3))
       else:
         angle_start = sweep_start_angle
         scanWidth = range_degrees
@@ -2810,7 +2810,7 @@ def vectorZebraStepScan(vecRequest):
     setPvDesc("vectorEndZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
     setPvDesc("vectorframeExptime",expTime*1000.0)
     setPvDesc("vectorNumFrames",numImagesPerStep)
-    zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
+    RE(zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start))
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
   det_lib.detector_stop_acquire()

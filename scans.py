@@ -8,7 +8,7 @@ def zebra_daq_prep(zebra):
                          zebra.m1_set_pos, 1,
                          zebra.m2_set_pos, 1,
                          zebra.m3_set_pos, 1,
-                         zebra.pc.arm_sel, 1)
+                         zebra.pc.gate.sel, 1)
 
 def setup_zebra_vector_scan(zebra, angle_start, gate_width, scan_width, pulse_width, pulse_step, exposure_period_per_image, num_images, is_still=False):
     yield from bps.mv(zebra.pc.gate.sel, angle_start)

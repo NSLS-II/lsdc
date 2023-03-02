@@ -341,7 +341,7 @@ def autoVector(currentRequest): #12/19 - not tested!
   return 1
 
 def rasterScreen(currentRequest):
-  if (daq_utils.beamline == "fmx"):
+  if (daq_utils.beamline == "fmx" and getBlConfig("scannerType") == "PI"):
     gridRaster(currentRequest)
     return
   

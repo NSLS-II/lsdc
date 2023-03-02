@@ -3620,7 +3620,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def protoComboActivatedCB(self, text):
       self.showProtParams()
       protocol = str(self.protoComboBox.currentText())
-      if (protocol == "raster" or protocol == "stepRaster" or protocol == "rasterScreen"):
+      if protocol in ("raster", "stepRaster", "rasterScreen", "multiCol"):
         self.vidActionRasterDefRadio.setChecked(True)
       else:
         self.vidActionC2CRadio.setChecked(True)

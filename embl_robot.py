@@ -262,9 +262,9 @@ class EMBLRobot:
             else:
               robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
               if (robotStatus != "Ready"):
-                if (daq_utils.beamline == "fmx"):
-                  daq_macros.homePins()
-                  time.sleep(3.0)
+                #if (daq_utils.beamline == "fmx"):
+                #  daq_macros.homePins()
+                #  time.sleep(3.0)
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
                   return MOUNT_FAILURE

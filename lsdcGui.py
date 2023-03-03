@@ -1274,7 +1274,7 @@ class DewarTree(QtWidgets.QTreeView):
                     selectedIndex = self.model.indexFromItem(col_item) ##attempt to leave it on the request after collection
                     
                     collectionRunning = True
-                    self.parent.refreshCollectionParams(sampleRequestList[k])
+                    self.parent.refreshCollectionParams(sampleRequestList[k], validate_hdf5=False)
                   elif (sampleRequestList[k]["priority"] > 0):
                     col_item.setCheckState(Qt.Checked)
                     col_item.setBackground(QtGui.QColor('white'))
@@ -1374,7 +1374,7 @@ class DewarTree(QtWidgets.QTreeView):
                 col_item.setCheckState(Qt.Checked)
                 col_item.setBackground(QtGui.QColor('green'))
                 collectionRunning = True
-                self.parent.refreshCollectionParams(self.orderedRequests[k])
+                self.parent.refreshCollectionParams(self.orderedRequests[k], validate_hdf5=False)
 
               elif (self.orderedRequests[k]["priority"] > 0):
                 col_item.setCheckState(Qt.Checked)
@@ -1600,7 +1600,6 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         self.currentSelectedCell = None
 
     def mousePressEvent(self, e):
-      logger.info("mouse pressed on group")
       for i in range(len(self.parent.rasterList)):
         if (self.parent.rasterList[i] != None):
           if (self.parent.rasterList[i]["graphicsItem"].isSelected()):
@@ -1620,6 +1619,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                       intensity = cell.data(3)
                       if (self.parent.staffScreenDialog.albulaDispCheckBox.isChecked()):
                           if (filename != "empty"):
+                              logger.debug(f"filename to display: {filename} spotcount: {spotcount} dmin: {d_min} intensity: {intensity}")
                               albulaUtils.albulaDispFile(filename)
                       if not (self.parent.rasterExploreDialog.isVisible()):
                           self.parent.rasterExploreDialog.show()
@@ -1644,7 +1644,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
           pass
 
         super(RasterGroup, self).mouseMoveEvent(e)
-        logger.info("pos " + str(self.pos()))
+        logger.debug(f"pos:{self.pos()} event:{e}") # TODO: Add event description 
 
     def mouseReleaseEvent(self, e):
         super(RasterGroup, self).mouseReleaseEvent(e)
@@ -4944,7 +4944,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.send_to_server("unmountSample()")
 
 
-    def refreshCollectionParams(self,selectedSampleRequest):
+    def refreshCollectionParams(self,selectedSampleRequest, validate_hdf5=True):
       reqObj = selectedSampleRequest["request_obj"]
       self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str(reqObj["protocol"])))
       protocol = str(reqObj["protocol"])
@@ -4987,8 +4987,15 @@ class ControlMain(QtWidgets.QMainWindow):
       if (str(reqObj["protocol"]) == "characterize" or str(reqObj["protocol"]) == "ednaCol" or str(reqObj["protocol"]) == "standard" or str(reqObj["protocol"]) == "vector"):
         if ("priority" in selectedSampleRequest):
           if (selectedSampleRequest["priority"] < 0 and self.staffScreenDialog.albulaDispCheckBox.isChecked()):
-            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)            
-            albulaUtils.albulaDispFile(firstFilename)            
+            firstFilename = daq_utils.create_filename(prefix_long,fnumstart)
+            if validate_hdf5:
+              if albulaUtils.validate_master_HDF5_file(firstFilename):            
+                albulaUtils.albulaDispFile(firstFilename)
+              else:
+                QtWidgets.QMessageBox.information(self, 
+                                                  'Error', 
+                                                  f'Master HDF5 file {firstFilename} could not be validated',
+                                                  QtWidgets.QMessageBox.Ok)
       self.rasterStepEdit.setText(str(reqObj["gridStep"]))
       if (reqObj["gridStep"] == self.rasterStepDefs["Coarse"]):
         self.rasterGrainCoarseRadio.setChecked(True)

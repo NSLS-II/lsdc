@@ -505,6 +505,7 @@ class StaffScreenDialog(QFrame):
         setBlConfig("queueCollect",0)
         self.gripperUnmountColdCheckBox.setEnabled(False)
         self.gripperUnmountColdCheckBox.setChecked(False)
+      self.parent.row_clicked(0) #This is so that appropriate boxes are filled when toggling queue collect
 
     def enableMountCheckCB(self,state):
       if state == QtCore.Qt.Checked:
@@ -4455,30 +4456,38 @@ class ControlMain(QtWidgets.QMainWindow):
         return
       self.progressDialog.setWindowTitle("Creating Requests")
       self.progressDialog.show()
-      for i in range(len(indexes)):
-        self.progressDialog.setValue(int((i+1)*progressInc))
-        item = self.dewarTree.model.itemFromIndex(indexes[i])
-        itemData = str(item.data(32))
-        itemDataType = str(item.data(33))        
-        if (itemDataType == "sample"): 
-          self.selectedSampleID = itemData
-          if (getBlConfig("queueCollect") == 0):
-            if (self.mountedPin_pv.get() != self.selectedSampleID):                    
-              self.selectedSampleID = self.mountedPin_pv.get()
+      if getBlConfig("queueCollect") == 1: # If queue collect is ON only consider samples and add a request to each
+        for i in range(len(indexes)):
+          self.progressDialog.setValue(int((i+1)*progressInc))
+          item = self.dewarTree.model.itemFromIndex(indexes[i])
+          itemData = str(item.data(32))
+          itemDataType = str(item.data(33))        
+          if (itemDataType == "sample"): 
+            self.selectedSampleID = itemData
 
-        try:
-          self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
-        except KeyError:
-          self.popupServerMessage("Please select a sample!")
-          self.progressDialog.close()
-          return
-        if (len(indexes)>1):
-          self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
-          self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
-          self.EScanDataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
-          self.EScanDataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
-        if (itemDataType != "container"):
-          self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
+          try:
+            self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+          except KeyError:
+            self.popupServerMessage("Please select a sample!")
+            self.progressDialog.close()
+            return
+          if (len(indexes)>1):
+            self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
+            self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
+            self.EScanDataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
+            self.EScanDataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
+          if (itemDataType != "container"):
+            self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
+      else: # If queue collect is off does not matter how many requests you select only one will be added to current pin
+        self.selectedSampleID = self.mountedPin_pv.get()
+        self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
+        self.dataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
+        self.dataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
+        self.EScanDataPathGB.setFilePrefix_ledit(str(self.selectedSampleRequest["request_obj"]["file_prefix"]))
+        self.EScanDataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
+        self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
+
+      
       self.progressDialog.close()
       self.treeChanged_pv.put(1)
 
@@ -5073,6 +5082,8 @@ class ControlMain(QtWidgets.QMainWindow):
         owner = sample["owner"]
         sample_name = db_lib.getSampleNamebyID(self.selectedSampleID)
         logger.info("sample in pos " + str(itemData))
+        if sample['uid'] != self.mountedPin_pv.get() and getBlConfig('queueCollect') == 0: # Don't fill data paths if an unmounted sample is clicked and queue collect is off
+          return
         if (self.osc_start_ledit.text() == ""):
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           self.refreshCollectionParams(self.selectedSampleRequest)
@@ -5110,6 +5121,8 @@ class ControlMain(QtWidgets.QMainWindow):
         reqID = self.selectedSampleRequest["uid"]
         self.selectedSampleID = self.selectedSampleRequest["sample"]        
         sample = db_lib.getSampleByID(self.selectedSampleID)
+        if sample['uid'] != self.mountedPin_pv.get() and getBlConfig('queueCollect') == 0: # Don't fill request data if unmounted sample and queuecollect is off
+          return
         owner = sample["owner"]
         if (reqObj["protocol"] == "eScan"):
           try:

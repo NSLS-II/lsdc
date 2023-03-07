@@ -510,15 +510,26 @@ def getQueue(beamlineName):
     for item in DewarItems:
       if (item != ""):
         items.append(item)
+    logger.debug(f"dewar items: {items}")
 
     sample_list = []
     contents = [getContainerByID(uid)['content'] for uid in items]
+    logger.debug(f"total contents: {contents}")
+    for samples in contents:
+        logger.debug(f"samples: {samples}")
+        for samp in samples:
+            logger.debug(f'{samp} {samp!=""}')
+            if (samp != ""):
+              sample_list.append(samp)
+
+    logger.debug(f"sample list: {sample_list}")
     for samp in contents:
         if (samp != ""):
           sample_list += samp
 
     for s in sample_list:
         reqs = getRequestsBySampleID(s, active_only=True)
+        logger.info(f"requests for sample {s}: {reqs}")
         for request in reqs:
             yield request
 

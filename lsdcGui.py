@@ -1345,16 +1345,16 @@ class DewarTree(QtWidgets.QTreeView):
       table_data = {}
       if 'request_obj' in data:
         req_data = data['request_obj']
-        table_data['Oscillation Start'] = req_data['sweep_start']
-        table_data['Oscillation Range'] = req_data['sweep_end'] - req_data['sweep_start']
-        table_data['Oscillation Width'] = req_data['img_width']
         table_data['Exposure Time'] = req_data['exposure_time']
+        table_data['Transmission'] = req_data['attenuation']
+        table_data['Oscillation Width'] = req_data['img_width']
+        table_data['Oscillation Range'] = req_data['sweep_end'] - req_data['sweep_start']
+        table_data['Oscillation Start'] = req_data['sweep_start']
         table_data['Detector Distance'] = req_data['detDist']
+        table_data['Resolution'] = req_data['resolution']
         table_data['Energy (eV)'] = req_data['energy']
         table_data['Wavelength'] = req_data['wavelength']
-        table_data['Resolution'] = req_data['resolution']
-        table_data['Transmission'] = req_data['attenuation']
-
+        
         text = "<table><tr><th>Parameter</th><th>Value</th></tr>"
         for key, value in table_data.items():
           text += f"<tr><td>{key}</td><td>{value}</td></tr>"

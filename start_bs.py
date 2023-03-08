@@ -189,8 +189,8 @@ elif beamline=="nyx":
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
-    from mxtools.raster_flyer import MXRasterFlyer
-    raster_flyer = MXRasterFlyer(vector, zebra, detector)
+    from nyxtools.nyx_raster_flyer import NYXRasterFlyer
+    raster_flyer = NYXRasterFlyer(vector, zebra, detector)
 
     from nyxtools.isara_robot import IsaraRobotDevice
     from denso_robot import OphydRobot

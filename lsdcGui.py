@@ -4666,6 +4666,13 @@ class ControlMain(QtWidgets.QMainWindow):
             mcaRoiLo = self.XRFInfoDict[symbol]-25
             mcaRoiHi = self.XRFInfoDict[symbol]+25
           targetEnergy = Elements.Element[symbol]["binding"][targetEdge]
+          currentEnergy = float(self.energy_ledit.text())
+          energyDiff = abs(currentEnergy - targetEnergy * 1000)  # targetEnergy is in keV, LSDC energy is in eV
+          if energyDiff >= 20:
+              message = f"Please choose an element with an edge closer to {currentEnergy}. The energy difference to {symbol} is {energyDiff:.1f}"
+              logger.error(message)
+              self.popupServerMessage(f'{message}')
+              return
           colRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
           sampleName = str(db_lib.getSampleNamebyID(colRequest["sample"]))
           runNum = db_lib.incrementSampleRequestCount(colRequest["sample"])

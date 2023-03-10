@@ -43,7 +43,7 @@ def start():
 
 @healthcheck(
     name='import daq_utils',
-    remediation='Error importing daq_lib',
+    remediation='', # Dynamic remediation defined in function
     fatal=True
 )
 def check_daq_utils():
@@ -56,7 +56,7 @@ def check_daq_utils():
 
 @healthcheck(
     name='working directory',
-    remediation='Please start LSDC from a data directory, not home directory',
+    remediation='', # Dynamic remediation defined in function
     fatal=True
 )
 def check_working_directory():

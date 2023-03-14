@@ -1153,6 +1153,13 @@ class DewarTree(QtWidgets.QTreeView):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openMenu)
         self.setStyleSheet("QTreeView::item:hover{background-color: #999966;}")
+        self.setMouseTracking(True)
+        self.entered.connect(self.handleItemEntered)
+
+    def handleItemEntered(self, index):
+      if index.isValid():
+        if index.data(33) == 'request':
+          QToolTip.showText(QCursor.pos(), index.data(34), self.viewport(), self.visualRect(index))
 
     def openMenu(self, position):
       indexes = self.selectedIndexes()
@@ -1277,7 +1284,8 @@ class DewarTree(QtWidgets.QTreeView):
                     continue
                   col_item = QtGui.QStandardItem(QtGui.QIcon(":/trolltech/styles/commonstyle/images/file-16.png"), QString(sampleRequestList[k]["request_obj"]["file_prefix"]+"_"+sampleRequestList[k]["request_obj"]["protocol"]))
                   col_item.setData(sampleRequestList[k]["uid"],32)
-                  col_item.setData("request",33)                  
+                  col_item.setData("request",33)
+                  col_item.setData(self.fillTooltip(sampleRequestList[k]), 34)               
                   col_item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsEditable | Qt.ItemIsSelectable)
                   if (sampleRequestList[k]["priority"] == 99999):
                     col_item.setCheckState(Qt.Checked)
@@ -1295,7 +1303,6 @@ class DewarTree(QtWidgets.QTreeView):
                   else:
                     col_item.setCheckState(Qt.Unchecked)
                     col_item.setBackground(QtGui.QColor('white'))
-                  col_item.setToolTip(self.fillTooltip(sampleRequestList[k]))
                   item.appendRow(col_item)
                   if (sampleRequestList[k]["uid"] == self.parent.SelectedItemData): #looking for the selected item, this is a request
                     selectedIndex = self.model.indexFromItem(col_item)

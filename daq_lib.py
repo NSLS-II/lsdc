@@ -623,8 +623,8 @@ def collectData(currentRequest):
     if daq_utils.beamline != "nyx":
       seqNum = flyer.detector.cam.sequence_id.get()
       comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-      logger.info(comm_s)
-      os.system(comm_s)   
+      logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
+      #os.system(comm_s)    
       filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
       logger.info(f"Checking integrity of {filename}")
       timeout_index = 0

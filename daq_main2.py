@@ -12,6 +12,14 @@ from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
 from gov_lib import setGovRobot
+from start_bs import robot
+from embl_robot import EMBLRobot
+if isinstance(robot, EMBLRobot):
+    print("loading RobotControlLib")
+    import RobotControlLib
+else:
+    print("not importing RobotControlLib")
+
 
 import logging
 from logging import handlers

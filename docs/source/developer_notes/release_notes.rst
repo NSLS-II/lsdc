@@ -2,6 +2,29 @@
  Release History
 =================
 
+2.0.1 (2023-04-xx, a.k.a. 2023-2)
+=================================
+
+Fixes and other changes
+-----------------------
+* AMX/FMX branch (master)
+  (Shekar's initial work)
+* AMX/FMX branch (one-branch)
+
+  * Routine use on both AMX and FMX!
+  * Make fastDP logging identifiable
+  * GUI change to level 2 upon sample mount
+  * Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
+  * GUI checks including correct beamline
+  * FMX: start fastDP/Dimple result gathering script
+  * Protocol harmonization and fixing after using LSDC2 (Jira)
+    * Add transmission and oscillation range for multiCol
+    * Add rastering selector for multiCol
+  * Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
+  * Ensure RobotControlLib is available in LSDC server and remote
+  * Fixed automated collection
+
+
 2.0.0 (2023-01-18, a.k.a. 2023-1)
 =================================
 

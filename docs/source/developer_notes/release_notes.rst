@@ -2,7 +2,7 @@
  Release History
 =================
 
-2.0.1 (2023-03-16, a.k.a. 2023-1)
+2.0.1 (2023-04-xx, a.k.a. 2023-2)
 =================================
 * AMX/FMX branch (master)
 
@@ -11,7 +11,25 @@
   * Raster is always drawn and can be explored regardless of gonio movement
   * Added validation of detector HDF5 files
   * Use alternate method to access images through Albula
-  * Specraster and screen protocols removed 
+  * GUI startup checks including correct beamline
+
+* AMX/FMX branch (one-branch)
+
+  * Standard collection fixed - standard, vector, raster are all Bluesky now
+
+    * Routine use on both AMX and FMX
+  * Make individual fastDP runs more identifiable
+  * FMX: start fastDP/Dimple result gathering script
+  * Protocol harmonization and fixing after the 3 standard protocols have been moved to Bluesky
+
+    * Fixed automated collection
+    * Specraster and screen protocols removed
+    * MultiCol
+    
+      * Add transmission and oscillation range entry boxes
+      * Enable ability to select raster region
+  * Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
+  * Ensure RobotControlLib is available in LSDC server and remote
 
 2.0.0 (2023-01-18, a.k.a. 2023-1)
 =================================

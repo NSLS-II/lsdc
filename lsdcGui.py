@@ -3443,7 +3443,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def totalExpChanged(self,text):
       if (text == "oscEnd" and daq_utils.beamline == "fmx"):
-        self.sampleLifetimeReadback_ledit.setStyleSheet("color : red");        
+        self.sampleLifetimeReadback_ledit.setStyleSheet("color : gray");        
       try:
         if (float(str(self.osc_range_ledit.text())) == 0):
           if (text == "oscRange"):

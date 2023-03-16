@@ -1993,7 +1993,6 @@ class ControlMain(QtWidgets.QMainWindow):
           self.osc_end_ledit.editingFinished.connect(self.calcLifetimeCB)
           self.osc_range_ledit.editingFinished.connect(self.calcLifetimeCB)
           self.exp_time_ledit.editingFinished.connect(self.calcLifetimeCB)
-          self.trans_ledit.editingFinished.connect(self.calcLifetimeCB)
           self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
           self.calcLifetimeCB()
         hBoxColParams25.addWidget(totalExptimeLabel)
@@ -2025,7 +2024,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
         self.setGuiValues({'transmission':getBlConfig("stdTrans")})
-        self.transmission_ledit.returnPressed.connect(self.setTransCB)        
+        self.transmission_ledit.returnPressed.connect(self.setTransCB)
+        if daq_utils.beamline == 'fmx':
+          self.transmission_ledit.editingFinished.connect(self.calcLifetimeCB)      
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")        
@@ -3734,9 +3735,14 @@ class ControlMain(QtWidgets.QMainWindow):
       if (not os.path.exists("2vb1.pdb")):
         os.system("cp -a $CONFIGDIR/2vb1.pdb .")
         os.system("mkdir rd3d")
-      
+            
       energyReadback = self.energy_pv.get()/1000.0
       sampleFlux = self.sampleFluxPV.get()
+      if hasattr(self, 'transmission_ledit') and hasattr(self, 'transmissionReadback_ledit'):
+        try:
+          sampleFlux = (sampleFlux*float(self.transmission_ledit.text()))/float(self.transmissionReadback_ledit.text())
+        except Exception as e:
+          logger.info(f'Exception while calculating sample flux {e}')
       logger.info("sample flux = " + str(sampleFlux))      
       try:
         vecLen_s = self.vecLenLabelOutput.text()

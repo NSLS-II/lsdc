@@ -2,6 +2,17 @@
  Release History
 =================
 
+2.0.1 (2023-03-16, a.k.a. 2023-1)
+=================================
+* AMX/FMX branch (master)
+
+  * Sample cam switches to zoom level 2 when sample is mounted
+  * When raster is selected, gonio will only move if user has control, governor is in SA and related sample is mounted
+  * Raster is always drawn and can be explored regardless of gonio movement
+  * Added validation of detector HDF5 files
+  * Use alternate method to access images through Albula
+  * Specraster and screen protocols removed 
+
 2.0.0 (2023-01-18, a.k.a. 2023-1)
 =================================
 

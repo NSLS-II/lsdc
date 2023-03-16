@@ -161,13 +161,14 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
 
 import epics
 
-def fmx_expTime_to_10MGy(beamsizeV = 1.0, beamsizeH = 2.0,
-                         vectorL = 0,
-                         energy = 12.66,
-                         flux = -1,
-                         wedge = 180,
-                         verbose = False
-                        ):
+def fmx_expTime(avg_dwd = 10, #Default of 10MGy 
+                beamsizeV = 1.0, beamsizeH = 2.0,
+                vectorL = 0,
+                energy = 12.66,
+                flux = -1,
+                wedge = 180,
+                verbose = False
+                ):
     """
     RD3D output = AWD [MGy]
     
@@ -267,10 +268,10 @@ def fmx_expTime_to_10MGy(beamsizeV = 1.0, beamsizeH = 2.0,
                          verbose=verbose
                         )
     
-    logger.info("\n=== fmx_expTime_to_10MGy summary ===")
+    logger.info("\n=== fmx_expTime summary ===")
     dose1s = rd3d_out['DWD'].item()  # .item() to convert 1d array to scalar
     logger.info('Average Diffraction Weighted Dose for 1s exposure = {:f} MGy'.format(dose1s))
-    expTime10MGy = 10 / dose1s  # Experiment time to reach an average DWD of 10 MGy
+    expTime10MGy = avg_dwd / dose1s  # Experiment time to reach an average DWD of 10 MGy
     logger.info('Experiment time to reach an average diffraction weighted dose of 10 MGy = {:f} s'.format(expTime10MGy))
     
     return expTime10MGy

@@ -1989,6 +1989,11 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
           calcLifetimeButton = QtWidgets.QPushButton("Calc. Lifetime")
           calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
+          self.osc_start_ledit.editingFinished.connect(self.calcLifetimeCB)
+          self.osc_end_ledit.editingFinished.connect(self.calcLifetimeCB)
+          self.osc_range_ledit.editingFinished.connect(self.calcLifetimeCB)
+          self.exp_time_ledit.editingFinished.connect(self.calcLifetimeCB)
+          self.trans_ledit.editingFinished.connect(self.calcLifetimeCB)
           self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
           self.calcLifetimeCB()
         hBoxColParams25.addWidget(totalExptimeLabel)
@@ -3743,7 +3748,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vecLen = 0
       wedge = float(self.osc_end_ledit.text())
       try:
-        lifeTime = raddoseLib.fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)          
+        lifeTime = raddoseLib.fmx_expTime(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)          
         lifeTime_s = "%.2f" % (lifeTime)
       except:
         lifeTime_s = "0.00"

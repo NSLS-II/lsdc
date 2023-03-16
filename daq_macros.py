@@ -3594,7 +3594,7 @@ def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy
   if (not os.path.exists("2vb1.pdb")):
     os.system("ln -s $CONFIGDIR/2vb1.pdb .")
     os.system("mkdir rd3d")
-  raddoseLib.fmx_expTime_to_10MGy(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
+  raddoseLib.fmx_expTime(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
 #  why doesn't this work? raddoseLib.fmx_expTime_to_10MGy(beamsizeV, beamsizeH, vectorL, energy, wedge, flux, verbose)
 
 def unlockGUI():

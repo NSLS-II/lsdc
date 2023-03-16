@@ -2892,7 +2892,9 @@ def setAttens(transmission): #where transmission = 0.0-1.0
     setPvDesc(pvKeyName,1)
     logger.info(pvKeyName)
 
-def importSpreadsheet(fname, owner=daq_utils.owner):
+def importSpreadsheet(fname, owner=None):
+  if owner is None:
+    owner = daq_utils.owner
   parseSheet.importSpreadsheet(fname, owner)
 
 

@@ -8,7 +8,14 @@
 Fixes and other changes
 -----------------------
 * AMX/FMX branch (master)
-  (Shekar's initial work)
+
+  * GUI - beamline and directory check
+  * Camera change to zoom level 2 on sample mount
+  * GUI - validate HDF5 files
+  * GUI - change albula image change method that improves stability
+  * GUI - gonio moves only under certain circumstances
+  * Docs - collection priority notes
+
 * AMX/FMX branch (one-branch)
 
   * Routine use on both AMX and FMX!

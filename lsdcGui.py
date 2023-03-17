@@ -3448,6 +3448,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.processingOptionsFrame.show()        
       elif (protocol == "multiCol" or protocol == "multiColQ"):
         self.rasterParamsFrame.show()
+        self.osc_start_ledit.setEnabled(False)
+        self.osc_end_ledit.setEnabled(False)
         self.multiColParamsFrame.show()
       elif (protocol == "vector" or protocol == "stepVector"):
         self.vectorParamsFrame.show()

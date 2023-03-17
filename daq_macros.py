@@ -2859,11 +2859,6 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   dna_image_info = {}
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
     logger.info("skinner prefix7 = " + prefix[0:7] +  " " + str(start_image_number) + "\n")
-    if (len(prefix)> 8):
-      if ((prefix[0:7] == "postref") and (start_image_number == 1)):
-        logger.info("skinner postref bail\n")
-        time.sleep(float(dna_number_of_images*float(dna_exptime)))        
-        break
   #skinner roi - maybe I can measure and use that for dna_start so that first image is face on.
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix

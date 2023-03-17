@@ -2851,7 +2851,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   else: #default Pilatus
     det_radius = 212.0
   theta_radians = 0.0
-  wave = 12398.5/beamline_lib.get_mono_energy() #for now
+  wave = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
   dx = det_radius/(math.tan(2.0*(math.asin(wave/(2.0*dna_res)))-theta_radians))
   logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now

@@ -1494,7 +1494,7 @@ class DewarTree(QtWidgets.QTreeView):
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.selectedSampleID = selectedSampleRequest["sample"]
           db_lib.deleteRequest(selectedSampleRequest["uid"])
-          if (selectedSampleRequest["request_obj"]["protocol"] == "raster" or selectedSampleRequest["request_obj"]["protocol"] == "stepRaster"):
+          if (selectedSampleRequest["request_obj"]["protocol"] in ("raster", "stepRaster", "multiCol")):
             for i in range(len(self.parent.rasterList)):
               if (self.parent.rasterList[i] != None):
                 if (self.parent.rasterList[i]["uid"] == selectedSampleRequest["uid"]):

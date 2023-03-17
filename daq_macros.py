@@ -2838,7 +2838,6 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   collect_and_characterize_success = 0
   dna_have_strategy_results = 0
   dna_have_index_results = 0  
-  dg2rd = 3.14159265 / 180.0  
   if (daq_utils.detector_id == "ADSC-Q315"):
     det_radius = 157.5
   elif (daq_utils.detector_id == "ADSC-Q210"):

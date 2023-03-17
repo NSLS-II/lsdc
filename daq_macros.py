@@ -2845,6 +2845,10 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     det_radius = 105.0
   elif (daq_utils.detector_id == "PILATUS-6"):
     det_radius = 212.0
+  elif daq_utils.detector_id == "EIGER-16" and daq_utils.beamline in ("amx", "nyx"):
+    det_radius = 233.1  # Eiger2-9M
+  elif daq_utils.detector_id == "EIGER-16":  # FMX
+    det_radius = 311.1  # Eiger2-16M
   else: #default Pilatus
     det_radius = 212.0
   theta_radians = 0.0

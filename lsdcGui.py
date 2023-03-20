@@ -3628,7 +3628,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.timerSample.start(SAMPLE_TIMER_DELAY)
       if (fname != ""):
         logger.info(fname)
-        comm_s = "importSpreadsheet(\""+str(fname[0])+"\")"
+        comm_s = f"importSpreadsheet(\"{fname[0]}\", \"{daq_utils.owner}\")"
         logger.info(comm_s)
         self.send_to_server(comm_s)
         

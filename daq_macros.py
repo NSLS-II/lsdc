@@ -2876,7 +2876,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     
     dna_filename_list.append(filename) #TODO actually contains directory structure for cbf, but filename of h5
     picture_taken = 1
-  edna_energy_ev = beamline_lib.motorPosFromDescriptor("energy", digits=6) * 1000.0
+  edna_energy_ev = beamline_lib.motorPosFromDescriptor("energy") * 1000.0
   if (daq_utils.beamline == "fmx"):   # a kludge b/c edna wants a square beam, so where making a 4x4 micron beam be the sqrt(1*1.5) for x and y on fmx
     xbeam_size = .004
     ybeam_size = .004

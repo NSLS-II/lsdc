@@ -236,9 +236,11 @@ class StaffScreenDialog(QFrame):
         if (getBlConfig("queueCollect") == 1):
           self.queueCollectOnCheckBox.setChecked(True)
           self.gripperUnmountColdCheckBox.setEnabled(True)
+          self.parent.queue_collect_status_widget.setText('Queue Collect: ON')
         else:
           self.queueCollectOnCheckBox.setChecked(False)            
           self.gripperUnmountColdCheckBox.setEnabled(False)
+          self.parent.queue_collect_status_widget.setText('Queue Collect: OFF')
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        
@@ -501,10 +503,12 @@ class StaffScreenDialog(QFrame):
       if state == QtCore.Qt.Checked:
         setBlConfig("queueCollect",1)
         self.gripperUnmountColdCheckBox.setEnabled(True)
+        self.parent.queue_collect_status_widget.setText('Queue Collect: ON')
       else:
         setBlConfig("queueCollect",0)
         self.gripperUnmountColdCheckBox.setEnabled(False)
         self.gripperUnmountColdCheckBox.setChecked(False)
+        self.parent.queue_collect_status_widget.setText('Queue Collect: OFF')
       self.parent.row_clicked(0) #This is so that appropriate boxes are filled when toggling queue collect
 
     def enableMountCheckCB(self,state):
@@ -4457,6 +4461,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.progressDialog.setWindowTitle("Creating Requests")
       self.progressDialog.show()
       if getBlConfig("queueCollect") == 1: # If queue collect is ON only consider samples and add a request to each
+        requestAdded = False
         for i in range(len(indexes)):
           self.progressDialog.setValue(int((i+1)*progressInc))
           item = self.dewarTree.model.itemFromIndex(indexes[i])
@@ -4464,6 +4469,8 @@ class ControlMain(QtWidgets.QMainWindow):
           itemDataType = str(item.data(33))        
           if (itemDataType == "sample"): 
             self.selectedSampleID = itemData
+          else:
+            continue
 
           try:
             self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
@@ -4478,6 +4485,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.EScanDataPathGB.setDataPath_ledit(str(self.selectedSampleRequest["request_obj"]["directory"]))
           if (itemDataType != "container"):
             self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
+            requestAdded = True
+
+        if not requestAdded:
+          self.popupServerMessage('Request(s) not added because no sample was selected and queue collect is on. Please select sample(s) you wish to add the request to')
       else: # If queue collect is off does not matter how many requests you select only one will be added to current pin
         self.selectedSampleID = self.mountedPin_pv.get()
         self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID)
@@ -5315,6 +5326,8 @@ class ControlMain(QtWidgets.QMainWindow):
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.closeAll)
         self.statusBar()
+        self.queue_collect_status_widget = QLabel('Queue Collect: ON')
+        self.statusBar().addPermanentWidget(self.queue_collect_status_widget)
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
         fileMenu.addAction(importAction)

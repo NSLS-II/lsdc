@@ -38,7 +38,7 @@ from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
-from threads import VideoThread
+from threads import VideoThread, RaddoseWorker
 import socket
 from utils.healthcheck import perform_checks
 
@@ -1989,10 +1989,6 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
           calcLifetimeButton = QtWidgets.QPushButton("Calc. Lifetime")
           calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
-          self.osc_start_ledit.editingFinished.connect(self.calcLifetimeCB)
-          self.osc_end_ledit.editingFinished.connect(self.calcLifetimeCB)
-          self.osc_range_ledit.editingFinished.connect(self.calcLifetimeCB)
-          self.exp_time_ledit.editingFinished.connect(self.calcLifetimeCB)
           self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
           self.calcLifetimeCB()
         hBoxColParams25.addWidget(totalExptimeLabel)
@@ -3754,13 +3750,23 @@ class ControlMain(QtWidgets.QMainWindow):
         vecLen = 0
       wedge = float(self.osc_end_ledit.text())
       try:
-        lifeTime = raddoseLib.fmx_expTime(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)          
-        lifeTime_s = "%.2f" % (lifeTime)
+        #lifeTime = raddoseLib.fmx_expTime(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)          
+        #lifeTime_s = "%.2f" % (lifeTime)
+        raddoseThread = QThread()
+        raddoseThread.start()
+
+        raddoseWorker = RaddoseWorker(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)
+        raddoseWorker.lifetime.connect(self.setLifetimeCB)
+        raddoseWorker.moveToThread(raddoseThread)
+        raddoseWorker.start.emit('start')
+        
       except:
         lifeTime_s = "0.00"
-      self.sampleLifetimeReadback_ledit.setText(lifeTime_s)
-      self.sampleLifetimeReadback_ledit.setStyleSheet("color : green");
       
+
+    def setLifetimeCB(self, lifetime):
+      self.sampleLifetimeReadback_ledit.setText(f"{lifetime}:.2f")
+      self.sampleLifetimeReadback_ledit.setStyleSheet("color : green")
 
     def setTransCB(self):
       if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):

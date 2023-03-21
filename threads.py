@@ -1,10 +1,11 @@
-from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt
+from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt, QObject
 from qtpy import QtGui
 from PIL import Image, ImageQt
 import urllib
 from io import BytesIO
 import logging
-        
+import raddoseLib
+
 logger = logging.getLogger()
 
 
@@ -61,3 +62,18 @@ class VideoThread(QThread):
         while True:
             self.camera_refresh()
             self.msleep(self.delay)
+
+
+class RaddoseWorker(QObject):
+    start = Signal(str)
+    lifetime = Signal(float)
+    def __init__(self, *args, **kwargs):
+        super(RaddoseWorker, self).__init__()
+        self.args = args
+        self.kwargs = kwargs
+        self.start.connect(self.run)
+
+    def run(self, arg):
+        lifetime = raddoseLib.fmx_expTime(*self.args, **self.kwargs)
+        self.lifetime.emit(lifetime)
+        

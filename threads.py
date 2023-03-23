@@ -64,16 +64,27 @@ class VideoThread(QThread):
             self.msleep(self.delay)
 
 
-class RaddoseWorker(QObject):
-    start = Signal(str)
+class RaddoseThread(QThread):
     lifetime = Signal(float)
-    def __init__(self, *args, **kwargs):
-        super(RaddoseWorker, self).__init__()
-        self.args = args
-        self.kwargs = kwargs
-        self.start.connect(self.run)
+    def __init__(self, *args, avg_dwd = 10, #Default of 10MGy 
+                beamsizeV = 1.0, beamsizeH = 2.0,
+                vectorL = 0.0,
+                energy = 12.66,
+                flux = -1.0,
+                wedge = 180.0,
+                verbose = False, **kwargs):
+        self.avg_dwd = avg_dwd
+        self.beamsizeV = beamsizeV
+        self.beamsizeH = beamsizeH
+        self.vectorL = vectorL
+        self.energy = energy
+        self.flux = flux
+        self.wedge = wedge
+        self.verbose = verbose
+        QThread.__init__(self, *args, **kwargs)
 
-    def run(self, arg):
-        lifetime = raddoseLib.fmx_expTime(*self.args, **self.kwargs)
-        self.lifetime.emit(lifetime)
-        
+    def run(self):
+        lifetime_value = raddoseLib.fmx_expTime(self.avg_dwd, self.beamsizeV, self.beamsizeH, self.vectorL, self.energy, self.flux, self.wedge, self.verbose)
+        self.lifetime.emit(lifetime_value)
+
+

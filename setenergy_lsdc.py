@@ -686,7 +686,7 @@ def setELsdc(energy,
             print('Experiment hutch shutter closed. Has to be open for this to work. Exiting')
             return -1
         desired_state  = "SA"
-        if not gov_robot.status.get() == (desired_state):
+        if not gov_robot.state.get() == (desired_state):
             print(f'Not in Governor state {desired_state}, exiting')
             return -1
         
@@ -856,7 +856,7 @@ def beam_center_align(transSet='All'):
             return -1
        
     desired_state = "SA"
-    if not gov_robot.status.get() == desired_state:
+    if not gov_robot.state.get() == desired_state:
         print(f'Not in Governor state {desired_state}, exiting.')
         return -1
     

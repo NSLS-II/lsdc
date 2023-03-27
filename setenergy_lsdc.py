@@ -269,33 +269,6 @@ def blStrGet():
     return blStr
 
 
-
-
-
-# Governor ===============================================================================
-
-def govMsgGet(configStr = 'Robot'):
-    """
-    Returns Governor message
-
-    configStr: Governor configuration, 'Robot' or 'Human', default: 'Robot'
-    
-    Examples:
-    govMsgGet()
-    govMsgGet(configStr = 'Human')
-    """
-    blStr = blStrGet()
-    if blStr == -1: return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
-    devStr = '{Gov:' + configStr + '}'
-    stsStr = 'Sts:Msg-Sts'
-    pvStr = sysStr + devStr + stsStr
-    govMsg = epics.caget(pvStr)
-    
-    return govMsg
-
-
 # Plans to set beamline energy =======================================================================
 
 ## Helper functions for set_energy and alignment

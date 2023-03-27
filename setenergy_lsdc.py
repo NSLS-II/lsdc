@@ -15,7 +15,8 @@ import numpy as np
 import pandas as pd
 import socket
 import time
-from start_bs import db
+import gov_lib
+from start_bs import db, gov_robot
 
 # Machine ==========================================================
 
@@ -321,92 +322,6 @@ def govStatusGet(stateStr, configStr = 'Robot'):
     govStatus = epics.caget(pvStr)
     
     return govStatus
-
-
-def govStateSet(stateStr, configStr = 'Robot'):
-    """
-    Sets Governor state
-
-    configStr: Governor configuration, 'Robot', 'Human', 'Chip_Scanner' or 'Hepath'. default: 'Robot'
-    stateStr: Governor short version state. Example: 'SA' for sample alignment
-              one of ['M','SE','SA','DA','XF','BL','BS','AB','CB','DI','CE','CA','CD']
-
-    Examples:
-    govStateSet('SA')
-    govStateSet('AB', configStr = 'Human')
-    """
-    blStr = blStrGet()
-    if blStr == -1: return -1
-
-    if stateStr not in ['M','SE','SA','DA','XF','BL','BS','AB','CB','DI','CE','CA','CD']:
-        print('stateStr must be one of: M,SE,SA,DA,XF,BL,BS,AB,CB,DI,CE,CA,CD]')
-        return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
-    devStr = '{Gov:' + configStr + '}'
-    cmdStr = 'Cmd:Go-Cmd'
-    pvStr = sysStr + devStr + cmdStr
-    epics.caput(pvStr, stateStr)
-    
-    while not govStatusGet(stateStr, configStr = configStr):
-        print(govMsgGet(configStr = configStr))
-        time.sleep(2)
-    print(govMsgGet(configStr = configStr))
-    
-    return
-
-
-def govPositionSet(position, positionerStr, positionTypeStr, configStr = 'Robot'):
-    """
-    Sets the Governor position for a positioner
-    
-    position: position value [motor units]
-    positionerStr: Governor short version of positioner. Example: 'gy' for Gonio Y
-    positionTypeStr: Type of position. Examples: 'Mount', 'Work', 'Park'
-    configStr: Governor configuration, 'Robot' or 'Human', default: 'Robot'
-    
-    Example PV: XF:17IDC-ES:FMX{Gov:Robot-Dev:gy}Pos:Work-Pos
-    
-    Examples:
-    govPositionSet(12913, 'gy', 'Work')
-    govPositionSet(12913, 'gy', 'Work', configStr = 'Human')
-    """
-    blStr = blStrGet()
-    if blStr == -1: return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
-    devStr = '{Gov:' + configStr + '-Dev:' + positionerStr + '}'
-    posStr = 'Pos:' + positionTypeStr + '-Pos'
-    pvStr = sysStr + devStr + posStr
-    epics.caput(pvStr, position)
-    
-    return
-
-
-def govPositionGet(positionerStr, positionTypeStr, configStr = 'Robot'):
-    """
-    Returns the current Governor position for a positioner
-    
-    position: position value [motor units]
-    positionerStr: Governor short version of positioner. Example: 'gy' for Gonio Y
-    positionTypeStr: Type of position. Examples: 'Mount', 'Work', 'Park'
-    configStr: Governor configuration, 'Robot' or 'Human', default: 'Robot'
-    
-    Example PV: XF:17IDC-ES:FMX{Gov:Robot-Dev:gy}Pos:Work-Pos
-    
-    Example: govPositionGet('gy', 'Work')
-    Example: govPositionGet('gy', 'Mount', configStr = 'Human')
-    """
-    blStr = blStrGet()
-    if blStr == -1: return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
-    devStr = '{Gov:' + configStr + '-Dev:' + positionerStr + '}'
-    posStr = 'Pos:' + positionTypeStr + '-Pos'
-    pvStr = sysStr + devStr + posStr
-    position = epics.caget(pvStr)
-    
-    return position
 
 
 # Plans to set beamline energy =======================================================================
@@ -1009,7 +924,7 @@ def beam_center_align(transSet='All'):
     detectorCoverClose()
     
     # Transition to Governor state AB (Auto-align Beam)
-    govStateSet('AB')
+    gov_lib.setGovRobot(gov_robot, 'AB')
     
     # Set beam transmission that avoids scintillator saturation
     # Default values are defined in settings as lookup table
@@ -1030,7 +945,7 @@ def beam_center_align(transSet='All'):
             yield from trans_set(transDefault, trans=trans_bcu)
             
     # Retract backlight
-    yield from bps.mv(light.y,govPositionGet('li', 'Out'))
+    yield from bps.mv(light.y,govs.gov.Robot.dev.li.target_Out.get())
     print('Light Y Out')
     
     # TODO: use "yield from bps.mv(...)" instead of .put(...) below.
@@ -1118,17 +1033,17 @@ def beam_center_align(transSet='All'):
         
         # Adjust Gonio Y so rotation axis is again aligned to beam
         gonioYDiff = beamHiMagDiffY * hiMagCal
-        posGyOld = govPositionGet('gy', 'Work')
+        posGyOld = govs.gov.Robot.dev.gy.target_Work.get()
         posGyNew = posGyOld + gonioYDiff
         yield from bps.mv(gonio.gy, posGyNew)   # Move Gonio Y to new position
-        govPositionSet(posGyNew, 'gy', 'Work')  # Set Governor Gonio Y Work position to new value
+        govs.gov.Robot.dev.gy.target_Work.set(posGyNew) # Set Governor Gonio Y Work position to new value
         print('Gonio Y difference = %.3f' % gonioYDiff)
             
     yield from bps.mv(shutter_bcu.close, 1)
     print('BCU Shutter Closed')
     
     # Transition to Governor state SA (Sample Alignment)
-    govStateSet('SA')
+    gov_lib.setGovRobot(gov_robot, 'SA')
     
     # Set previous beam transmission
     if transSet != 'None':

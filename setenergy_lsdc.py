@@ -1,13 +1,3 @@
-# From 01-bluesky.py
-import nslsii
-BEAMLINE_ID = 'fmx'
-nslsii.configure_base(get_ipython().user_ns, BEAMLINE_ID, pbar=False,
-                      publish_documents_with_kafka=True) # Progress bar for scans
-
-# Disable plots via BestEffortCallback:
-bec.disable_plots()
-# ---
-
 from ophyd import (SingleTrigger, ProsilicaDetector,
                    ImagePlugin, TIFFPlugin, StatsPlugin, ROIPlugin, DetectorBase, HDF5Plugin,
                    TransformPlugin, ProcessPlugin, AreaDetector)

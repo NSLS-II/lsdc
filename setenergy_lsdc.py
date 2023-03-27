@@ -16,7 +16,7 @@ import pandas as pd
 import socket
 import time
 import gov_lib
-from start_bs import db, gov_robot
+from start_bs import db, gov_robot, govs
 
 # Machine ==========================================================
 

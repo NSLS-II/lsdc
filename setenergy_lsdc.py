@@ -610,13 +610,8 @@ def dcm_rock(dcm_p_range=0.03, dcm_p_points=51, logging=True, altDetector=False)
         *lut(rock_mot)    # Set Pitch interpolated position
     )
 
-    # Setup plots
-    fig, ax1 = plt.subplots()
-    ax1.grid(True)
-    # fig.tight_layout()
-    
     # Decorate find_peaks to play along with our plot and plot the peak location
-    def find_peak_inner(detector, motor, start, stop, num, ax):
+    def find_peak_inner(detector, motor, start, stop, num):
         if detector == bpm1:
             det_name = detector.name+'_sum_all'
         else:
@@ -624,15 +619,13 @@ def dcm_rock(dcm_p_range=0.03, dcm_p_points=51, logging=True, altDetector=False)
         mot_name = motor.name+'_user_setpoint'
         
         # 2DO: Comment out when used within LSDC
-        @bpp.subs_decorator(LivePlot(det_name, mot_name, ax=ax))
         def inner():
             peak_x, peak_y = yield from find_peak(detector, motor, start, stop, num)
-            ax.plot([peak_x], [peak_y], 'or')
             return peak_x, peak_y
         return inner()
 
     # Scan DCM Pitch
-    peak_x, peak_y = yield from find_peak_inner(rock_det, rock_mot, -dcm_p_range, dcm_p_range, dcm_p_points, ax1)
+    peak_x, peak_y = yield from find_peak_inner(rock_det, rock_mot, -dcm_p_range, dcm_p_range, dcm_p_points)
     yield from bps.mv(rock_mot, peak_x)
     
     # (FMX specific)
@@ -645,7 +638,6 @@ def dcm_rock(dcm_p_range=0.03, dcm_p_points=51, logging=True, altDetector=False)
             time.sleep(2.0)  # Range switching is slow
             print('Keithley current = {:.4g} A'.format(keithley.get()))
         
-    plt.close(fig)
     
 
     
@@ -689,13 +681,8 @@ def ivu_gap_scan(start, end, steps, detector=bpm1, goToPeak=True):
     
     LUT_offset = [epics.caget(LUT_fmt.format('ivu_gap_off', axis)) for axis in 'XY']
     
-    # Setup plots
-    ax = plt.subplot(111)
-    ax.grid(True)
-    plt.tight_layout()
-
     # Decorate find_peaks to play along with our plot and plot the peak location
-    def find_peak_inner(detector, motor, start, stop, num, ax):
+    def find_peak_inner(detector, motor, start, stop, num):
         det_name = detector.name+'_sum_all'
         mot_name = motor.gap.name+'_user_setpoint' if motor is ivu_gap else motor.name+'_user_setpoint'
 
@@ -711,10 +698,8 @@ def ivu_gap_scan(start, end, steps, detector=bpm1, goToPeak=True):
                 stop -= 5*step_size
 
         # 2DO: Comment out when used within LSDC
-        @bpp.subs_decorator(LivePlot(det_name, mot_name, ax=ax))
         def inner():
             peak_x, peak_y = yield from find_peak(detector, motor, start, stop, num)
-            ax.plot([peak_x], [peak_y], 'or')
             return peak_x, peak_y
         return inner()
     
@@ -725,7 +710,7 @@ def ivu_gap_scan(start, end, steps, detector=bpm1, goToPeak=True):
     yield from bps.mv(motor, start)
     
     # Scan IVU Gap
-    peak_x, peak_y = yield from find_peak_inner(detector, ivu_gap, 0, (end-start), steps, ax)
+    peak_x, peak_y = yield from find_peak_inner(detector, ivu_gap, 0, (end-start), steps)
     
     # Go to peak
     if goToPeak==True:
@@ -736,8 +721,6 @@ def ivu_gap_scan(start, end, steps, detector=bpm1, goToPeak=True):
         yield from bps.mv(ivu_gap, gapPreStart)
         print('Gap set to pre-scan value: %.1f' % gapPreStart + ' um')
     
-    plt.close()
-
     
 def setELsdc(energy,
              dcm_p_range=0.03, dcm_p_points=51, altDetector=False,

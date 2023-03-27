@@ -636,7 +636,12 @@ def setELsdc(energy,
     RE(setE(9000, beamCenterAlign=False))
     RE(setE(12660, beamCenterAlign=False, slit1Set=False))
     """
-    
+
+    desired_states  = ("SA", "AB")
+    if not gov_robot.state.get() in desired_states:
+        print(f'Governor state not in one of {desired_states}, exiting')
+        return -1
+
     # Store initial Slit 1 gap positions
     if slit1Set:
         slits1XGapOrg = slits1.x_gap.user_readback.get()
@@ -684,10 +689,6 @@ def setELsdc(energy,
         # Check for pre-conditions for beam_center_align()
         if shutter_hutch_c.status.get():
             print('Experiment hutch shutter closed. Has to be open for this to work. Exiting')
-            return -1
-        desired_state  = "SA"
-        if not gov_robot.state.get() == (desired_state):
-            print(f'Not in Governor state {desired_state}, exiting')
             return -1
         
         print('Aligning beam center')
@@ -855,9 +856,9 @@ def beam_center_align(transSet='All'):
             print('transSet must be one of: All, None')
             return -1
        
-    desired_state = "SA"
-    if not gov_robot.state.get() == desired_state:
-        print(f'Not in Governor state {desired_state}, exiting.')
+    desired_states = ("SA", "AB")
+    if not gov_robot.state.get() in desired_states:
+        print(f'Governor state not in one of {desired_states}, exiting.')
         return -1
     
     # Check for beam after DCM: BPM1 total current

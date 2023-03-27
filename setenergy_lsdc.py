@@ -296,34 +296,6 @@ def govMsgGet(configStr = 'Robot'):
     return govMsg
 
 
-def govStatusGet(stateStr, configStr = 'Robot'):
-    """
-    Returns the current active status for a Governor state
-    
-    configStr: Governor configuration, 'Robot', 'Human', 'Chip_Scanner' or 'Hepath'. default: 'Robot'
-    stateStr: Governor short version state. Example: 'SA' for sample alignment
-              one of ['M','SE','SA','DA','XF','BL','BS','AB','CB','DI','CE','CA','CD']
-
-    Examples
-    govStatusGet('SA')
-    govStatusGet('SA', configStr = 'Human')
-    """
-    blStr = blStrGet()
-    if blStr == -1: return -1
-    
-    if stateStr not in ['M','SE','SA','DA','XF','BL','BS','AB','CB','DI','CE','CA','CD']:
-        print('stateStr must be one of: M,SE,SA,DA,XF,BL,BS,AB,CB,DI,CE,CA,CD]')
-        return -1
-    
-    sysStr = 'XF:17IDC-ES:' + blStr
-    devStr = '{Gov:' + configStr + '-St:' + stateStr + '}'
-    stsStr = 'Sts:Active-Sts'
-    pvStr = sysStr + devStr + stsStr
-    govStatus = epics.caget(pvStr)
-    
-    return govStatus
-
-
 # Plans to set beamline energy =======================================================================
 
 ## Helper functions for set_energy and alignment
@@ -740,8 +712,9 @@ def setELsdc(energy,
         if shutter_hutch_c.status.get():
             print('Experiment hutch shutter closed. Has to be open for this to work. Exiting')
             return -1
-        if not govStatusGet('SA'):
-            print('Not in Governor state SA, exiting')
+        desired_state  = "SA"
+        if not gov_robot.status.get() == (desired_state):
+            print(f'Not in Governor state {desired_state}, exiting')
             return -1
         
         print('Aligning beam center')
@@ -908,9 +881,10 @@ def beam_center_align(transSet='All'):
         if transSet not in ['All', 'None']:
             print('transSet must be one of: All, None')
             return -1
-        
-    if not govStatusGet('SA'):
-        print('Not in Governor state SA, exiting.')
+       
+    desired_state = "SA"
+    if not gov_robot.status.get() == desired_state:
+        print(f'Not in Governor state {desired_state}, exiting.')
         return -1
     
     # Check for beam after DCM: BPM1 total current

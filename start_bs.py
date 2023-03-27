@@ -7,6 +7,8 @@ from mxtools.zebra import Zebra
 from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
+from ophyd.signal import EpicsSignalBase
+EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
 
 #12/19 - author unknown. DAMA can help
 """

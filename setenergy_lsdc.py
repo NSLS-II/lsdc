@@ -7,7 +7,6 @@ from ophyd import Device
 from ophyd import EpicsSignal, EpicsSignalRO
 from ophyd import EpicsMotor
 from ophyd import PVPositioner, PVPositionerPC
-from ophyd.utils import set_and_wait
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 import bluesky.preprocessors as bpp
@@ -29,7 +28,7 @@ class InsertionDevice(Device):
                 kind='omitted', add_prefix=('read_pv', 'write_pv', 'suffix'))
 
     def set(self, *args, **kwargs):
-        set_and_wait(self.brake, 1)
+        self.brake.set(1).wait(5)
         return self.gap.set(*args, **kwargs)
 
     def stop(self, *, success=False):

@@ -2760,14 +2760,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxlayout.addLayout(fileHBoxLayout)
         vBoxlayout.addLayout(fileHBoxLayout2)        
         sampleTab.setLayout(vBoxlayout)   
-        self.XRFTab = QtWidgets.QFrame()        
-        XRFhBox = QtWidgets.QHBoxLayout()
-        self.mcafit = McaAdvancedFit(self.XRFTab)
-        XRFhBox.addWidget(self.mcafit)
-        self.XRFTab.setLayout(XRFhBox)
         self.tabs.addTab(sampleTab,"Collect")
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
-        self.tabs.addTab(self.XRFTab,"XRF Spectrum")
         self.zoomLevelToggledCB("Zoom1")
 
         if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX

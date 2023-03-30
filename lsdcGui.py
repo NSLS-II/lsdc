@@ -5083,7 +5083,7 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.rasterGrainCustomRadio.setChecked(True)          
       rasterStep = int(reqObj["gridStep"])
-      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster")):
+      if (not self.hideRastersCheckBox.isChecked() and (reqObj["protocol"] in ("raster", "stepRaster", "multiCol"))):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
           self.fillPolyRaster(selectedSampleRequest)

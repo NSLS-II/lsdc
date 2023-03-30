@@ -132,8 +132,11 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
     # https://stackoverflow.com/questions/53137822/adding-a-field-to-a-structured-numpy-array-4
     rd3d_out = rd3d_out.reshape(1)
     logger.info("Diffraction weighted dose = " + "%.3f" % rd3d_out['DWD'] + " MGy")
-    logger.info("Max dose = " + "%.3f" % rd3d_out['Max_Dose'] + " MGy")  
-    t2gl = exposureTime * 30 / rd3d_out['DWD']  # Time to Garman limit based on diffraction weighted dose
+    logger.info("Max dose = " + "%.3f" % rd3d_out['Max_Dose'] + " MGy")
+    if rd3d_out['DWD']:
+        t2gl = exposureTime * 30 / rd3d_out['DWD']  # Time to Garman limit based on diffraction weighted dose
+    else:
+        t2gl = 0
     rd3d_out = rfn.append_fields(rd3d_out,'t2gl',[t2gl],usemask=False)
     logger.info("Time to Garman limit = " + "%.3f" % rd3d_out['t2gl'] + " s")
     

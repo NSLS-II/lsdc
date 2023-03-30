@@ -3730,7 +3730,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def setLifetimeCB(self, lifetime):
       if hasattr(self, 'sampleLifetimeReadback_ledit'):
         self.sampleLifetimeReadback_ledit.setText(f"{lifetime:.2f}")
-        self.sampleLifetimeReadback_ledit.setStyleSheet("color : green")
+        self.sampleLifetimeReadback_ledit.setStyleSheet("color : black")
 
     def calcLifetimeCB(self):
       if (not os.path.exists("2vb1.pdb")):

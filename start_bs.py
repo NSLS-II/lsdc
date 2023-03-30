@@ -156,6 +156,8 @@ elif beamline == "fmx":
     back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
 
+    import setenergy_lsdc
+
 elif beamline=="nyx":
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',

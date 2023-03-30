@@ -2350,7 +2350,7 @@ def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of wha
   newReqObj["pos_x"] = hitCoords['x']
   newReqObj["pos_y"] = hitCoords['y']
   newReqObj["pos_z"] = hitCoords['z']
-  newReqObj["fastDP"] = False
+  newReqObj["fastDP"] = True
   newReqObj["fastEP"] = False
   newReqObj["dimple"] = False    
   newReqObj["xia2"] = False

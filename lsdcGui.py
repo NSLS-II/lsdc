@@ -2155,7 +2155,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
+        protoOptionList = ["standard","raster","vector","burn","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 

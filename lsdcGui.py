@@ -38,7 +38,7 @@ from element_info import element_info
 import numpy as np
 import _thread #TODO python document suggests using threading! make this chance once stable
 import lsdcOlog
-from threads import VideoThread
+from threads import VideoThread, RaddoseThread
 import socket
 from utils.healthcheck import perform_checks
 
@@ -1993,8 +1993,8 @@ class ControlMain(QtWidgets.QMainWindow):
           self.calcLifetimeCB()
         hBoxColParams25.addWidget(totalExptimeLabel)
         hBoxColParams25.addWidget(self.totalExptime_ledit)
-        if (daq_utils.beamline == "fmx"):
-          hBoxColParams25.addWidget(calcLifetimeButton)
+        #if (daq_utils.beamline == "fmx"):
+        #  hBoxColParams25.addWidget(calcLifetimeButton)
         hBoxColParams25.addWidget(sampleLifetimeLabel)
         hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
@@ -2020,7 +2020,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
         self.setGuiValues({'transmission':getBlConfig("stdTrans")})
-        self.transmission_ledit.returnPressed.connect(self.setTransCB)        
+        self.transmission_ledit.returnPressed.connect(self.setTransCB)
+        if daq_utils.beamline == 'fmx':
+          self.transmission_ledit.textChanged.connect(self.calcLifetimeCB)      
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")        
@@ -3437,7 +3439,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def totalExpChanged(self,text):
       if (text == "oscEnd" and daq_utils.beamline == "fmx"):
-        self.sampleLifetimeReadback_ledit.setStyleSheet("color : red");        
+        self.sampleLifetimeReadback_ledit.setStyleSheet("color : gray");        
       try:
         if (float(str(self.osc_range_ledit.text())) == 0):
           if (text == "oscRange"):
@@ -3725,13 +3727,23 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info(comm_s)        
         self.send_to_server(comm_s)
 
+    def setLifetimeCB(self, lifetime):
+      if hasattr(self, 'sampleLifetimeReadback_ledit'):
+        self.sampleLifetimeReadback_ledit.setText(f"{lifetime:.2f}")
+        self.sampleLifetimeReadback_ledit.setStyleSheet("color : black")
+
     def calcLifetimeCB(self):
       if (not os.path.exists("2vb1.pdb")):
         os.system("cp -a $CONFIGDIR/2vb1.pdb .")
         os.system("mkdir rd3d")
-      
+            
       energyReadback = self.energy_pv.get()/1000.0
       sampleFlux = self.sampleFluxPV.get()
+      if hasattr(self, 'transmission_ledit') and hasattr(self, 'transmissionReadback_ledit'):
+        try:
+          sampleFlux = (sampleFlux*float(self.transmission_ledit.text()))/float(self.transmissionReadback_ledit.text())
+        except Exception as e:
+          logger.info(f'Exception while calculating sample flux {e}')
       logger.info("sample flux = " + str(sampleFlux))      
       try:
         vecLen_s = self.vecLenLabelOutput.text()
@@ -3743,12 +3755,12 @@ class ControlMain(QtWidgets.QMainWindow):
         vecLen = 0
       wedge = float(self.osc_end_ledit.text())
       try:
-        lifeTime = raddoseLib.fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)          
-        lifeTime_s = "%.2f" % (lifeTime)
+        raddose_thread = RaddoseThread(parent=self, beamsizeV = 3.0, beamsizeH = 5.0, vectorL = vecLen, energy = energyReadback, wedge = wedge, flux = sampleFlux, verbose = True)
+        raddose_thread.lifetime.connect(lambda lifetime: self.setLifetimeCB(lifetime))
+        raddose_thread.start()
+        
       except:
         lifeTime_s = "0.00"
-      self.sampleLifetimeReadback_ledit.setText(lifeTime_s)
-      self.sampleLifetimeReadback_ledit.setStyleSheet("color : green");
       
 
     def setTransCB(self):

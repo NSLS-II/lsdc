@@ -280,12 +280,12 @@ def fmx_expTime(avg_dwd = 10, #Default of 10MGy
         dose1s = 0
     
     if dose1s > 0:
-        expTime10MGy = avg_dwd / dose1s  # Experiment time to reach an average DWD of 10 MGy
+        expTimeMGy = avg_dwd / dose1s  # Experiment time to reach an average DWD (avg_dwd)
     else:
-        expTime10MGy = 0
-    logger.info('Experiment time to reach an average diffraction weighted dose of 10 MGy = {:f} s'.format(expTime10MGy))
+        expTimeMGy = 0
+    logger.info(f'Experiment time to reach an average diffraction weighted dose of {avg_dwd} MGy = {expTimeMGy} s')
     
-    return expTime10MGy
+    return expTimeMGy
 
 
 

@@ -4460,7 +4460,7 @@ class ControlMain(QtWidgets.QMainWindow):
         return
       self.progressDialog.setWindowTitle("Creating Requests")
       self.progressDialog.show()
-      if getBlConfig("queueCollect") == 1: # If queue collect is ON only consider samples and add a request to each
+      if getBlConfig("queueCollect") == 1: # If queue collect is ON only consider selected samples and add a request to each
         requestAdded = False
         for i in range(len(indexes)):
           self.progressDialog.setValue(int((i+1)*progressInc))
@@ -4473,7 +4473,7 @@ class ControlMain(QtWidgets.QMainWindow):
             continue
 
           try:
-            self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) #7/21/15  - not sure what this does, b/c I don't pass it, ahhh probably the commented line for prefix
+            self.selectedSampleRequest = daq_utils.createDefaultRequest(self.selectedSampleID) 
           except KeyError:
             self.popupServerMessage("Please select a sample!")
             self.progressDialog.close()

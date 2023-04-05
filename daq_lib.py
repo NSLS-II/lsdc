@@ -17,6 +17,7 @@ from daq_utils import getBlConfig
 from config_params import *
 from kafka_producer import send_kafka_message
 import logging
+import albulaUtils
 logger = logging.getLogger(__name__)
 
 try:
@@ -731,6 +732,15 @@ def collectData(currentRequest):
     comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
     logger.info(comm_s)
     os.system(comm_s)    
+    filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
+    logger.info(f"Checking integrity of {filename}")
+    timeout_index = 0
+    while not albulaUtils.validate_master_HDF5_file(filename):
+      timeout_index += 1
+      time.sleep(3)
+      if timeout_index > 15:
+        logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
+        return
     if img_width > 0: #no dataset processing in stills mode
       if (reqObj["fastDP"]):
         if (reqObj["fastEP"]):

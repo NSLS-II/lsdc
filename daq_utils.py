@@ -5,6 +5,7 @@ import math
 import requests
 import getpass
 import logging
+import warnings
 logger = logging.getLogger(__name__)
 
 try:
@@ -72,7 +73,13 @@ def init_environment():
   highMagPixY = float(getBlConfig("highMagPixY"))
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
-  defaultOverlayColor = "GREEN"
+
+  try:
+    defaultOverlayColor = getBlConfig("defaultOverlayColor")
+  except KeyError as e:
+    defaultOverlayColor = "BLUE"
+    warnings.warn(f"Missing defaultOverlayColor config, using default value {defaultOverlayColor}", Warning)
+
   try: 
     unitScaling = float(getBlConfig("unitScaling"))
     sampleCameraCount = float(getBlConfig("sampleCameraCount"))

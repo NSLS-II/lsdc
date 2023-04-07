@@ -2400,8 +2400,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
-        if(daq_utils.defaultOverlayColor == 'GREEN'):
-          centerMarkBrush = QtGui.QBrush(QtCore.Qt.green)
+        if QtGui.QColor.fromString(daq_utils.defaultOverlayColor).isValid():
+          centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(daq_utils.defaultOverlayColor))
         else:
           centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)

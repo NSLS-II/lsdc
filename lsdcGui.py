@@ -1494,7 +1494,7 @@ class DewarTree(QtWidgets.QTreeView):
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.selectedSampleID = selectedSampleRequest["sample"]
           db_lib.deleteRequest(selectedSampleRequest["uid"])
-          if (selectedSampleRequest["request_obj"]["protocol"] == "raster" or selectedSampleRequest["request_obj"]["protocol"] == "stepRaster"):
+          if (selectedSampleRequest["request_obj"]["protocol"] in ("raster", "stepRaster", "multiCol")):
             for i in range(len(self.parent.rasterList)):
               if (self.parent.rasterList[i] != None):
                 if (self.parent.rasterList[i]["uid"] == selectedSampleRequest["uid"]):
@@ -3448,6 +3448,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.processingOptionsFrame.show()        
       elif (protocol == "multiCol" or protocol == "multiColQ"):
         self.rasterParamsFrame.show()
+        self.osc_start_ledit.setEnabled(False)
+        self.osc_end_ledit.setEnabled(False)
         self.multiColParamsFrame.show()
       elif (protocol == "vector" or protocol == "stepVector"):
         self.vectorParamsFrame.show()
@@ -5081,7 +5083,7 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.rasterGrainCustomRadio.setChecked(True)          
       rasterStep = int(reqObj["gridStep"])
-      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster")):
+      if (not self.hideRastersCheckBox.isChecked() and (reqObj["protocol"] in ("raster", "stepRaster", "multiCol"))):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
           self.fillPolyRaster(selectedSampleRequest)

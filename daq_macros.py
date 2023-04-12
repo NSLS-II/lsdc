@@ -2838,17 +2838,20 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   collect_and_characterize_success = 0
   dna_have_strategy_results = 0
   dna_have_index_results = 0  
-  dg2rd = 3.14159265 / 180.0  
   if (daq_utils.detector_id == "ADSC-Q315"):
     det_radius = 157.5
   elif (daq_utils.detector_id == "ADSC-Q210"):
     det_radius = 105.0
   elif (daq_utils.detector_id == "PILATUS-6"):
     det_radius = 212.0
+  elif daq_utils.detector_id == "EIGER-16" and daq_utils.beamline in ("amx", "nyx"):
+    det_radius = 233.1  # Eiger2-9M
+  elif daq_utils.detector_id == "EIGER-16":  # FMX
+    det_radius = 311.1  # Eiger2-16M
   else: #default Pilatus
     det_radius = 212.0
   theta_radians = 0.0
-  wave = 12398.5/beamline_lib.get_mono_energy() #for now
+  wave = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
   dx = det_radius/(math.tan(2.0*(math.asin(wave/(2.0*dna_res)))-theta_radians))
   logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
@@ -2856,11 +2859,6 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   dna_image_info = {}
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
     logger.info("skinner prefix7 = " + prefix[0:7] +  " " + str(start_image_number) + "\n")
-    if (len(prefix)> 8):
-      if ((prefix[0:7] == "postref") and (start_image_number == 1)):
-        logger.info("skinner postref bail\n")
-        time.sleep(float(dna_number_of_images*float(dna_exptime)))        
-        break
   #skinner roi - maybe I can measure and use that for dna_start so that first image is face on.
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix
@@ -2878,7 +2876,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     
     dna_filename_list.append(filename) #TODO actually contains directory structure for cbf, but filename of h5
     picture_taken = 1
-  edna_energy_ev = (12.3985/wave) * 1000.0
+  edna_energy_ev = beamline_lib.motorPosFromDescriptor("energy") * 1000.0
   if (daq_utils.beamline == "fmx"):   # a kludge b/c edna wants a square beam, so where making a 4x4 micron beam be the sqrt(1*1.5) for x and y on fmx
     xbeam_size = .004
     ybeam_size = .004

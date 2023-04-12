@@ -13,6 +13,14 @@ import atexit
 from daq_main_common import pybass_init
 import logging
 from logging import handlers
+from start_bs import robot
+from embl_robot import EMBLRobot
+if isinstance(robot, EMBLRobot):
+    print("loading RobotControlLib")
+    import RobotControlLib
+else:
+    print("not importing RobotControlLib")
+
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('ophyd').setLevel(logging.WARN)

@@ -83,9 +83,9 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
-VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}}
-VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}}
-VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}}
+VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}, 'nyx':{'min':0.01, 'max':10, 'digits':3}}
+VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}, 'nyx':{'min':100, 'max':500, 'digits':3}}
+VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':1000, 'digits':3}}
 VALID_PREFIX_LENGTH = 25 #TODO centralize with spreadsheet validation?
 VALID_PREFIX_NAME = '[0-9a-zA-Z-_]{0,%s}' % VALID_PREFIX_LENGTH
 
@@ -677,6 +677,17 @@ class UserScreenDialog(QFrame):
             Qt.Horizontal, self)
         self.buttons.buttons()[0].clicked.connect(self.userScreenOKCB)
 
+        if(daq_utils.beamline=="nyx"):
+          self.openShutterButton.setDisabled(True)
+          self.unmountColdButton.setDisabled(True)
+          self.testRobotButton.setDisabled(True)
+          self.recoverRobotButton.setDisabled(True)
+          self.dryGripperButton.setDisabled(True)
+          self.resetZebraButton.setDisabled(True)
+          self.rebootZebraButton.setDisabled(True)
+          self.stopDetButton.setDisabled(True)
+          self.rebootDetIocButton.setDisabled(True)
+
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxColParams2)        
         vBoxColParams1.addLayout(hBoxColParams25)
@@ -726,16 +737,16 @@ class UserScreenDialog(QFrame):
       self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-      self.parent.send_to_server("setGovRobot('SE')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'SE')")
 
     def SAgovCB(self):
-      self.parent.send_to_server("setGovRobot('SA')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'SA')")
 
     def DAgovCB(self):
-      self.parent.send_to_server("setGovRobot('DA')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'DA')")
 
     def BLgovCB(self):
-      self.parent.send_to_server("setGovRobot('BL')")
+      self.parent.send_to_server("setGovRobot(gov_robot, 'BL')")
 
     def userScreenOKCB(self):
       self.hide()
@@ -1072,8 +1083,8 @@ class PuckDialog(QtWidgets.QDialog):
 class DewarDialog(QtWidgets.QDialog):
     def __init__(self, parent = None,action="add"):
         super(DewarDialog, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.action = action
         self.parent=parent
 
@@ -1147,8 +1158,8 @@ class DewarDialog(QtWidgets.QDialog):
 class DewarTree(QtWidgets.QTreeView):
     def __init__(self, parent=None):
         super(DewarTree, self).__init__(parent)
-        self.pucksPerDewarSector = 3
-        self.dewarSectors = 8
+        self.pucksPerDewarSector = PUCKS_PER_DEWAR_SECTOR[daq_utils.beamline]
+        self.dewarSectors = DEWAR_SECTORS[daq_utils.beamline]
         self.parent=parent
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)
@@ -1487,7 +1498,7 @@ class DewarTree(QtWidgets.QTreeView):
           selectedSampleRequest = db_lib.getRequestByID(itemData)
           self.selectedSampleID = selectedSampleRequest["sample"]
           db_lib.deleteRequest(selectedSampleRequest["uid"])
-          if (selectedSampleRequest["request_obj"]["protocol"] == "raster" or selectedSampleRequest["request_obj"]["protocol"] == "stepRaster" or selectedSampleRequest["request_obj"]["protocol"] == "specRaster"):
+          if (selectedSampleRequest["request_obj"]["protocol"] in ("raster", "stepRaster", "multiCol")):
             for i in range(len(self.parent.rasterList)):
               if (self.parent.rasterList[i] != None):
                 if (self.parent.rasterList[i]["uid"] == selectedSampleRequest["uid"]):
@@ -1537,6 +1548,7 @@ class DataLocInfo(QtWidgets.QGroupBox):
         self.hBoxDPathParams2.addWidget(self.prefix_ledit)
         self.dataNumstartLabel = QtWidgets.QLabel('File Number Start:')
         self.file_numstart_ledit = QtWidgets.QLineEdit()
+        self.file_numstart_ledit.setValidator(QIntValidator(1, 99999, self))
         self.file_numstart_ledit.setFixedWidth(50)
         self.hBoxDPathParams3 = QtWidgets.QHBoxLayout()
         self.dataPathLabel = QtWidgets.QLabel('Data Path:')
@@ -1750,7 +1762,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = PV(daq_utils.pvLookupDict["gripTemp"])
-        self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
+        if getBlConfig(CRYOSTREAM_ONLINE):
+          self.cryostreamTemp_pv = PV(cryostreamTempPV[daq_utils.beamline])
         if (daq_utils.beamline == "fmx"):        
           self.slit1XGapSP_pv = PV(daq_utils.motor_dict["slit1XGap"] + ".VAL")
           self.slit1YGapSP_pv = PV(daq_utils.motor_dict["slit1YGap"] + ".VAL")        
@@ -1771,6 +1784,9 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
           self.motPos = {"x":self.sampx_pv.get(),"y":self.sampy_pv.get(),"z":self.sampz_pv.get(),"omega":self.omega_pv.get(),"fineX":self.sampFineX_pv.get(),"fineY":self.sampFineY_pv.get(),"fineZ":self.sampFineZ_pv.get()}                    
         self.staffScreenDialog = StaffScreenDialog(self, show=False)
+        if daq_utils.beamline == "nyx":  # requires staffScreenDialog to be present
+          self.staffScreenDialog.fastDPCheckBox.setDisabled(True)
+
         self.dewarTree.refreshTreeDewarView()
         if (self.mountedPin_pv.get() == ""):
           mountedPin = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')["sampleID"]
@@ -2003,7 +2019,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams25.addWidget(sampleLifetimeLabel)
         hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
-        if (daq_utils.beamline == "fmx"):
+        if (daq_utils.beamline in ("fmx", "nyx")):
           if (getBlConfig("attenType") == "RI"):
             self.transmissionReadback = QtEpicsPVLabel(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
             self.transmissionSetPoint = QtEpicsPVEntry(daq_utils.pvLookupDict["RI_Atten_SP"],self,60,3)
@@ -2129,7 +2145,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = ["standard","screen","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol","specRaster"] # these should probably come from db
+        protoOptionList = ["standard","raster","vector","burn","eScan","rasterScreen","stepRaster","stepVector","multiCol","characterize","ednaCol"] # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB) 
@@ -2396,13 +2412,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoomRadioGroup.addButton(self.zoom1Radio)
         self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
         self.zoom2Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom2"))
-        self.zoomRadioGroup.addButton(self.zoom2Radio)
         self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
         self.zoom3Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom3"))
-        self.zoomRadioGroup.addButton(self.zoom3Radio)
         self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
         self.zoom4Radio.toggled.connect(functools.partial(self.zoomLevelToggledCB,"Zoom4"))
-        self.zoomRadioGroup.addButton(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2):
+          self.zoomRadioGroup.addButton(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            self.zoomRadioGroup.addButton(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              self.zoomRadioGroup.addButton(self.zoom4Radio)
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30        
@@ -2501,9 +2520,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
         hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        hBoxVidControlLayout.addWidget(self.zoom2Radio)
-        hBoxVidControlLayout.addWidget(self.zoom3Radio)
-        hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        if (daq_utils.sampleCameraCount>=2): # Button naming assumes sequential camera ordering
+          hBoxVidControlLayout.addWidget(self.zoom2Radio)
+          if (daq_utils.sampleCameraCount>=3):
+            hBoxVidControlLayout.addWidget(self.zoom3Radio)
+            if (daq_utils.sampleCameraCount>=4):
+              hBoxVidControlLayout.addWidget(self.zoom4Radio)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)                        
@@ -2688,9 +2710,15 @@ class ControlMain(QtWidgets.QMainWindow):
           self.sampleExposedLabel = QtWidgets.QLabel("Sample Not Exposed")
           self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")              
         gripperLabel = QtWidgets.QLabel('Gripper Temp:')
-        self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
+        if(daq_utils.beamline=="nyx"):
+          self.gripperTempLabel = QtWidgets.QLabel("N/A")
+        else:
+          self.gripperTempLabel = QtWidgets.QLabel('%.1f' % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel('Cryostream Temp:')
-        self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
+        if getBlConfig(CRYOSTREAM_ONLINE):
+          self.cryostreamTempLabel = QtWidgets.QLabel(str(self.cryostreamTemp_pv.get()))
+        else:
+          self.cryostreamTempLabel = QtWidgets.QLabel("N/A")
 
         fileHBoxLayout.addWidget(gripperLabel)
         fileHBoxLayout.addWidget(self.gripperTempLabel)
@@ -2716,6 +2744,27 @@ class ControlMain(QtWidgets.QMainWindow):
 #12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.        
         self.tabs.addTab(self.XRFTab,"XRF Spectrum")
         self.zoomLevelToggledCB("Zoom1")
+
+        if(daq_utils.beamline=="nyx"): # Temporarily disabling unusued buttons on NYX
+          self.protoRasterRadio.setDisabled(True)
+          self.protoStandardRadio.setDisabled(True)
+          self.protoVectorRadio.setDisabled(True)
+          self.protoOtherRadio.setDisabled(True)
+          self.autoProcessingCheckBox.setDisabled(True)
+          self.fastEPCheckBox.setDisabled(True)
+          self.dimpleCheckBox.setDisabled(True)
+          self.centeringComboBox.setDisabled(True)
+          self.beamsizeComboBox.setDisabled(True)
+          centerLoopButton.setDisabled(True)
+          clearGraphicsButton.setDisabled(True)
+          saveCenteringButton.setDisabled(True) 
+          selectAllCenteringButton.setDisabled(True) 
+          snapshotButton.setDisabled(True) 
+          self.hideRastersCheckBox.setDisabled(True) 
+          self.vidActionC2CRadio.setDisabled(True)
+          self.vidActionRasterExploreRadio.setDisabled(True)
+          self.vidActionRasterDefRadio.setDisabled(True)
+          self.vidActionDefineCenterRadio.setDisabled(True)
 
         hutchCornerCamThread = VideoThread(parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig('hutchCornerCamURL'))
         hutchCornerCamThread.frame_ready.connect(lambda frame: self.updateCam(self.pixmap_item_HutchCorner, frame))
@@ -2807,7 +2856,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.showProtParams()
       if (self.vidActionC2CRadio.isChecked()):        
         self.click_positions = []
-        if (self.protoComboBox.findText(str("raster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("stepRaster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("specRaster")) == self.protoComboBox.currentIndex()):
+        if (self.protoComboBox.findText(str("raster")) == self.protoComboBox.currentIndex() or self.protoComboBox.findText(str("stepRaster")) == self.protoComboBox.currentIndex()):
           self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
           self.protoComboActivatedCB("standard")          
         self.showProtParams()
@@ -2815,7 +2864,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def adjustGraphics4ZoomChange(self,fov):
-      imageScaleMicrons = int(round(self.imageScaleLineLen * (fov["x"]/daq_utils.screenPixX)))
+      imageScaleMicrons = int(round(self.imageScaleLineLen * (fov["x"]/daq_utils.screenPixX))) * daq_utils.unitScaling
       self.imageScaleText.setText(str(imageScaleMicrons) + " microns")
       if (self.rasterList != []):
         saveRasterList = self.rasterList
@@ -3401,14 +3450,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_start_ledit.setEnabled(False)
         self.osc_end_ledit.setEnabled(False)
         
-      elif (protocol == "stepRaster" or protocol == "specRaster"):
+      elif (protocol == "stepRaster"):
         self.rasterParamsFrame.show()
         self.processingOptionsFrame.show()        
       elif (protocol == "multiCol" or protocol == "multiColQ"):
         self.rasterParamsFrame.show()
+        self.osc_start_ledit.setEnabled(False)
+        self.osc_end_ledit.setEnabled(False)
         self.multiColParamsFrame.show()
-      elif (protocol == "screen"):
-        pass
       elif (protocol == "vector" or protocol == "stepVector"):
         self.vectorParamsFrame.show()
         self.processingOptionsFrame.show()        
@@ -3436,6 +3485,8 @@ class ControlMain(QtWidgets.QMainWindow):
       y_vec = y_vec_end - y_vec_start
       z_vec = z_vec_end - z_vec_start
       trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
+      if daq_utils.beamline == "nyx":
+        trans_total *= 1000
       self.vecLenLabelOutput.setText(str(int(trans_total)))
       totalExpTime =(float(self.osc_end_ledit.text())/float(self.osc_range_ledit.text()))*float(self.exp_time_ledit.text()) #(range/inc)*exptime
       speed = trans_total/totalExpTime
@@ -3577,7 +3628,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def protoComboActivatedCB(self, text):
       self.showProtParams()
       protocol = str(self.protoComboBox.currentText())
-      if (protocol == "raster" or protocol == "stepRaster" or protocol == "rasterScreen" or protocol == "specRaster"):
+      if (protocol == "raster" or protocol == "stepRaster" or protocol == "rasterScreen"):
         self.vidActionRasterDefRadio.setChecked(True)
       else:
         self.vidActionC2CRadio.setChecked(True)
@@ -3769,8 +3820,12 @@ class ControlMain(QtWidgets.QMainWindow):
       
 
     def setTransCB(self):
-      if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
-        self.popupServerMessage("Transmission must be 0.001-1.0")
+      try:
+        if (float(self.transmission_ledit.text()) > 1.0 or float(self.transmission_ledit.text()) < 0.001):
+          self.popupServerMessage("Transmission must be 0.001-1.0")
+          return
+      except ValueError as e:
+        self.popupServerMessage("Please enter a valid number")
         return
       comm_s = "setTrans(" + str(self.transmission_ledit.text()) + ")"
       logger.info(comm_s)
@@ -3802,10 +3857,26 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage("You don't have control")
 
     def focusTweakCB(self,tv):
-      tvf = float(tv)        
+      tvf = float(tv)*daq_utils.unitScaling        
+
+      current_viewangle = daq_utils.mag1ViewAngle
+      if (self.zoom2Radio.isChecked()):
+        current_viewangle = daq_utils.mag2ViewAngle
+      elif (self.zoom3Radio.isChecked()):
+        current_viewangle = daq_utils.mag3ViewAngle
+      elif (self.zoom4Radio.isChecked()):
+        current_viewangle = daq_utils.mag4ViewAngle
+
+      if (current_viewangle==daq_utils.CAMERA_ANGLE_BEAM):
+        view_omega_offset = 0
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_BELOW):
+        view_omega_offset = 90
+      elif (current_viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
+        view_omega_offset = -90
+      
       if (self.controlEnabled()):
-        tvY = tvf*(math.cos(math.radians(90.0 + self.motPos["omega"]))) #these are opposite C2C
-        tvZ = tvf*(math.sin(math.radians(90.0 + self.motPos["omega"])))
+        tvY = tvf*(math.cos(math.radians(view_omega_offset  + self.motPos["omega"]))) #these are opposite C2C
+        tvZ = tvf*(math.sin(math.radians(view_omega_offset  + self.motPos["omega"])))
         self.sampyTweak_pv.put(tvY)
         self.sampzTweak_pv.put(tvZ)        
       else:
@@ -4161,9 +4232,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def getCurrentFOV(self):
       fov = {"x":0.0,"y":0.0}
-      if (self.zoom2Radio.isChecked()):  #lowmagzoom      
-        fov["x"] = daq_utils.lowMagFOVx/2.0
-        fov["y"] = daq_utils.lowMagFOVy/2.0
+      if (self.zoom2Radio.isChecked()):  #lowmagzoom
+        if (daq_utils.sampleCameraCount==2):   #this is a hard assumption that when there are 2 cameras the second uses highmagfov   
+          fov["x"] = daq_utils.highMagFOVx
+          fov["y"] = daq_utils.highMagFOVy
+        else:
+          fov["x"] = daq_utils.lowMagFOVx/2.0
+          fov["y"] = daq_utils.lowMagFOVy/2.0
       elif (self.zoom1Radio.isChecked()):
         fov["x"] = daq_utils.lowMagFOVx
         fov["y"] = daq_utils.lowMagFOVy
@@ -4384,12 +4459,21 @@ class ControlMain(QtWidgets.QMainWindow):
           return
         fov = self.getCurrentFOV()
         correctedC2C_x = daq_utils.screenPixCenterX + (x_click - (self.centerMarker.x()+self.centerMarkerCharOffsetX))
-        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))        
+        correctedC2C_y = daq_utils.screenPixCenterY + (y_click - (self.centerMarker.y()+self.centerMarkerCharOffsetY))
+
+        current_viewangle = daq_utils.mag1ViewAngle
+        if (self.zoom2Radio.isChecked()):
+          current_viewangle = daq_utils.mag2ViewAngle
+        elif (self.zoom3Radio.isChecked()): 
+          current_viewangle = daq_utils.mag3ViewAngle
+        elif (self.zoom4Radio.isChecked()):
+          current_viewangle = daq_utils.mag4ViewAngle
+        
         if (self.threeClickCount > 0): #3-click centering
           self.threeClickCount = self.threeClickCount + 1
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"]) + "," + '"screen",jog=90)'          
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'          
         else:
-          comm_s = 'center_on_click(' + str(correctedC2C_x) + "," + str(correctedC2C_y) + "," + str(fov["x"]) + "," + str(fov["y"])  + "," + '"screen",0)'
+          comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
         if (not self.vidActionRasterExploreRadio.isChecked()):
           self.aux_send_to_server(comm_s)
         if (self.threeClickCount == 4):
@@ -4441,7 +4525,7 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["slit_width"] = float(self.beamWidth_ledit.text())
         reqObj["slit_height"] = float(self.beamHeight_ledit.text())
         reqObj["energy"] = float(self.energy_ledit.text())
-        wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+        wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
         reqObj["wavelength"] = wave
       except ValueError:
         message = "Please ensure that all boxes that expect numerical values have numbers in them"
@@ -4460,7 +4544,7 @@ class ControlMain(QtWidgets.QMainWindow):
       self.treeChanged_pv.put(1)
 
     def addRequestsToAllSelectedCB(self):
-      if (self.protoComboBox.currentText() == "raster" or self.protoComboBox.currentText() == "stepRaster" or self.protoComboBox.currentText() == "specRaster"): #it confused people when they didn't need to add rasters explicitly
+      if (self.protoComboBox.currentText() == "raster" or self.protoComboBox.currentText() == "stepRaster"): #it confused people when they didn't need to add rasters explicitly
         return
       selmod = self.dewarTree.selectionModel()
       selection = selmod.selection()
@@ -4610,7 +4694,7 @@ class ControlMain(QtWidgets.QMainWindow):
                reqObj["slit_width"] = float(self.beamWidth_ledit.text())
                reqObj["slit_height"] = float(self.beamHeight_ledit.text())
                reqObj["energy"] = float(self.energy_ledit.text())             
-               wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+               wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
                reqObj["wavelength"] = wave
              except ValueError:
                message = "Please ensure that all boxes that expect numerical values have numbers in them"
@@ -4689,7 +4773,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.popupServerMessage(f'{message}')
           return
         try:        
-          wave = daq_utils.energy2wave(float(self.energy_ledit.text()))
+          wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
         except ValueError:
           wave = 1.1
 
@@ -5004,7 +5088,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.xia2CheckBox.setChecked(reqObj["xia2"])
       reqObj["energy"] = float(self.energy_ledit.text())
       self.energy_ledit.setText(str(reqObj["energy"]))                        
-      energy_s = str(daq_utils.wave2energy(reqObj["wavelength"]))
+      energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))
       dist_s = str(reqObj["detDist"])
       self.detDistMotorEntry.getEntry().setText(str(dist_s))
       self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))
@@ -5038,7 +5122,7 @@ class ControlMain(QtWidgets.QMainWindow):
       else:
         self.rasterGrainCustomRadio.setChecked(True)          
       rasterStep = int(reqObj["gridStep"])
-      if (not self.hideRastersCheckBox.isChecked() and (str(reqObj["protocol"])== "raster" or str(reqObj["protocol"])== "stepRaster" or str(reqObj["protocol"])== "specRaster")):
+      if (not self.hideRastersCheckBox.isChecked() and (reqObj["protocol"] in ("raster", "stepRaster", "multiCol"))):
         if (not self.rasterIsDrawn(selectedSampleRequest)):
           self.drawPolyRaster(selectedSampleRequest)
           self.fillPolyRaster(selectedSampleRequest)
@@ -5123,11 +5207,6 @@ class ControlMain(QtWidgets.QMainWindow):
           if (self.vidActionRasterDefRadio.isChecked()):
             self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("raster")))
             self.showProtParams()
-        elif (str(self.protoComboBox.currentText()) == "screen"):
-          self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
-          self.refreshCollectionParams(self.selectedSampleRequest)
-          if (self.stillModeStatePV.get()):
-            self.setGuiValue({'osc_range':"0.0"})
         else:
           self.selectedSampleRequest = daq_utils.createDefaultRequest(itemData,createVisit=False)
           reqObj = self.selectedSampleRequest["request_obj"]
@@ -5342,14 +5421,70 @@ class ControlMain(QtWidgets.QMainWindow):
         self.statusBar().addPermanentWidget(self.queue_collect_status_widget)
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
+        settingsMenu = menubar.addMenu('Settings')
         fileMenu.addAction(importAction)
         fileMenu.addAction(self.userAction)
         fileMenu.addAction(self.expertAction)
         fileMenu.addAction(self.staffAction)                
+        # Define all of the available actions for the overlay color group
+        self.BlueOverlayAction = QtWidgets.QAction('Blue', self, checkable=True)
+        self.RedOverlayAction = QtWidgets.QAction('Red', self, checkable=True)
+        self.GreenOverlayAction = QtWidgets.QAction('Green', self, checkable=True)
+        self.WhiteOverlayAction = QtWidgets.QAction('White', self, checkable=True)
+        self.BlackOverlayAction = QtWidgets.QAction('Black', self, checkable=True)
+        # Connect all of the trigger callbacks to their respective actions
+        self.BlueOverlayAction.triggered.connect(self.blueOverlayTriggeredCB)
+        self.RedOverlayAction.triggered.connect(self.redOverlayTriggeredCB)
+        self.GreenOverlayAction.triggered.connect(self.greenOverlayTriggeredCB)
+        self.WhiteOverlayAction.triggered.connect(self.whiteOverlayTriggeredCB)
+        self.BlackOverlayAction.triggered.connect(self.blackOverlayTriggeredCB)
+        # Create the action group and populate it
+        self.overlayColorActionGroup = QtWidgets.QActionGroup(self)
+        self.overlayColorActionGroup.setExclusive(True)
+        self.overlayColorActionGroup.addAction(self.BlueOverlayAction)
+        self.overlayColorActionGroup.addAction(self.RedOverlayAction)
+        self.overlayColorActionGroup.addAction(self.GreenOverlayAction)
+        self.overlayColorActionGroup.addAction(self.WhiteOverlayAction)
+        self.overlayColorActionGroup.addAction(self.BlackOverlayAction)
+        # Create the menu item with the submenu, add the group 
+        self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
+        self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
+        self.BlueOverlayAction.setChecked(True)
+        
         fileMenu.addAction(exitAction)
         self.setGeometry(300, 300, 1550, 1000) #width and height here. 
         self.setWindowTitle('LSDC on %s' % daq_utils.beamline)
         self.show()
+
+    def blueOverlayTriggeredCB(self):
+        overlayBrush = QtGui.QBrush(QtCore.Qt.blue)
+        self.centerMarker.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
+
+    def redOverlayTriggeredCB(self):
+        overlayBrush = QtGui.QBrush(QtCore.Qt.red)
+        self.centerMarker.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
+
+    def greenOverlayTriggeredCB(self):
+        overlayBrush = QtGui.QBrush(QtCore.Qt.green)
+        self.centerMarker.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
+
+    def whiteOverlayTriggeredCB(self):
+        overlayBrush = QtGui.QBrush(QtCore.Qt.white)
+        self.centerMarker.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
+
+    def blackOverlayTriggeredCB(self):
+        overlayBrush = QtGui.QBrush(QtCore.Qt.black)
+        self.centerMarker.setBrush(overlayBrush)
+        self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def popStaffDialogCB(self):
       if (self.controlEnabled()):
@@ -5482,7 +5617,10 @@ class ControlMain(QtWidgets.QMainWindow):
       self.omega_pv = PV(daq_utils.motor_dict["omega"] + ".VAL")
       self.omegaTweak_pv = PV(daq_utils.motor_dict["omega"] + ".RLV")
       self.sampyTweak_pv = PV(daq_utils.motor_dict["sampleY"] + ".RLV")
-      self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
+      if (daq_utils.beamline=="nyx"): 
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleX"] + ".RLV")            
+      else:
+        self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")            
       self.omegaRBV_pv = PV(daq_utils.motor_dict["omega"] + ".RBV")
       self.omegaRBV_pv.add_callback(self.processSampMoveCB,motID="omega") #I think monitoring this allows for the textfield to monitor val and this to deal with the graphics. Else next line has two callbacks on same thing.
       self.photonShutterOpen_pv = PV(daq_utils.pvLookupDict["photonShutterOpen"])
@@ -5492,8 +5630,9 @@ class ControlMain(QtWidgets.QMainWindow):
       self.fastShutterRBV_pv.add_callback(self.shutterChangedCB)
       self.gripTempSignal.connect(self.processGripTemp)
       self.gripTemp_pv.add_callback(self.gripTempChangedCB)
-      self.cryostreamTempSignal.connect(self.processCryostreamTemp)
-      self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
+      if getBlConfig(CRYOSTREAM_ONLINE):
+        self.cryostreamTempSignal.connect(self.processCryostreamTemp)
+        self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
       self.ringCurrentSignal.connect(self.processRingCurrent)      
       self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)
       self.beamAvailableSignal.connect(self.processBeamAvailable)      

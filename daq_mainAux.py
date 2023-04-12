@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2022-3.2/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-1-latest/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """
@@ -8,6 +8,7 @@ import daq_lib
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
+from gov_lib import setGovRobot
 import atexit
 from daq_main_common import pybass_init
 import logging

@@ -692,9 +692,11 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     roiMode = beamline_support.getPvValFromDescriptor("detectorROIMode")
     if roiMode == 1:
         detector = "eiger4m"
-    else:
+    elif daq_utils.beamline in ("amx", "fmx"):
         detector = beamline_support.getPvValFromDescriptor("detectorDescription")
         detector = ''.join(detector.split()[1::]).lower() #format for dozor
+    else:
+        detector = "eiger2-9m"
     nx = beamline_support.getPvValFromDescriptor("detectorNx")
     ny = beamline_support.getPvValFromDescriptor("detectorNy")
     
@@ -705,6 +707,10 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
     dozorSpotLevel = getBlConfig(RASTER_DOZOR_SPOT_LEVEL)
+    if daq_utils.beamline == "nyx":
+        dozorPlugin = "/nsls2/software/mx/nyx/bin/dectris-neggia.so"
+    else:
+        dozorPlugin = "/usr/lib64/dectris-neggia.so"
     templateDict = {"detector": detector,
                     "nx": nx,
                     "ny": ny,
@@ -715,7 +721,8 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
                     "first_image_number": firstImageNumber,
                     "number_images": rowCellCount,
                     "spot_level": dozorSpotLevel,
-                    "name_template_image": hdf5TemplateImage,}
+                    "name_template_image": hdf5TemplateImage,
+                    "processing_plugin": dozorPlugin,}
     with open("".join([dozorRowDir,f"h5_row_{rowIndex}.dat"]),"w") as f:
         f.write(src.substitute(templateDict))
     return dozorRowDir

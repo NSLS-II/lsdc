@@ -84,7 +84,7 @@ containerDict = {}
 
 cryostreamTempPV = {'amx': 'AMX:cs700:gasT-I', 'fmx': 'FMX:cs700:gasT-I'}
 
-VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}, 'nyx':{'min':0.01, 'max':10, 'digits':3}}
+VALID_EXP_TIMES = {'amx':{'min':0.005, 'max':1, 'digits':3}, 'fmx':{'min':0.01, 'max':10, 'digits':3}, 'nyx':{'min':0.002, 'max':10, 'digits':4}}
 VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, 'max':2000, 'digits':2}, 'nyx':{'min':100, 'max':500, 'digits':3}}
 VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':1000, 'digits':3}}
 VALID_PREFIX_LENGTH = 25 #TODO centralize with spreadsheet validation?
@@ -768,7 +768,7 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
 
         hBoxColParams2 = QtWidgets.QHBoxLayout()
         colRangeLabel = QtWidgets.QLabel('Oscillation Width:')
-        colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
+        colRangeLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.osc_range_ledit = QtWidgets.QLineEdit() # note, this is for rastering! same name used for data collections
         self.setGuiValues({'osc_range':getBlConfig("rasterDefaultWidth")})
         self.osc_range_ledit.returnPressed.connect(self.screenDefaultsOKCB)                        
@@ -1878,7 +1878,7 @@ class ControlMain(QtWidgets.QMainWindow):
         deQueueSelectedButton = QtWidgets.QPushButton("deQueue All Selected")        
         deQueueSelectedButton.clicked.connect(self.dewarTree.deQueueAllSelectedCB)
         runQueueButton = QtWidgets.QPushButton("Collect Queue")
-        runQueueButton.setStyleSheet("background-color: yellow")
+        runQueueButton.setStyleSheet("background-color: green")
         runQueueButton.clicked.connect(self.collectQueueCB)
         stopRunButton = QtWidgets.QPushButton("Stop Collection")
         stopRunButton.setStyleSheet("background-color: red")
@@ -1946,12 +1946,14 @@ class ControlMain(QtWidgets.QMainWindow):
         colStartLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_start_ledit = QtWidgets.QLineEdit()
         self.osc_start_ledit.setFixedWidth(60)
+        self.osc_start_ledit.setValidator(QtGui.QDoubleValidator())
         self.colEndLabel = QtWidgets.QLabel('Oscillation Range:')
         self.colEndLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.colEndLabel.setFixedWidth(140)
         self.osc_end_ledit = QtWidgets.QLineEdit()
         self.setGuiValues({'osc_end':"180.0"})
         self.osc_end_ledit.setFixedWidth(60)
+        self.osc_end_ledit.setValidator(QtGui.QDoubleValidator())
         self.osc_end_ledit.textChanged[str].connect(functools.partial(self.totalExpChanged,"oscEnd"))        
         hBoxColParams1.addWidget(colStartLabel)
         hBoxColParams1.addWidget(self.osc_start_ledit)
@@ -1963,13 +1965,16 @@ class ControlMain(QtWidgets.QMainWindow):
         colRangeLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.osc_range_ledit = QtWidgets.QLineEdit()
         self.osc_range_ledit.setFixedWidth(60)
+        self.osc_range_ledit.setValidator(QtGui.QDoubleValidator(0.001,3600,3))
         self.stillModeCheckBox = QCheckBox("Stills")
         self.stillModeCheckBox.setEnabled(False)
         if (self.stillModeStatePV.get()):
           self.stillModeCheckBox.setChecked(True)
           self.setGuiValues({'osc_range':"0.0"})
+          self.osc_range_ledit.setEnabled(False)
         else:
-          self.stillModeCheckBox.setChecked(False)          
+          self.stillModeCheckBox.setChecked(False)
+          self.osc_range_ledit.setEnabled(True)
         colExptimeLabel = QtWidgets.QLabel('ExposureTime:')
         self.stillModeCheckBox.clicked.connect(self.stillModeUserPushCB)        
         self.osc_range_ledit.textChanged[str].connect(functools.partial(self.totalExpChanged,"oscRange"))
@@ -2035,6 +2040,7 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
+        self.transmission_ledit.setValidator(QtGui.QDoubleValidator(0.001,0.999,3))
         self.setGuiValues({'transmission':getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)        
         setTransButton = QtWidgets.QPushButton("Set Trans")
@@ -2055,6 +2061,7 @@ class ControlMain(QtWidgets.QMainWindow):
         energySPLabel = QtWidgets.QLabel("SetPoint:")
         self.energyMoveLedit = QtEpicsPVEntry(daq_utils.motor_dict["energy"] + ".VAL",self,75,2)
         self.energy_ledit = self.energyMoveLedit.getEntry()
+        self.energy_ledit.setValidator(QtGui.QDoubleValidator())
         self.energy_ledit.returnPressed.connect(self.moveEnergyCB)        
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)        
@@ -2089,7 +2096,10 @@ class ControlMain(QtWidgets.QMainWindow):
         colResoLabel.setAlignment(QtCore.Qt.AlignCenter) 
         self.resolution_ledit = QtWidgets.QLineEdit()
         self.resolution_ledit.setFixedWidth(60)
+        self.resolution_ledit.setValidator(QtGui.QDoubleValidator())
         self.resolution_ledit.textEdited[str].connect(self.resoTextChanged)
+        if (daq_utils.beamline == "nyx"):
+            self.resolution_ledit.setEnabled(False)
         detDistLabel = QtWidgets.QLabel('Detector Dist.')
         detDistLabel.setAlignment(QtCore.Qt.AlignCenter)         
         detDistRBLabel = QtWidgets.QLabel("Readback:")
@@ -2278,6 +2288,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
+        self.vectorFPP_ledit.setValidator(QIntValidator(self))
         vecLenLabel = QtWidgets.QLabel("    Length(microns):")
         self.vecLenLabelOutput = QtWidgets.QLabel("---")
         vecSpeedLabel = QtWidgets.QLabel("    Speed(microns/s):")
@@ -2389,7 +2400,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
-        centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)                
+        try:
+          if QtGui.QColor.isValidColor(getBlConfig('defaultOverlayColor')):
+            centerMarkBrush = QtGui.QBrush(QtGui.QColor(getBlConfig('defaultOverlayColor')))
+          else:
+            centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
+        except KeyError as e:
+          logger.warning('No value found for defaultOverlayColor')
+          centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)
         self.centerMarker = QtWidgets.QGraphicsSimpleTextItem("+")
         self.centerMarker.setZValue(10.0)
@@ -2427,7 +2445,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scene.addItem(self.beamSizeOverlay)
         self.beamSizeOverlay.setVisible(False)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
-        scaleBrush = QtGui.QBrush(QtCore.Qt.blue)        
+        try:
+          if QtGui.QColor.isValidColor(getBlConfig('defaultOverlayColor')):
+            scaleBrush = QtGui.QBrush(QtGui.QColor(getBlConfig('defaultOverlayColor')))
+          else:
+            scaleBrush = QtGui.QBrush(QtCore.Qt.blue)
+        except KeyError as e:
+          logger.warning('No value found for defaultOverlayColor')
+          scaleBrush = QtGui.QBrush(QtCore.Qt.blue) 
         scalePen = QtGui.QPen(scaleBrush,2.0)
         scaleTextPen = QtGui.QPen(scaleBrush,1.0)
         self.imageScaleLineLen = 50
@@ -2748,6 +2773,7 @@ class ControlMain(QtWidgets.QMainWindow):
           self.dimpleCheckBox.setDisabled(True)
           self.centeringComboBox.setDisabled(True)
           self.beamsizeComboBox.setDisabled(True)
+          annealButton.setDisabled(True)
           centerLoopButton.setDisabled(True)
           clearGraphicsButton.setDisabled(True)
           saveCenteringButton.setDisabled(True) 
@@ -5404,7 +5430,14 @@ class ControlMain(QtWidgets.QMainWindow):
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
-        self.BlueOverlayAction.setChecked(True)
+        try:
+            if (getBlConfig('defaultOverlayColor') == 'GREEN'):
+                self.GreenOverlayAction.setChecked(True)
+            else:
+                self.BlueOverlayAction.setChecked(True)
+        except KeyError as e:
+            logger.warning('No value for defaultOverlayColor')
+            self.BlueOverlayAction.setChecked(True)
         
         fileMenu.addAction(exitAction)
         self.setGeometry(300, 300, 1550, 1000) #width and height here. 

@@ -2400,9 +2400,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
-        if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor').isValid():
-          centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
-        else:
+        try:
+          if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')).isValid():
+            centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
+          else:
+            centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
+        except KeyError as e:
+          logger.warning('No value found for defaultOverlayColor')
           centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)
         self.centerMarker = QtWidgets.QGraphicsSimpleTextItem("+")
@@ -2441,9 +2445,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scene.addItem(self.beamSizeOverlay)
         self.beamSizeOverlay.setVisible(False)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
-        if(getBlConfig('defaultOverlayColor' == 'GREEN'):
-          scaleBrush = QtGui.QBrush(QtCore.Qt.green) 
-        else:
+        try:
+          if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')).isValid():
+            scaleBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
+          else:
+            scaleBrush = QtGui.QBrush(QtCore.Qt.blue)
+        except KeyError as e:
+          logger.warning('No value found for defaultOverlayColor')
           scaleBrush = QtGui.QBrush(QtCore.Qt.blue) 
         scalePen = QtGui.QPen(scaleBrush,2.0)
         scaleTextPen = QtGui.QPen(scaleBrush,1.0)
@@ -5422,9 +5430,13 @@ class ControlMain(QtWidgets.QMainWindow):
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
-        if (getBlConfig('defaultOverlayColor' == 'GREEN'):
-            self.GreenOverlayAction.setChecked(True)
-        else:
+        try:
+            if (getBlConfig('defaultOverlayColor') == 'GREEN'):
+                self.GreenOverlayAction.setChecked(True)
+            else:
+                self.BlueOverlayAction.setChecked(True)
+        except KeyError as e:
+            logger.warning('No value for defaultOverlayColor')
             self.BlueOverlayAction.setChecked(True)
         
         fileMenu.addAction(exitAction)

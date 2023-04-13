@@ -2400,8 +2400,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sceneHutchTop.addItem(self.pixmap_item_HutchTop)
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
-        if QtGui.QColor.fromString(daq_utils.defaultOverlayColor).isValid():
-          centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(daq_utils.defaultOverlayColor))
+        if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor').isValid():
+          centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
         else:
           centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         centerMarkPen = QtGui.QPen(centerMarkBrush,2.0)
@@ -2441,7 +2441,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.scene.addItem(self.beamSizeOverlay)
         self.beamSizeOverlay.setVisible(False)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
-        if(daq_utils.defaultOverlayColor == 'GREEN'):
+        if(getBlConfig('defaultOverlayColor' == 'GREEN'):
           scaleBrush = QtGui.QBrush(QtCore.Qt.green) 
         else:
           scaleBrush = QtGui.QBrush(QtCore.Qt.blue) 
@@ -5422,7 +5422,7 @@ class ControlMain(QtWidgets.QMainWindow):
         # Create the menu item with the submenu, add the group 
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
-        if (daq_utils.defaultOverlayColor == 'GREEN'):
+        if (getBlConfig('defaultOverlayColor' == 'GREEN'):
             self.GreenOverlayAction.setChecked(True)
         else:
             self.BlueOverlayAction.setChecked(True)

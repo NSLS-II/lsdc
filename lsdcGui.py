@@ -2401,8 +2401,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.pixmap_item.mousePressEvent = self.pixelSelect
         try:
-          if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')).isValid():
-            centerMarkBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
+          if QtGui.QColor.isValidColor(getBlConfig('defaultOverlayColor')):
+            centerMarkBrush = QtGui.QBrush(QtGui.QColor(getBlConfig('defaultOverlayColor')))
           else:
             centerMarkBrush = QtGui.QBrush(QtCore.Qt.blue)
         except KeyError as e:
@@ -2446,8 +2446,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeOverlay.setVisible(False)
         self.beamSizeOverlay.setRect(self.overlayPosOffsetX+self.centerMarker.x()-(self.beamSizeXPixels/2),self.overlayPosOffsetY+self.centerMarker.y()-(self.beamSizeYPixels/2),self.beamSizeXPixels,self.beamSizeYPixels)
         try:
-          if QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')).isValid():
-            scaleBrush = QtGui.QBrush(QtGui.QColor.fromString(getBlConfig('defaultOverlayColor')))
+          if QtGui.QColor.isValidColor(getBlConfig('defaultOverlayColor')):
+            scaleBrush = QtGui.QBrush(QtGui.QColor(getBlConfig('defaultOverlayColor')))
           else:
             scaleBrush = QtGui.QBrush(QtCore.Qt.blue)
         except KeyError as e:

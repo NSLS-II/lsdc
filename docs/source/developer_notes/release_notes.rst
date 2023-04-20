@@ -2,34 +2,36 @@
  Release History
 =================
 
-2.0.1 (2023-04-xx, a.k.a. 2023-2)
+2.0.1 (2023-04-20, a.k.a. 2023-2)
 =================================
 
 Fixes and other changes
 -----------------------
-* AMX/FMX branch (master)
 
-  * GUI - beamline and directory check
-  * Camera change to zoom level 2 on sample mount
-  * GUI - validate HDF5 files
-  * GUI - change albula image change method that improves stability
-  * GUI - gonio moves only under certain circumstances
-  * Docs - collection priority notes
+* Routine use of one-branch (Bluesky collections) on both AMX and FMX!
+* Make fastDP logging identifiable
+* GUI change to level 2 upon sample mount
+* Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
+* GUI
+  * Startup checks including correct beamline and directory
+  * Overlay improvements
+  * Validation for more input fields
+  * Collect Queue button now green
+  * NYX-specific disabling of some buttons
+  * Validate HDF5 files #link
+  * Change albula image change method that improves stability
 
-* AMX/FMX branch (one-branch)
-
-  * Routine use on both AMX and FMX!
-  * Make fastDP logging identifiable
-  * GUI change to level 2 upon sample mount
-  * Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
-  * GUI checks including correct beamline
-  * FMX: start fastDP/Dimple result gathering script
-  * Protocol harmonization and fixing after using LSDC2 (Jira)
-    * Add transmission and oscillation range for multiCol
-    * Add rastering selector for multiCol
-  * Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
-  * Ensure RobotControlLib is available in LSDC server and remote
-  * Fixed automated collection
+* FMX: start fastDP/Dimple result gathering script
+* Protocol harmonization and fixing after using LSDC2 (Jira)
+  * Remove screen and specRaster protocols
+  * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links
+  * Get ednaCol working (requires local EDNA fixes as well) #links
+* Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
+* Ensure RobotControlLib is available in LSDC server and remote
+* Fixed automated collection
+* Docs - collection priority notes
+* setE function added for FMX #link
+* Fix detector distance value set in Eiger master file with rasters #link
 
 
 2.0.0 (2023-01-18, a.k.a. 2023-1)

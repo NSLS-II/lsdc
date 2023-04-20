@@ -28,11 +28,11 @@ Fixes and other changes
   * Remove XRF Spectrum tab
 
 * FMX: start fastDP/Dimple result gathering script
-* Protocol harmonization and fixing after using LSDC2 (Jira)
+* Protocol harmonization and fixing after using LSDC2
 
-  * Remove screen and specRaster protocols
-  * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links
-  * Get ednaCol working (requires local EDNA fixes as well) #links
+  * Remove screen and specRaster protocols https://github.com/NSLS-II/lsdc/pull/270
+  * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links SB-317
+  * Get ednaCol working (requires local EDNA fixes as well) SB-319
   * Remove eScan from list of selectable protocols - only available from its tab in the GUI
 
 * Improve sample information handling to prevent problems with collection requests with empty sample IDs

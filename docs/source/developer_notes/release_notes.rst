@@ -8,7 +8,10 @@
 Fixes and other changes
 -----------------------
 
-* Routine use of one-branch (Bluesky collections) on both AMX and FMX!
+* one-branch-to-rule-them-all and derived branches will be merged into master permanently because the Bluesky collections are all working satisfactorily
+  * This is why we are reporting all changes here as for this version, not for any particular version.
+
+
 * Make fastDP logging identifiable
 * GUI change to level 2 upon sample mount
 * Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
@@ -20,18 +23,22 @@ Fixes and other changes
   * NYX-specific disabling of some buttons
   * Validate HDF5 files #link
   * Change albula image change method that improves stability
+  * Remove XRF Spectrum tab
 
 * FMX: start fastDP/Dimple result gathering script
 * Protocol harmonization and fixing after using LSDC2 (Jira)
   * Remove screen and specRaster protocols
   * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links
   * Get ednaCol working (requires local EDNA fixes as well) #links
+  * Remove eScan from list of selectable protocols - only available from its tab in the GUI
+
+* Energy scans can only be done for elements within 20 eV of current energy
 * Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
 * Ensure RobotControlLib is available in LSDC server and remote
 * Fixed automated collection
 * Docs - collection priority notes
 * setE function added for FMX #link
-* Fix detector distance value set in Eiger master file with rasters #link
+* Fix detector distance value set in Eiger master file with rasters SB-266
 
 
 2.0.0 (2023-01-18, a.k.a. 2023-1)

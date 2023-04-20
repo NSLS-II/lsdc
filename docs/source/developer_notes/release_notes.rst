@@ -9,6 +9,7 @@ Fixes and other changes
 -----------------------
 
 * one-branch-to-rule-them-all and derived branches will be merged into master permanently because the Bluesky collections are all working satisfactorily
+
   * This is why we are reporting all changes here as for this version, not for any particular version.
 
 
@@ -16,6 +17,7 @@ Fixes and other changes
 * GUI change to level 2 upon sample mount
 * Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
 * GUI
+
   * Startup checks including correct beamline and directory
   * Overlay improvements
   * Validation for more input fields
@@ -27,6 +29,7 @@ Fixes and other changes
 
 * FMX: start fastDP/Dimple result gathering script
 * Protocol harmonization and fixing after using LSDC2 (Jira)
+
   * Remove screen and specRaster protocols
   * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links
   * Get ednaCol working (requires local EDNA fixes as well) #links

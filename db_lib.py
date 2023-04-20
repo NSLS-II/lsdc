@@ -525,7 +525,7 @@ def getQueue(beamlineName):
 
     for s in sample_list:
         reqs = getRequestsBySampleID(s, active_only=True)
-        logger.info(f"requests for sample {s}: {reqs}")
+        logger.debug(f"requests for sample {s}: {reqs}")
         for request in reqs:
             yield request
 

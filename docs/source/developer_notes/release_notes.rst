@@ -32,6 +32,8 @@ Fixes and other changes
   * Get ednaCol working (requires local EDNA fixes as well) #links
   * Remove eScan from list of selectable protocols - only available from its tab in the GUI
 
+* Improve sample information handling to prevent problems with collection requests with empty sample IDs
+* Enable old-style detector initialization - still need while remaining data collection protocols are converted to full Bluesky
 * Energy scans can only be done for elements within 20 eV of current energy
 * Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
 * Ensure RobotControlLib is available in LSDC server and remote

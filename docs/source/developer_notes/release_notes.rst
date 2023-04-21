@@ -26,8 +26,10 @@ Fixes and other changes
   * Validate HDF5 files #link
   * Change albula image change method that improves stability
   * Remove XRF Spectrum tab
+  * Changes to queue collect behavior, requests added to mounted sample if off else add to selected sample
 
 * FMX: start fastDP/Dimple result gathering script
+* FMX: Run raddose3d based on changes to transmission set point and remove "Calc Lifetime" button
 * Protocol harmonization and fixing after using LSDC2
 
   * Remove screen and specRaster protocols https://github.com/NSLS-II/lsdc/pull/270

@@ -1518,6 +1518,17 @@ class DewarTree(QtWidgets.QTreeView):
       self.collapseAll()
       self.isExpanded = 0
 
+    def getSelectedSample(self):
+      selectedSampleID = None
+      if self.selectedIndexes():
+        index = self.selectedIndexes()[0]
+        item = self.model.itemFromIndex(index)
+        if str(item.data(33)) == 'sample':
+          selectedSampleID = str(item.data(32))
+        elif str(item.data(33)) == 'request':
+          selectedSampleRequest = db_lib.getRequestByID(item.data(32))
+          selectedSampleID = selectedSampleRequest["sample"]
+      return selectedSampleID
 
 
 class DataLocInfo(QtWidgets.QGroupBox):
@@ -5070,11 +5081,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage("Mounting disabled!! Call staff!")
         return
       logger.info("mount selected sample")
-      self.eraseCB()      
-      try:
-        self.selectedSampleID = self.selectedSampleRequest["sample"]
-      except KeyError as e:
-        logger.error('unable to get sample')
+      self.eraseCB()
+      if 'sample' in self.selectedSampleRequest: # When GUI is started and no sample is mounted, self.selectedSampleRequest is empty
+        self.selectedSampleID = self.selectedSampleRequest['sample']
+      elif self.dewarTree.getSelectedSample(): # If sample ID is not found check the dewartree directly
+        self.selectedSampleID = self.dewarTree.getSelectedSample()
+      else: # No sample ID found, do nothing
+        logger.info('No sample selected, cannot mount')
         return
       self.send_to_server("mountSample(\""+str(self.selectedSampleID)+"\")")
       self.zoom2Radio.setChecked(True)      

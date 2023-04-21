@@ -16,6 +16,10 @@ import db_lib
 from daq_utils import getBlConfig
 from config_params import *
 from kafka_producer import send_kafka_message
+from start_bs import govs, gov_robot, flyer, RE
+import gov_lib
+from bluesky.preprocessors import finalize_wrapper
+import bluesky.plan_stubs as bps
 import logging
 import albulaUtils
 logger = logging.getLogger(__name__)
@@ -70,12 +74,13 @@ def destroy_gui_message():
 
 
 def unlatchGov(): # Command needed for FloCos to recover robot
-  print(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  logger.info(f"OLD: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  setPvDesc("robotGovActive",1)
-  time.sleep(0.2)
-  print(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
-  logger.info(f"NEW: unlatchGov called, gov active state = {getPvDesc('robotGovActive')}")
+  message1 = f"OLD: unlatchGov called, gov active state = {govs.sel.active.get()}"
+  print(message1)
+  logger.info(message1)
+  govs.sel.active.set(1)
+  message2 = f"NEW: unlatchGov called, gov active state = {govs.sel.active.get()}"
+  print(message2)
+  logger.info(message2)
 
 
 def set_field(param,val):
@@ -234,106 +239,6 @@ def setRobotGovState(stateString):
   else:
     setPvDesc("humanGovGo",stateString)
 
-def toggleLowMagCameraSettings(stateCode):
-
-  if (stateCode == "DA"):
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN_DA))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME_DA))
-  else:
-    setPvDesc("lowMagGain", getBlConfig(LOW_MAG_GAIN))
-    setPvDesc("lowMagAcquireTime",getBlConfig(LOW_MAG_EXP_TIME))
-
-def waitGovRobotSE():
-  waitGovNoSleep()    
-  robotGovState = (getPvDesc("robotSeActive") or getPvDesc("humanSeActive"))
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("SE")
-    return 1
-  else:
-    logger.info("Governor did not reach SE")
-    gui_message("Governor did not reach SE.")    
-    return 0
-
-def setGovRobot(state):
-  if state == "DI":
-    return setGovRobotDI()
-  else:
-    logger.info('setGovRob%s' % state)
-    setRobotGovState(state)
-    altName = state.lower().capitalize()
-    waitGov()
-    robotGovState = (getPvDesc("robot%sActive" % altName) or getPvDesc("human%sActive" % altName))
-    logger.info("robot gov state = " + str(robotGovState))
-    if (robotGovState != 0):
-      if state in ["SA", "DA"]:
-        toggleLowMagCameraSettings(state)
-      return 1
-    else:
-      logger.info("Governor did not reach %s" % state)
-      gui_message("Governor did not reach %s." % state)
-      return 0
-
-def setGovRobotDI(): # keep this because it is different from the others
-  setRobotGovState("DI")
-  waitGov()    
-  robotGovState = getPvDesc("robotDiActive")
-  logger.info("robot gov state = " + str(robotGovState))
-  if (robotGovState != 0):
-    toggleLowMagCameraSettings("DI")        
-    return 1
-  else:
-    logger.info("Governor did not reach DI")
-    gui_message("Governor did not reach DI.")        
-    return 0
-
-def govBusy():
-  return (getPvDesc("robotGovStatus") == 1 or getPvDesc("humanGovStatus") == 1)
-
-def setGovRobotSA_nowait(): #called at end of a data collection. The idea is this will have time to complete w/o waiting. 
-  logger.info("setGovRobotSA")
-  toggleLowMagCameraSettings("SA")  
-  setRobotGovState("SA")
-  return 1
-
-def setGovRobotDI_nowait():
-  logger.info("setGovRobotDI")
-  toggleLowMagCameraSettings("DI")
-  setRobotGovState("DI")
-  
-
-
-def waitGov():
-  govTimeout = 120  
-  startTime = time.time()
-  time.sleep(1.5)  
-  while (1):
-    robotGovStatus = govBusy()
-    logger.info("robot gov status = " + str(robotGovStatus))    
-    if (robotGovStatus != 1): #enum 1 = busy
-      break
-    if (time.time()-startTime > govTimeout):
-      logger.info("Governor Timeout!")
-      gui_message("Governor Timeout!")          
-      return 0
-    time.sleep(0.1)        
-  time.sleep(1.0)    
-
-def waitGovNoSleep():
-  govTimeout = 120  
-  startTime = time.time()
-  while (1):
-    time.sleep(.05)
-    robotGovStatus = govBusy()
-    logger.info("robot gov status = " + str(robotGovStatus))    
-    if (robotGovStatus != 1): #enum 1 = busy
-      break
-    if (time.time()-startTime > govTimeout):
-      logger.info("Governor Timeout!")
-      gui_message("Governor Timeout!")                
-      return 0
-  
-  
 def mountSample(sampID):
   global mountCounter
 
@@ -359,10 +264,10 @@ def mountSample(sampID):
     setPvDesc("robotOmegaWorkPos",90.0)    
     logger.info("done setting work pos")  
   if (currentMountedSampleID != ""): #then unmount what's there
-    if (sampID!=currentMountedSampleID):
+    if (sampID!=currentMountedSampleID and not robot_lib.multiSampleGripper()):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
-      if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+      if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
         db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)
         set_field("mounted_pin","")        
         db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})        
@@ -370,7 +275,7 @@ def mountSample(sampID):
         if (warmUpNeeded):
           gui_message("Warming gripper. Please stand by.")
           mountCounter = 0
-        mountStat = robot_lib.mountRobotSample(puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
+        mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
         if (warmUpNeeded):
           destroy_gui_message()
         if (mountStat == 1):
@@ -389,7 +294,7 @@ def mountSample(sampID):
       return 1
   else: #nothing mounted
     (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
-    mountStat = robot_lib.mountRobotSample(puckPos,pinPos,sampID,init=1)
+    mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
     if (mountStat == 1):
       set_field("mounted_pin",sampID)
     elif(mountStat == 2):
@@ -415,7 +320,7 @@ def unmountSample():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.finish()
       set_field("mounted_pin","")
@@ -430,7 +335,7 @@ def unmountCold():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
-    if (robot_lib.unmountRobotSample(puckPos,pinPos,currentMountedSampleID)):
+    if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.parkGripper()
       set_field("mounted_pin","")
@@ -470,16 +375,20 @@ def runDCQueue(): #maybe don't run rasters from here???
       break
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
-    setPvDesc("govRobotDetDist",reqObj["detDist"])
-    setPvDesc("govHumanDetDist",reqObj["detDist"])
+    gov_lib.set_detz_in(gov_robot, reqObj["detDist"])
     if (reqObj["detDist"] >= ROBOT_MIN_DISTANCE and getBlConfig("HePath") == 0):
-      setPvDesc("govRobotDetDistOut",reqObj["detDist"])
-      setPvDesc("govHumanDetDistOut",reqObj["detDist"])          
+      gov_lib.set_detz_out(gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
     currentMountedSampleID = mountedSampleDict["sampleID"]
     if (currentMountedSampleID != sampleID):
       if (getBlConfig("queueCollect") == 0):
+        current_request = db_lib.popNextRequest(daq_utils.beamline)
+        logger.info(f"Current request: {current_request}")
+        if current_request["request_obj"]["beamline"] != daq_utils.beamline:
+            message = f"Beamline mismatch between collection and beamline. request: '{current_request['request_obj']['beamline']}' beamline: '{daq_utils.beamline}'. request_uid: {current_request['uid']}\nuse db_lib.delete_request(uid) to delete this bad request"
+            logger.error(message)
+            gui_message(message)
         gui_message("You can only run requests on the currently mounted sample. Remove offending request and continue.")
         return
       mountStat = mountSample(sampleID)
@@ -593,7 +502,7 @@ def collectData(currentRequest):
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
-  if not prot in ["eScan", "specRaster"]:
+  if not prot in ["eScan"]:
     beamline_lib.mvaDescriptor("detectorDist",colDist)  
   logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
@@ -602,16 +511,15 @@ def collectData(currentRequest):
   db_lib.updateRequest(currentRequest)
   if (prot == "raster"):
     logger.info('entering raster')
-    status = daq_macros.snakeRaster(currentRequest["uid"])
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
+    status = 0
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
-  elif (prot == "specRaster"):
-    status = daq_macros.snakeStepRasterSpec(currentRequest["uid"])    
   elif (prot == "vector" or prot == "stepVector"):
     imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):
-    daq_macros.snakeRaster(currentRequest["uid"])    
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
   elif (prot == "rasterScreen"):
     daq_macros.rasterScreen(currentRequest)    
   elif (prot == "multiColQ"):
@@ -641,28 +549,8 @@ def collectData(currentRequest):
           reqObj["sweep_start"] = beamline_lib.motorPosFromDescriptor("omega") - 90.0 #%360.0?
           sweep_start = reqObj["sweep_start"]
       daq_macros.setTrans(attenuation)      
-    if (reqObj["protocol"] == "screen"):
-      screenImages = 2
-      screenRange = 90
-      range_degrees = img_width
-      for i in range (0,screenImages):
-        sweep_start = reqObj["sweep_start"]+(i*screenRange)
-        sweep_end = sweep_start+screenRange
-        file_prefix = str(reqObj["file_prefix"]+"_"+str(i*screenRange))
-        data_directory_name = str(reqObj["directory"]) # for now
-        file_number_start = reqObj["file_number_start"]
-        beamline_lib.mvaDescriptor("omega",sweep_start)
-        if (i==0):
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
-        else:
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
-        seqNum = int(detector_get_seqnum())         
-        node = getBlConfig("spotNode1")
-        comm_s = f'ssh -q {node} \"{os.environ["MXPROCESSINGSCRIPTSDIR"]}eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}\"'
-        logger.info(comm_s)
-        os.system(comm_s)
-          
-    elif (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
+
+    if (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
       characterizationParams = reqObj["characterizationParams"]
       index_success = daq_macros.dna_execute_collection3(0.0,img_width,2,exposure_period,data_directory_name+"/",file_prefix,1,-89.0,1,currentRequest)
       if (index_success):        
@@ -710,8 +598,12 @@ def collectData(currentRequest):
             return 1
     else: #standard
       logger.info("moving omega to start " + str(time.time()))      
-      beamline_lib.mvaDescriptor("omega",sweep_start)
-      imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
+      if daq_utils.beamline == "nyx":
+          direction = (sweep_end - sweep_start) / abs(sweep_end - sweep_start)
+          beamline_lib.mvaDescriptor("omega",sweep_start - direction*0.05)
+      else:
+          beamline_lib.mvaDescriptor("omega",sweep_start)
+      collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   try:
     if (logMe) and prot == 'raster':
       logMxRequestParams(currentRequest,wait=False)
@@ -728,48 +620,50 @@ def collectData(currentRequest):
   if reqObj["protocol"] in ("standard", "vector", "raster"):
     send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=reqObj["protocol"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
-    seqNum = int(detector_get_seqnum())
-    comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-    logger.info(comm_s)
-    os.system(comm_s)    
-    filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
-    logger.info(f"Checking integrity of {filename}")
-    timeout_index = 0
-    while not albulaUtils.validate_master_HDF5_file(filename):
-      timeout_index += 1
-      time.sleep(3)
-      if timeout_index > 15:
-        logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
-        return
-    if img_width > 0: #no dataset processing in stills mode
-      if (reqObj["fastDP"]):
-        if (reqObj["fastEP"]):
-          fastEPFlag = 1
-        else:
-          fastEPFlag = 0
-        if (reqObj["dimple"]):
-          dimpleFlag = 1
-        else:
-          dimpleFlag = 0        
-        nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
-        fastDPNodeCounter+=1
-        node = getBlConfig(nodeName)      
-        dimpleNode = getBlConfig("dimpleNode")      
-        if (daq_utils.detector_id == "EIGER-16"):
-          seqNum = int(detector_get_seqnum())
-          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
-        else:
-          comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-        logger.info(f'Running fastdp command: {comm_s}')
-        visitName = daq_utils.getVisitName()
-        if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
-          os.system("killall -KILL loop-fdp-dple-populate.sh")
-          logger.info('starting fast dp result gathering script')
-          os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
-        os.system(comm_s)
-      if (reqObj["xia2"]):
-        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
-        os.system(comm_s)
+    if daq_utils.beamline != "nyx":
+      seqNum = flyer.detector.cam.sequence_id.get()
+      comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
+      logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
+      #os.system(comm_s)    
+      filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
+      logger.info(f"Checking integrity of {filename}")
+      timeout_index = 0
+      while not albulaUtils.validate_master_HDF5_file(filename):
+        timeout_index += 1
+        time.sleep(3)
+        if timeout_index > 15:
+          logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
+          return 
+      if img_width > 0: #no dataset processing in stills mode
+        if (reqObj["fastDP"]):
+          if (reqObj["fastEP"]):
+            fastEPFlag = 1
+          else:
+            fastEPFlag = 0
+          if (reqObj["dimple"]):
+            dimpleFlag = 1
+          else:
+            dimpleFlag = 0        
+          nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
+          fastDPNodeCounter+=1
+          node = getBlConfig(nodeName)      
+          dimpleNode = getBlConfig("dimpleNode")      
+          if (daq_utils.detector_id == "EIGER-16"):
+            seqNum = flyer.detector.cam.sequence_id.get()
+            comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
+          else:
+            comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
+          logger.info(f'Running fastdp command: {comm_s}')
+          if daq_utils.beamline in ("amx", "fmx"):
+            visitName = daq_utils.getVisitName()
+            if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
+              os.system("killall -KILL loop-fdp-dple-populate")
+              logger.info('starting fast dp result gathering script')
+              os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
+          os.system(comm_s)
+        if (reqObj["xia2"]):
+          comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
+          os.system(comm_s)
   
   logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)
@@ -805,14 +699,17 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   except ValueError: 
     pass
   logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "screen" or protocol == "burn"):
+  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
     logger.info("vectorSync " + str(time.time()))    
     daq_macros.vectorSync()
-    logger.info("zebraDaq " + str(time.time()))        
-    daq_macros.zebraDaq(angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,changeState)
-#    daq_macros.zebraDaq(angleStart,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number,3,protocol=protocol)  #?protocol?
+    logger.info("zebraDaq " + str(time.time()))
+   
+    vector_params = daq_macros.gatherStandardVectorParams()
+    logger.debug(f"vector_params: {vector_params}") 
+    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
+
   elif (protocol == "vector"):
-    daq_macros.vectorZebraScan(currentRequest)  
+    RE(daq_macros.vectorZebraScan(currentRequest))
   elif (protocol == "stepVector"):
     daq_macros.vectorZebraStepScan(currentRequest)
   else:
@@ -840,7 +737,7 @@ def detectorArm(angle_start,image_width,number_of_images,exposure_period,filepre
   detector_set_filepath(data_directory_name)
   detector_set_fileprefix(file_prefix_minus_directory)
   detector_set_filenumber(file_number)
-  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), 6),0.0,exposure_period,getPvDesc("beamCenterX"),getPvDesc("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
+  detector_set_fileheader(angle_start,image_width,beamline_lib.motorPosFromDescriptor("detectorDist"),daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6),0.0,exposure_period,getPvDesc("beamCenterX"),getPvDesc("beamCenterY"),"omega",angle_start,0.0,0.0) #only a few for eiger
   
   detector_start() #but you need wired or manual trigger
   startArm = time.time()
@@ -855,25 +752,28 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
   centerPixX = getPvDesc("image_Y_centerPix")
   xpos = beamline_lib.motorPosFromDescriptor("sampleX")
   target = xpos + ((x-centerPixX) * (fovx/scalePixX))
+  target = target * daq_utils.unitScaling  # unitScaling multiplier used to adjust units between microns and mm
   logger.info('checkC2C_X target: %s' % target)
-  xlimLow = getPvDesc("robotXMountPos") + getPvDesc("robotXMountLowLim")
-  xlimHi = getPvDesc("robotXMountPos") + getPvDesc("robotXMountHiLim")
+  xlimLow = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.low.get()
+  xlimHi = getPvDesc("robotXMountPos") + gov_robot.dev.gx.at_SA.high.get()
   if (target<xlimLow or target>xlimHi):
     gui_message("Click to Center out of bounds on X move. Please mount next sample.")
     return 0
   return 1
   
 
-def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
+def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAMERA_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
+  #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):
+      logger.error("Bad governor state, must be in SA to use C2C, aborting C2C movement")
       return
     if not (checkC2C_X(x,fovx)):
       return
   if (source == "screen"):
-    waitGovNoSleep()
+    gov_lib.waitGovNoSleep()
     setPvDesc("image_X_scalePix",daq_utils.screenPixX) #these are video dimensions in the gui
     setPvDesc("image_Y_scalePix",daq_utils.screenPixY)
     setPvDesc("image_X_centerPix",daq_utils.screenPixX/2)
@@ -898,16 +798,27 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0): #maglevel=0
       setPvDesc("image_X_scaleMM",float(fovx))
       setPvDesc("image_Y_scaleMM",float(fovy))
 
-  omega_mod = beamline_lib.motorPosFromDescriptor("omega")%360.0
+  # The following is intended to allow basic axis changes for standard off-axis camera views
+  # CAMERA_ANGLE_BEAM - camera view is directly in line with beam
+  # CAMERA_ANGLE_ABOVE - camera is looking down from directly above
+  # CAMERA_ANGLE_BELOW - camera is looking up from directly below
+  if (viewangle==daq_utils.CAMERA_ANGLE_BEAM):
+    camera_view_omega_offset = 0
+  elif (viewangle==daq_utils.CAMERA_ANGLE_ABOVE):
+    camera_view_omega_offset = -90
+  elif (viewangle==daq_utils.CAMERA_ANGLE_BELOW):
+    camera_view_omega_offset = 90
+  else:
+    logger.error(f"blconfig 'viewangle' set to invalid value:  {viewangle}") 
+  
+  omega_mod = (camera_view_omega_offset + beamline_lib.motorPosFromDescriptor("omega"))%360.0
   lib_gon_center_xtal(x,y,omega_mod,0)
   if (jog):
     beamline_lib.mvrDescriptor("omega",float(jog))
-
 
 def setProposalID(proposalID):
   daq_utils.setProposalID(proposalID)
 
 def getProposalID():
   return daq_utils.getProposalID()
-
 

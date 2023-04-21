@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2022-3.2/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-1-latest/bin/ipython -i
 """
 The main server for the LSDC system
 """
@@ -11,6 +11,15 @@ from daq_macros import *
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
+from gov_lib import setGovRobot
+from start_bs import robot
+from embl_robot import EMBLRobot
+if isinstance(robot, EMBLRobot):
+    print("loading RobotControlLib")
+    import RobotControlLib
+else:
+    print("not importing RobotControlLib")
+
 
 import logging
 from logging import handlers

@@ -9,6 +9,7 @@ import det_lib
 import beamline_support
 import beamline_lib
 from start_bs import plt
+import config_params
 import atexit
 import traceback
 
@@ -17,6 +18,7 @@ from daq_macros import *
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
+from gov_lib import setGovRobot
 
 import logging
 logger = logging.getLogger(__name__)
@@ -38,6 +40,7 @@ def pybass_init():
 
   daq_utils.init_environment()
   daq_lib.init_var_channels()
+  #if getBlConfig(config_params.DETECTOR_OBJECT_TYPE) == config_params.DETECTOR_OBJECT_TYPE_LSDC:
   det_lib.init_detector()  
   daq_lib.message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "message_string")    
   daq_lib.gui_popup_message_string_pv = beamline_support.pvCreate(daq_utils.beamlineComm + "gui_popup_message_string")    

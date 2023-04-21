@@ -105,7 +105,7 @@ def govStateSet(stateStr, configStr = 'Robot'):
     return
 
 from ophyd import PVPositioner, PVPositionerPC, Device, Component as Cpt, EpicsMotor, EpicsSignal, EpicsSignalRO
-from ophyd import SubscriptionStatus
+from ophyd.status import SubscriptionStatus
 
 # XF:17IDC-ES:FMX{Wago:1}AnnealerIn-Sts
 # XF:17IDC-ES:FMX{Wago:1}AnnealerAir-Sel

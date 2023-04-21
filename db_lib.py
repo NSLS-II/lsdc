@@ -510,15 +510,22 @@ def getQueue(beamlineName):
     for item in DewarItems:
       if (item != ""):
         items.append(item)
+    logger.debug(f"dewar items: {items}")
 
     sample_list = []
     contents = [getContainerByID(uid)['content'] for uid in items]
-    for samp in contents:
-        if (samp != ""):
-          sample_list += samp
+    logger.debug(f"total contents: {contents}")
+    for samples in contents:
+        logger.debug(f"samples: {samples}")
+        for samp in samples:
+            logger.debug(f'{samp} {samp!=""}')
+            if (samp != ""):
+              sample_list.append(samp)
+    logger.debug(f"sample list: {sample_list}")
 
     for s in sample_list:
         reqs = getRequestsBySampleID(s, active_only=True)
+        logger.debug(f"requests for sample {s}: {reqs}")
         for request in reqs:
             yield request
 
@@ -787,7 +794,11 @@ def setBeamlineConfigParam(beamline_id, paramName, paramVal):
     beamlineInfo(beamline_id,paramName,{"val":paramVal})
 
 def getBeamlineConfigParam(beamline_id, paramName):
-    return beamlineInfo(beamline_id,paramName)["val"]
+    try:
+        return beamlineInfo(beamline_id,paramName)["val"]
+    except KeyError as e:
+        logger.error(f'key {paramName} does not exist as part of beamlineInfo')
+        raise e
 
 def getAllBeamlineConfigParams(beamline_id):
   g = configuration_ref.find(key='beamline_info', beamline_id=beamline_id)

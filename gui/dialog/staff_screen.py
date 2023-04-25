@@ -1,4 +1,5 @@
 from qtpy import QtWidgets, QtCore
+from qtpy.QtWidgets import QCheckBox
 import logging
 from daq_utils import getBlConfig, setBlConfig
 from config_params import TOP_VIEW_CHECK, BEAM_CHECK, UNMOUNT_COLD_CHECK
@@ -6,23 +7,23 @@ import typing
 from typing import Optional
 
 if typing.TYPE_CHECKING:
-  from lsdcGui import ControlMain
+    from lsdcGui import ControlMain
 
 logger = logging.getLogger()
 
 
-class StaffScreenDialog(QFrame):  
-    def __init__(self, parent = None, **kwargs):
-        show = kwargs.get('show', True)
-        self.parent=parent
-        QFrame.__init__(self)
+class StaffScreenDialog(QtWidgets.QFrame):
+    def __init__(self, parent: "ControlMain", **kwargs):
+        show = kwargs.get("show", True)
+        self.parent = parent
+        QtWidgets.QFrame.__init__(self)
         self.setWindowTitle("Staff Only")
         self.spotNodeCount = 8
         self.fastDPNodeCount = 4
         self.cpuCount = 28
         vBoxColParams1 = QtWidgets.QVBoxLayout()
-        hBoxColParams0 = QtWidgets.QHBoxLayout()                
-        hBoxColParams1 = QtWidgets.QHBoxLayout()        
+        hBoxColParams0 = QtWidgets.QHBoxLayout()
+        hBoxColParams1 = QtWidgets.QHBoxLayout()
         hBoxColParams2 = QtWidgets.QHBoxLayout()
         hBoxColParams3 = QtWidgets.QHBoxLayout()
         hBoxFastDP = QtWidgets.QHBoxLayout()
@@ -32,77 +33,77 @@ class StaffScreenDialog(QFrame):
         removePuckButton = QtWidgets.QPushButton("Remove Puck...")
         removePuckButton.clicked.connect(self.parent.removePuckCB)
         hBoxColParams0.addWidget(puckToDewarButton)
-        hBoxColParams0.addWidget(removePuckButton )                        
+        hBoxColParams0.addWidget(removePuckButton)
         self.robotOnCheckBox = QCheckBox("Robot (On)")
-        if (getBlConfig("robot_online") == 1):
-          self.robotOnCheckBox.setChecked(True)
+        if getBlConfig("robot_online") == 1:
+            self.robotOnCheckBox.setChecked(True)
         else:
-          self.robotOnCheckBox.setChecked(False)            
+            self.robotOnCheckBox.setChecked(False)
         self.robotOnCheckBox.stateChanged.connect(self.robotOnCheckCB)
         self.topViewCheckOnCheckBox = QCheckBox("TopViewCheck (On)")
-        if (getBlConfig(TOP_VIEW_CHECK) == 1):
-          self.topViewCheckOnCheckBox.setChecked(True)
+        if getBlConfig(TOP_VIEW_CHECK) == 1:
+            self.topViewCheckOnCheckBox.setChecked(True)
         else:
-          self.topViewCheckOnCheckBox.setChecked(False)            
+            self.topViewCheckOnCheckBox.setChecked(False)
         self.topViewCheckOnCheckBox.stateChanged.connect(self.topViewOnCheckCB)
-        # BeamCheck check box 
+        # BeamCheck check box
         self.beamCheckOnCheckBox = QCheckBox("BeamCheck (On)")
-        if (getBlConfig(BEAM_CHECK) == 1):
-          self.beamCheckOnCheckBox.setChecked(True)
+        if getBlConfig(BEAM_CHECK) == 1:
+            self.beamCheckOnCheckBox.setChecked(True)
         else:
-          self.beamCheckOnCheckBox.setChecked(False)
+            self.beamCheckOnCheckBox.setChecked(False)
         self.beamCheckOnCheckBox.stateChanged.connect(self.beamCheckOnCheckCB)
 
         self.gripperUnmountColdCheckBox = QCheckBox("Unmount Cold")
         self.gripperUnmountColdCheckBox.stateChanged.connect(self.unmountColdCheckCB)
-        if (getBlConfig(UNMOUNT_COLD_CHECK) == 1):
-          self.gripperUnmountColdCheckBox.setEnabled(True)
-          self.gripperUnmountColdCheckBox.setChecked(True)
+        if getBlConfig(UNMOUNT_COLD_CHECK) == 1:
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+            self.gripperUnmountColdCheckBox.setChecked(True)
         else:
-          self.gripperUnmountColdCheckBox.setEnabled(False)
-          self.gripperUnmountColdCheckBox.setChecked(False)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
+            self.gripperUnmountColdCheckBox.setChecked(False)
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
-        if (getBlConfig("queueCollect") == 1):
-          self.queueCollectOnCheckBox.setChecked(True)
-          self.gripperUnmountColdCheckBox.setEnabled(True)
-          self.parent.queue_collect_status_widget.setText('Queue Collect: ON')
+        if getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
         else:
-          self.queueCollectOnCheckBox.setChecked(False)            
-          self.gripperUnmountColdCheckBox.setEnabled(False)
-          self.parent.queue_collect_status_widget.setText('Queue Collect: OFF')
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
-        hBoxColParams1.addWidget(self.vertRasterOnCheckBox)        
-        if (getBlConfig("vertRasterOn") == 1):
-          self.vertRasterOnCheckBox.setChecked(True)
+        hBoxColParams1.addWidget(self.vertRasterOnCheckBox)
+        if getBlConfig("vertRasterOn") == 1:
+            self.vertRasterOnCheckBox.setChecked(True)
         else:
-          self.vertRasterOnCheckBox.setChecked(False)            
+            self.vertRasterOnCheckBox.setChecked(False)
         self.vertRasterOnCheckBox.stateChanged.connect(self.vertRasterOnCheckCB)
         self.procRasterOnCheckBox = QCheckBox("Process Raster")
-        hBoxColParams1.addWidget(self.procRasterOnCheckBox)        
-        if (getBlConfig("rasterProcessFlag") == 1):
-          self.procRasterOnCheckBox.setChecked(True)
+        hBoxColParams1.addWidget(self.procRasterOnCheckBox)
+        if getBlConfig("rasterProcessFlag") == 1:
+            self.procRasterOnCheckBox.setChecked(True)
         else:
-          self.procRasterOnCheckBox.setChecked(False)            
+            self.procRasterOnCheckBox.setChecked(False)
         self.procRasterOnCheckBox.stateChanged.connect(self.procRasterOnCheckCB)
         self.guiRemoteOnCheckBox = QCheckBox("GUI Remote")
-        hBoxColParams1.addWidget(self.guiRemoteOnCheckBox)        
-        if (getBlConfig("omegaMonitorPV") == "VAL"):
-          self.guiRemoteOnCheckBox.setChecked(True)
+        hBoxColParams1.addWidget(self.guiRemoteOnCheckBox)
+        if getBlConfig("omegaMonitorPV") == "VAL":
+            self.guiRemoteOnCheckBox.setChecked(True)
         else:
-          self.guiRemoteOnCheckBox.setChecked(False)            
+            self.guiRemoteOnCheckBox.setChecked(False)
         self.guiRemoteOnCheckBox.stateChanged.connect(self.guiRemoteOnCheckCB)
         self.albulaDispCheckBox = QCheckBox("Display Data (Albula)")
         self.albulaDispCheckBox.setChecked(True)
         hBoxColParams1.addWidget(self.albulaDispCheckBox)
 
         self.enableMountCheckBox = QCheckBox("Enable Mount")
-        if (getBlConfig("mountEnabled") == 1):
-          self.enableMountCheckBox.setChecked(True)
+        if getBlConfig("mountEnabled") == 1:
+            self.enableMountCheckBox.setChecked(True)
         else:
-          self.enableMountCheckBox.setChecked(False)            
+            self.enableMountCheckBox.setChecked(False)
         self.enableMountCheckBox.stateChanged.connect(self.enableMountCheckCB)
         self.unmountColdButton = QtWidgets.QPushButton("Unmount Cold")
         self.unmountColdButton.clicked.connect(self.unmountColdCB)
@@ -110,46 +111,46 @@ class StaffScreenDialog(QFrame):
         self.openPort1Button.clicked.connect(self.openPort1CB)
         self.closePortsButton = QtWidgets.QPushButton("Close Ports")
         self.closePortsButton.clicked.connect(self.closePortsCB)
-        self.warmupButton = QtWidgets.QPushButton("Dry Gripper")        
+        self.warmupButton = QtWidgets.QPushButton("Dry Gripper")
         self.warmupButton.clicked.connect(self.parent.dryGripperCB)
-        self.enableTScreenButton = QtWidgets.QPushButton("Enable Dewar Tscreen")        
+        self.enableTScreenButton = QtWidgets.QPushButton("Enable Dewar Tscreen")
         self.enableTScreenButton.clicked.connect(self.parent.enableTScreenGripperCB)
-        self.parkButton = QtWidgets.QPushButton("Park Gripper")        
+        self.parkButton = QtWidgets.QPushButton("Park Gripper")
         self.parkButton.clicked.connect(self.parent.parkGripperCB)
         self.homePinsButton = QtWidgets.QPushButton("Home Pins")
         self.homePinsButton.clicked.connect(self.homePinsCB)
         self.clearMountedSampleButton = QtWidgets.QPushButton("Clear Mounted Sample")
         self.clearMountedSampleButton.clicked.connect(self.clearMountedSampleCB)
         hBoxColParams2.addWidget(self.openPort1Button)
-        hBoxColParams2.addWidget(self.closePortsButton)        
+        hBoxColParams2.addWidget(self.closePortsButton)
         hBoxColParams2.addWidget(self.unmountColdButton)
         hBoxColParams2.addWidget(self.warmupButton)
         hBoxColParams2.addWidget(self.enableTScreenButton)
-        hBoxColParams2.addWidget(self.parkButton)                        
+        hBoxColParams2.addWidget(self.parkButton)
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
-        hBoxColParams1.addWidget(self.homePinsButton)        
+        hBoxColParams1.addWidget(self.homePinsButton)
         self.setFastDPNodesButton = QtWidgets.QPushButton("Set FastDP Nodes")
         self.setFastDPNodesButton.clicked.connect(self.setFastDPNodesCB)
-        hBoxFastDP.addWidget(self.setFastDPNodesButton)        
+        hBoxFastDP.addWidget(self.setFastDPNodesButton)
         self.fastDPNodeEntryList = []
-        nodeList = self.getFastDPNodeList()        
-        for i in range (0,self.fastDPNodeCount):
-          self.fastDPNodeEntryList.append(QtWidgets.QLineEdit())
-          self.fastDPNodeEntryList[i].setFixedWidth(30)
-          self.fastDPNodeEntryList[i].setText(str(nodeList[i]))
-          hBoxFastDP.addWidget(self.fastDPNodeEntryList[i])
+        nodeList = self.getFastDPNodeList()
+        for i in range(0, self.fastDPNodeCount):
+            self.fastDPNodeEntryList.append(QtWidgets.QLineEdit())
+            self.fastDPNodeEntryList[i].setFixedWidth(30)
+            self.fastDPNodeEntryList[i].setText(str(nodeList[i]))
+            hBoxFastDP.addWidget(self.fastDPNodeEntryList[i])
         self.fastDPCheckBox = QCheckBox("FastDP")
         self.fastDPCheckBox.setChecked(True)
         hBoxFastDP.addWidget(self.fastDPCheckBox)
         self.setBeamcenterButton = QtWidgets.QPushButton("Set Beamcenter")
         self.setBeamcenterButton.clicked.connect(self.setBeamcenterCB)
         hBoxFastDP.addWidget(self.setBeamcenterButton)
-        self.beamcenterX_ledit =  QtWidgets.QLineEdit()
-        self.beamcenterX_ledit.setText(str(self.parent.beamCenterX_pv.get()))        
-        self.beamcenterY_ledit =  QtWidgets.QLineEdit()
+        self.beamcenterX_ledit = QtWidgets.QLineEdit()
+        self.beamcenterX_ledit.setText(str(self.parent.beamCenterX_pv.get()))
+        self.beamcenterY_ledit = QtWidgets.QLineEdit()
         self.beamcenterY_ledit.setText(str(self.parent.beamCenterY_pv.get()))
         hBoxFastDP.addWidget(self.beamcenterX_ledit)
-        hBoxFastDP.addWidget(self.beamcenterY_ledit)                
+        hBoxFastDP.addWidget(self.beamcenterY_ledit)
         self.setSpotNodesButton = QtWidgets.QPushButton("Set Spotfinder Nodes")
         self.setSpotNodesButton.clicked.connect(self.setSpotNodesCB)
         self.lockGuiButton = QtWidgets.QPushButton("Lock")
@@ -157,15 +158,15 @@ class StaffScreenDialog(QFrame):
         self.unLockGuiButton = QtWidgets.QPushButton("unLock")
         self.unLockGuiButton.clicked.connect(self.unLockGuiCB)
         hBoxSpotfinder.addWidget(self.lockGuiButton)
-        hBoxSpotfinder.addWidget(self.unLockGuiButton)                        
-        hBoxSpotfinder.addWidget(self.setSpotNodesButton)        
+        hBoxSpotfinder.addWidget(self.unLockGuiButton)
+        hBoxSpotfinder.addWidget(self.setSpotNodesButton)
         self.spotNodeEntryList = []
-        nodeList = self.getSpotNodeList()        
-        for i in range (0,self.spotNodeCount):
-          self.spotNodeEntryList.append(QtWidgets.QLineEdit())
-          self.spotNodeEntryList[i].setFixedWidth(30)
-          self.spotNodeEntryList[i].setText(str(nodeList[i]))          
-          hBoxSpotfinder.addWidget(self.spotNodeEntryList[i])
+        nodeList = self.getSpotNodeList()
+        for i in range(0, self.spotNodeCount):
+            self.spotNodeEntryList.append(QtWidgets.QLineEdit())
+            self.spotNodeEntryList[i].setFixedWidth(30)
+            self.spotNodeEntryList[i].setText(str(nodeList[i]))
+            hBoxSpotfinder.addWidget(self.spotNodeEntryList[i])
         robotGB = QtWidgets.QGroupBox()
         robotGB.setTitle("Robot")
         hBoxRobot1 = QtWidgets.QHBoxLayout()
@@ -184,173 +185,176 @@ class StaffScreenDialog(QFrame):
         hBoxRobot1.addWidget(self.beamCheckOnCheckBox)
         hBoxRobot1.addWidget(self.gripperUnmountColdCheckBox)
         hBoxRobot1.addWidget(self.topViewCheckOnCheckBox)
-        hBoxRobot1.addWidget(self.enableMountCheckBox)        
+        hBoxRobot1.addWidget(self.enableMountCheckBox)
         hBoxRobot1.addWidget(self.recoverRobotButton)
         hBoxRobot1.addWidget(self.rebootEMBLButton)
         hBoxRobot1.addWidget(self.restartEMBLButton)
         hBoxRobot1.addWidget(self.openGripperButton)
-        hBoxRobot1.addWidget(self.closeGripperButton)                        
+        hBoxRobot1.addWidget(self.closeGripperButton)
         vBoxRobot1.addLayout(hBoxRobot1)
-        vBoxRobot1.addLayout(hBoxColParams2)        
+        vBoxRobot1.addLayout(hBoxColParams2)
         robotGB.setLayout(vBoxRobot1)
-        self.buttons = QDialogButtonBox(
-            QDialogButtonBox.Ok,
-            Qt.Horizontal, self)
+        self.buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok, QtCore.Qt.Horizontal, self
+        )
         self.buttons.buttons()[0].clicked.connect(self.screenDefaultsOKCB)
         vBoxColParams1.addLayout(hBoxColParams0)
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxFastDP)
-        vBoxColParams1.addLayout(hBoxSpotfinder)        
+        vBoxColParams1.addLayout(hBoxSpotfinder)
         vBoxColParams1.addWidget(robotGB)
         vBoxColParams1.addWidget(self.buttons)
-        self.setLayout(vBoxColParams1)        
+        self.setLayout(vBoxColParams1)
         if show:
-          self.show()
-
+            self.show()
 
     def getSpotNodeList(self):
-      nodeList = []
-      for i in range (0,self.spotNodeCount):
-        nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('cpu')[1]))
-      return nodeList
-        
-        
+        nodeList = []
+        for i in range(0, self.spotNodeCount):
+            nodeList.append(int(getBlConfig("spotNode" + str(i + 1)).split("cpu")[1]))
+        return nodeList
+
     def getFastDPNodeList(self):
-      nodeList = []
-      for i in range (0,self.fastDPNodeCount):
-        nodeList.append(int(getBlConfig("fastDPNode"+str(i+1)).split('cpu')[1]))
-      return nodeList
+        nodeList = []
+        for i in range(0, self.fastDPNodeCount):
+            nodeList.append(int(getBlConfig("fastDPNode" + str(i + 1)).split("cpu")[1]))
+        return nodeList
 
     def setFastDPNodesCB(self):
-      comm_s = "fastDPNodes("
-      for i in range (0,self.fastDPNodeCount):
-        comm_s = comm_s+str(self.fastDPNodeEntryList[i].text())
-        if (i==self.fastDPNodeCount-1):
-          comm_s = comm_s+")"
-        else:
-          comm_s = comm_s+","
-      logger.info(comm_s)
-      self.parent.send_to_server(comm_s)
+        comm_s = "fastDPNodes("
+        for i in range(0, self.fastDPNodeCount):
+            comm_s = comm_s + str(self.fastDPNodeEntryList[i].text())
+            if i == self.fastDPNodeCount - 1:
+                comm_s = comm_s + ")"
+            else:
+                comm_s = comm_s + ","
+        logger.info(comm_s)
+        self.parent.send_to_server(comm_s)
 
     def lockGuiCB(self):
-      self.parent.send_to_server("lockControl")
+        self.parent.send_to_server("lockControl")
 
     def unLockGuiCB(self):
-      self.parent.send_to_server("unlockControl")
-      
-    def setSpotNodesCB(self):
-      comm_s = "spotNodes("
-      for i in range (0,self.spotNodeCount):
-        comm_s = comm_s+str(self.spotNodeEntryList[i].text())
-        if (i==self.spotNodeCount-1):
-          comm_s = comm_s+")"
-        else:
-          comm_s = comm_s+","
-      logger.info(comm_s)
-      self.parent.send_to_server(comm_s)      
+        self.parent.send_to_server("unlockControl")
 
-        
+    def setSpotNodesCB(self):
+        comm_s = "spotNodes("
+        for i in range(0, self.spotNodeCount):
+            comm_s = comm_s + str(self.spotNodeEntryList[i].text())
+            if i == self.spotNodeCount - 1:
+                comm_s = comm_s + ")"
+            else:
+                comm_s = comm_s + ","
+        logger.info(comm_s)
+        self.parent.send_to_server(comm_s)
+
     def unmountColdCB(self):
-      self.parent.send_to_server("unmountCold()")
+        self.parent.send_to_server("unmountCold()")
 
     def openPort1CB(self):
-      self.parent.send_to_server("openPort(1)")
+        self.parent.send_to_server("openPort(1)")
 
     def setBeamcenterCB(self):
-      self.parent.send_to_server("set_beamcenter (" + str(self.beamcenterX_ledit.text()) + "," + str(self.beamcenterY_ledit.text()) + ")")
-      
+        self.parent.send_to_server(
+            "set_beamcenter ("
+            + str(self.beamcenterX_ledit.text())
+            + ","
+            + str(self.beamcenterY_ledit.text())
+            + ")"
+        )
+
     def closePortsCB(self):
-      self.parent.send_to_server("closePorts()")
-      
+        self.parent.send_to_server("closePorts()")
+
     def clearMountedSampleCB(self):
-      self.parent.send_to_server("clearMountedSample()")
+        self.parent.send_to_server("clearMountedSample()")
 
     def recoverRobotCB(self):
-      self.parent.aux_send_to_server("recoverRobot()")
+        self.parent.aux_send_to_server("recoverRobot()")
 
     def rebootEMBL_CB(self):
-      self.parent.aux_send_to_server("rebootEMBL()")
+        self.parent.aux_send_to_server("rebootEMBL()")
 
     def restartEMBL_CB(self):
-      self.parent.send_to_server("restartEMBL()")
+        self.parent.send_to_server("restartEMBL()")
 
     def openGripper_CB(self):
-      self.parent.send_to_server("openGripper()")
+        self.parent.send_to_server("openGripper()")
 
     def closeGripper_CB(self):
-      self.parent.send_to_server("closeGripper()")
-      
+        self.parent.send_to_server("closeGripper()")
+
     def homePinsCB(self):
-      self.parent.send_to_server("homePins()")
-      
+        self.parent.send_to_server("homePins()")
 
-    def robotOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("robot_online",1)
-      else:
-        setBlConfig("robot_online",0)
+    def robotOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("robot_online", 1)
+        else:
+            setBlConfig("robot_online", 0)
 
-    def beamCheckOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-         setBlConfig(BEAM_CHECK,1)
-         logger.debug(f"{BEAM_CHECK} on")
-      else:
-         setBlConfig(BEAM_CHECK,0)
-         logger.debug(f"{BEAM_CHECK} off")
+    def beamCheckOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig(BEAM_CHECK, 1)
+            logger.debug(f"{BEAM_CHECK} on")
+        else:
+            setBlConfig(BEAM_CHECK, 0)
+            logger.debug(f"{BEAM_CHECK} off")
 
-    def unmountColdCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        logger.info("unmountColdCheckCB On")
-        setBlConfig(UNMOUNT_COLD_CHECK,1)
-      else:
-        logger.info("unmountColdCheckCB Off")
-        setBlConfig(UNMOUNT_COLD_CHECK,0)
+    def unmountColdCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            logger.info("unmountColdCheckCB On")
+            setBlConfig(UNMOUNT_COLD_CHECK, 1)
+        else:
+            logger.info("unmountColdCheckCB Off")
+            setBlConfig(UNMOUNT_COLD_CHECK, 0)
 
-    def topViewOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig(TOP_VIEW_CHECK,1)
-      else:
-        setBlConfig(TOP_VIEW_CHECK,0)
-        
-    def vertRasterOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("vertRasterOn",1)
-      else:
-        setBlConfig("vertRasterOn",0)
+    def topViewOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig(TOP_VIEW_CHECK, 1)
+        else:
+            setBlConfig(TOP_VIEW_CHECK, 0)
 
-    def procRasterOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("rasterProcessFlag",1)
-      else:
-        setBlConfig("rasterProcessFlag",0)
+    def vertRasterOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("vertRasterOn", 1)
+        else:
+            setBlConfig("vertRasterOn", 0)
 
-    def guiRemoteOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("omegaMonitorPV","VAL")
-      else:
-        setBlConfig("omegaMonitorPV","RBV")
-        
-    def queueCollectOnCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("queueCollect",1)
-        self.gripperUnmountColdCheckBox.setEnabled(True)
-        self.parent.queue_collect_status_widget.setText('Queue Collect: ON')
-      else:
-        setBlConfig("queueCollect",0)
-        self.gripperUnmountColdCheckBox.setEnabled(False)
-        self.gripperUnmountColdCheckBox.setChecked(False)
-        self.parent.queue_collect_status_widget.setText('Queue Collect: OFF')
-      self.parent.row_clicked(0) #This is so that appropriate boxes are filled when toggling queue collect
+    def procRasterOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("rasterProcessFlag", 1)
+        else:
+            setBlConfig("rasterProcessFlag", 0)
 
-    def enableMountCheckCB(self,state):
-      if state == QtCore.Qt.Checked:
-        setBlConfig("mountEnabled",1)
-      else:
-        setBlConfig("mountEnabled",0)
+    def guiRemoteOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("omegaMonitorPV", "VAL")
+        else:
+            setBlConfig("omegaMonitorPV", "RBV")
+
+    def queueCollectOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("queueCollect", 1)
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
+        else:
+            setBlConfig("queueCollect", 0)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
+            self.gripperUnmountColdCheckBox.setChecked(False)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.parent.row_clicked(
+            0
+        )  # This is so that appropriate boxes are filled when toggling queue collect
+
+    def enableMountCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig("mountEnabled", 1)
+        else:
+            setBlConfig("mountEnabled", 0)
 
     def screenDefaultsCancelCB(self):
-      self.hide()
+        self.hide()
 
     def screenDefaultsOKCB(self):
-      self.hide()
-        
+        self.hide()

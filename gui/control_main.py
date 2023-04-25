@@ -1,53 +1,55 @@
-from qtpy import QtCore, QtWidgets, QtGui
-from qtpy.QtCore import Qt, QModelIndex, QTimer, QRectF
-from qtpy.QtWidgets import QFrame, QCheckBox, QGraphicsPixmapItem
-from qtpy.QtGui import QIntValidator
-import albulaUtils
+import _thread
+import functools
+import logging
+import math
+import os
+import sys
+import time
+
+import cv2
+import numpy as np
 from epics import PV
+from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
+from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
+from PyMca5.PyMcaPhysics.xrf import Elements
+from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
+from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
+from qtpy import QtCore, QtGui, QtWidgets
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
+from qtpy.QtGui import QIntValidator
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem
+
+import albulaUtils
 import daq_utils
+import db_lib
+import lsdcOlog
 from config_params import (
     CRYOSTREAM_ONLINE,
-    cryostreamTempPV,
+    HUTCH_TIMER_DELAY,
+    RASTER_GUI_XREC_FILL_DELAY,
+    SAMPLE_TIMER_DELAY,
+    VALID_DET_DIST,
     VALID_EXP_TIMES,
     VALID_TOTAL_EXP_TIMES,
-    VALID_DET_DIST,
-    SAMPLE_TIMER_DELAY,
-    HUTCH_TIMER_DELAY,
     RasterStatus,
-    RASTER_GUI_XREC_FILL_DELAY,
+    cryostreamTempPV,
 )
+from daq_utils import getBlConfig, setBlConfig
+from element_info import element_info
+from gui.data_loc_info import DataLocInfo
+from gui.dewar_tree import DewarTree
 from gui.dialog import (
-    StaffScreenDialog,
-    RasterExploreDialog,
-    UserScreenDialog,
-    SnapCommentDialog,
-    ScreenDefaultsDialog,
     DewarDialog,
     PuckDialog,
+    RasterExploreDialog,
+    ScreenDefaultsDialog,
+    SnapCommentDialog,
+    StaffScreenDialog,
+    UserScreenDialog,
 )
-from gui.dewar_tree import DewarTree
-from gui.data_loc_info import DataLocInfo
 from gui.raster import RasterCell, RasterGroup
-import sys
-import logging
-import db_lib
-import os
-from daq_utils import getBlConfig, setBlConfig
-import cv2
-import functools
-from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
-from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
-import _thread
 from QPeriodicTable import QPeriodicTable
-from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
-from PyMca5.PyMcaGui.physics.xrf.McaAdvancedFit import McaAdvancedFit
-from PyMca5.PyMcaPhysics.xrf import Elements
-from element_info import element_info
-import time
-import lsdcOlog
-import math
-from threads import VideoThread, RaddoseThread
-import numpy as np
+from threads import RaddoseThread, VideoThread
 
 logger = logging.getLogger()
 try:

@@ -1,10 +1,13 @@
-from qtpy import QtWidgets, QtCore, QtGui
-import db_lib, daq_utils
-from config_params import VALID_PREFIX_LENGTH, VALID_PREFIX_NAME
 import logging
+import os
 import typing
 from typing import Optional
-import os
+
+from qtpy import QtCore, QtGui, QtWidgets
+
+import daq_utils
+import db_lib
+from config_params import VALID_PREFIX_LENGTH, VALID_PREFIX_NAME
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

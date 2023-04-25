@@ -1,11 +1,14 @@
-from qtpy import QtWidgets, QtCore, QtGui
-from qtpy.QtCore import Qt
-import db_lib, daq_utils
 import functools
-from config_params import PUCKS_PER_DEWAR_SECTOR, DEWAR_SECTORS, SAMPLE_TIMER_DELAY
 import logging
 import typing
 from typing import Optional
+
+from qtpy import QtCore, QtGui, QtWidgets
+from qtpy.QtCore import Qt
+
+import daq_utils
+import db_lib
+from config_params import DEWAR_SECTORS, PUCKS_PER_DEWAR_SECTOR, SAMPLE_TIMER_DELAY
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

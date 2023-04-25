@@ -1,6 +1,8 @@
-from qtpy import QtWidgets, QtCore
 import logging
 import typing
+
+from qtpy import QtCore, QtWidgets
+
 import albulaUtils
 
 if typing.TYPE_CHECKING:

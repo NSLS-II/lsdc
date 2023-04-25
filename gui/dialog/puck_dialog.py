@@ -1,9 +1,12 @@
-from qtpy import QtWidgets, QtCore, QtGui
-from qtpy.QtCore import Qt
-import db_lib, daq_utils
 import logging
 import typing
 from typing import Optional
+
+from qtpy import QtCore, QtGui, QtWidgets
+from qtpy.QtCore import Qt
+
+import daq_utils
+import db_lib
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

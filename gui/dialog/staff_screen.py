@@ -1,10 +1,12 @@
-from qtpy import QtWidgets, QtCore
-from qtpy.QtWidgets import QCheckBox
 import logging
-from daq_utils import getBlConfig, setBlConfig
-from config_params import TOP_VIEW_CHECK, BEAM_CHECK, UNMOUNT_COLD_CHECK
 import typing
 from typing import Optional
+
+from qtpy import QtCore, QtWidgets
+from qtpy.QtWidgets import QCheckBox
+
+from config_params import BEAM_CHECK, TOP_VIEW_CHECK, UNMOUNT_COLD_CHECK
+from daq_utils import getBlConfig, setBlConfig
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

@@ -1,10 +1,12 @@
-from qtpy import QtWidgets, QtCore
-from qtpy.QtWidgets import QCheckBox
-from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
-import daq_utils
 import logging
 import typing
 from typing import Optional
+
+from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
+from qtpy import QtCore, QtWidgets
+from qtpy.QtWidgets import QCheckBox
+
+import daq_utils
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

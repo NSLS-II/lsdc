@@ -1,18 +1,20 @@
-from qtpy import QtWidgets, QtCore, QtGui
-import db_lib
 import logging
-from daq_utils import getBlConfig, setBlConfig, beamline
-from config_params import (
-    VALID_EXP_TIMES,
-    RASTER_TUNE_LOW_RES,
-    RASTER_TUNE_HIGH_RES,
-    RASTER_TUNE_RESO_FLAG,
-    RASTER_TUNE_ICE_RING_WIDTH,
-    RASTER_TUNE_ICE_RING_FLAG,
-    RASTER_DOZOR_SPOT_LEVEL,
-)
 import typing
 from typing import Optional
+
+from qtpy import QtCore, QtGui, QtWidgets
+
+import db_lib
+from config_params import (
+    RASTER_DOZOR_SPOT_LEVEL,
+    RASTER_TUNE_HIGH_RES,
+    RASTER_TUNE_ICE_RING_FLAG,
+    RASTER_TUNE_ICE_RING_WIDTH,
+    RASTER_TUNE_LOW_RES,
+    RASTER_TUNE_RESO_FLAG,
+    VALID_EXP_TIMES,
+)
+from daq_utils import beamline, getBlConfig, setBlConfig
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

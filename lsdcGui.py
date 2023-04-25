@@ -7,6 +7,7 @@ import daq_utils
 from utils.healthcheck import perform_checks
 import logging
 import platform
+import traceback
 from logging import handlers
 from gui.control_main import ControlMain
 
@@ -47,3 +48,4 @@ if __name__ == "__main__":
         main()
     except Exception as e:
         logger.error(f"Exception occured: {e}")
+        print(traceback.format_exc())

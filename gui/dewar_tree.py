@@ -30,7 +30,7 @@ class DewarTree(QtWidgets.QTreeView):
         self.parent = parent
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)
-        # self.model = QtGui.QStandardItemModel()
+        self.model = QtGui.QStandardItemModel()
         self.model.itemChanged.connect(self.queueSelectedSample)
         # self.isExpanded = 1
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -219,7 +219,7 @@ class DewarTree(QtWidgets.QTreeView):
                         )
                         item.setData("", 32)
                         parentItem.appendRow(item)
-        # self.setModel(self.model)
+        self.setModel(self.model)
         if selectedSampleIndex != None and collectionRunning == False:
             self.setCurrentIndex(selectedSampleIndex)
             if mountedIndex != None:
@@ -344,7 +344,7 @@ class DewarTree(QtWidgets.QTreeView):
                         self.orderedRequests[k]["uid"] == self.parent.SelectedItemData
                     ):  # looking for the selected item
                         selectedIndex = self.model.indexFromItem(col_item)
-        # self.setModel(self.model)
+        self.setModel(self.model)
         if selectedSampleIndex != None and collectionRunning == False:
             self.setCurrentIndex(selectedSampleIndex)
             self.parent.row_clicked(selectedSampleIndex)

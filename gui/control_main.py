@@ -3706,8 +3706,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.progressDialog.show()
         if (
             getBlConfig("queueCollect") == 1
-        ):  # If queue collect is ON only consider selected samples and add a request to each
-            requestAdded = False
+        ):  # If queue collect is ON only consider selected samples/requests and add a request to each
+            samplesConsidered = set()
             for i in range(len(indexes)):
                 self.progressDialog.setValue(int((i + 1) * progressInc))
                 item = self.dewarTree.model.itemFromIndex(indexes[i])
@@ -3715,7 +3715,11 @@ class ControlMain(QtWidgets.QMainWindow):
                 itemDataType = str(item.data(33))
                 if itemDataType == "sample":
                     self.selectedSampleID = itemData
-                else:
+                elif itemDataType == "request":
+                    selectedSampleRequest = db_lib.getRequestByID(item.data(32))
+                    self.selectedSampleID = selectedSampleRequest["sample"]
+                
+                if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
                     continue
 
                 try:
@@ -3741,12 +3745,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     )
                 if itemDataType != "container":
                     self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
-                    requestAdded = True
-
-            if not requestAdded:
-                self.popupServerMessage(
-                    "Request(s) not added because no sample was selected and queue collect is on. Please select sample(s) you wish to add the request to"
-                )
+                    samplesConsidered.add(self.selectedSampleID)
         else:  # If queue collect is off does not matter how many requests you select only one will be added to current pin
             self.selectedSampleID = self.mountedPin_pv.get()
             self.selectedSampleRequest = daq_utils.createDefaultRequest(
@@ -4432,10 +4431,6 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info("mount selected sample")
         self.eraseCB()
         if (
-            "sample" in self.selectedSampleRequest
-        ):  # When GUI is started and no sample is mounted, self.selectedSampleRequest is empty
-            self.selectedSampleID = self.selectedSampleRequest["sample"]
-        elif (
             self.dewarTree.getSelectedSample()
         ):  # If sample ID is not found check the dewartree directly
             self.selectedSampleID = self.dewarTree.getSelectedSample()

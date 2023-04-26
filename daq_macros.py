@@ -1826,10 +1826,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
-      return
+
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -1854,7 +1851,6 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     total_exposure_time = exptimePerCell*totalImages
     detDist /= 1000  # TODO find a way to standardize detector distance settings
 
-    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
@@ -1862,9 +1858,16 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         raster_flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
-    raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
+    arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
+      arm_status.wait()
+      raster_flyer.detector.cam.acquire.put(0)
+      return
+    arm_status.wait()
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
@@ -3336,10 +3339,6 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
-      return
 
     x_vec_start=vector_params["vecStart"]["x"]
     y_vec_start=vector_params["vecStart"]["y"]
@@ -3369,13 +3368,29 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
 
-    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
-                   x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
-                   x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
-                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
-                   data_path=data_path)
+    required_parameters = {'angle_start':angle_start, 'scan_width':scanWidth, 'img_width':imgWidth,
+                           'num_images':num_images, 'exposure_period_per_image':exposurePeriodPerImage,
+                           'x_start_um':x_vec_start, 'y_start_um':y_vec_start, 'z_start_um':z_vec_start,
+                           'x_end_um':x_vec_end, 'y_end_um':y_vec_end, 'z_end_um':z_vec_end, 'file_prefix':filePrefix,
+                           'data_directory_name':data_directory_name, 'file_number_start':file_number_start,
+                           'x_beam':vector_params["x_beam"], 'y_beam':vector_params["y_beam"],
+                           'wavelength':vector_params["wavelength"], 'det_distance_m':vector_params["det_distance_m"],
+                           'detector_dead_time':detectorDeadTime, 'scan_encoder':scanEncoder,
+                           'change_state':changeState, 'transmission':vector_params["transmission"],
+                           'data_path':data_path}
+
+    arm_status = flyer.detector_arm(**required_parameters)
+
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
+      arm_status.wait()
+      flyer.detector.cam.acquire.put(0)
+      return
+
+    arm_status.wait()
+
+    flyer.update_parameters(**required_parameters)
 
     yield from bp.fly([flyer])
 

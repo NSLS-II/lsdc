@@ -1855,19 +1855,16 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        raster_flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
     arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
     if govStatus.exception():
       logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
-      arm_status.wait()
-      raster_flyer.detector.cam.acquire.put(0)
       return
-    arm_status.wait()
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
@@ -3364,7 +3361,6 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
 
@@ -3380,15 +3376,11 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                            'data_path':data_path}
 
     arm_status = flyer.detector_arm(**required_parameters)
-
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
     if govStatus.exception():
       logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
-      arm_status.wait()
-      flyer.detector.cam.acquire.put(0)
       return
-
-    arm_status.wait()
 
     flyer.update_parameters(**required_parameters)
 

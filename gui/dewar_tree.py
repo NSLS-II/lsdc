@@ -1,7 +1,5 @@
-import functools
 import logging
 import typing
-from typing import Optional
 
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt

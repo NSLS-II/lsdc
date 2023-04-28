@@ -1,6 +1,5 @@
 import logging
 import typing
-from typing import Optional
 
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtWidgets

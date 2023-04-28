@@ -1,6 +1,5 @@
 import logging
 import typing
-from typing import Optional
 
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox

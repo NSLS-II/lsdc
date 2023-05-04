@@ -1127,9 +1127,9 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)
-        hBoxVidControlLayout.addWidget(lightLevelLabel)
-        hBoxVidControlLayout.addWidget(sampleBrighterButton)
-        hBoxVidControlLayout.addWidget(sampleDimmerButton)
+        # hBoxVidControlLayout.addWidget(lightLevelLabel)
+        # hBoxVidControlLayout.addWidget(sampleBrighterButton)
+        # hBoxVidControlLayout.addWidget(sampleDimmerButton)
         hBoxVidControlLayout.addWidget(annealButton)
         hBoxVidControlLayout.addWidget(annealTimeLabel)
         hBoxVidControlLayout.addWidget(self.annealTime_ledit)
@@ -3718,8 +3718,10 @@ class ControlMain(QtWidgets.QMainWindow):
                 elif itemDataType == "request":
                     selectedSampleRequest = db_lib.getRequestByID(item.data(32))
                     self.selectedSampleID = selectedSampleRequest["sample"]
-                
-                if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
+
+                if (
+                    self.selectedSampleID in samplesConsidered
+                ):  # If a request is already added to the sample, move on
                     continue
 
                 try:

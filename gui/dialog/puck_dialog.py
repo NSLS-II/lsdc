@@ -49,8 +49,8 @@ class PuckDialog(QtWidgets.QDialog):
         self.proxyModel.sort(0, order=Qt.DescendingOrder)
         self.tv.setModel(self.proxyModel)
         self.label = QtWidgets.QLabel(self)
-        self.buttons = QtGui.QDialogButtonBox(
-            QtGui.QDialogButtonBox.Ok | QtGui.QDialogButtonBox.Cancel,
+        self.buttons = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel,
             Qt.Horizontal,
             self,
         )

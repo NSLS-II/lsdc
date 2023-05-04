@@ -1857,11 +1857,13 @@ def snakeRasterBluesky(rasterReqID, grain=""):
                             'this collection, retry when ready.')
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
+    start_time = time.time()
     arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
     arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time() - start_time} seconds.")
     if govStatus.exception():
       logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
       return
@@ -3374,10 +3376,11 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                            'detector_dead_time':detectorDeadTime, 'scan_encoder':scanEncoder,
                            'change_state':changeState, 'transmission':vector_params["transmission"],
                            'data_path':data_path}
-
+    start_time = time.time()
     arm_status = flyer.detector_arm(**required_parameters)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
     arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
       logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
       return

@@ -520,9 +520,13 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
-        self.transmission_ledit.setValidator(QtGui.QDoubleValidator(VALID_TRANSMISSION[daq_utils.beamline]["min"], 
-                                                                    VALID_TRANSMISSION[daq_utils.beamline]["max"], 
-                                                                    VALID_TRANSMISSION[daq_utils.beamline]["digits"]))
+        self.transmission_ledit.setValidator(
+            QtGui.QDoubleValidator(
+                VALID_TRANSMISSION[daq_utils.beamline]["min"],
+                VALID_TRANSMISSION[daq_utils.beamline]["max"],
+                VALID_TRANSMISSION[daq_utils.beamline]["digits"],
+            )
+        )
         self.setGuiValues({"transmission": getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)
         if daq_utils.beamline == "fmx":
@@ -2742,7 +2746,7 @@ class ControlMain(QtWidgets.QMainWindow):
             except:
                 pass
         wedge = float(self.osc_end_ledit.text())
-        
+
         try:
             raddose_thread = RaddoseThread(
                 parent=self,
@@ -3735,8 +3739,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 elif itemDataType == "request":
                     selectedSampleRequest = db_lib.getRequestByID(item.data(32))
                     self.selectedSampleID = selectedSampleRequest["sample"]
-                
-                if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
+                # If a request is already added to the sample, move on
+                if self.selectedSampleID in samplesConsidered:
                     continue
 
                 try:

@@ -31,6 +31,7 @@ from config_params import (
     VALID_DET_DIST,
     VALID_EXP_TIMES,
     VALID_TOTAL_EXP_TIMES,
+    VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
 )
@@ -195,6 +196,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
         self.rasterStepDefs = {"Coarse": 20.0, "Fine": 10.0, "VFine": 5.0}
+
+        # Timer that waits for a second before calling raddose 3d
+        # This is to prevent multiple calls when transmission textbox is changing
+        self.raddoseTimer = QTimer()
+        self.raddoseTimer.setSingleShot(True)
+        self.raddoseTimer.setInterval(1000)
+        self.raddoseTimer.timeout.connect(self.spawnRaddoseThread)
+
         self.createSampleTab()
 
         self.initCallbacks()
@@ -511,7 +520,9 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
-        self.transmission_ledit.setValidator(QtGui.QDoubleValidator(0.001, 0.999, 3))
+        self.transmission_ledit.setValidator(QtGui.QDoubleValidator(VALID_TRANSMISSION[daq_utils.beamline]["min"], 
+                                                                    VALID_TRANSMISSION[daq_utils.beamline]["max"], 
+                                                                    VALID_TRANSMISSION[daq_utils.beamline]["digits"]))
         self.setGuiValues({"transmission": getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)
         if daq_utils.beamline == "fmx":
@@ -2536,6 +2547,7 @@ class ControlMain(QtWidgets.QMainWindow):
             )
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
+            self.calcLifetimeCB()
         elif protocol == "burn":
             self.setGuiValues(
                 {
@@ -2560,6 +2572,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
             self.protoVectorRadio.setChecked(True)
+            self.calcLifetimeCB()
         else:
             self.protoOtherRadio.setChecked(True)
         self.totalExpChanged("")
@@ -2701,10 +2714,14 @@ class ControlMain(QtWidgets.QMainWindow):
             self.sampleLifetimeReadback_ledit.setStyleSheet("color : black")
 
     def calcLifetimeCB(self):
+        self.raddoseTimer.start()
+        if hasattr(self, "sampleLifetimeReadback_ledit"):
+            self.sampleLifetimeReadback_ledit.setStyleSheet("color : gray")
+
+    def spawnRaddoseThread(self):
         if not os.path.exists("2vb1.pdb"):
             os.system("cp -a $CONFIGDIR/2vb1.pdb .")
             os.system("mkdir rd3d")
-
         energyReadback = self.energy_pv.get() / 1000.0
         sampleFlux = self.sampleFluxPV.get()
         if hasattr(self, "transmission_ledit") and hasattr(
@@ -2717,15 +2734,15 @@ class ControlMain(QtWidgets.QMainWindow):
             except Exception as e:
                 logger.info(f"Exception while calculating sample flux {e}")
         logger.info("sample flux = " + str(sampleFlux))
-        try:
-            vecLen_s = self.vecLenLabelOutput.text()
-            if vecLen_s != "---":
-                vecLen = float(vecLen_s)
-            else:
-                vecLen = 0
-        except:
-            vecLen = 0
+        # Read vector length only if the vector protocol is chosen
+        vecLen = 0
+        if self.protoVectorRadio.isChecked():
+            try:
+                vecLen = float(self.vecLenLabelOutput.text())
+            except:
+                pass
         wedge = float(self.osc_end_ledit.text())
+        
         try:
             raddose_thread = RaddoseThread(
                 parent=self,

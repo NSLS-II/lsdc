@@ -84,3 +84,6 @@ VALID_DET_DIST = {'amx':{'min': 100, 'max':500, 'digits':3}, 'fmx':{'min':137, '
 VALID_TOTAL_EXP_TIMES = {'amx':{'min':0.005, 'max':300, 'digits':3}, 'fmx':{'min':0.01, 'max':300, 'digits':3}, 'nyx':{'min':0.01, 'max':1000, 'digits':3}}
 VALID_PREFIX_LENGTH = 25 #TODO centralize with spreadsheet validation?
 VALID_PREFIX_NAME = '[0-9a-zA-Z-_]{0,%s}' % VALID_PREFIX_LENGTH
+VALID_TRANSMISSION = {'amx': {'min': 0.001, 'max': 1.0, 'digits': 3},
+                      'fmx': {'min': 0.001, 'max': 1.0, 'digits': 3},
+                      'nyx': {'min': 0.001, 'max': 0.999, 'digits': 3}}

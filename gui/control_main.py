@@ -2547,7 +2547,8 @@ class ControlMain(QtWidgets.QMainWindow):
             )
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
-            self.calcLifetimeCB()
+            if daq_utils.beamline == 'fmx':
+                self.calcLifetimeCB()
         elif protocol == "burn":
             self.setGuiValues(
                 {
@@ -2572,7 +2573,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
             self.protoVectorRadio.setChecked(True)
-            self.calcLifetimeCB()
+            if daq_utils.beamline == 'fmx':
+                self.calcLifetimeCB()
         else:
             self.protoOtherRadio.setChecked(True)
         self.totalExpChanged("")

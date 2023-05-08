@@ -1092,9 +1092,11 @@ class ControlMain(QtWidgets.QMainWindow):
         sampleBrighterButton = QtWidgets.QPushButton("+")
         sampleBrighterButton.setFixedWidth(30)
         sampleBrighterButton.clicked.connect(self.lightUpCB)
+        sampleBrighterButton.setEnabled(False)  # Disabling until PV is fixed
         sampleDimmerButton = QtWidgets.QPushButton("-")
         sampleDimmerButton.setFixedWidth(30)
         sampleDimmerButton.clicked.connect(self.lightDimCB)
+        sampleDimmerButton.setEnabled(False)  # Disabling until PV is fixed
         focusLabel = QtWidgets.QLabel("Focus")
         focusLabel.setAlignment(QtCore.Qt.AlignRight | Qt.AlignVCenter)
         focusPlusButton = QtWidgets.QPushButton("+")
@@ -3718,7 +3720,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 elif itemDataType == "request":
                     selectedSampleRequest = db_lib.getRequestByID(item.data(32))
                     self.selectedSampleID = selectedSampleRequest["sample"]
-                
+
                 if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
                     continue
 

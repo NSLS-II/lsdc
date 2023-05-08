@@ -3721,9 +3721,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     selectedSampleRequest = db_lib.getRequestByID(item.data(32))
                     self.selectedSampleID = selectedSampleRequest["sample"]
 
-                if (
-                    self.selectedSampleID in samplesConsidered
-                ):  # If a request is already added to the sample, move on
+                if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
                     continue
 
                 try:

@@ -408,6 +408,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_end_ledit.textChanged[str].connect(
             functools.partial(self.totalExpChanged, "oscEnd")
         )
+        self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
         hBoxColParams1.addWidget(colStartLabel)
         hBoxColParams1.addWidget(self.osc_start_ledit)
         hBoxColParams1.addWidget(self.colEndLabel)
@@ -2553,7 +2554,7 @@ class ControlMain(QtWidgets.QMainWindow):
             )
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
-            if daq_utils.beamline == 'fmx':
+            if daq_utils.beamline == "fmx":
                 self.calcLifetimeCB()
         elif protocol == "burn":
             self.setGuiValues(
@@ -2579,7 +2580,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
             self.protoVectorRadio.setChecked(True)
-            if daq_utils.beamline == 'fmx':
+            if daq_utils.beamline == "fmx":
                 self.calcLifetimeCB()
         else:
             self.protoOtherRadio.setChecked(True)

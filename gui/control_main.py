@@ -1685,20 +1685,16 @@ class ControlMain(QtWidgets.QMainWindow):
             if reqID != None:
                 filePrefix = db_lib.getRequestByID(reqID)["request_obj"]["file_prefix"]
                 imagePath = (
-                    os.getcwd() + "/snapshots/" + filePrefix + str(int(now)) + ".jpg"
+                    f"{getBlConfig('visitDirectory')}/snapshots/{filePrefix}{int(now)}.jpg"
                 )
             else:
                 if self.dataPathGB.prefix_ledit.text() != "":
                     imagePath = (
-                        os.getcwd()
-                        + "/snapshots/"
-                        + str(self.dataPathGB.prefix_ledit.text())
-                        + str(int(now))
-                        + ".jpg"
+                        f"{getBlConfig('visitDirectory')}/snapshots/{self.dataPathGB.prefix_ledit.text()}{int(now)}.jpg"
                     )
                 else:
                     imagePath = (
-                        os.getcwd() + "/snapshots/capture" + str(int(now)) + ".jpg"
+                        f"{getBlConfig('visitDirectory')}/snapshots/capture{int(now)}.jpg"
                     )
         else:
             imagePath = rasterHeatJpeg

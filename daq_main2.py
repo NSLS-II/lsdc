@@ -35,6 +35,7 @@ handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 logger.addHandler(handler2)
 
+setBlConfig("visitDirectory", os.getcwd())
 sitefilename = ""
 global command_list,immediate_command_list,z
 command_list = []

@@ -49,7 +49,7 @@ from gui.dialog import (
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
-from threads import RaddoseThread, VideoThread
+from threads import RaddoseThread, VideoThread, ServerCheckThread
 
 logger = logging.getLogger()
 try:
@@ -1392,6 +1392,9 @@ class ControlMain(QtWidgets.QMainWindow):
             lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame)
         )
         hutchTopCamThread.start()
+        serverCheckThread = ServerCheckThread(
+            parent=self)
+        serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)

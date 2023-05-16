@@ -1,9 +1,12 @@
 from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt, QObject
 from qtpy import QtGui
 from PIL import Image, ImageQt
+import os
+import sys
 import urllib
 from io import BytesIO
 import logging
+from daq_lib import getBlConfig
 import raddoseLib
 
 logger = logging.getLogger()
@@ -88,3 +91,8 @@ class RaddoseThread(QThread):
         self.lifetime.emit(lifetime_value)
 
 
+class ServerCheckThread(QThread):
+    def run(self):
+        if getBlConfig("visitDirectory") != os.getcwd():
+            logger.error("The server visit directory has changed, stopping!")
+            sys.exit(1)

@@ -92,7 +92,13 @@ class RaddoseThread(QThread):
 
 
 class ServerCheckThread(QThread):
+    def __init__(self, *args, delay=60, **kwargs):
+        self.delay = delay
+        QThread.__init__(self, *args, **kwargs)
+
     def run(self):
-        if getBlConfig("visitDirectory") != os.getcwd():
-            logger.error("The server visit directory has changed, stopping!")
-            sys.exit(1)
+        while True:
+            if getBlConfig("visitDirectory") != os.getcwd():
+                logger.error("The server visit directory has changed, stopping!")
+                sys.exit(1)
+            self.msleep(self.delay)

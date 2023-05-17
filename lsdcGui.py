@@ -2,7 +2,6 @@
 The GUI for the LSDC system
 """
 import sys
-import os
 from qtpy import QtWidgets
 import daq_utils
 from utils.healthcheck import perform_checks
@@ -32,10 +31,6 @@ myformat = logging.Formatter(
 )
 handler1.setFormatter(myformat)
 logger.addHandler(handler1)
-
-if daq_utils.getBlConfig("visitDirectory") != os.getcwd():
-    logger.error("The GUI has not been started in the visit directory. Aborting!")
-    sys.exit(1)
 
 def main():
     logger.info("Starting LSDC...")

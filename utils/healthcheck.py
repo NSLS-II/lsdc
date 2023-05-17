@@ -61,6 +61,7 @@ def check_daq_utils():
 )
 def check_working_directory():
     import daq_utils
+    import os
     working_dir = Path.cwd()
     home_dir = Path.home()
     if home_dir in working_dir.parents or home_dir == working_dir:
@@ -72,6 +73,11 @@ def check_working_directory():
         return False
     else:
         return True
+    if daq_utils.getBlConfig("visitDirectory") != os.getcwd():
+        check_working_directory.remediation = ("Working directory mismatch. Please start LSDC GUI in the same folder as the server is running.")
+        return False
+    return True
+
 
 @healthcheck(
     name='database lib',
@@ -121,4 +127,3 @@ def perform_checks():
             handle_fail(check)
     print("End checks")
     print(u'\u2500' * 20)
-    

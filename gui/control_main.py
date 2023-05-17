@@ -26,6 +26,7 @@ import lsdcOlog
 from config_params import (
     CRYOSTREAM_ONLINE,
     HUTCH_TIMER_DELAY,
+    SERVER_CHECK_DELAY,
     RASTER_GUI_XREC_FILL_DELAY,
     SAMPLE_TIMER_DELAY,
     VALID_DET_DIST,
@@ -1393,7 +1394,7 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         hutchTopCamThread.start()
         serverCheckThread = ServerCheckThread(
-            parent=self)
+            parent=self, delay=SERVER_CHECK_DELAY)
         serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):

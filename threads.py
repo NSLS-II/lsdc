@@ -7,6 +7,7 @@ import urllib
 from io import BytesIO
 import logging
 from daq_lib import getBlConfig
+from config_params import SERVER_CHECK_DELAY
 import raddoseLib
 
 logger = logging.getLogger()
@@ -92,7 +93,7 @@ class RaddoseThread(QThread):
 
 
 class ServerCheckThread(QThread):
-    def __init__(self, *args, delay=60, **kwargs):
+    def __init__(self, *args, delay=SERVER_CHECK_DELAY, **kwargs):
         self.delay = delay
         QThread.__init__(self, *args, **kwargs)
 

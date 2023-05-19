@@ -8,6 +8,7 @@ import sys
 import os.path
 import os
 import logging
+import traceback
 logger = logging.getLogger(__name__)
 
 #12/19 - See Martin about this code!
@@ -19,8 +20,22 @@ def replaceLine(file,searchExp,replaceExp):
             line = replaceExp
         sys.stdout.write(line)
 
+def replaceLines(filename, replacementStrings):
+    lines = []
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            for text_to_search, replacement_text in replacementStrings.items():
+                if text_to_search in line:
+                    line = replacement_text
+                    break
+            lines.append(line)
+    
+    with open(filename, 'w') as f:
+        f.writelines(lines)
+
+    
 def run_rd3d(inputFileName):
-    prc = subprocess.Popen(["java", "-jar", os.environ['CONFIGDIR'] + "/raddose3d.jar", "-i", inputFileName, "-p", "rd3d/rd3d_"],
+    prc = subprocess.Popen(["java", "-jar", os.environ['CONFIGDIR'] + "/raddose3d.jar", "-i", inputFileName, "-p", f"rd3d/rd3d_{os.getpid()}_"],
         stdout=subprocess.PIPE,
         universal_newlines=True)
     out = prc.communicate()[0]
@@ -98,31 +113,35 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
     """
     
     rd3d_dir = "rd3d"
-    inputFileName = "rd3d_input.txt"
-    outputFileName = "rd3d_Summary.csv"
+    inputFileName = f"rd3d_{os.getpid()}_input.txt"
+    outputFileName = f"rd3d_{os.getpid()}_Summary.csv"
 
     templateFilePath=os.path.join(rd3d_dir,templateFileName)
     inputFilePath=os.path.join(rd3d_dir,inputFileName)
     outputFilePath=os.path.join(rd3d_dir,outputFileName)
     
     copyfile(templateFilePath, inputFilePath)
-        
-    replaceLine(inputFilePath,"FLUX",'FLUX {:.2e}\n'.format(flux))
-    replaceLine(inputFilePath,"ENERGY",'ENERGY {:.2f}\n'.format(energy))
-    replaceLine(inputFilePath,"TYPE GAUSSIAN",'TYPE {:s}\n'.format(beamType))
-    replaceLine(inputFilePath,"FWHM",'FWHM {:.1f} {:.1f}\n'.format(fwhmX,fwhmY))
-    replaceLine(inputFilePath,"COLLIMATION",'COLLIMATION RECTANGULAR {:.1f} {:.1f}\n'.format(collimationX,collimationY))
-    replaceLine(inputFilePath,"WEDGE",'WEDGE 0 {:0.1f}\n'.format(wedge))
-    replaceLine(inputFilePath,"EXPOSURETIME",'EXPOSURETIME {:0.3f}\n'.format(exposureTime))
-    replaceLine(inputFilePath,"TRANSLATEPERDEGREE",
-                'TRANSLATEPERDEGREE {:0.4f} {:0.4f} {:0.4f}\n'.format(translatePerDegX,translatePerDegY,translatePerDegZ))
-    replaceLine(inputFilePath,"DIMENSION",'DIMENSION {:0.1f} {:0.1f} {:0.1f}\n'.format(dimX,dimY,dimZ))
-    replaceLine(inputFilePath,"PIXELSPERMICRON",'PIXELSPERMICRON {:0.1f}\n'.format(pixelsPerMicron))
-    replaceLine(inputFilePath,"ANGULARRESOLUTION",'ANGULARRESOLUTION {:0.1f}\n'.format(angularResolution))
-    replaceLine(inputFilePath,"STARTOFFSET",
-                'STARTOFFSET {:f} {:f} {:f}\n'.format(startOffsetX,startOffsetY,startOffsetZ))    
+
+    replacementStrings = {
+        "FLUX":'FLUX {:.2e}\n'.format(flux),
+        "ENERGY":'ENERGY {:.2f}\n'.format(energy),
+        "TYPE GAUSSIAN":'TYPE {:s}\n'.format(beamType),
+        "FWHM":'FWHM {:.1f} {:.1f}\n'.format(fwhmX,fwhmY),
+        "COLLIMATION":'COLLIMATION RECTANGULAR {:.1f} {:.1f}\n'.format(collimationX,collimationY),
+        "WEDGE":'WEDGE 0 {:0.1f}\n'.format(wedge),
+        "EXPOSURETIME":'EXPOSURETIME {:0.3f}\n'.format(exposureTime),
+        "TRANSLATEPERDEGREE":
+                'TRANSLATEPERDEGREE {:0.4f} {:0.4f} {:0.4f}\n'.format(translatePerDegX,translatePerDegY,translatePerDegZ),
+        "DIMENSION":'DIMENSION {:0.1f} {:0.1f} {:0.1f}\n'.format(dimX,dimY,dimZ),
+        "PIXELSPERMICRON":'PIXELSPERMICRON {:0.1f}\n'.format(pixelsPerMicron),
+        "ANGULARRESOLUTION":'ANGULARRESOLUTION {:0.1f}\n'.format(angularResolution),
+        "STARTOFFSET":
+                'STARTOFFSET {:f} {:f} {:f}\n'.format(startOffsetX,startOffsetY,startOffsetZ)
+    }
+
+    replaceLines(inputFilePath, replacementStrings)
     
-    out = run_rd3d(inputFilePath)
+    out = run_rd3d(inputFilePath, outputFilePath)
     if verbose:
         logger.info(out)
     
@@ -276,6 +295,7 @@ def fmx_expTime(avg_dwd = 10, #Default of 10MGy
         dose1s = rd3d_out['DWD'].item()  # .item() to convert 1d array to scalar
         logger.info('Average Diffraction Weighted Dose for 1s exposure = {:f} MGy'.format(dose1s))
     except Exception as e:
+        traceback.print_exc()
         logger.error(f'Exception in rd3d calc: {e}')
         dose1s = 0
     

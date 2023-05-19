@@ -408,6 +408,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_end_ledit.textChanged[str].connect(
             functools.partial(self.totalExpChanged, "oscEnd")
         )
+        self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
         hBoxColParams1.addWidget(colStartLabel)
         hBoxColParams1.addWidget(self.osc_start_ledit)
         hBoxColParams1.addWidget(self.colEndLabel)
@@ -2747,9 +2748,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 vecLen = float(self.vecLenLabelOutput.text())
             except:
                 pass
-        wedge = float(self.osc_end_ledit.text())
-
+        
         try:
+            wedge = float(self.osc_end_ledit.text())
             raddose_thread = RaddoseThread(
                 parent=self,
                 beamsizeV=3.0,

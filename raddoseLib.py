@@ -8,17 +8,9 @@ import sys
 import os.path
 import os
 import logging
-import traceback
 logger = logging.getLogger(__name__)
 
 #12/19 - See Martin about this code!
-
-
-def replaceLine(file,searchExp,replaceExp):
-    for line in fileinput.input(file, inplace=1):
-        if searchExp in line:
-            line = replaceExp
-        sys.stdout.write(line)
 
 def replaceLines(filename, replacementStrings):
     lines = []
@@ -141,7 +133,7 @@ def rd3d_calc(flux=3.5e12, energy=12.66,
 
     replaceLines(inputFilePath, replacementStrings)
     
-    out = run_rd3d(inputFilePath, outputFilePath)
+    out = run_rd3d(inputFilePath)
     if verbose:
         logger.info(out)
     
@@ -295,7 +287,6 @@ def fmx_expTime(avg_dwd = 10, #Default of 10MGy
         dose1s = rd3d_out['DWD'].item()  # .item() to convert 1d array to scalar
         logger.info('Average Diffraction Weighted Dose for 1s exposure = {:f} MGy'.format(dose1s))
     except Exception as e:
-        traceback.print_exc()
         logger.error(f'Exception in rd3d calc: {e}')
         dose1s = 0
     

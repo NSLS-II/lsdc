@@ -48,6 +48,7 @@ from gui.dialog import (
     StaffScreenDialog,
     UserScreenDialog,
 )
+from gui.acquisition import VectorParamsFrame
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
@@ -818,33 +819,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout1)
         vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout2)
         self.characterizeParamsFrame.setLayout(vBoxCharacterizeParams1)
-        self.vectorParamsFrame = QFrame()
-        hBoxVectorLayout1 = QtWidgets.QHBoxLayout()
-        setVectorStartButton = QtWidgets.QPushButton("Vector\nStart")
-        setVectorStartButton.setStyleSheet("background-color: blue")
-        setVectorStartButton.clicked.connect(
-            lambda: self.setVectorPointCB("vectorStart")
-        )
-        setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd")
-        setVectorEndButton.setStyleSheet("background-color: red")
-        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        self.vectorParamsFrame = VectorParamsFrame(self)
         self.vecLine = None
-        vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
-        self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
-        self.vectorFPP_ledit.setValidator(QIntValidator(self))
-        vecLenLabel = QtWidgets.QLabel("    Length(microns):")
-        self.vecLenLabelOutput = QtWidgets.QLabel("---")
-        vecSpeedLabel = QtWidgets.QLabel("    Speed(microns/s):")
-        self.vecSpeedLabelOutput = QtWidgets.QLabel("---")
-        hBoxVectorLayout1.addWidget(setVectorStartButton)
-        hBoxVectorLayout1.addWidget(setVectorEndButton)
-        hBoxVectorLayout1.addWidget(vectorFPPLabel)
-        hBoxVectorLayout1.addWidget(self.vectorFPP_ledit)
-        hBoxVectorLayout1.addWidget(vecLenLabel)
-        hBoxVectorLayout1.addWidget(self.vecLenLabelOutput)
-        hBoxVectorLayout1.addWidget(vecSpeedLabel)
-        hBoxVectorLayout1.addWidget(self.vecSpeedLabelOutput)
-        self.vectorParamsFrame.setLayout(hBoxVectorLayout1)
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxColParams2)
         vBoxColParams1.addLayout(hBoxColParams25)
@@ -2314,14 +2290,14 @@ class ControlMain(QtWidgets.QMainWindow):
         trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
         if daq_utils.beamline == "nyx":
             trans_total *= 1000
-        self.vecLenLabelOutput.setText(str(int(trans_total)))
+        self.vectorParamsFrame.vecLenLabelOutput.setText(str(int(trans_total)))
         totalExpTime = (
             float(self.osc_end_ledit.text()) / float(self.osc_range_ledit.text())
         ) * float(
             self.exp_time_ledit.text()
         )  # (range/inc)*exptime
         speed = trans_total / totalExpTime
-        self.vecSpeedLabelOutput.setText(str(int(speed)))
+        self.vectorParamsFrame.vecSpeedLabelOutput.setText(str(int(speed)))
         return x_vec, y_vec, z_vec, trans_total
 
     def totalExpChanged(self, text):
@@ -2747,7 +2723,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vecLen = 0
         if self.protoVectorRadio.isChecked():
             try:
-                vecLen = float(self.vecLenLabelOutput.text())
+                vecLen = float(self.vectorParamsFrame.vecLenLabelOutput.text())
             except:
                 pass
         wedge = float(self.osc_end_ledit.text())
@@ -3709,7 +3685,7 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["xia2"] = self.xia2CheckBox.isChecked()
         reqObj["protocol"] = str(self.protoComboBox.currentText())
         if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
-            reqObj["vectorParams"]["fpp"] = int(self.vectorFPP_ledit.text())
+            reqObj["vectorParams"]["fpp"] = int(self.vectorParamsFrame.vectorFPP_ledit.text())
         colRequest["request_obj"] = reqObj
         db_lib.updateRequest(colRequest)
         self.treeChanged_pv.put(1)
@@ -4147,7 +4123,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 selectedCenteringFound = 1
                 try:
                     x_vec, y_vec, z_vec, trans_total = self.updateVectorLengthAndSpeed()
-                    framesPerPoint = int(self.vectorFPP_ledit.text())
+                    framesPerPoint = int(self.vectorParamsFrame.vectorFPP_ledit.text())
                     vectorParams = {
                         "vecStart": self.vectorStart["coords"],
                         "vecEnd": self.vectorEnd["coords"],
@@ -4413,8 +4389,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.vectorEnd:
             self.scene.removeItem(self.vectorEnd["graphicsitem"])
             self.vectorEnd = None
-            self.vecLenLabelOutput.setText("---")
-            self.vecSpeedLabelOutput.setText("---")
+            self.vectorParamsFrame.vecLenLabelOutput.setText("---")
+            self.vectorParamsFrame.vecSpeedLabelOutput.setText("---")
         if self.vecLine:
             self.scene.removeItem(self.vecLine)
             self.vecLine = None

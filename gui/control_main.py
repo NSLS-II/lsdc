@@ -48,7 +48,7 @@ from gui.dialog import (
     StaffScreenDialog,
     UserScreenDialog,
 )
-from gui.acquisition import VectorParamsFrame
+from gui.acquisition import VectorParamsFrame, MultiColParamsFrame
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
@@ -763,20 +763,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vBoxRasterParams.addLayout(self.hBoxRasterLayout1)
         self.vBoxRasterParams.addLayout(self.hBoxRasterLayout2)
         self.rasterParamsFrame.setLayout(self.vBoxRasterParams)
-        self.multiColParamsFrame = (
-            QFrame()
-        )  # something for criteria to decide on which hotspots to collect on for multi-xtal
-        self.hBoxMultiColParamsLayout1 = QtWidgets.QHBoxLayout()
-        self.hBoxMultiColParamsLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        multiColCutoffLabel = QtWidgets.QLabel("Diffraction Cutoff")
-        multiColCutoffLabel.setFixedWidth(110)
-        self.multiColCutoffEdit = QtWidgets.QLineEdit(
-            "320"
-        )  # may need to store this in DB at some point, it's a silly number for now
-        self.multiColCutoffEdit.setFixedWidth(60)
-        self.hBoxMultiColParamsLayout1.addWidget(multiColCutoffLabel)
-        self.hBoxMultiColParamsLayout1.addWidget(self.multiColCutoffEdit)
-        self.multiColParamsFrame.setLayout(self.hBoxMultiColParamsLayout1)
+        self.multiColParamsFrame = MultiColParamsFrame(self)
         self.characterizeParamsFrame = QFrame()
         vBoxCharacterizeParams1 = QtWidgets.QVBoxLayout()
         self.hBoxCharacterizeLayout1 = QtWidgets.QHBoxLayout()
@@ -4098,7 +4085,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 reqObj["detDist"] = new_distance
             if reqObj["protocol"] == "multiCol" or reqObj["protocol"] == "multiColQ":
                 reqObj["gridStep"] = float(self.rasterStepEdit.text())
-                reqObj["diffCutoff"] = float(self.multiColCutoffEdit.text())
+                reqObj["diffCutoff"] = float(self.multiColParamsFrame.multiColCutoffEdit.text())
             if reqObj["protocol"] == "rasterScreen":
                 reqObj["gridStep"] = float(self.rasterStepEdit.text())
             if rasterDef != None:

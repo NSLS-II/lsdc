@@ -20,7 +20,6 @@ class VectorParamsFrame(QtWidgets.QFrame):
         setVectorEndButton.clicked.connect(
             lambda: self.parent().setVectorPointCB("vectorEnd")
         )
-        self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
         self.vectorFPP_ledit.setValidator(QIntValidator(self))

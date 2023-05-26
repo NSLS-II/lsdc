@@ -48,7 +48,11 @@ from gui.dialog import (
     StaffScreenDialog,
     UserScreenDialog,
 )
-from gui.acquisition import VectorParamsFrame, MultiColParamsFrame
+from gui.acquisition import (
+    VectorParamsFrame,
+    MultiColParamsFrame,
+    CharacterizeParamsFrame,
+)
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
@@ -764,48 +768,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vBoxRasterParams.addLayout(self.hBoxRasterLayout2)
         self.rasterParamsFrame.setLayout(self.vBoxRasterParams)
         self.multiColParamsFrame = MultiColParamsFrame(self)
-        self.characterizeParamsFrame = QFrame()
-        vBoxCharacterizeParams1 = QtWidgets.QVBoxLayout()
-        self.hBoxCharacterizeLayout1 = QtWidgets.QHBoxLayout()
-        self.characterizeTargetLabel = QtWidgets.QLabel("Characterization Targets")
-        characterizeResoLabel = QtWidgets.QLabel("Resolution")
-        characterizeResoLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeResoEdit = QtWidgets.QLineEdit("3.0")
-        characterizeISIGLabel = QtWidgets.QLabel("I/Sigma")
-        characterizeISIGLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeISIGEdit = QtWidgets.QLineEdit("2.0")
-        self.characterizeAnomCheckBox = QCheckBox("Anomolous")
-        self.characterizeAnomCheckBox.setChecked(False)
-        self.hBoxCharacterizeLayout2 = QtWidgets.QHBoxLayout()
-        characterizeCompletenessLabel = QtWidgets.QLabel("Completeness")
-        characterizeCompletenessLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeCompletenessEdit = QtWidgets.QLineEdit("0.99")
-        characterizeMultiplicityLabel = QtWidgets.QLabel("Multiplicity")
-        characterizeMultiplicityLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeMultiplicityEdit = QtWidgets.QLineEdit("auto")
-        characterizeDoseLimitLabel = QtWidgets.QLabel("Dose Limit")
-        characterizeDoseLimitLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeDoseLimitEdit = QtWidgets.QLineEdit("100")
-        characterizeSpaceGroupLabel = QtWidgets.QLabel("Space Group")
-        characterizeSpaceGroupLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeSpaceGroupEdit = QtWidgets.QLineEdit("P1")
-        self.hBoxCharacterizeLayout1.addWidget(characterizeResoLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeResoEdit)
-        self.hBoxCharacterizeLayout1.addWidget(characterizeISIGLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeISIGEdit)
-        self.hBoxCharacterizeLayout1.addWidget(characterizeSpaceGroupLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeSpaceGroupEdit)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeAnomCheckBox)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeCompletenessLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeCompletenessEdit)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeMultiplicityLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeMultiplicityEdit)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeDoseLimitLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeDoseLimitEdit)
-        vBoxCharacterizeParams1.addWidget(self.characterizeTargetLabel)
-        vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout1)
-        vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout2)
-        self.characterizeParamsFrame.setLayout(vBoxCharacterizeParams1)
+        self.characterizeParamsFrame = CharacterizeParamsFrame(self)
         self.vectorParamsFrame = VectorParamsFrame(self)
         self.vecLine = None
         vBoxColParams1.addLayout(hBoxColParams1)
@@ -3672,7 +3635,9 @@ class ControlMain(QtWidgets.QMainWindow):
         reqObj["xia2"] = self.xia2CheckBox.isChecked()
         reqObj["protocol"] = str(self.protoComboBox.currentText())
         if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
-            reqObj["vectorParams"]["fpp"] = int(self.vectorParamsFrame.vectorFPP_ledit.text())
+            reqObj["vectorParams"]["fpp"] = int(
+                self.vectorParamsFrame.vectorFPP_ledit.text()
+            )
         colRequest["request_obj"] = reqObj
         db_lib.updateRequest(colRequest)
         self.treeChanged_pv.put(1)
@@ -3958,17 +3923,9 @@ class ControlMain(QtWidgets.QMainWindow):
                         reqObj["protocol"] == "characterize"
                         or reqObj["protocol"] == "ednaCol"
                     ):
-                        characterizationParams = {
-                            "aimed_completeness": float(
-                                self.characterizeCompletenessEdit.text()
-                            ),
-                            "aimed_multiplicity": str(
-                                self.characterizeMultiplicityEdit.text()
-                            ),
-                            "aimed_resolution": float(self.characterizeResoEdit.text()),
-                            "aimed_ISig": float(self.characterizeISIGEdit.text()),
-                        }
-                        reqObj["characterizationParams"] = characterizationParams
+                        reqObj[
+                            "characterizationParams"
+                        ] = self.characterizeParamsFrame.get_params()
                     colRequest["request_obj"] = reqObj
                     newSampleRequestID = db_lib.addRequesttoSample(
                         self.selectedSampleID,
@@ -4085,22 +4042,18 @@ class ControlMain(QtWidgets.QMainWindow):
                 reqObj["detDist"] = new_distance
             if reqObj["protocol"] == "multiCol" or reqObj["protocol"] == "multiColQ":
                 reqObj["gridStep"] = float(self.rasterStepEdit.text())
-                reqObj["diffCutoff"] = float(self.multiColParamsFrame.multiColCutoffEdit.text())
+                reqObj["diffCutoff"] = float(
+                    self.multiColParamsFrame.multiColCutoffEdit.text()
+                )
             if reqObj["protocol"] == "rasterScreen":
                 reqObj["gridStep"] = float(self.rasterStepEdit.text())
             if rasterDef != None:
                 reqObj["rasterDef"] = rasterDef
                 reqObj["gridStep"] = float(self.rasterStepEdit.text())
             if reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol":
-                characterizationParams = {
-                    "aimed_completeness": float(
-                        self.characterizeCompletenessEdit.text()
-                    ),
-                    "aimed_multiplicity": str(self.characterizeMultiplicityEdit.text()),
-                    "aimed_resolution": float(self.characterizeResoEdit.text()),
-                    "aimed_ISig": float(self.characterizeISIGEdit.text()),
-                }
-                reqObj["characterizationParams"] = characterizationParams
+                reqObj[
+                    "characterizationParams"
+                ] = self.characterizeParamsFrame.get_params()
             if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
                 if float(self.osc_end_ledit.text()) < 5.0:
                     self.popupServerMessage(

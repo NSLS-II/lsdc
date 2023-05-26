@@ -52,6 +52,7 @@ from gui.acquisition import (
     MultiColParamsFrame,
     CharacterizeParamsFrame,
     RasterParamsFrame,
+    ProcessingOptionsFrame,
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
@@ -676,25 +677,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams7.addWidget(self.centeringComboBox)
         hBoxColParams7.addWidget(colResoLabel)
         hBoxColParams7.addWidget(self.resolution_ledit)
-        self.processingOptionsFrame = QFrame()
-        self.hBoxProcessingLayout1 = QtWidgets.QHBoxLayout()
-        self.hBoxProcessingLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        procOptionLabel = QtWidgets.QLabel("Processing Options:")
-        procOptionLabel.setFixedWidth(200)
-        self.autoProcessingCheckBox = QCheckBox("AutoProcessing On")
-        self.autoProcessingCheckBox.setChecked(True)
-        self.autoProcessingCheckBox.stateChanged.connect(self.autoProcessingCheckCB)
-        self.fastEPCheckBox = QCheckBox("FastEP")
-        self.fastEPCheckBox.setChecked(False)
-        self.fastEPCheckBox.setEnabled(False)
-        self.dimpleCheckBox = QCheckBox("Dimple")
-        self.dimpleCheckBox.setChecked(True)
-        self.xia2CheckBox = QCheckBox("Xia2")
-        self.xia2CheckBox.setChecked(False)
-        self.hBoxProcessingLayout1.addWidget(self.autoProcessingCheckBox)
-        self.hBoxProcessingLayout1.addWidget(self.fastEPCheckBox)
-        self.hBoxProcessingLayout1.addWidget(self.dimpleCheckBox)
-        self.processingOptionsFrame.setLayout(self.hBoxProcessingLayout1)
+        self.processingOptionsFrame = ProcessingOptionsFrame(self)
         self.rasterParamsFrame = RasterParamsFrame(self)
         self.multiColParamsFrame = MultiColParamsFrame(self)
         self.characterizeParamsFrame = CharacterizeParamsFrame(self)
@@ -1233,9 +1216,9 @@ class ControlMain(QtWidgets.QMainWindow):
             self.protoStandardRadio.setDisabled(True)
             self.protoVectorRadio.setDisabled(True)
             self.protoOtherRadio.setDisabled(True)
-            self.autoProcessingCheckBox.setDisabled(True)
-            self.fastEPCheckBox.setDisabled(True)
-            self.dimpleCheckBox.setDisabled(True)
+            self.processingOptionsFrame.autoProcessingCheckBox.setDisabled(True)
+            self.processingOptionsFrame.fastEPCheckBox.setDisabled(True)
+            self.processingOptionsFrame.dimpleCheckBox.setDisabled(True)
             self.centeringComboBox.setDisabled(True)
             self.beamsizeComboBox.setDisabled(True)
             annealButton.setDisabled(True)
@@ -1309,15 +1292,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.stillModeCheckBox.setChecked(True)
             else:
                 self.stillModeCheckBox.setChecked(False)
-
-    def autoProcessingCheckCB(self, state):
-        if state == QtCore.Qt.Checked:
-            self.dimpleCheckBox.setEnabled(True)
-            self.xia2CheckBox.setEnabled(True)
-        else:
-            self.fastEPCheckBox.setEnabled(False)
-            self.dimpleCheckBox.setEnabled(False)
-            self.xia2CheckBox.setEnabled(False)
 
     def vidActionToggledCB(self):
         if len(self.rasterList) > 0:
@@ -3535,12 +3509,12 @@ class ControlMain(QtWidgets.QMainWindow):
             return
         reqObj["fastDP"] = (
             self.staffScreenDialog.fastDPCheckBox.isChecked()
-            or self.fastEPCheckBox.isChecked()
-            or self.dimpleCheckBox.isChecked()
+            or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+            or self.processingOptionsFrame.dimpleCheckBox.isChecked()
         )
-        reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-        reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-        reqObj["xia2"] = self.xia2CheckBox.isChecked()
+        reqObj["fastEP"] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+        reqObj["dimple"] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+        reqObj["xia2"] = self.processingOptionsFrame.xia2CheckBox.isChecked()
         reqObj["protocol"] = str(self.protoComboBox.currentText())
         if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
             reqObj["vectorParams"]["fpp"] = int(
@@ -3821,12 +3795,18 @@ class ControlMain(QtWidgets.QMainWindow):
                     )
                     reqObj["fastDP"] = (
                         self.staffScreenDialog.fastDPCheckBox.isChecked()
-                        or self.fastEPCheckBox.isChecked()
-                        or self.dimpleCheckBox.isChecked()
+                        or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                        or self.processingOptionsFrame.dimpleCheckBox.isChecked()
                     )
-                    reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-                    reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-                    reqObj["xia2"] = self.xia2CheckBox.isChecked()
+                    reqObj[
+                        "fastEP"
+                    ] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                    reqObj[
+                        "dimple"
+                    ] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+                    reqObj[
+                        "xia2"
+                    ] = self.processingOptionsFrame.xia2CheckBox.isChecked()
                     if (
                         reqObj["protocol"] == "characterize"
                         or reqObj["protocol"] == "ednaCol"
@@ -3920,12 +3900,16 @@ class ControlMain(QtWidgets.QMainWindow):
                 else:
                     reqObj["fastDP"] = (
                         self.staffScreenDialog.fastDPCheckBox.isChecked()
-                        or self.fastEPCheckBox.isChecked()
-                        or self.dimpleCheckBox.isChecked()
+                        or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                        or self.processingOptionsFrame.dimpleCheckBox.isChecked()
                     )
-                    reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-                    reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-                reqObj["xia2"] = self.xia2CheckBox.isChecked()
+                    reqObj[
+                        "fastEP"
+                    ] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                    reqObj[
+                        "dimple"
+                    ] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+                reqObj["xia2"] = self.processingOptionsFrame.xia2CheckBox.isChecked()
                 reqObj["attenuation"] = float(self.transmission_ledit.text())
                 reqObj["slit_width"] = self.rasterParamsFrame.rasterStep
                 reqObj["slit_height"] = self.rasterParamsFrame.rasterStep
@@ -4332,11 +4316,11 @@ class ControlMain(QtWidgets.QMainWindow):
                 (reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"])
             )
         if "fastEP" in reqObj:
-            self.fastEPCheckBox.setChecked(reqObj["fastEP"])
+            self.processingOptionsFrame.fastEPCheckBox.setChecked(reqObj["fastEP"])
         if "dimple" in reqObj:
-            self.dimpleCheckBox.setChecked(reqObj["dimple"])
+            self.processingOptionsFrame.dimpleCheckBox.setChecked(reqObj["dimple"])
         if "xia2" in reqObj:
-            self.xia2CheckBox.setChecked(reqObj["xia2"])
+            self.processingOptionsFrame.xia2CheckBox.setChecked(reqObj["xia2"])
         reqObj["energy"] = float(self.energy_ledit.text())
         self.energy_ledit.setText(str(reqObj["energy"]))
         energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))

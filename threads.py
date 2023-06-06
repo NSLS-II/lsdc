@@ -100,6 +100,8 @@ class ServerCheckThread(QThread):
     def run(self):
         while True:
             if getBlConfig("visitDirectory") != os.getcwd():
-                logger.error("The server visit directory has changed, stopping!")
+                message = "The server visit directory has changed, stopping!"
+                logger.error(message)
+                print(message)
                 sys.exit(1)
             self.msleep(self.delay)

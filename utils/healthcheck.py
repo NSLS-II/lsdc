@@ -41,6 +41,7 @@ def healthcheck(name:str='',
 def start():
     return True
 
+# GUI checks
 @healthcheck(
     name='import daq_utils',
     remediation='', # Dynamic remediation defined in function
@@ -100,30 +101,70 @@ def handle_fail(check):
         print("End checks")
         print(u'\u2500' * 20)
         sys.exit('Fatal error, exiting...')
-        
+
+# Server checks
+@healthcheck(name="server working directory", remediation="", fatal=True)
+def check_curr_visit_dir() -> bool:
+    if "CURRENT_VISIT_DIR" not in os.environ:
+        check_curr_visit_dir.remediation = (
+            "CURRENT_VISIT_DIR environment variable not found"
+        )
+        return False
+    if os.environ["CURRENT_VISIT_DIR"] != "":
+        check_curr_visit_dir.remediation = "CURRENT_VISIT_DIR is empty"
+        return False
+    current_visit_dir = Path(os.environ["CURRENT_VISIT_DIR"])
+    if not current_visit_dir.exists():
+        check_curr_visit_dir.remediation = (
+            f"CURRENT_VISIT_DIR = {current_visit_dir} does not exist"
+        )
+        return False
+    return True
+
+
+@healthcheck(name="existence of environment file", remediation="", fatal=True)
+def check_env_file() -> bool:
+    import daq_utils
+
+    env_path = Path(f"/nsls2/software/mx/current_visit_lsdc_{daq_utils.beamline}")
+    if not env_path.exists():
+        check_env_file.remidiation = f"Environment file not found at {env_path}"
+        return False
+    return True
+
 
 def perform_checks():
-    """Call this function to contruct a DAG where each node is evaluated using 
-    breadth first search. DAGs allow certain tests to be run only after passing 
+    """Call this function to contruct a DAG where each node is evaluated using
+    breadth first search. DAGs allow certain tests to be run only after passing
     specific tests. For example
     """
+    check_functions = [check_daq_utils, check_working_directory, check_db]
+    run_checks(check_functions)
+
+
+def perform_server_checks():
+    check_functions = [check_env_file, check_curr_visit_dir]
+    run_checks(check_functions)
+
+
+def run_checks(check_functions):
     checks = DiGraph()
-    for c in [check_daq_utils, check_working_directory, check_db]:
+    for c in check_functions:
         for d in c.depends:
             checks.add_edge(d, c)
-    print(u'\u2500' * 20)
+    print("\u2500" * 20)
     print("Begin checks")
     for check in bfs_tree(checks, start):
         try:
             if all([parent.passed for parent in checks.predecessors(check)]):
-                print(f'Checking {check.name}...', end='\t')
+                print(f"Checking {check.name}...", end="\t")
                 if check():
-                    print(f'{bcolors.OKGREEN}Success{bcolors.ENDC}')
+                    print(f"{bcolors.OKGREEN}Success{bcolors.ENDC}")
                 else:
                     handle_fail(check)
         except Exception as e:
-            print(f'Exception: {e}')
-            logger.error(f'Exception during checks {e}')
+            print(f"Exception: {e}")
+            logger.error(f"Exception during checks {e}")
             handle_fail(check)
     print("End checks")
-    print(u'\u2500' * 20)
+    print("\u2500" * 20)

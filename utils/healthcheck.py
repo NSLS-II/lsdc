@@ -110,7 +110,7 @@ def check_curr_visit_dir() -> bool:
             "CURRENT_VISIT_DIR environment variable not found"
         )
         return False
-    if os.environ["CURRENT_VISIT_DIR"] != "":
+    if os.environ["CURRENT_VISIT_DIR"] == "":
         check_curr_visit_dir.remediation = "CURRENT_VISIT_DIR is empty"
         return False
     current_visit_dir = Path(os.environ["CURRENT_VISIT_DIR"])

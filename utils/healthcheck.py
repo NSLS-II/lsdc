@@ -2,7 +2,7 @@ import sys
 import logging
 from pathlib import Path
 from networkx import DiGraph, bfs_tree
-
+import os
 
 logger = logging.getLogger()
 class bcolors:
@@ -105,20 +105,43 @@ def handle_fail(check):
 # Server checks
 @healthcheck(name="server working directory", remediation="", fatal=True)
 def check_curr_visit_dir() -> bool:
-    if "CURRENT_VISIT_DIR" not in os.environ:
+    # Check if current visit dir is valid 
+    visit_dir_env_var = "CURRENT_VISIT_DIR"
+    if visit_dir_env_var not in os.environ:
         check_curr_visit_dir.remediation = (
-            "CURRENT_VISIT_DIR environment variable not found"
+            f"{visit_dir_env_var} environment variable not found"
         )
         return False
-    if os.environ["CURRENT_VISIT_DIR"] == "":
-        check_curr_visit_dir.remediation = "CURRENT_VISIT_DIR is empty"
+    if os.environ[visit_dir_env_var] == "":
+        check_curr_visit_dir.remediation = f"{visit_dir_env_var} is empty"
         return False
-    current_visit_dir = Path(os.environ["CURRENT_VISIT_DIR"])
+    current_visit_dir = Path(os.environ[visit_dir_env_var])
     if not current_visit_dir.exists():
         check_curr_visit_dir.remediation = (
-            f"CURRENT_VISIT_DIR = {current_visit_dir} does not exist"
+            f"{visit_dir_env_var} = {current_visit_dir} does not exist"
         )
         return False
+    
+    # Check if current visit dir is one of the dirs defined in BASE_DATA_DIRS
+    base_dir_env_var = "BASE_DATA_DIRS"
+    if base_dir_env_var not in os.environ:
+        check_curr_visit_dir.remediation = f"{base_dir_env_var} evironment variable not found"
+        return False
+    # Splitting on : if there are multiple base dirs
+    base_dirs = [Path(p) for p in os.environ[base_dir_env_var].split(":")]
+    pass_dir_found = False
+    for i, part in enumerate(reversed(current_visit_dir.parts)):
+        if 'pass-' in part:
+            pass_dir_found = True
+            if current_visit_dir.parents[i] not in base_dirs:
+                check_curr_visit_dir.remediation = f"{current_visit_dir.parents[i]} not found in {base_dirs}"
+                return False
+            else:
+                break
+    if not pass_dir_found:
+        check_curr_visit_dir.remediation = f"Pass folder not found in {current_visit_dir}"
+        return False
+
     return True
 
 

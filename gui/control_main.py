@@ -1395,6 +1395,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hutchTopCamThread.start()
         serverCheckThread = ServerCheckThread(
             parent=self, delay=SERVER_CHECK_DELAY)
+        serverCheckThread.visit_dir_changed.connect(self.close)
         serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):

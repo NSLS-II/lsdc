@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from networkx import DiGraph, bfs_tree
 import os
+import getpass
 
 logger = logging.getLogger()
 class bcolors:
@@ -72,8 +73,6 @@ def check_working_directory():
         # Hacky way to check if amx or fmx is in path. Unless server can tell GUI where its running?
         check_working_directory.remediation = f'Please start LSDC in {daq_utils.beamline} data directory. Current directory: {working_dir}'
         return False
-    else:
-        return True
     if daq_utils.getBlConfig("visitDirectory") != os.getcwd():
         check_working_directory.remediation = ("Working directory mismatch. Please start LSDC GUI in the same folder as the server is running.")
         return False
@@ -100,9 +99,18 @@ def handle_fail(check):
     if check.fatal:
         print("End checks")
         print(u'\u2500' * 20)
-        sys.exit('Fatal error, exiting...')
+        print('Fatal error, exiting...')
+        os._exit(1)
 
 # Server checks
+@healthcheck(name="check service user", remediation="LSDC server not being started by a LSDC service user account, aborting!")
+def check_service_user() -> bool:
+    if not getpass.getuser().startswith("lsdc-"):
+        return False
+    print(f"continuing as we are using a service user: {getpass.getuser()}")
+    return True
+
+
 @healthcheck(name="server working directory", remediation="", fatal=True)
 def check_curr_visit_dir() -> bool:
     import daq_utils
@@ -167,7 +175,7 @@ def perform_checks():
 
 
 def perform_server_checks():
-    check_functions = [check_env_file, check_curr_visit_dir]
+    check_functions = [check_service_user, check_env_file, check_curr_visit_dir]
     run_checks(check_functions)
 
 

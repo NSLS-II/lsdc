@@ -6,7 +6,6 @@ import sys
 import urllib
 from io import BytesIO
 import logging
-from daq_lib import getBlConfig
 from config_params import SERVER_CHECK_DELAY
 import raddoseLib
 
@@ -98,8 +97,10 @@ class ServerCheckThread(QThread):
         QThread.__init__(self, *args, **kwargs)
 
     def run(self):
+        import db_lib
+        beamline = os.environ["BEAMLINE_ID"]
         while True:
-            if getBlConfig("visitDirectory") != os.getcwd():
+            if db_lib.getBeamlineConfigParam(beamline, "visitDirectory") != os.getcwd():
                 message = "The server visit directory has changed, stopping!"
                 logger.error(message)
                 print(message)

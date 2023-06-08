@@ -1,4 +1,4 @@
-from daq_utils import setBlConfig
+from daq_utils import setBlConfig, getBlConfig
 import daq_lib
 import beamline_lib
 import time

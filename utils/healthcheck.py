@@ -105,6 +105,7 @@ def handle_fail(check):
 # Server checks
 @healthcheck(name="server working directory", remediation="", fatal=True)
 def check_curr_visit_dir() -> bool:
+    import daq_utils
     # Check if current visit dir is valid 
     visit_dir_env_var = "CURRENT_VISIT_DIR"
     if visit_dir_env_var not in os.environ:
@@ -123,7 +124,7 @@ def check_curr_visit_dir() -> bool:
         return False
     
     # Check if current visit dir is one of the dirs defined in BASE_DATA_DIRS
-    base_dir_env_var = "BASE_DATA_DIRS"
+    base_dir_env_var = f"BASE_DATA_DIRS_{daq_utils.beamline.upper()}"
     if base_dir_env_var not in os.environ:
         check_curr_visit_dir.remediation = f"{base_dir_env_var} evironment variable not found"
         return False

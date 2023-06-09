@@ -4,6 +4,7 @@ from pathlib import Path
 from networkx import DiGraph, bfs_tree
 import os
 import getpass
+import tempfile
 
 logger = logging.getLogger()
 class bcolors:
@@ -110,6 +111,15 @@ def check_service_user() -> bool:
     print(f"continuing as we are using a service user: {getpass.getuser()}")
     return True
 
+def has_write_permission(directory):
+    try:
+        testfile = tempfile.TemporaryFile(dir = directory)
+        testfile.close()
+    except OSError as e:
+        if e.errno == 13: # Permission denied
+            return False
+        raise
+    return True
 
 @healthcheck(name="server working directory", remediation="", fatal=True)
 def check_curr_visit_dir() -> bool:
@@ -149,6 +159,11 @@ def check_curr_visit_dir() -> bool:
                 break
     if not pass_dir_found:
         check_curr_visit_dir.remediation = f"Pass folder not found in {current_visit_dir}"
+        return False
+    
+    # Check if current visit dir is writable
+    if not has_write_permission(current_visit_dir):
+        check_curr_visit_dir.remediation = f"Server does not have write permission to {current_visit_dir}"
         return False
 
     return True

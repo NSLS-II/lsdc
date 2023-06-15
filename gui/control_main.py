@@ -17,7 +17,7 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 
 import albulaUtils
 import daq_utils
@@ -1395,7 +1395,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hutchTopCamThread.start()
         serverCheckThread = ServerCheckThread(
             parent=self, delay=SERVER_CHECK_DELAY)
-        serverCheckThread.visit_dir_changed.connect(self.close)
+        serverCheckThread.visit_dir_changed.connect(QApplication.instance().quit)
         serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):

@@ -56,15 +56,19 @@ class VideoThread(QThread):
         self.url = url
         self.camera_object = camera_object
         self.showing_error = False
+        self.is_running = True
         QThread.__init__(self, *args, **kwargs)
     
     def updateCam(self, camera_object):
         self.camera_object = camera_object
         
     def run(self):
-        while True:
+        while self.is_running:
             self.camera_refresh()
             self.msleep(self.delay)
+    
+    def stop(self):
+        self.is_running = False
 
 
 class RaddoseThread(QThread):

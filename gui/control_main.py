@@ -1378,21 +1378,21 @@ class ControlMain(QtWidgets.QMainWindow):
             self.vidActionRasterDefRadio.setDisabled(True)
             self.vidActionDefineCenterRadio.setDisabled(True)
 
-        hutchCornerCamThread = VideoThread(
+        self.hutchCornerCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchCornerCamURL")
         )
-        hutchCornerCamThread.frame_ready.connect(
+        self.hutchCornerCamThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item_HutchCorner, frame)
         )
-        hutchCornerCamThread.start()
+        self.hutchCornerCamThread.start()
 
-        hutchTopCamThread = VideoThread(
+        self.hutchTopCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchTopCamURL")
         )
-        hutchTopCamThread.frame_ready.connect(
+        self.hutchTopCamThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame)
         )
-        hutchTopCamThread.start()
+        self.hutchTopCamThread.start()
         serverCheckThread = ServerCheckThread(
             parent=self, delay=SERVER_CHECK_DELAY)
         serverCheckThread.visit_dir_changed.connect(QApplication.instance().quit)
@@ -4958,7 +4958,11 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def closeAll(self):
-        QtWidgets.QApplication.closeAllWindows()
+        self.hutchCornerCamThread.stop()
+        self.hutchTopCamThread.stop()
+        self.hutchCornerCamThread.wait()
+        self.hutchTopCamThread.wait()
+        QtWidgets.QApplication.instance().quit()
 
     def initCallbacks(self):
         self.beamSizeSignal.connect(self.processBeamSize)

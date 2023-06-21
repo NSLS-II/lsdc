@@ -13,6 +13,12 @@ class OphydRobot:
     def __init__(self, robot):
         self.robot = robot
 
+    def parkRobot(self):
+        try:
+            self.robot.parkRobot()
+        except Exception as e:
+            logger.error(f'Failed to park robot: {e}')
+
     def warmupGripper(self):
         try:
             logger.info('drying gripper')

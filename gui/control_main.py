@@ -1511,7 +1511,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.centeringComboBox.setDisabled(True)
             self.beamsizeComboBox.setDisabled(True)
             annealButton.setDisabled(True)
-            centerLoopButton.setEnabled(True)
+            centerLoopButton.setDisabled(True)
             clearGraphicsButton.setDisabled(True)
             saveCenteringButton.setDisabled(True)
             selectAllCenteringButton.setDisabled(True)

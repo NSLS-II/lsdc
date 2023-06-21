@@ -1,5 +1,6 @@
 import logging
 import typing
+import daq_utils
 
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox

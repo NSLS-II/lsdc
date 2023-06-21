@@ -906,7 +906,7 @@ class ControlMain(QtWidgets.QMainWindow):
         mikesGB = QtWidgets.QGroupBox()
         mikesGB.setTitle("Acquisition")
        
-        paramSubspace = QGridLayout()
+        paramSubspace = QtWidgets.QGridLayout()
 
         #paramSubspace.setColumnMinimumWidth(0, 140) 
         #paramSubspace.setColumnMinimumWidth(1, 90) 
@@ -964,7 +964,7 @@ class ControlMain(QtWidgets.QMainWindow):
         paramSubspace.addWidget(self.detDistRBVLabel.getEntry(),0,4, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.transmissionReadback_ledit,3,4, alignment=QtCore.Qt.AlignLeft)
 
-        improvedParamSpacing = QVBoxLayout()
+        improvedParamSpacing = QtWidgets.QVBoxLayout()
         improvedParamSpacing.addWidget(self.stillModeCheckBox)
         improvedParamSpacing.addLayout(paramSubspace)
         improvedParamSpacing.addLayout(hBoxColParams7)

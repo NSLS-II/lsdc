@@ -379,6 +379,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.closeShutterButton = QtWidgets.QPushButton("Close Photon Shutter")
         self.closeShutterButton.clicked.connect(self.closePhotonShutterCB)
         self.closeShutterButton.setStyleSheet("background-color: red")
+        self.parkRobotButton = QtWidgets.QPushButton("Park Robot")
+        self.parkRobotButton.clicked.connect(self.parkRobotCB)
         hBoxTreeButtsLayout = QtWidgets.QHBoxLayout()
         vBoxTreeButtsLayoutLeft = QtWidgets.QVBoxLayout()
         vBoxTreeButtsLayoutRight = QtWidgets.QVBoxLayout()
@@ -389,6 +391,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
+        vBoxTreeButtsLayoutRight.addWidget(self.parkRobotButton)
         vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
@@ -430,10 +433,10 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         if daq_utils.beamline == "fmx":
             self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
-        hBoxColParams1.addWidget(colStartLabel)
-        hBoxColParams1.addWidget(self.osc_start_ledit)
-        hBoxColParams1.addWidget(self.colEndLabel)
-        hBoxColParams1.addWidget(self.osc_end_ledit)
+        #hBoxColParams1.addWidget(colStartLabel)
+        #hBoxColParams1.addWidget(self.osc_start_ledit)
+        #hBoxColParams1.addWidget(self.colEndLabel)
+        #hBoxColParams1.addWidget(self.osc_end_ledit)
         hBoxColParams2 = QtWidgets.QHBoxLayout()
         colRangeLabel = QtWidgets.QLabel("Oscillation Width:")
         colRangeLabel.setFixedWidth(140)
@@ -468,13 +471,13 @@ class ControlMain(QtWidgets.QMainWindow):
             )
         )
         self.exp_time_ledit.textChanged.connect(self.checkEntryState)
-        hBoxColParams2.addWidget(colRangeLabel)
-        hBoxColParams2.addWidget(self.osc_range_ledit)
+        #hBoxColParams2.addWidget(colRangeLabel)
+        #hBoxColParams2.addWidget(self.osc_range_ledit)
 
-        hBoxColParams2.addWidget(colExptimeLabel)
-        hBoxColParams2.addWidget(self.exp_time_ledit)
+        #hBoxColParams2.addWidget(colExptimeLabel)
+        #hBoxColParams2.addWidget(self.exp_time_ledit)
         hBoxColParams25 = QtWidgets.QHBoxLayout()
-        hBoxColParams25.addWidget(self.stillModeCheckBox)
+        #hBoxColParams25.addWidget(self.stillModeCheckBox)
         totalExptimeLabel = QtWidgets.QLabel("Total Exposure Time (s):")
         totalExptimeLabel.setFixedWidth(155)
         totalExptimeLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -502,12 +505,12 @@ class ControlMain(QtWidgets.QMainWindow):
             calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
             self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
             self.calcLifetimeCB()
-        hBoxColParams25.addWidget(totalExptimeLabel)
-        hBoxColParams25.addWidget(self.totalExptime_ledit)
+        #hBoxColParams25.addWidget(totalExptimeLabel)
+        #hBoxColParams25.addWidget(self.totalExptime_ledit)
         # if (daq_utils.beamline == "fmx"):
         #  hBoxColParams25.addWidget(calcLifetimeButton)
-        hBoxColParams25.addWidget(sampleLifetimeLabel)
-        hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
+        #hBoxColParams25.addWidget(sampleLifetimeLabel)
+        #hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
         if daq_utils.beamline in ("fmx", "nyx"):
             if getBlConfig("attenType") == "RI":
@@ -578,35 +581,30 @@ class ControlMain(QtWidgets.QMainWindow):
         self.energy_ledit.returnPressed.connect(self.moveEnergyMaxDeltaCB)
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)
-        hBoxColParams3.addWidget(colEnergyLabel)
-        hBoxColParams3.addWidget(self.energyReadback)
-        hBoxColParams3.addWidget(energySPLabel)
-        if daq_utils.beamline == "fmx":
-            if getBlConfig(SET_ENERGY_CHECK):
-                hBoxColParams3.addWidget(moveEnergyButton)
-            else:
-                hBoxColParams3.addWidget(self.energy_ledit)
-        else:
-            hBoxColParams3.addWidget(self.energy_ledit)
-
-        hBoxColParams22.addWidget(colTransmissionLabel)
-        hBoxColParams22.addWidget(self.transmissionReadback_ledit)
-        hBoxColParams22.addWidget(transmisionSPLabel)
-        hBoxColParams22.addWidget(self.transmission_ledit)
-        hBoxColParams22.insertSpacing(5, 100)
-        hBoxColParams22.addWidget(beamsizeLabel)
-        hBoxColParams22.addWidget(self.beamsizeComboBox)
+        #hBoxColParams3.addWidget(colEnergyLabel)
+        #hBoxColParams3.addWidget(self.energyReadback)
+        #hBoxColParams3.addWidget(energySPLabel)
+        #hBoxColParams3.addWidget(self.energy_ledit)
+        #hBoxColParams22.addWidget(colTransmissionLabel)
+        #hBoxColParams22.addWidget(self.transmissionReadback_ledit)
+        #hBoxColParams22.addWidget(transmisionSPLabel)
+        #hBoxColParams22.addWidget(self.transmission_ledit)
+        #hBoxColParams22.insertSpacing(5, 100)
+        #hBoxColParams22.addWidget(beamsizeLabel)
+        #hBoxColParams22.addWidget(self.beamsizeComboBox)
         hBoxColParams4 = QtWidgets.QHBoxLayout()
         colBeamWLabel = QtWidgets.QLabel("Beam Width:")
         colBeamWLabel.setFixedWidth(140)
         colBeamWLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.beamWidth_ledit = QtWidgets.QLineEdit()
         self.beamWidth_ledit.setFixedWidth(60)
+        self.beamWidth_ledit.setText(getBlConfig("screen_default_beamWidth"))
         colBeamHLabel = QtWidgets.QLabel("Beam Height:")
         colBeamHLabel.setFixedWidth(140)
         colBeamHLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.beamHeight_ledit = QtWidgets.QLineEdit()
         self.beamHeight_ledit.setFixedWidth(60)
+        self.beamHeight_ledit.setText(getBlConfig("screen_default_beamHeight"))
         hBoxColParams4.addWidget(colBeamWLabel)
         hBoxColParams4.addWidget(self.beamWidth_ledit)
         hBoxColParams4.addWidget(colBeamHLabel)
@@ -621,7 +619,7 @@ class ControlMain(QtWidgets.QMainWindow):
         if daq_utils.beamline == "nyx":
             self.resolution_ledit.setEnabled(False)
         detDistLabel = QtWidgets.QLabel("Detector Dist.")
-        detDistLabel.setAlignment(QtCore.Qt.AlignCenter)
+        #detDistLabel.setAlignment(QtCore.Qt.AlignCenter)
         detDistRBLabel = QtWidgets.QLabel("Readback:")
         self.detDistRBVLabel = QtEpicsPVLabel(
             daq_utils.motor_dict["detectorDist"] + ".RBV", self, 70
@@ -645,10 +643,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.detDistMotorEntry.getEntry().returnPressed.connect(self.moveDetDistCB)
         self.moveDetDistButton = QtWidgets.QPushButton("Move Detector")
         self.moveDetDistButton.clicked.connect(self.moveDetDistCB)
-        hBoxColParams3.addWidget(detDistLabel)
-        hBoxColParams3.addWidget(self.detDistRBVLabel.getEntry())
-        hBoxColParams3.addWidget(detDistSPLabel)
-        hBoxColParams3.addWidget(self.detDistMotorEntry.getEntry())
+        #hBoxColParams3.addWidget(detDistLabel)
+        #hBoxColParams3.addWidget(self.detDistRBVLabel.getEntry())
+        #hBoxColParams3.addWidget(detDistSPLabel)
+        #hBoxColParams3.addWidget(self.detDistMotorEntry.getEntry())
         hBoxColParams6 = QtWidgets.QHBoxLayout()
         hBoxColParams6.setAlignment(QtCore.Qt.AlignLeft)
         hBoxColParams7 = QtWidgets.QHBoxLayout()
@@ -692,18 +690,22 @@ class ControlMain(QtWidgets.QMainWindow):
         self.protoOtherRadio = QtWidgets.QRadioButton("other")
         self.protoOtherRadio.setEnabled(False)
         self.protoRadioGroup.addButton(self.protoOtherRadio)
-        protoOptionList = [
-            "standard",
-            "raster",
-            "vector",
-            "burn",
-            "rasterScreen",
-            "stepRaster",
-            "stepVector",
-            "multiCol",
-            "characterize",
-            "ednaCol",
-        ]  # these should probably come from db
+        if daq_utils.beamline == "nyx":
+            protoOptionList = ["standard","raster","vector"] # these should probably come from db
+
+        else:
+            protoOptionList = [
+                "standard",
+                "raster",
+                "vector",
+                "burn",
+                "rasterScreen",
+                "stepRaster",
+                "stepVector",
+                "multiCol",
+                "characterize",
+                "ednaCol",
+            ]  # these should probably come from db
         self.protoComboBox = QtWidgets.QComboBox(self)
         self.protoComboBox.addItems(protoOptionList)
         self.protoComboBox.activated[str].connect(self.protoComboActivatedCB)
@@ -714,8 +716,8 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams6.addWidget(self.protoComboBox)
         hBoxColParams7.addWidget(centeringLabel)
         hBoxColParams7.addWidget(self.centeringComboBox)
-        hBoxColParams7.addWidget(colResoLabel)
-        hBoxColParams7.addWidget(self.resolution_ledit)
+        #hBoxColParams7.addWidget(colResoLabel)
+        #hBoxColParams7.addWidget(self.resolution_ledit)
         self.processingOptionsFrame = QFrame()
         self.hBoxProcessingLayout1 = QtWidgets.QHBoxLayout()
         self.hBoxProcessingLayout1.setAlignment(QtCore.Qt.AlignLeft)
@@ -894,19 +896,98 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxColParams1.addLayout(hBoxColParams25)
         vBoxColParams1.addLayout(hBoxColParams22)
         vBoxColParams1.addLayout(hBoxColParams3)
-        vBoxColParams1.addLayout(hBoxColParams7)
-        vBoxColParams1.addLayout(hBoxColParams6)
-        vBoxColParams1.addWidget(self.rasterParamsFrame)
-        vBoxColParams1.addWidget(self.multiColParamsFrame)
-        vBoxColParams1.addWidget(self.vectorParamsFrame)
-        vBoxColParams1.addWidget(self.characterizeParamsFrame)
-        vBoxColParams1.addWidget(self.processingOptionsFrame)
+        #vBoxColParams1.addLayout(hBoxColParams7)
+        #vBoxColParams1.addLayout(hBoxColParams6)
+        #vBoxColParams1.addWidget(self.rasterParamsFrame)
+        #vBoxColParams1.addWidget(self.multiColParamsFrame)
+        #vBoxColParams1.addWidget(self.vectorParamsFrame)
+        #vBoxColParams1.addWidget(self.characterizeParamsFrame)
+        #vBoxColParams1.addWidget(self.processingOptionsFrame)
+        mikesGB = QtWidgets.QGroupBox()
+        mikesGB.setTitle("Acquisition")
+       
+        paramSubspace = QGridLayout()
+
+        #paramSubspace.setColumnMinimumWidth(0, 140) 
+        #paramSubspace.setColumnMinimumWidth(1, 90) 
+        #paramSubspace.setColumnMinimumWidth(2, 140) 
+        #paramSubspace.setColumnMinimumWidth(3, 90) 
+        #paramSubspace.setColumnMinimumWidth(4, 90)
+        #paramSubspace.setColumnStretch(1) learn about stretch factor and then update        
+       
+       
+        # Parameter Collection Column 1, Labels
+        colStartLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(colStartLabel,1,0, alignment=QtCore.Qt.AlignLeft)
+        self.colEndLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.colEndLabel,2,0, alignment=QtCore.Qt.AlignLeft) 
+        colRangeLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(colRangeLabel,0,0, alignment=QtCore.Qt.AlignLeft)
+        colExptimeLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(colExptimeLabel,3,0, alignment=QtCore.Qt.AlignLeft)
+        totalExptimeLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(totalExptimeLabel,4,0, alignment=QtCore.Qt.AlignLeft)
+        # Parameter Collection Column 2, Input Boxes  
+        paramSubspace.addWidget(self.osc_start_ledit,1,1, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.osc_end_ledit,2,1, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.osc_range_ledit,0,1, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.exp_time_ledit,3,1, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.totalExptime_ledit,4,1, alignment=QtCore.Qt.AlignLeft)
+        # Parameter Collection Column 3, Labels
+        paramSubspace.addWidget(detDistLabel,0,2, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(colResoLabel,1,2, alignment=QtCore.Qt.AlignLeft)
+        #paramSubspace.addWidget(detDistSPLabel,1,2, alignment=QtCore.Qt.AlignLeft)
+        #hBoxColParams7.addWidget(colResoLabel)
+        paramSubspace.addWidget(colEnergyLabel,2,2, alignment=QtCore.Qt.AlignLeft)
+        #paramSubspace.addWidget(energySPLabel,3,2, alignment=QtCore.Qt.AlignLeft)
+        colTransmissionLabel.setAlignment(QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(colTransmissionLabel,3,2, alignment=QtCore.Qt.AlignLeft)
+        transmisionSPLabel.setAlignment(QtCore.Qt.AlignLeft)
+        #paramSubspace.addWidget(transmisionSPLabel,3,2, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(beamsizeLabel,4,2, alignment=QtCore.Qt.AlignLeft)
+        # Parameter Collection Column 4, Input Boxes
+        paramSubspace.addWidget(self.detDistMotorEntry.getEntry(),0,3, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.resolution_ledit,1,3, alignment=QtCore.Qt.AlignLeft)
+        #hBoxColParams7.addWidget(self.resolution_ledit)
+        if daq_utils.beamline == "fmx":
+            if getBlConfig(SET_ENERGY_CHECK):
+                paramSubspace.addWidget(moveEnergyButton,2,3, alignment=QtCore.Qt.AlignLeft)
+            else:
+                paramSubspace.addWidget(self.energy_ledit,2,3, alignment=QtCore.Qt.AlignLeft)
+        else:
+            paramSubspace.addWidget(self.energy_ledit,2,3, alignment=QtCore.Qt.AlignLeft)
+        
+        paramSubspace.addWidget(self.transmission_ledit,3,3, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.beamsizeComboBox,4,3, alignment=QtCore.Qt.AlignLeft)
+        # Param Collection Column 5, RBV  
+        paramSubspace.addWidget(self.energyReadback,2,4, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.detDistRBVLabel.getEntry(),0,4, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.transmissionReadback_ledit,3,4, alignment=QtCore.Qt.AlignLeft)
+
+        improvedParamSpacing = QVBoxLayout()
+        improvedParamSpacing.addWidget(self.stillModeCheckBox)
+        improvedParamSpacing.addLayout(paramSubspace)
+        improvedParamSpacing.addLayout(hBoxColParams7)
+        improvedParamSpacing.addLayout(hBoxColParams6)
+        improvedParamSpacing.addWidget(self.rasterParamsFrame)
+        improvedParamSpacing.addWidget(self.multiColParamsFrame)
+        improvedParamSpacing.addWidget(self.vectorParamsFrame)
+        improvedParamSpacing.addWidget(self.characterizeParamsFrame)
+        improvedParamSpacing.addWidget(self.processingOptionsFrame)
+        mikesGB.setLayout(improvedParamSpacing)
+
         self.rasterParamsFrame.hide()
         self.multiColParamsFrame.hide()
         self.characterizeParamsFrame.hide()
         colParamsGB.setLayout(vBoxColParams1)
         self.dataPathGB = DataLocInfo(self)
-        vBoxMainColLayout.addWidget(colParamsGB)
+        hBoxDisplayOptionLayout= QtWidgets.QHBoxLayout()        
+        self.albulaDispCheckBox = QCheckBox("Display Data (Albula)")
+        self.albulaDispCheckBox.setChecked(False)
+        hBoxDisplayOptionLayout.addWidget(self.albulaDispCheckBox)
+        #vBoxMainColLayout.addWidget(colParamsGB)
+        vBoxMainColLayout.addWidget(mikesGB)
+
         vBoxMainColLayout.addWidget(self.dataPathGB)
         self.mainColFrame.setLayout(vBoxMainColLayout)
         self.mainToolBox.addItem(self.mainColFrame, "Collection Parameters")
@@ -1240,6 +1321,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vidActionRasterSelectRadio = QtWidgets.QRadioButton("Raster Select")
         self.vidActionRasterSelectRadio.setChecked(False)
         self.vidActionRasterSelectRadio.toggled.connect(self.vidActionToggledCB)
+        self.vidActionRadioGroup.addButton(self.vidActionRasterSelectRadio)
         self.vidActionRasterDefRadio = QtWidgets.QRadioButton("Define Raster")
         self.vidActionRasterDefRadio.setChecked(False)
         self.vidActionRasterDefRadio.setEnabled(False)
@@ -1429,15 +1511,15 @@ class ControlMain(QtWidgets.QMainWindow):
             self.centeringComboBox.setDisabled(True)
             self.beamsizeComboBox.setDisabled(True)
             annealButton.setDisabled(True)
-            centerLoopButton.setDisabled(True)
+            centerLoopButton.setEnabled(True)
             clearGraphicsButton.setDisabled(True)
             saveCenteringButton.setDisabled(True)
             selectAllCenteringButton.setDisabled(True)
             snapshotButton.setDisabled(True)
-            self.hideRastersCheckBox.setDisabled(True)
-            self.vidActionC2CRadio.setDisabled(True)
-            self.vidActionRasterExploreRadio.setDisabled(True)
-            self.vidActionRasterDefRadio.setDisabled(True)
+            self.hideRastersCheckBox.setEnabled(True)
+            self.vidActionC2CRadio.setEnabled(True)
+            self.vidActionRasterExploreRadio.setEnabled(True)
+            self.vidActionRasterDefRadio.setEnabled(True)
             self.vidActionDefineCenterRadio.setDisabled(True)
 
         self.hutchCornerCamThread = VideoThread(
@@ -3273,22 +3355,22 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def screenXPixels2microns(self, pixels):
         fov = self.getCurrentFOV()
-        fovX = fov["x"]
+        fovX = fov["x"]*1000
         return float(pixels) * (fovX / daq_utils.screenPixX)
 
     def screenYPixels2microns(self, pixels):
         fov = self.getCurrentFOV()
-        fovY = fov["y"]
+        fovY = fov["y"]*1000
         return float(pixels) * (fovY / daq_utils.screenPixY)
 
     def screenXmicrons2pixels(self, microns):
         fov = self.getCurrentFOV()
-        fovX = fov["x"]
+        fovX = fov["x"]*1000
         return int(round(microns * (daq_utils.screenPixX / fovX)))
 
     def screenYmicrons2pixels(self, microns):
         fov = self.getCurrentFOV()
-        fovY = fov["y"]
+        fovY = fov["y"]*1000
         return int(round(microns * (daq_utils.screenPixY / fovY)))
 
     def definePolyRaster(
@@ -4230,6 +4312,9 @@ class ControlMain(QtWidgets.QMainWindow):
             self.userScreenDialog.show()
         else:
             self.popupServerMessage("You don't have control")
+
+    def parkRobotCB(self):
+        self.send_to_server("parkRobot()")
 
     def closePhotonShutterCB(self):
         self.photonShutterClose_pv.put(1)

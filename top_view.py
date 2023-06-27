@@ -1,4 +1,4 @@
-from daq_utils import setBlConfig
+from daq_utils import setBlConfig, getBlConfig
 import daq_lib
 import beamline_lib
 import time
@@ -31,13 +31,13 @@ def wait90TopviewThread(gov_robot, prefix1,prefix90):
     time.sleep(0.10)
   try:
     topViewWrite()
-    topViewSnap(prefix90,os.getcwd()+"/pinAlign",1)
+    topViewSnap(prefix90,getBlConfig("visitDirectory")+"/pinAlign",1)
     snapshot1Name = prefix1+"_001.jpg"
     snapshot2Name = prefix90+"_001.jpg"
-    if (not filecmp.cmp(os.getcwd()+"/pinAlign/"+snapshot1Name,os.getcwd()+"/pinAlign/"+snapshot2Name)): #this would mean something is wrong if true because the pictures are identical
+    if (not filecmp.cmp(getBlConfig("visitDirectory")+"/pinAlign/"+snapshot1Name,getBlConfig("visitDirectory")+"/pinAlign/"+snapshot2Name)): #this would mean something is wrong if true because the pictures are identical
       comm_s = os.environ["LSDCHOME"] + "/runPinAlign.py " + snapshot1Name + " " + snapshot2Name
       logger.info(comm_s)
-      lines = os.popen(comm_s).readlines()
+      lines = os.popen(comm_s, cwd=getBlConfig("visitDirectory")).readlines()
       logger.info("printing lines right after popen ")
       logger.info(lines)
       logger.info(" done")

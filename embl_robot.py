@@ -207,7 +207,7 @@ class EMBLRobot:
             prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
             kwargs['prefix1'] = prefix1
             kwargs['prefix90'] = prefix90
-            top_view.topViewSnap(prefix1,os.getcwd()+"/pinAlign",1,acquire=0)
+            top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
             message = "TopView check ERROR, will continue: " + e_s

@@ -5,6 +5,7 @@ The main server for the LSDC system
 import sys
 import os
 from daq_main_common import pybass_init, run_server
+from config_params import LSDC_SERVICE_USERS
 
 #TODO understand why imports are required here - GUI requires imports in daq_main_common
 from daq_macros import *
@@ -28,7 +29,7 @@ handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 logger.addHandler(handler2)
 
-if not getpass.getuser().startswith("lsdc-"):
+if not getpass.getuser() in LSDC_SERVICE_USERS:
     message = "LSDC server not being started by a LSDC service user account, aborting!"
     print(message)
     logger.error(message)

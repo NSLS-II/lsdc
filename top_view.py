@@ -36,10 +36,10 @@ def wait90TopviewThread(gov_robot, prefix1,prefix90):
     snapshot1Name = prefix1+"_001.jpg"
     snapshot2Name = prefix90+"_001.jpg"
     if (not filecmp.cmp(getBlConfig("visitDirectory")+"/pinAlign/"+snapshot1Name,getBlConfig("visitDirectory")+"/pinAlign/"+snapshot2Name)): #this would mean something is wrong if true because the pictures are identical
-      comm_s = os.environ["LSDCHOME"] + "/runPinAlign.py " + snapshot1Name + " " + snapshot2Name
+      comm_s = [os.environ["LSDCHOME"] + "/runPinAlign.py", snapshot1Name, snapshot2Name]
       logger.info(comm_s)
-      process = subprocess.Popen(comm_s, cwd=getBlConfig("visitDirectory"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-      lines = process.stdout.readlines()
+      process = subprocess.run(comm_s, cwd=getBlConfig("visitDirectory"), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      lines = process.stdout.decode().strip().split('\n')
       logger.info("printing lines right after popen ")
       logger.info(lines)
       logger.info(" done")

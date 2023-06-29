@@ -152,6 +152,10 @@ slits1 = Slits('XF:17IDA-OP:FMX{Slt:1', name='slits1', labels=['fmx'])
 ## Light
 light = YMotor('XF:17IDC-ES:FMX{Light:1', name='lightY')
 
+## Temporary: Disable motor alarm until end switch is fixed
+from ophyd.utils.epics_pvs import AlarmSeverity
+light.y.tolerated_alarm = AlarmSeverity.MAJOR
+
 ## Goniometer Stack
 gonio = GoniometerStack('XF:17IDC-ES:FMX{Gon:1', name='gonio')
 
@@ -1124,8 +1128,10 @@ def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 
                                    ])
     
     # Put in diode
-    yield from bps.mv(light.y,govPositionGet('li', 'Diode'))
+    yield from bps.mv(light.y,
+                      govs.gov.Robot.dev.li.target_Diode.get())
     
+
     # Open BCU shutter
     yield from bps.mv(shutter_bcu.open, 1)
     time.sleep(1)
@@ -1149,8 +1155,9 @@ def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 
     yield from bps.mv(shutter_bcu.close, 1)
     
     # Retract diode
-    yield from bps.mv(light.y,govPositionGet('li', 'In'))
-    
+    yield from bps.mv(light.y,
+                      govs.gov.Robot.dev.li.target_In.get())
+
     # Set previous beam transmission
     if transSet != 'None':
         if transSet in ['All', 'RI']:

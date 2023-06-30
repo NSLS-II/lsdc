@@ -59,6 +59,10 @@ global autoVectorFlag, autoVectorCoarseCoords
 autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
+
+
+C3D_SEARCH_BASE = f'{os.environ["PROJDIR"]}/software/c3d/c3d_search -p=$CONFIGDIR/'
+
 IMAGES_PER_FILE = 500 # default images per HDF5 data file for Eiger
 EXTERNAL_TRIGGER = 2 # external trigger for detector
 #12/19 - general comments. This file takes the brunt of the near daily changes and additions the scientists request. Some duplication and sloppiness reflects that.
@@ -341,7 +345,7 @@ def autoVector(currentRequest): #12/19 - not tested!
   return 1
 
 def rasterScreen(currentRequest):
-  if (daq_utils.beamline == "fmx"):
+  if (daq_utils.beamline == "fmx" and getBlConfig("scannerType") == "PI"):
     gridRaster(currentRequest)
     return
   
@@ -1822,10 +1826,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
-      return
+
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -1850,17 +1851,22 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     total_exposure_time = exptimePerCell*totalImages
     detDist /= 1000  # TODO find a way to standardize detector distance settings
 
-    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        raster_flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
-    raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
+    start_time = time.time()
+    arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time() - start_time} seconds.")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
+      return
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
@@ -2099,7 +2105,7 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
       beamline_lib.mvaDescriptor("sampleX",xMotAbsoluteMove+(j*stepX)+(stepX/2.0),"sampleY",yMotAbsoluteMove-(j*stepY)-(stepY/2.0),"sampleZ",zMotAbsoluteMove-(j*stepZ)-(stepZ/2.0))
       vectorSync()
       if (j == 0):
-        zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3)
+        RE(zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3))
       else:
         angle_start = sweep_start_angle
         scanWidth = range_degrees
@@ -2817,7 +2823,7 @@ def vectorZebraStepScan(vecRequest):
     setPvDesc("vectorEndZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
     setPvDesc("vectorframeExptime",expTime*1000.0)
     setPvDesc("vectorNumFrames",numImagesPerStep)
-    zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
+    RE(zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start))
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
   det_lib.detector_stop_acquire()
@@ -3071,8 +3077,10 @@ def setAttens(transmission): #where transmission = 0.0-1.0
     setPvDesc(pvKeyName,1)
     logger.info(pvKeyName)
 
-def importSpreadsheet(fname):
-  parseSheet.importSpreadsheet(fname,daq_utils.owner)
+def importSpreadsheet(fname, owner=None):
+  if owner is None:
+    owner = daq_utils.owner
+  parseSheet.importSpreadsheet(fname, owner)
 
 
 def zebraDaqPrep():
@@ -3132,7 +3140,8 @@ def loop_center_mask():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   beamline_lib.mvrDescriptor("omega",90.0)
   daq_utils.take_crystal_picture(filename="findslice_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopslice.txt"
+  comm_s = f'{C3D_SEARCH_BASE}find_loopslice.txt'
+  logger.debug(f'loop_center_mask: {comm_s}')
   os.system(comm_s)
   os.system("dos2unix res0.txt")
   os.system("echo \"\n\">>res0.txt")    
@@ -3156,7 +3165,8 @@ def loop_center_mask():
 def getLoopSize():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   daq_utils.take_crystal_picture(filename="findsize_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopSize.txt"
+  comm_s = f'{C3D_SEARCH_BASE}find_loopSize.txt'
+  logger.debug(f'getLoopSize: {comm_s}')
   os.system(comm_s)
   os.system("dos2unix loopSizeOut0.txt")
   os.system("echo \"\n\">>loopSizeOut0.txt")    
@@ -3328,10 +3338,6 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
-      return
 
     x_vec_start=vector_params["vecStart"]["x"]
     y_vec_start=vector_params["vecStart"]["y"]
@@ -3357,17 +3363,29 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
 
-    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
-                   x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
-                   x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
-                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
-                   data_path=data_path)
+    required_parameters = {'angle_start':angle_start, 'scan_width':scanWidth, 'img_width':imgWidth,
+                           'num_images':num_images, 'exposure_period_per_image':exposurePeriodPerImage,
+                           'x_start_um':x_vec_start, 'y_start_um':y_vec_start, 'z_start_um':z_vec_start,
+                           'x_end_um':x_vec_end, 'y_end_um':y_vec_end, 'z_end_um':z_vec_end, 'file_prefix':filePrefix,
+                           'data_directory_name':data_directory_name, 'file_number_start':file_number_start,
+                           'x_beam':vector_params["x_beam"], 'y_beam':vector_params["y_beam"],
+                           'wavelength':vector_params["wavelength"], 'det_distance_m':vector_params["det_distance_m"],
+                           'detector_dead_time':detectorDeadTime, 'scan_encoder':scanEncoder,
+                           'change_state':changeState, 'transmission':vector_params["transmission"],
+                           'data_path':data_path}
+    start_time = time.time()
+    arm_status = flyer.detector_arm(**required_parameters)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
+      return
+
+    flyer.update_parameters(**required_parameters)
 
     yield from bp.fly([flyer])
 
@@ -3897,7 +3915,7 @@ def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy
   if (not os.path.exists("2vb1.pdb")):
     os.system("ln -s $CONFIGDIR/2vb1.pdb .")
     os.system("mkdir rd3d")
-  raddoseLib.fmx_expTime_to_10MGy(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
+  raddoseLib.fmx_expTime(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
 #  why doesn't this work? raddoseLib.fmx_expTime_to_10MGy(beamsizeV, beamsizeH, vectorL, energy, wedge, flux, verbose)
 
 def unlockGUI():

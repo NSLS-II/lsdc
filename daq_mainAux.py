@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2023-1-latest/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-2-latest/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """
@@ -13,6 +13,14 @@ import atexit
 from daq_main_common import pybass_init
 import logging
 from logging import handlers
+from start_bs import robot
+from embl_robot import EMBLRobot
+if isinstance(robot, EMBLRobot):
+    print("loading RobotControlLib")
+    import RobotControlLib
+else:
+    print("not importing RobotControlLib")
+
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
 logging.getLogger('ophyd').setLevel(logging.WARN)

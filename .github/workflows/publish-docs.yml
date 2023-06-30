@@ -66,5 +66,5 @@ jobs:
           publish_dir: ./docs/build/html
           external_repository: NSLS-II/NSLS-II.github.io
           destination_dir: ${{ env.REPOSITORY_NAME }}  # just the repo name, without the "NSLS-II/"
-          keep_files: false  # Keep old files.
+          keep_files: true  # Keep old files.
           force_orphan: false  # Keep git history.

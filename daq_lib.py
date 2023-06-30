@@ -21,6 +21,7 @@ import gov_lib
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
 import logging
+import albulaUtils
 logger = logging.getLogger(__name__)
 
 try:
@@ -382,6 +383,12 @@ def runDCQueue(): #maybe don't run rasters from here???
     currentMountedSampleID = mountedSampleDict["sampleID"]
     if (currentMountedSampleID != sampleID):
       if (getBlConfig("queueCollect") == 0):
+        current_request = db_lib.popNextRequest(daq_utils.beamline)
+        logger.info(f"Current request: {current_request}")
+        if current_request["request_obj"]["beamline"] != daq_utils.beamline:
+            message = f"Beamline mismatch between collection and beamline. request: '{current_request['request_obj']['beamline']}' beamline: '{daq_utils.beamline}'. request_uid: {current_request['uid']}\nuse db_lib.delete_request(uid) to delete this bad request"
+            logger.error(message)
+            gui_message(message)
         gui_message("You can only run requests on the currently mounted sample. Remove offending request and continue.")
         return
       mountStat = mountSample(sampleID)
@@ -616,8 +623,17 @@ def collectData(currentRequest):
     if daq_utils.beamline != "nyx":
       seqNum = flyer.detector.cam.sequence_id.get()
       comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-      logger.info(comm_s)
-      os.system(comm_s)    
+      logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
+      #os.system(comm_s)    
+      filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
+      logger.info(f"Checking integrity of {filename}")
+      timeout_index = 0
+      while not albulaUtils.validate_master_HDF5_file(filename):
+        timeout_index += 1
+        time.sleep(3)
+        if timeout_index > 15:
+          logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
+          return 
       if img_width > 0: #no dataset processing in stills mode
         if (reqObj["fastDP"]):
           if (reqObj["fastEP"]):
@@ -638,7 +654,7 @@ def collectData(currentRequest):
           else:
             comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
           logger.info(f'Running fastdp command: {comm_s}')
-          if (daq_utils.beamline in ("amx", "fmx")):
+          if daq_utils.beamline in ("amx", "fmx"):
             visitName = daq_utils.getVisitName()
             if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
               os.system("killall -KILL loop-fdp-dple-populate")

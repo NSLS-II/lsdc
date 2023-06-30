@@ -106,3 +106,5 @@ VALID_TRANSMISSION = {
     "fmx": {"min": 0.001, "max": 1.0, "digits": 3},
     "nyx": {"min": 0.001, "max": 0.999, "digits": 3},
 }
+
+LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")

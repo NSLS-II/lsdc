@@ -12,6 +12,7 @@ from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
 from gov_lib import setGovRobot
+import getpass
 from start_bs import robot
 from embl_robot import EMBLRobot
 if isinstance(robot, EMBLRobot):
@@ -19,8 +20,6 @@ if isinstance(robot, EMBLRobot):
     import RobotControlLib
 else:
     print("not importing RobotControlLib")
-
-import getpass
 
 import logging
 from logging import handlers

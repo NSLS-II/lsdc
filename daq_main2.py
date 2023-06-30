@@ -20,6 +20,7 @@ if isinstance(robot, EMBLRobot):
 else:
     print("not importing RobotControlLib")
 
+import getpass
 
 import logging
 from logging import handlers

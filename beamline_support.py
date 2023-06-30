@@ -8,21 +8,22 @@ import time
 import epics
 import os
 import logging
+import json
 logger = logging.getLogger(__name__)
 
 
 global beamline_designation,motor_dict,soft_motor_list,scan_list,counter_dict,motor_channel_dict,counter_channel_dict,number_of_counter_readouts,scanparms_channel_dict,beamline_scan_record,scan_active_pv,scan_reference_counter,scan_detector_count,datafile_name,pvChannelDict
 
-motor_dict = {}
-counter_dict = {}
-pvLookupDict = {}
-motor_channel_dict = {}
-counter_channel_dict = {}
-scanparms_channel_dict = {}
-pvChannelDict = {}
+motor_dict: "dict[str,str]" = {}
+counter_dict: "dict[str,str]" = {}
+pvLookupDict: "dict[str,str]" = {}
+motor_channel_dict: "dict[str, EpicsMotor]" = {}
+counter_channel_dict: "dict[str, EpicsScaler]" = {}
+scanparms_channel_dict: "dict[str,str]" = {}
+pvChannelDict: "dict[str,epics.PV]" = {}
 
-scan_list = []
-soft_motor_list = []
+scan_list: "list[str]" = []
+soft_motor_list: "list[str]"= []
 
 number_of_counter_readouts = 6
 scan_detector_count = 4
@@ -254,67 +255,22 @@ def read_db():
   try:
     dbfilename = os.environ[envname]
   except KeyError:
-    logger.error(envname + " not defined. Defaulting to epx.db.")
-    dbfilename = "epx.db"
+    logger.error(envname + " not defined. Defaulting to epx.json.")
+    dbfilename = "epx.json"
   if (os.path.exists(dbfilename) == 0):
     error_msg = "EPICS BEAMLINE INFO %s does not exist.\n Program exiting." % dbfilename
     logger.error(error_msg)
     sys.exit()
   else:
-    dbfile = open(dbfilename,'r')
-    line = dbfile.readline()
-    line = dbfile.readline()
-    beamline_designation = line[:-1]
-    line = dbfile.readline()
-    i = 0
-    while(1):
-      line = dbfile.readline()
-      if (line == ""):
-        break
-      else:
-        line = line[:-1]
-        if (line == "#virtual motors"):
-          break
-        else:
-          motor_inf = line.split()
-          motor_dict[motor_inf[1]] = beamline_designation +  motor_inf[0]
-    while(1):
-      line = dbfile.readline()
-      if (line == ""):
-        break
-      else:
-        line = line[:-1]
-        if (line == "#control PVs"):
-          break
-        else:
-          motor_inf = line.split()
-          soft_motor_list.append(beamline_designation + motor_inf[0])
-          motor_dict[motor_inf[1]] = beamline_designation + motor_inf[0]          
-    while(1):
-      line = dbfile.readline()
-      if (line == ""):
-        break
-      else:
-        line = line[:-1]
-        if (line == "#scanned motors"):
-          break
-        else:
-          inf = line.split()
-          pvLookupDict[inf[1]] = beamline_designation + inf[0]          
-    while(1):
-      line = dbfile.readline()
-      if (line == ""):
-        break
-      else:
-        line = line[:-1]
-        if (line == "#counters"):
-          break
-        else:
-          scan_list.append(beamline_designation + line + "scanParms")
-    line = dbfile.readline()
-    counter_inf = line.split()
-    counter_dict[counter_inf[1]] = beamline_designation + counter_inf[0]    
-
+    with open(dbfilename, 'r') as f:
+      data = json.load(f)
+    
+    beamline_designation = data['beamline_designation']
+    motor_dict.update(data['motor_dict']) 
+    soft_motor_list.extend(data['soft_motor_list'])
+    scan_list.extend(data["scan_list"]) 
+    counter_dict.update(data[counter_dict])
+    pvLookupDict.update(data["pvLookupDict"])
 
 
 def init_motors():

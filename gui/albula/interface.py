@@ -1,5 +1,5 @@
 import subprocess
-
+import os
 
 class AlbulaInterface:
     _instance = None  # For a singleton
@@ -9,12 +9,14 @@ class AlbulaInterface:
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(AlbulaInterface, cls).__new__(cls)
-            cls._init_args = (args, kwargs)
+            # cls._init_args = (args, kwargs)
         return cls._instance
 
     def __init__(self, *args, **kwargs):
+        print("Initializing Albula")
         if self._init_args is None:
             self._init_args = (args, kwargs)
+            print("Opening Albula")
             self.open(args, kwargs)
 
     def _call(self, code):
@@ -31,9 +33,11 @@ class AlbulaInterface:
             index = None
         else:
             # For rasters filename is passed in as a tuple of filename and image index
-            filename = filename[0]
             index = filename[1]
-        result = self._call(f'albulaController.albulaDispFile("{filename}", {index})')
+            filename = filename[0]
+            
+        print(filename, index)
+        result = self._call(f'albulaController.disp_file("{filename}", {index})')
         print(result)
 
     def close(self):
@@ -51,13 +55,13 @@ class AlbulaInterface:
                 kwargs["python_path"],
                 "-u",
                 "-i",
-                "./gui/albula/controller.py",
+                f"{os.path.dirname(os.path.realpath(__file__))}/controller.py",
             ],  # -u for unbuffered I/O, -i to keep stdin open
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
-            text=True,
+            universal_newlines=True,
         )
         if "ip" in kwargs and "gov_message_pv_name" in kwargs:
             self._call(
-                f'albulaController.setup_monitor({kwargs["ip"]}, {kwargs["gov_message_pv_name"]})'
+                f'albulaController.setup_monitor("{kwargs["ip"]}", "{kwargs["gov_message_pv_name"]}")'
             )

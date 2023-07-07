@@ -989,6 +989,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.zoom4Radio.toggled.connect(
             functools.partial(self.zoomLevelToggledCB, "Zoom4")
         )
+        self.zoomSlider = ZoomSlider()
+
         if daq_utils.sampleCameraCount >= 2:
             self.zoomRadioGroup.addButton(self.zoom2Radio)
             if daq_utils.sampleCameraCount >= 3:
@@ -1207,6 +1209,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxRadioLayout100.addWidget(self.vidActionDefineCenterRadio)
         vBoxVidLayout.addLayout(hBoxSampleOrientationLayout)
         vBoxVidLayout.addLayout(hBoxVidControlLayout)
+        vBoxVidLayout.addWidget(self.zoomSlider)
         vBoxVidLayout.addLayout(hBoxSampleAlignLayout)
         vBoxVidLayout.addLayout(hBoxRadioLayout100)
         self.VidFrame.setLayout(vBoxVidLayout)

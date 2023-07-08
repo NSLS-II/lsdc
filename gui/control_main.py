@@ -49,6 +49,7 @@ from gui.dialog import (
     UserScreenDialog,
 )
 from gui.raster import RasterCell, RasterGroup
+from gui.camera.zoom_widget import ZoomSlider
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -970,33 +971,9 @@ class ControlMain(QtWidgets.QMainWindow):
             daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX,
             daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY,
         )
-        self.zoomRadioGroup = QtWidgets.QButtonGroup()
-        self.zoom1Radio = QtWidgets.QRadioButton("Mag1")
-        self.zoom1Radio.setChecked(True)
-        self.zoom1Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom1")
-        )
-        self.zoomRadioGroup.addButton(self.zoom1Radio)
-        self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
-        self.zoom2Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom2")
-        )
-        self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
-        self.zoom3Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom3")
-        )
-        self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
-        self.zoom4Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom4")
-        )
-        self.zoomSlider = ZoomSlider()
+        
+        self.zoomSlider = ZoomSlider(1, maximum=int(daq_utils.sampleCameraCount), parent=self)
 
-        if daq_utils.sampleCameraCount >= 2:
-            self.zoomRadioGroup.addButton(self.zoom2Radio)
-            if daq_utils.sampleCameraCount >= 3:
-                self.zoomRadioGroup.addButton(self.zoom3Radio)
-                if daq_utils.sampleCameraCount >= 4:
-                    self.zoomRadioGroup.addButton(self.zoom4Radio)
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30
@@ -1135,15 +1112,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox = QCheckBox("Hide\nRasters")
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
-        hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        if (
-            daq_utils.sampleCameraCount >= 2
-        ):  # Button naming assumes sequential camera ordering
-            hBoxVidControlLayout.addWidget(self.zoom2Radio)
-            if daq_utils.sampleCameraCount >= 3:
-                hBoxVidControlLayout.addWidget(self.zoom3Radio)
-                if daq_utils.sampleCameraCount >= 4:
-                    hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        hBoxVidControlLayout.addWidget(self.zoomSlider)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)
@@ -1153,6 +1122,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxVidControlLayout.addWidget(annealButton)
         hBoxVidControlLayout.addWidget(annealTimeLabel)
         hBoxVidControlLayout.addWidget(self.annealTime_ledit)
+        
         hBoxSampleAlignLayout = QtWidgets.QHBoxLayout()
         centerLoopButton = QtWidgets.QPushButton("Center\nLoop")
         centerLoopButton.clicked.connect(self.autoCenterLoopCB)
@@ -1209,7 +1179,6 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxRadioLayout100.addWidget(self.vidActionDefineCenterRadio)
         vBoxVidLayout.addLayout(hBoxSampleOrientationLayout)
         vBoxVidLayout.addLayout(hBoxVidControlLayout)
-        vBoxVidLayout.addWidget(self.zoomSlider)
         vBoxVidLayout.addLayout(hBoxSampleAlignLayout)
         vBoxVidLayout.addLayout(hBoxRadioLayout100)
         self.VidFrame.setLayout(vBoxVidLayout)
@@ -1374,7 +1343,7 @@ class ControlMain(QtWidgets.QMainWindow):
         sampleTab.setLayout(vBoxlayout)
         self.tabs.addTab(sampleTab, "Collect")
         # 12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.
-        self.zoomLevelToggledCB("Zoom1")
+        
 
         if daq_utils.beamline == "nyx":  # Temporarily disabling unusued buttons on NYX
             self.protoRasterRadio.setDisabled(True)
@@ -1562,126 +1531,6 @@ class ControlMain(QtWidgets.QMainWindow):
             if commTime > 0.01:
                 return
 
-    def zoomLevelToggledCB(self, identifier):
-        fov = {}
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom2Radio.isChecked():
-            self.flushBuffer(self.captureLowMagZoom)
-            self.capture = self.captureLowMagZoom
-            fov["x"] = daq_utils.lowMagFOVx / 2.0
-            fov["y"] = daq_utils.lowMagFOVy / 2.0
-            unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom1Radio.isChecked():
-            self.flushBuffer(self.captureLowMag)
-            self.capture = self.captureLowMag
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
-            self.centerMarker.setPos(
-                self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom4Radio.isChecked():
-            self.flushBuffer(self.captureHighMagZoom)
-            self.capture = self.captureHighMagZoom
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
-            unzoomedCursorX = (
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            )
-            unzoomedCursorY = (
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom3Radio.isChecked():
-            self.flushBuffer(self.captureHighMag)
-            self.capture = self.captureHighMag
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
-            self.centerMarker.setPos(
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        self.adjustGraphics4ZoomChange(fov)
-        self.sampleZoomChangeSignal.emit(self.capture)
 
     def saveVidSnapshotButtonCB(self):
         comment, useOlog, ok = SnapCommentDialog.getComment()
@@ -1814,110 +1663,10 @@ class ControlMain(QtWidgets.QMainWindow):
         pass
 
     def processLowMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom2Radio.isChecked():  # lowmagzoom
-            unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        else:
-            self.centerMarker.setPos(
-                self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
+        self.zoomSlider.zoom_level_toggled()
 
     def processHighMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom4Radio.isChecked():  # highmagzoom
-            unzoomedCursorX = (
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            )
-            unzoomedCursorY = (
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        else:
-            self.centerMarker.setPos(
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
+        self.zoomSlider.zoom_level_toggled()
 
     def processSampMove(self, posRBV, motID):
         #      print "new " + motID + " pos=" + str(posRBV)
@@ -2820,13 +2569,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def focusTweakCB(self, tv):
         tvf = float(tv) * daq_utils.unitScaling
 
-        current_viewangle = daq_utils.mag1ViewAngle
-        if self.zoom2Radio.isChecked():
-            current_viewangle = daq_utils.mag2ViewAngle
-        elif self.zoom3Radio.isChecked():
-            current_viewangle = daq_utils.mag3ViewAngle
-        elif self.zoom4Radio.isChecked():
-            current_viewangle = daq_utils.mag4ViewAngle
+        current_viewangle = self.zoomSlider.get_current_viewangle()
 
         if current_viewangle == daq_utils.CAMERA_ANGLE_BEAM:
             view_omega_offset = 0
@@ -3270,26 +3013,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.scene.removeItem(self.rasterPoly)
 
     def getCurrentFOV(self):
-        fov = {"x": 0.0, "y": 0.0}
-        if self.zoom2Radio.isChecked():  # lowmagzoom
-            if (
-                daq_utils.sampleCameraCount == 2
-            ):  # this is a hard assumption that when there are 2 cameras the second uses highmagfov
-                fov["x"] = daq_utils.highMagFOVx
-                fov["y"] = daq_utils.highMagFOVy
-            else:
-                fov["x"] = daq_utils.lowMagFOVx / 2.0
-                fov["y"] = daq_utils.lowMagFOVy / 2.0
-        elif self.zoom1Radio.isChecked():
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
-        elif self.zoom4Radio.isChecked():
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
-        else:
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
-        return fov
+        return self.zoomSlider.getFOV()
 
     def screenXPixels2microns(self, pixels):
         fov = self.getCurrentFOV()
@@ -3576,42 +3300,7 @@ class ControlMain(QtWidgets.QMainWindow):
         penGreen = QtGui.QPen(QtCore.Qt.green)
         penRed = QtGui.QPen(QtCore.Qt.red)
         if self.vidActionDefineCenterRadio.isChecked():
-            self.vidActionC2CRadio.setChecked(
-                True
-            )  # because it's easy to forget defineCenter is on
-            if self.zoom4Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterHighMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",1)"
-                )
-            elif self.zoom3Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterHighMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",0)"
-                )
-            if self.zoom2Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterLowMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",1)"
-                )
-            elif self.zoom1Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterLowMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",0)"
-                )
-            self.send_to_server(comm_s)
+            self.define_center(x_click, y_click)
             return
         if self.vidActionRasterDefRadio.isChecked():
             self.click_positions.append(event.pos())
@@ -3629,13 +3318,7 @@ class ControlMain(QtWidgets.QMainWindow):
             y_click - (self.centerMarker.y() + self.centerMarkerCharOffsetY)
         )
 
-        current_viewangle = daq_utils.mag1ViewAngle
-        if self.zoom2Radio.isChecked():
-            current_viewangle = daq_utils.mag2ViewAngle
-        elif self.zoom3Radio.isChecked():
-            current_viewangle = daq_utils.mag3ViewAngle
-        elif self.zoom4Radio.isChecked():
-            current_viewangle = daq_utils.mag4ViewAngle
+        current_viewangle = self.zoomSlider.get_current_viewangle()
 
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
@@ -3648,6 +3331,16 @@ class ControlMain(QtWidgets.QMainWindow):
             self.threeClickCount = 0
             self.click3Button.setStyleSheet("background-color: None")
         return
+
+    def define_center(self, x_click, y_click):
+        self.vidActionC2CRadio.setChecked(
+            True
+        )  # because it's easy to forget defineCenter is on
+        zoom, mag = self.zoomSlider.get_zoom_mag()
+        
+        comm_s = f"changeImageCenter({x_click}, {y_click}, {zoom}, '{mag}')"
+        self.send_to_server(comm_s)
+
 
     def editScreenParamsCB(self):
         self.screenDefaultsDialog = ScreenDefaultsDialog(self)
@@ -4468,8 +4161,7 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.info("No sample selected, cannot mount")
             return
         self.send_to_server('mountSample("' + str(self.selectedSampleID) + '")')
-        self.zoom2Radio.setChecked(True)
-        self.zoomLevelToggledCB("Zoom2")
+        self.zoomSlider.slider.setValue(2)
         self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
         self.protoComboActivatedCB("standard")
 

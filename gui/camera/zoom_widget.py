@@ -1,4 +1,4 @@
-from qtpy import QtWidgets, QtCore
+from qtpy import QtWidgets, QtCore, QtGui
 import daq_utils
 from epics import PV
 import typing
@@ -6,18 +6,69 @@ import typing
 if typing.TYPE_CHECKING:
     from gui.control_main import ControlMain
 
+class ClickableQSlider(QtWidgets.QSlider):
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            value = self.minimum() + ((self.maximum() - self.minimum()) * event.x()) / self.width()
+            self.setValue(round(value))
+            event.accept()
+        else:
+            super().mousePressEvent(event)
+
 
 class ZoomSlider(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent=parent)
-        self.slider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal, self)
-        self.slider.setMinimum(1)
-        self.slider.setMaximum(4)
-        self.slider.setValue(1)
-        self.slider.setTickInterval(1)
-        self.slider.setTickPosition(QtWidgets.QSlider.TickPosition.TicksBelow)
+    # Based on the stackoverflow answer: https://stackoverflow.com/a/54819051
+    def __init__(self, minimum, maximum, interval=1, orientation=QtCore.Qt.Horizontal,
+            labels=None, parent=None):
+        super(ZoomSlider, self).__init__(parent=parent)
+        self.parent: "ControlMain" = parent
+        self.zoom_levels = maximum
+        
+        
+
+        levels=range(minimum, maximum+interval, interval)
+        labels = [f'Mag{i}' for i in levels]
+        if labels is not None:
+            if not isinstance(labels, (tuple, list)):
+                raise Exception("<labels> is a list or tuple.")
+            if len(labels) != len(levels):
+                raise Exception("Size of <labels> doesn't match levels.")
+            self.levels=list(zip(levels,labels))
+        else:
+            self.levels=list(zip(levels,map(str,levels)))
+
+        if orientation==QtCore.Qt.Horizontal:
+            self.layout=QtWidgets.QVBoxLayout(self)
+        elif orientation==QtCore.Qt.Vertical:
+            self.layout=QtWidgets.QHBoxLayout(self)
+        else:
+            raise Exception("<orientation> wrong.")
+
+        # gives some space to print labels
+        self.left_margin=10
+        self.top_margin=10
+        self.right_margin=10
+        self.bottom_margin=10
+
+        self.layout.setContentsMargins(self.left_margin,self.top_margin,
+                self.right_margin,self.bottom_margin)
+
+        self.slider=ClickableQSlider(orientation, self)
+        self.slider.setMinimum(minimum)
+        self.slider.setMaximum(maximum)
+        self.slider.setValue(minimum)
+        if orientation==QtCore.Qt.Horizontal:
+            self.slider.setTickPosition(QtWidgets.QSlider.TicksBelow)
+            self.slider.setMinimumWidth(200) # just to make it easier to read
+        else:
+            self.slider.setTickPosition(QtWidgets.QSlider.TicksLeft)
+            self.slider.setMinimumHeight(300) # just to make it easier to read
+        self.slider.setTickInterval(interval)
         self.slider.setSingleStep(1)
-        self.slider.valueChanged.connect(self.zoomLevelToggledCB)
+
+        self.layout.addWidget(self.slider)
+
+        self.slider.valueChanged.connect(self.zoom_level_toggled)
 
         self.centerMarkerCharOffsetX = 12
         self.centerMarkerCharOffsetY = 18
@@ -26,65 +77,160 @@ class ZoomSlider(QtWidgets.QWidget):
         self.highMagCursorX_pv = PV(daq_utils.pvLookupDict["highMagCursorX"])
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
 
-        labels = [f"Mag{i}" for i in range(1, 5)]
+        
 
-        if labels is not None:
-            self.widget_layout = QtWidgets.QVBoxLayout(self)
-            self.label_layout = QtWidgets.QHBoxLayout()
-            self.widget_layout.addWidget(self.slider)
-            self.widget_layout.addLayout(self.label_layout)
-            for label in labels:
-                label = QtWidgets.QLabel(str(label))
-                self.label_layout.addWidget(
-                    label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter
-                )
-        else:
-            self.widget_layout = QtWidgets.QVBoxLayout(self)
-            self.widget_layout.addWidget(self.slider)
+    def paintEvent(self, e):
 
-        self.setLayout(self.widget_layout)
+        super(ZoomSlider,self).paintEvent(e)
 
-    def parent(self) -> ControlMain:
-        return typing.cast("ControlMain", super().parent())
+        style=self.slider.style()
+        painter=QtGui.QPainter(self)
+        st_slider=QtWidgets.QStyleOptionSlider()
+        st_slider.initFrom(self.slider)
+        st_slider.orientation=self.slider.orientation()
 
-    def zoomLevelToggledCB(self, value):
+        length=style.pixelMetric(QtWidgets.QStyle.PM_SliderLength, st_slider, self.slider)
+        available=style.pixelMetric(QtWidgets.QStyle.PM_SliderSpaceAvailable, st_slider, self.slider)
+
+        for v, v_str in self.levels:
+
+            # get the size of the label
+            rect=painter.drawText(QtCore.QRect(), QtCore.Qt.TextDontPrint, v_str)
+
+            if self.slider.orientation()==QtCore.Qt.Horizontal:
+                # I assume the offset is half the length of slider, therefore
+                # + length//2
+                x_loc=QtWidgets.QStyle.sliderPositionFromValue(self.slider.minimum(),
+                        self.slider.maximum(), v, available)+length//2
+
+                # left bound of the text = center - half of text width + L_margin
+                left=x_loc-rect.width()//2+self.left_margin
+                bottom=self.rect().bottom()-3
+
+                # enlarge margins if clipping
+                if v==self.slider.minimum():
+                    if left<=0:
+                        self.left_margin=rect.width()//2-x_loc
+                    if self.bottom_margin<=rect.height():
+                        self.bottom_margin=rect.height()
+
+                    self.layout.setContentsMargins(self.left_margin,
+                            self.top_margin, self.right_margin,
+                            self.bottom_margin)
+
+                if v==self.slider.maximum() and rect.width()//2>=self.right_margin:
+                    self.right_margin=rect.width()//2
+                    self.layout.setContentsMargins(self.left_margin,
+                            self.top_margin, self.right_margin,
+                            self.bottom_margin)
+
+            else:
+                y_loc=QtWidgets.QStyle.sliderPositionFromValue(self.slider.minimum(),
+                        self.slider.maximum(), v, available, upsideDown=True)
+
+                bottom=y_loc+length//2+rect.height()//2+self.top_margin-3
+                # there is a 3 px offset that I can't attribute to any metric
+
+                left=self.left_margin-rect.width()
+                if left<=0:
+                    self.left_margin=rect.width()+2
+                    self.layout.setContentsMargins(self.left_margin,
+                            self.top_margin, self.right_margin,
+                            self.bottom_margin)
+
+            pos= QtCore.QPointF(left, bottom)
+            painter.drawText(pos, v_str)
+
+        return
+    
+
+    def zoom_level_toggled(self, value=None):
+        if value is None:
+            value = self.slider.value()
         fov = {}
         zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
         zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
         if value == 1:
-            capture = self.parent().captureLowMag
+            capture = self.parent.captureLowMag
             fov["x"] = daq_utils.lowMagFOVx
             fov["y"] = daq_utils.lowMagFOVy
             cursor_x = (
-                self.parent().lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
+                self.parent.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             )
             cursor_y = (
-                self.parent().lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
+                self.parent.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
         elif value == 2:
-            capture = self.parent().captureLowMagZoom
+            capture = self.parent.captureLowMagZoom
             fov["x"] = daq_utils.lowMagFOVx / 2.0
             fov["y"] = daq_utils.lowMagFOVy / 2.0
             cursor_x = zoomedCursorX
             cursor_y = zoomedCursorY
         elif value == 3:
-            capture = self.parent().captureHighMag
+            capture = self.parent.captureHighMag
             fov["x"] = daq_utils.highMagFOVx
             fov["y"] = daq_utils.highMagFOVy
             cursor_x = (
-                self.parent().highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
+                self.parent.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             )
             cursor_y = (
-                self.parent().highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
+                self.parent.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
         elif value == 4:
-            capture = self.parent().captureHighMagZoom
+            capture = self.parent.captureHighMagZoom
             fov["x"] = daq_utils.highMagFOVx / 2.0
             fov["y"] = daq_utils.highMagFOVy / 2.0
             cursor_x = zoomedCursorX
             cursor_y = zoomedCursorY
 
-        self.parent().flushBuffer(capture)
-        self.parent().centerMarker.setPos(cursor_x, cursor_y)
-        self.parent().adjustGraphics4ZoomChange(fov)
-        self.parent().sampleZoomChangeSignal.emit(capture)
+        self.parent.flushBuffer(capture)
+        self.parent.capture = capture
+        self.parent.centerMarker.setPos(cursor_x, cursor_y)
+        self.parent.adjustGraphics4ZoomChange(fov)
+        self.parent.sampleZoomChangeSignal.emit(capture)
+
+
+    def getFOV(self):
+        fov = {"x": 0.0, "y": 0.0}
+        if self.slider.value() == 2:  # lowmagzoom
+            if (
+                daq_utils.sampleCameraCount == 2
+            ):  # this is a hard assumption that when there are 2 cameras the second uses highmagfov
+                fov["x"] = daq_utils.highMagFOVx
+                fov["y"] = daq_utils.highMagFOVy
+            else:
+                fov["x"] = daq_utils.lowMagFOVx / 2.0
+                fov["y"] = daq_utils.lowMagFOVy / 2.0
+        elif self.slider.value() == 1:
+            fov["x"] = daq_utils.lowMagFOVx
+            fov["y"] = daq_utils.lowMagFOVy
+        elif self.slider.value() == 4:
+            fov["x"] = daq_utils.highMagFOVx / 2.0
+            fov["y"] = daq_utils.highMagFOVy / 2.0
+        else:
+            fov["x"] = daq_utils.highMagFOVx
+            fov["y"] = daq_utils.highMagFOVy
+        return fov
+    
+    def get_current_viewangle(self):
+        current_viewangle = daq_utils.mag1ViewAngle
+        if self.slider.value() == 2:
+            current_viewangle = daq_utils.mag2ViewAngle
+        elif self.slider.value() == 3:
+            current_viewangle = daq_utils.mag3ViewAngle
+        elif self.slider.value() == 4:
+            current_viewangle = daq_utils.mag4ViewAngle
+        
+        return current_viewangle
+    
+    def get_zoom_mag(self):
+        if self.slider.value() == 2:
+            zoom, mag = 1, 'low'
+        elif self.slider.value() == 3:
+            zoom, mag = 0, 'high'
+        elif self.slider.value() == 4:
+            zoom, mag = 1, 'high'
+        else:
+            zoom, mag = 0, 'low'
+
+        return zoom, mag

@@ -280,18 +280,6 @@ class ControlMain(QtWidgets.QMainWindow):
         evnt.accept()
         sys.exit()  # doing this to close any windows left open
 
-    def initVideo2(self, frequency):
-        self.captureHighMag = cv2.VideoCapture(daq_utils.highMagCamURL)
-        logger.debug('highMagCamURL: "' + daq_utils.highMagCamURL + '"')
-
-    def initVideo4(self, frequency):
-        self.captureHighMagZoom = cv2.VideoCapture(daq_utils.highMagZoomCamURL)
-        logger.debug('highMagZoomCamURL: "' + daq_utils.highMagZoomCamURL + '"')
-
-    def initVideo3(self, frequency):
-        self.captureLowMagZoom = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
-        logger.debug('lowMagZoomCamURL: "' + daq_utils.lowMagZoomCamURL + '"')
-
     def createSampleTab(self):
         sampleTab = QtWidgets.QWidget()
         splitter1 = QtWidgets.QSplitter(Qt.Horizontal)
@@ -905,25 +893,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.VidFrame = QFrame()
         self.VidFrame.setFixedWidth(680)
         vBoxVidLayout = QtWidgets.QVBoxLayout()
-        self.captureLowMag = None
-        self.captureHighMag = None
-        self.captureHighMagZoom = None
-        self.captureLowMagZoom = None
-        if daq_utils.has_xtalview:
-            if self.zoom3FrameRatePV.get() != 0:
-                _thread.start_new_thread(self.initVideo2, (0.25,))  # highMag
-            if self.zoom4FrameRatePV.get() != 0:
-                _thread.start_new_thread(
-                    self.initVideo4, (0.25,)
-                )  # this sets up highMagDigiZoom
-            if self.zoom2FrameRatePV.get() != 0:
-                _thread.start_new_thread(
-                    self.initVideo3, (0.25,)
-                )  # this sets up lowMagDigiZoom
-            if self.zoom1FrameRatePV.get() != 0:
-                self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
-                logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
-        self.capture = self.captureLowMag
+                
+        self.capture = cv2.VideoCapture(daq_utils.sampleCameraConfig[0]['url'])
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
         self.timerSample.start(SAMPLE_TIMER_DELAY)
@@ -972,7 +943,7 @@ class ControlMain(QtWidgets.QMainWindow):
             daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY,
         )
         
-        self.zoomSlider = ZoomSlider(1, maximum=int(daq_utils.sampleCameraCount), parent=self)
+        self.zoomSlider = ZoomSlider(config=daq_utils.sampleCameraConfig, parent=self)
 
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30

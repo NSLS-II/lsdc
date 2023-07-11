@@ -18,15 +18,21 @@ class ClickableQSlider(QtWidgets.QSlider):
 
 class ZoomSlider(QtWidgets.QWidget):
     # Based on the stackoverflow answer: https://stackoverflow.com/a/54819051
-    def __init__(self, minimum, maximum, interval=1, orientation=QtCore.Qt.Horizontal,
-            labels=None, parent=None):
+    def __init__(self, config,
+                 orientation=QtCore.Qt.Horizontal,
+                 parent=None):
         super(ZoomSlider, self).__init__(parent=parent)
         self.parent: "ControlMain" = parent
-        self.zoom_levels = maximum
-        
-        
 
-        levels=range(minimum, maximum+interval, interval)
+        self.config = config
+        self.zoom_levels = len(self.config)
+        minimum = 1
+        interval = 1
+        maximum = self.zoom_levels
+        levels = range(minimum, maximum+1)
+        
+        self.scaling_factor = [1, 2, 4, 6]
+        
         labels = [f'Mag{i}' for i in levels]
         if labels is not None:
             if not isinstance(labels, (tuple, list)):
@@ -150,10 +156,16 @@ class ZoomSlider(QtWidgets.QWidget):
         fov = {}
         zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
         zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
+        camera_config = daq_utils.sampleCameraConfig[value - 1]
+
+        if self.parent.capture.isOpened():
+            self.parent.capture.release()
+        
+        self.parent.capture.open(camera_config["url"])
+        fov['x'] = camera_config["fov"]["width"]
+        fov['y'] = camera_config["fov"]["height"]
+
         if value == 1:
-            capture = self.parent.captureLowMag
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
             cursor_x = (
                 self.parent.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             )
@@ -161,15 +173,9 @@ class ZoomSlider(QtWidgets.QWidget):
                 self.parent.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
         elif value == 2:
-            capture = self.parent.captureLowMagZoom
-            fov["x"] = daq_utils.lowMagFOVx / 2.0
-            fov["y"] = daq_utils.lowMagFOVy / 2.0
             cursor_x = zoomedCursorX
             cursor_y = zoomedCursorY
         elif value == 3:
-            capture = self.parent.captureHighMag
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
             cursor_x = (
                 self.parent.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             )
@@ -177,39 +183,17 @@ class ZoomSlider(QtWidgets.QWidget):
                 self.parent.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
         elif value == 4:
-            capture = self.parent.captureHighMagZoom
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
             cursor_x = zoomedCursorX
             cursor_y = zoomedCursorY
 
-        self.parent.flushBuffer(capture)
-        self.parent.capture = capture
         self.parent.centerMarker.setPos(cursor_x, cursor_y)
-        self.parent.adjustGraphics4ZoomChange(fov)
-        self.parent.sampleZoomChangeSignal.emit(capture)
+        self.parent.adjustGraphics4ZoomChange(fov, )
 
 
     def getFOV(self):
         fov = {"x": 0.0, "y": 0.0}
-        if self.slider.value() == 2:  # lowmagzoom
-            if (
-                daq_utils.sampleCameraCount == 2
-            ):  # this is a hard assumption that when there are 2 cameras the second uses highmagfov
-                fov["x"] = daq_utils.highMagFOVx
-                fov["y"] = daq_utils.highMagFOVy
-            else:
-                fov["x"] = daq_utils.lowMagFOVx / 2.0
-                fov["y"] = daq_utils.lowMagFOVy / 2.0
-        elif self.slider.value() == 1:
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
-        elif self.slider.value() == 4:
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
-        else:
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
+        config_fov = daq_utils.sampleCameraConfig[self.slider.value()-1]["fov"]
+        fov["x"], fov["y"] = config_fov["width"], config_fov["height"]
         return fov
     
     def get_current_viewangle(self):

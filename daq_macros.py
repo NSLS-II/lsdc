@@ -3295,9 +3295,9 @@ def xrec_no_zebra(angle_start):
     logger.info(f'taking image at {omega_target}')
     timeout = 5
     # change image mode to single(0)
-    beamline_support.setPvValFromDescriptor("lowMagImMode",0)
+    setPvDesc("lowMagImMode",0)
     # start camera
-    beamline_support.setPvValFromDescriptor("lowMagAcquire",1)
+    setPvDesc("lowMagAcquire",1)
     try:
       with urllib.request.urlopen(daq_utils.lowMagCamURL, timeout=timeout) as response:
         logger.info("xnz: read")
@@ -3312,9 +3312,9 @@ def xrec_no_zebra(angle_start):
     logger.info("xnz: sleep")
     time.sleep(1)
     # change image mode to continuous(2)
-    beamline_support.setPvValFromDescriptor("lowMagImMode",2)
+    setPvDesc("lowMagImMode",2)
     # start camera
-    beamline_support.setPvValFromDescriptor("lowMagAcquire",1)
+    setPvDesc("lowMagAcquire",1)
  
 
 def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega

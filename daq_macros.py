@@ -1895,7 +1895,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row_index, vector)
         #raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
-        time.sleep(0.3)  # necessary for reliable row processing - see comment in commit 6793f4
+        yield from bps.sleep(0.3)  # necessary for reliable row processing - see comment in commit 6793f4
         # processing
         if (procFlag):    
           if (daq_utils.detector_id == "EIGER-16"):
@@ -1919,7 +1919,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     initiate transitions here allows for GUI sample/heat map image to update
     after moving to known position"""
     logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
-    time.sleep(3) #waiting for detector to not lose row
+    yield from bps.sleep(3) #waiting for detector to not lose row
     if (lastOnSample() and not autoRasterFlag):
       govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
       if govStatus.exception():

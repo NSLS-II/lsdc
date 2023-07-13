@@ -1880,10 +1880,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
         logger.info(f'starting new row: {row_index}')
         zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
         vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
-        yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000)
-        yield from bps.mv(samplexyz.y, yMotAbsoluteMove/1000)
-        yield from bps.mv(samplexyz.z, zMotAbsoluteMove/1000)
-        yield from bps.mv(samplexyz.omega, omega-0.05)
+        yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row_index, vector)
         #raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
@@ -3308,7 +3305,7 @@ def xrec_no_zebra(angle_start):
         logger.info("xnz: read")
         image_data = response.read()
         logger.info("xnz: read")
-      with open("findloop_"+str(omega_target/40)+".jpg", "wb") as filename:
+      with open(getBlConfig("visitDirectory")+"findloop_"+str(omega_target/40)+".jpg", "wb") as filename:
         logger.info("xnz: write file")
         filename.write(image_data)
         logger.info("xnz: write file")

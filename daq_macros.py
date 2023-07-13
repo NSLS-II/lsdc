@@ -2051,8 +2051,6 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if govStatus.exception():
       logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
       return
-    #raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
-    #raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
     yield from bps.mv(samplexyz.omega, (omega-1)) # attempting to over-compensate omega movement

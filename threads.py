@@ -1,9 +1,12 @@
 from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt, QObject
 from qtpy import QtGui
 from PIL import Image, ImageQt
+import os
+import sys
 import urllib
 from io import BytesIO
 import logging
+from config_params import SERVER_CHECK_DELAY
 import raddoseLib
 
 logger = logging.getLogger()
@@ -53,15 +56,19 @@ class VideoThread(QThread):
         self.url = url
         self.camera_object = camera_object
         self.showing_error = False
+        self.is_running = True
         QThread.__init__(self, *args, **kwargs)
     
     def updateCam(self, camera_object):
         self.camera_object = camera_object
         
     def run(self):
-        while True:
+        while self.is_running:
             self.camera_refresh()
             self.msleep(self.delay)
+    
+    def stop(self):
+        self.is_running = False
 
 
 class RaddoseThread(QThread):
@@ -88,3 +95,20 @@ class RaddoseThread(QThread):
         self.lifetime.emit(lifetime_value)
 
 
+class ServerCheckThread(QThread):
+    visit_dir_changed = Signal()
+    def __init__(self, *args, delay=SERVER_CHECK_DELAY, **kwargs):
+        self.delay = delay
+        QThread.__init__(self, *args, **kwargs)
+
+    def run(self):
+        import db_lib
+        beamline = os.environ["BEAMLINE_ID"]
+        while True:
+            if db_lib.getBeamlineConfigParam(beamline, "visitDirectory") != os.getcwd():
+                message = "The server visit directory has changed, stopping!"
+                logger.error(message)
+                print(message)
+                self.visit_dir_changed.emit()
+                break
+            self.msleep(self.delay)

@@ -185,6 +185,9 @@ class ZoomSlider(QtWidgets.QWidget):
         elif value == 4:
             cursor_x = zoomedCursorX
             cursor_y = zoomedCursorY
+        else:
+            cursor_x = zoomedCursorX
+            cursor_y = zoomedCursorY
 
         self.parent.centerMarker.setPos(cursor_x, cursor_y)
         self.parent.adjustGraphics4ZoomChange(fov, )
@@ -218,3 +221,15 @@ class ZoomSlider(QtWidgets.QWidget):
             zoom, mag = 0, 'low'
 
         return zoom, mag
+    
+    def handle_wheel(self, value):
+        slider_val = self.slider.value()
+        if value > 0 and slider_val < self.slider.maximum():
+            self.slider.setValue(slider_val+1)
+        elif value < 0 and slider_val > self.slider.minimum():
+            self.slider.setValue(slider_val-1)
+
+    def get_scale(self):
+        no_zoom_fov = daq_utils.sampleCameraConfig[0]["fov"]
+        current_zoom_fov = daq_utils.sampleCameraConfig[self.slider.value()-1]["fov"]
+        return no_zoom_fov['width']/current_zoom_fov['width']

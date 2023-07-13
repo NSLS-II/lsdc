@@ -50,6 +50,7 @@ from gui.dialog import (
 )
 from gui.raster import RasterCell, RasterGroup
 from gui.camera.zoom_widget import ZoomSlider
+from gui.camera.scene import CustomScene
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -905,7 +906,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.polyPointItems = []
         self.rasterPoly = None
         self.measureLine = None
-        self.scene = QtWidgets.QGraphicsScene(0, 0, 640, 512, self)
+        self.scene = CustomScene(0, 0, 640, 512, self)
         hBoxHutchVidsLayout = QtWidgets.QHBoxLayout()
         self.sceneHutchCorner = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
         self.sceneHutchTop = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
@@ -944,6 +945,7 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         
         self.zoomSlider = ZoomSlider(config=daq_utils.sampleCameraConfig, parent=self)
+        self.scene.y_value.connect(self.zoomSlider.handle_wheel)
 
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
@@ -3234,6 +3236,7 @@ class ControlMain(QtWidgets.QMainWindow):
         qimage = QtGui.QImage(
             self.currentFrame, width, height, 3 * width, QtGui.QImage.Format_RGB888
         )
+        qimage = qimage.scaledToHeight(int(self.scene.height()))
         qimage = qimage.rgbSwapped()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item.setPixmap(pixmap_orig)

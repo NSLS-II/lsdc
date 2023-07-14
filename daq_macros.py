@@ -2049,7 +2049,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     #raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
-    yield from bps.mv(samplexyz.omega, (omega-1)) # attempting to over-compensate omega movemen
+    yield from bps.mv(samplexyz.omega, (omega-1)) # attempting to over-compensate omega movement
     for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row
         logger.info(f'starting new row: {row_index}')
         zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)

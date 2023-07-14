@@ -3567,7 +3567,7 @@ def xrec_no_zebra(angle_start):
         logger.info("xnz: read")
         image_data = response.read()
         logger.info("xnz: read")
-      with open(getBlConfig("visitDirectory")+"findloop_"+str(omega_target/40)+".jpg", "wb") as filename:
+      with open(getBlConfig("visitDirectory")+"findloop_"+str(omega_target//40)+".jpg", "wb") as filename:
         logger.info("xnz: write file")
         filename.write(image_data)
         logger.info("xnz: write file")

@@ -75,7 +75,7 @@ def check_working_directory():
         check_working_directory.remediation = f'Please start LSDC in {daq_utils.beamline} data directory. Current directory: {working_dir}'
         return False
     if daq_utils.getBlConfig("visitDirectory") != os.getcwd():
-        check_working_directory.remediation = (f"Working directory mismatch ({daq_utils.getBlConfig('visitDirectory')}!={os.getcwd()}). Please start LSDC GUI in the same folder as the server is running.")
+        check_working_directory.remediation = (f"Working directory mismatch. Please start LSDC GUI in the same folder as the server is running.")
         return False
     return True
 

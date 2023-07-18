@@ -17,7 +17,7 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QGraphicsScene
 
 import albulaUtils
 import daq_utils
@@ -50,7 +50,7 @@ from gui.dialog import (
 )
 from gui.raster import RasterCell, RasterGroup
 from gui.camera.zoom_widget import ZoomSlider
-from gui.camera.scene import CustomScene
+from gui.camera.scene import CustomView
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -906,12 +906,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.polyPointItems = []
         self.rasterPoly = None
         self.measureLine = None
-        self.scene = CustomScene(0, 0, 640, 512, self)
+        self.scene = QGraphicsScene(0, 0, 640, 512, self)
         hBoxHutchVidsLayout = QtWidgets.QHBoxLayout()
         self.sceneHutchCorner = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
         self.sceneHutchTop = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
         self.scene.keyPressEvent = self.sceneKey
-        self.view = QtWidgets.QGraphicsView(self.scene)
+        # self.view = QtWidgets.QGraphicsView(self.scene)
+        self.view = CustomView(self.scene, parent=self)
         self.viewHutchCorner = QtWidgets.QGraphicsView(self.sceneHutchCorner)
         self.viewHutchTop = QtWidgets.QGraphicsView(self.sceneHutchTop)
         self.pixmap_item = QtWidgets.QGraphicsPixmapItem(None)
@@ -945,7 +946,7 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         
         self.zoomSlider = ZoomSlider(config=daq_utils.sampleCameraConfig, parent=self)
-        self.scene.y_value.connect(self.zoomSlider.handle_wheel)
+        self.view.y_value.connect(self.zoomSlider.handle_wheel)
 
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30

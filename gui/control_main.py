@@ -2663,11 +2663,13 @@ class ControlMain(QtWidgets.QMainWindow):
     def fillPolyRaster(
         self, rasterReq, waitTime=1
     ):  # at this point I should have a drawn polyRaster
-        time.sleep(waitTime)
         logger.info("filling poly for " + str(rasterReq["uid"]))
-        resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
         rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])
+        
+        if not rasterResults:
+            return
         rasterResult = {}
+        
         for i in range(0, len(rasterResults)):
             if rasterResults[i]["result_type"] == "rasterResult":
                 rasterResult = rasterResults[i]
@@ -2677,6 +2679,7 @@ class ControlMain(QtWidgets.QMainWindow):
         except KeyError:
             db_lib.deleteRequest(rasterReq["uid"])
             return
+        
         rasterListIndex = 0
         for i in range(len(self.rasterList)):
             if self.rasterList[i] != None:
@@ -2693,12 +2696,18 @@ class ControlMain(QtWidgets.QMainWindow):
         self.currentRasterCellList = currentRasterGroup.childItems()
         cellResults = rasterResult["result_obj"]["rasterCellResults"]["resultObj"]
         numLines = len(cellResults)
-        cellResults_array = [{} for i in range(numLines)]
+        # cellResults_array = [{} for i in range(numLines)]
         my_array = np.zeros(numLines)
         spotLineCounter = 0
         cellIndex = 0
         rowStartIndex = 0
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
+        if rasterEvalOption == "Spot Count":
+            cell_result_key = "spot_count_no_ice"
+        elif rasterEvalOption == "Intensity":
+            cell_result_key = "total_intensity"
+        else:
+            cell_result_key = "d_min"
         lenX = abs(
             rasterDef["rowDefs"][0]["end"]["x"] - rasterDef["rowDefs"][0]["start"]["x"]
         )  # ugly for tile flip/noflip
@@ -2717,12 +2726,7 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                try:
-                    spotcount = cellResult["spot_count_no_ice"]
-                    filename = cellResult["image"]
-                except TypeError:
-                    spotcount = 0
-                    filename = "empty"
+                
 
                 if (
                     lenX > 180 and self.scannerType == "PI"
@@ -2733,16 +2737,12 @@ class ControlMain(QtWidgets.QMainWindow):
                         cellIndex = spotLineCounter
                     else:
                         cellIndex = rowStartIndex + ((numsteps - 1) - j)
+                
                 try:
-                    if rasterEvalOption == "Spot Count":
-                        my_array[cellIndex] = spotcount
-                    elif rasterEvalOption == "Intensity":
-                        my_array[cellIndex] = cellResult["total_intensity"]
-                    else:
-                        if float(cellResult["d_min"]) == -1:
-                            my_array[cellIndex] = 50.0
-                        else:
-                            my_array[cellIndex] = float(cellResult["d_min"])
+                    my_array[cellIndex] = cellResult[cell_result_key]
+                    if cell_result_key == 'd_min' and my_array[cellIndex] == -1:
+                        my_array[cellIndex] = 50.0
+
                 except IndexError:
                     logger.error("caught index error #2")
                     logger.error("numlines = " + str(numLines))
@@ -2750,59 +2750,44 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                cellResults_array[
-                    cellIndex
-                ] = cellResult  # instead of just grabbing filename, get everything. Not sure why I'm building my own list of results. How is this different from cellResults?
-                # I don't think cellResults_array is different from cellResults, could maybe test that below by subtituting one for the other. It may be a remnant of trying to store less than the whole result set.
                 spotLineCounter += 1
         floor = np.amin(my_array)
         ceiling = np.amax(my_array)
+        
         cellCounter = 0
-        for i in range(len(rasterDef["rowDefs"])):
-            rowCellCount = 0
-            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
-                cellResult = cellResults_array[cellCounter]
-                try:
-                    spotcount = int(cellResult["spot_count_no_ice"])
-                    cellFilename = cellResult["image"]
-                    d_min = float(cellResult["d_min"])
-                    if d_min == -1:
-                        d_min = 50.0  # trying to handle frames with no spots
-                    total_intensity = int(cellResult["total_intensity"])
-                except TypeError:
-                    spotcount = 0
-                    cellFilename = "empty"
-                    d_min = 50.0
-                    total_intensity = 0
+        color_id = None
+        if ceiling == 0:
+            color_id = 255
+        elif ceiling == floor:
+            if rasterEvalOption == "Resolution":
+                color_id = 0
+            else:
+                color_id = 255
+        if color_id is None:
+            color_ids = ((my_array - floor) / (ceiling - floor)) * 255.0
+        else:
+            color_ids = np.full(my_array.shape, color_id)
 
-                if rasterEvalOption == "Spot Count":
-                    param = spotcount
-                elif rasterEvalOption == "Intensity":
-                    param = total_intensity
-                else:
-                    param = d_min
-                if ceiling == 0:
-                    color_id = 255
-                elif ceiling == floor:
+        for i in range(len(rasterDef["rowDefs"])):
+            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
+                if color_id is None:
+                    param = my_array[cellCounter]
                     if rasterEvalOption == "Resolution":
-                        color_id = 0
+                        color = int(255 - color_ids[cellCounter])
                     else:
-                        color_id = 255
-                elif rasterEvalOption == "Resolution":
-                    color_id = int(
-                        255.0 * (float(param - floor) / float(ceiling - floor))
+                        color = int(color_ids[cellCounter])
+                    self.currentRasterCellList[cellCounter].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, color, 0, 127))
                     )
                 else:
-                    color_id = int(
-                        255 - (255.0 * (float(param - floor) / float(ceiling - floor)))
+                    self.currentRasterCellList[cellCounter].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
                     )
-                self.currentRasterCellList[cellCounter].setBrush(
-                    QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
-                )
-                self.currentRasterCellList[cellCounter].setData(0, spotcount)
-                self.currentRasterCellList[cellCounter].setData(1, cellFilename)
-                self.currentRasterCellList[cellCounter].setData(2, d_min)
-                self.currentRasterCellList[cellCounter].setData(3, total_intensity)
+                cellResult = cellResults[cellCounter]
+                self.currentRasterCellList[cellCounter].setData(0, cellResult.get("spot_count_no_ice", 0))
+                self.currentRasterCellList[cellCounter].setData(1, cellResult.get("image", "empty"))
+                self.currentRasterCellList[cellCounter].setData(2, cellResult.get("dmin", 50.0))
+                self.currentRasterCellList[cellCounter].setData(3, cellResult.get("total_intensity", 0))
                 cellCounter += 1
 
     def takeRasterSnapshot(self, rasterReq):
@@ -3148,7 +3133,6 @@ class ControlMain(QtWidgets.QMainWindow):
             rasterDef = rasterReq["request_obj"]["rasterDef"]
         except KeyError:
             return
-        beamSize = self.screenXmicrons2pixels(rasterDef["beamWidth"])
         stepsizeX = self.screenXmicrons2pixels(rasterDef["stepsize"])
         stepsizeY = self.screenYmicrons2pixels(rasterDef["stepsize"])
         pen = QtGui.QPen(QtCore.Qt.red)
@@ -3163,54 +3147,33 @@ class ControlMain(QtWidgets.QMainWindow):
                 rasterDir = "vertical"
         except IndexError:
             return
+        newItemGroup = RasterGroup(self)
+        self.scene.addItem(newItemGroup)
+
         for i in range(len(rasterDef["rowDefs"])):
             rowCellCount = 0
+            x = self.screenXmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["x"]
+                        ) + self.centerMarker.x() + self.centerMarkerCharOffsetX
+            y = self.screenYmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["y"]
+                        ) + self.centerMarker.y() + self.centerMarkerCharOffsetY
             for j in range(rasterDef["rowDefs"][i]["numsteps"]):
                 if rasterDir == "horizontal":
-                    newCellX = (
-                        self.screenXmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["x"]
-                        )
-                        + (j * stepsizeX)
-                        + self.centerMarker.x()
-                        + self.centerMarkerCharOffsetX
-                    )
-                    newCellY = (
-                        self.screenYmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["y"]
-                        )
-                        + self.centerMarker.y()
-                        + self.centerMarkerCharOffsetY
-                    )
+                    newCellX = x + (j * stepsizeX)
+                    newCellY = y
                 else:
-                    newCellX = (
-                        self.screenXmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["x"]
-                        )
-                        + self.centerMarker.x()
-                        + self.centerMarkerCharOffsetX
-                    )
-                    newCellY = (
-                        self.screenYmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["y"]
-                        )
-                        + (j * stepsizeY)
-                        + self.centerMarker.y()
-                        + self.centerMarkerCharOffsetY
-                    )
-                if rowCellCount == 0:  # start of a new row
-                    rowStartX = newCellX
-                    rowStartY = newCellY
+                    newCellX = x
+                    newCellY = y + (j * stepsizeY)
+                        
                 newCellX = int(newCellX)
                 newCellY = int(newCellY)
                 newCell = RasterCell(newCellX, newCellY, stepsizeX, stepsizeY, self)
                 newRasterCellList.append(newCell)
+                newItemGroup.addToGroup(newCell)
                 newCell.setPen(pen)
                 rowCellCount = rowCellCount + 1  # really just for test of new row
-        newItemGroup = RasterGroup(self)
-        self.scene.addItem(newItemGroup)
-        for i in range(len(newRasterCellList)):
-            newItemGroup.addToGroup(newRasterCellList[i])
+        
         newRasterGraphicsDesc = {
             "uid": rasterReq["uid"],
             "coords": {

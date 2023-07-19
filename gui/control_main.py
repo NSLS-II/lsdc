@@ -53,11 +53,6 @@ from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
 logger = logging.getLogger()
-try:
-    import ispybLib
-except Exception as e:
-    logger.error("lsdcGui: ISPYB import error, %s" % e)
-
 
 def get_request_object_escan(
     reqObj,
@@ -3116,10 +3111,7 @@ class ControlMain(QtWidgets.QMainWindow):
             reqID=rasterReq["uid"],
             rasterHeatJpeg=jpegImageFilename,
         )
-        try:
-            ispybLib.insertRasterResult(rasterReq, visitName)
-        except Exception as e:
-            logger.error(f"Exception while writing raster result: {e}")
+        self.send_to_server(f"ispybLib.insertRasterResult('{rasterReq['uid']}', '{visitName}'")
 
     def reFillPolyRaster(self):
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())

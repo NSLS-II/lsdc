@@ -2,13 +2,18 @@ from qtpy.QtGui import QCursor
 from qtpy.QtWidgets import QGraphicsView
 from qtpy.QtCore import Signal, Qt
 import daq_utils
+import typing
+
+if typing.TYPE_CHECKING:
+    from gui.control_main import ControlMain
+
 
 class CustomView(QGraphicsView):
     y_value = Signal(float)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent = kwargs['parent']
+        self.parent: ControlMain = kwargs['parent']
         self.control_pressed = False
 
     def wheelEvent(self, event) -> None:
@@ -50,7 +55,5 @@ class CustomView(QGraphicsView):
         fov = self.parent.getCurrentFOV()
         current_viewangle = self.parent.zoomSlider.get_current_viewangle()
         comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
-        if self.parent.controlEnabled():
+        if self.parent.govStateMessagePV.get(as_string=True) == "state SA":
             self.parent.aux_send_to_server(comm_s)
-        else:
-            self.parent.popupServerMessage("You don't have control")

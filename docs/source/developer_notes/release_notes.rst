@@ -2,6 +2,86 @@
  Release History
 =================
 
+2.0.1 (2023-04-20, a.k.a. 2023-2)
+=================================
+
+Fixes and other changes
+-----------------------
+
+* one-branch-to-rule-them-all and derived branches will be merged into master permanently because the Bluesky collections are all working satisfactorily
+
+  * This is why we are reporting all changes here as for this version, not for any particular version.
+
+
+* Make fastDP logging identifiable
+* GUI change to level 2 upon sample mount
+* Prevent gonio movements in certain circumstances, such as when another sample is loaded or an experiment is in progress
+* GUI
+
+  * Startup checks including correct beamline and directory
+  * Overlay improvements
+  * Validation for more input fields
+  * Collect Queue button now green
+  * NYX-specific disabling of some buttons
+  * Validate HDF5 files #link
+  * Change albula image change method that improves stability
+  * Remove XRF Spectrum tab
+  * Changes to queue collect behavior, requests added to mounted sample if off else add to selected sample
+
+* FMX: start fastDP/Dimple result gathering script
+* FMX: Run raddose3d based on changes to transmission set point and remove "Calc Lifetime" button
+* Protocol harmonization and fixing after using LSDC2
+
+  * Remove screen and specRaster protocols https://github.com/NSLS-II/lsdc/pull/270
+  * MultiCol improvements including rastering region selector, addition of transmission and oscillation range for data collections #links SB-317
+  * Get ednaCol working (requires local EDNA fixes as well) SB-319
+  * Remove eScan from list of selectable protocols - only available from its tab in the GUI
+
+* Improve sample information handling to prevent problems with collection requests with empty sample IDs
+* Enable old-style detector initialization - still need while remaining data collection protocols are converted to full Bluesky
+* Energy scans can only be done for elements within 20 eV of current energy
+* Improve handling of sample info to prevent requests with empty sample name showing up on all beamlines
+* Ensure RobotControlLib is available in LSDC server and remote
+* Fixed automated collection
+* Docs - collection priority notes
+* setE function added for FMX #link
+* Fix detector distance value set in Eiger master file with rasters SB-266
+
+
+2.0.0 (2023-01-18, a.k.a. 2023-1)
+=================================
+
+Fixes and other changes
+-----------------------
+* AMX/FMX branch (master)
+
+  * GUI updates - right-click options on collection and close shutter button is now the main experiment "stop" button
+  * Startup check added - including not allowing startup in home directory
+  * Annealer working on both beamlines
+  * Vector tweak - more intuitive editing of vector start/end points 
+  * Puck list in order of modification
+  * Crashes in puck/dewar position dialog boxes fixed
+  * c3d location fixed
+  * Hutch cameras run on independent QThreads, shows message when feed is unavailable
+
+* AMX/FMX branch (one-branch)
+
+  * Check for detector arming (part of SB-166)
+  * Fix issues with governor moves at beginning and toward end of collections SB-165
+  * Always stop the detector acquisition at the end of standard, vector, and raster collections SB-166
+  * Fix energy being incorrect for rasters SB-184
+  * Rastering looks like it is now working - will be tested once beam is available SB-168
+
+* NYX branch (nyx-one-branch)
+
+  * Isara robot (in nyxtools)
+  * Isara robot integration into LSDC
+
+* Documentation
+
+  * Architecture diagram and description added
+  * Graphviz files can now be used in documentation and are compiled during the build process
+
 1.0.3 (2022-09-06, a.k.a. 2022-3)
 =================================
 

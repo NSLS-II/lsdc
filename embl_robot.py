@@ -193,7 +193,7 @@ class EMBLRobot:
           gov_return = gov_lib.setGovRobot(gov_robot, desired_gov_state)
           if not gov_return.success:
             logger.error(f'Did not reach {desired_gov_state}')
-            return
+            return MOUNT_FAILURE, kwargs
         if (getBlConfig(TOP_VIEW_CHECK) == 1):
           try:
             if (daq_utils.beamline == "fmx"):
@@ -311,7 +311,7 @@ class EMBLRobot:
               if (retryMountCount == 0):
                 retryMountCount+=1
                 mountStat = self.mount(puckPos,pinPos,sampID, kwargs)
-                if (mountStat == MOUNT_SUCCESSFUL):
+                if (mountStat == MOUNT_STEP_SUCCESSFUL):
                   retryMountCount = 0
                 return mountStat
               else:

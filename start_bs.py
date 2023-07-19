@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2023-1.0/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-2-latest/bin/ipython -i
 # import asyncio
 from ophyd import *
 from ophyd.mca import (Mercury1, SoftDXPTrigger)
@@ -7,6 +7,8 @@ from mxtools.zebra import Zebra
 from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
+from ophyd.signal import EpicsSignalBase
+EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
 
 #12/19 - author unknown. DAMA can help
 """
@@ -153,6 +155,8 @@ elif beamline == "fmx":
 
     back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
+
+    import setenergy_lsdc
 
 elif beamline=="nyx":
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')

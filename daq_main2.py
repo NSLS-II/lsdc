@@ -1,10 +1,11 @@
-#!/opt/conda_envs/lsdc-server-2023-1.0/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-2-latest/bin/ipython -i
 """
 The main server for the LSDC system
 """
 import sys
 import os
 from daq_main_common import pybass_init, run_server
+from config_params import LSDC_SERVICE_USERS
 
 #TODO understand why imports are required here - GUI requires imports in daq_main_common
 from daq_macros import *
@@ -12,6 +13,14 @@ from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
 from gov_lib import setGovRobot
+import getpass
+from start_bs import robot
+from embl_robot import EMBLRobot
+if isinstance(robot, EMBLRobot):
+    print("loading RobotControlLib")
+    import RobotControlLib
+else:
+    print("not importing RobotControlLib")
 
 import logging
 from logging import handlers
@@ -27,6 +36,13 @@ handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 logger.addHandler(handler2)
 
+if not getpass.getuser() in LSDC_SERVICE_USERS:
+    message = "LSDC server not being started by a LSDC service user account, aborting!"
+    print(message)
+    logger.error(message)
+    sys.exit(1)
+else:
+    print(f"continuing as we are using a service user: {getpass.getuser()}")
 sitefilename = ""
 global command_list,immediate_command_list,z
 command_list = []

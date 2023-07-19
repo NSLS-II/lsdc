@@ -21,6 +21,7 @@ import gov_lib
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
 import logging
+import albulaUtils
 logger = logging.getLogger(__name__)
 
 try:
@@ -382,6 +383,12 @@ def runDCQueue(): #maybe don't run rasters from here???
     currentMountedSampleID = mountedSampleDict["sampleID"]
     if (currentMountedSampleID != sampleID):
       if (getBlConfig("queueCollect") == 0):
+        current_request = db_lib.popNextRequest(daq_utils.beamline)
+        logger.info(f"Current request: {current_request}")
+        if current_request["request_obj"]["beamline"] != daq_utils.beamline:
+            message = f"Beamline mismatch between collection and beamline. request: '{current_request['request_obj']['beamline']}' beamline: '{daq_utils.beamline}'. request_uid: {current_request['uid']}\nuse db_lib.delete_request(uid) to delete this bad request"
+            logger.error(message)
+            gui_message(message)
         gui_message("You can only run requests on the currently mounted sample. Remove offending request and continue.")
         return
       mountStat = mountSample(sampleID)
@@ -495,7 +502,7 @@ def collectData(currentRequest):
     os.system(comm_s)
   logger.debug('starting initial motions - transmission and detector distance')
   daq_macros.setTrans(attenuation)
-  if not prot in ["eScan", "specRaster"]:
+  if not prot in ["eScan"]:
     beamline_lib.mvaDescriptor("detectorDist",colDist)  
   logger.debug('transmission and detector distance done')
   # now that the detector is in the correct position, get the beam center
@@ -509,12 +516,10 @@ def collectData(currentRequest):
     logger.info('exiting raster')
   elif (prot == "stepRaster"):
     status = daq_macros.snakeStepRaster(currentRequest["uid"])    
-  elif (prot == "specRaster"):
-    status = daq_macros.snakeStepRasterSpec(currentRequest["uid"])    
   elif (prot == "vector" or prot == "stepVector"):
     imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)
   elif (prot == "multiCol"):
-    daq_macros.snakeRaster(currentRequest["uid"])    
+    RE(daq_macros.snakeRaster(currentRequest["uid"]))
   elif (prot == "rasterScreen"):
     daq_macros.rasterScreen(currentRequest)    
   elif (prot == "multiColQ"):
@@ -544,28 +549,8 @@ def collectData(currentRequest):
           reqObj["sweep_start"] = beamline_lib.motorPosFromDescriptor("omega") - 90.0 #%360.0?
           sweep_start = reqObj["sweep_start"]
       daq_macros.setTrans(attenuation)      
-    if (reqObj["protocol"] == "screen"):
-      screenImages = 2
-      screenRange = 90
-      range_degrees = img_width
-      for i in range (0,screenImages):
-        sweep_start = reqObj["sweep_start"]+(i*screenRange)
-        sweep_end = sweep_start+screenRange
-        file_prefix = str(reqObj["file_prefix"]+"_"+str(i*screenRange))
-        data_directory_name = str(reqObj["directory"]) # for now
-        file_number_start = reqObj["file_number_start"]
-        beamline_lib.mvaDescriptor("omega",sweep_start)
-        if (i==0):
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest,changeState=False)
-        else:
-          imagesAttempted = collect_detector_seq_hw(sweep_start,range_degrees,img_width,exposure_period,file_prefix,data_directory_name,file_number_start,currentRequest)            
-        seqNum = flyer.detector.cam.sequence_id.get()
-        node = getBlConfig("spotNode1")
-        comm_s = f'ssh -q {node} \"{os.environ["MXPROCESSINGSCRIPTSDIR"]}eiger2cbf.sh {currentRequest["uid"]} 1 1 sweep_start {seqNum}\"'
-        logger.info(comm_s)
-        os.system(comm_s)
-          
-    elif (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
+
+    if (reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol"):
       characterizationParams = reqObj["characterizationParams"]
       index_success = daq_macros.dna_execute_collection3(0.0,img_width,2,exposure_period,data_directory_name+"/",file_prefix,1,-89.0,1,currentRequest)
       if (index_success):        
@@ -638,8 +623,17 @@ def collectData(currentRequest):
     if daq_utils.beamline != "nyx":
       seqNum = flyer.detector.cam.sequence_id.get()
       comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-      logger.info(comm_s)
-      os.system(comm_s)    
+      logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
+      #os.system(comm_s)    
+      filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
+      logger.info(f"Checking integrity of {filename}")
+      timeout_index = 0
+      while not albulaUtils.validate_master_HDF5_file(filename):
+        timeout_index += 1
+        time.sleep(3)
+        if timeout_index > 15:
+          logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
+          return 
       if img_width > 0: #no dataset processing in stills mode
         if (reqObj["fastDP"]):
           if (reqObj["fastEP"]):
@@ -660,7 +654,7 @@ def collectData(currentRequest):
           else:
             comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
           logger.info(f'Running fastdp command: {comm_s}')
-          if (daq_utils.beamline == "amx"):                                            
+          if daq_utils.beamline in ("amx", "fmx"):
             visitName = daq_utils.getVisitName()
             if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
               os.system("killall -KILL loop-fdp-dple-populate")
@@ -705,7 +699,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   except ValueError: 
     pass
   logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "screen" or protocol == "burn"):
+  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
     logger.info("vectorSync " + str(time.time()))    
     daq_macros.vectorSync()
     logger.info("zebraDaq " + str(time.time()))

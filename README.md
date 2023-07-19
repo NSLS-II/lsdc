@@ -6,4 +6,4 @@ Currently used at the NSLS-II MX beamlines - AMX, FMX
 
 Offline fork of https://github.com/jskinner53/lsdc
 
-Needs more documentation as only a module diagram currently exists. 
+Documentation: http://nsls-ii.github.io/lsdc/ 

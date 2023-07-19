@@ -59,6 +59,10 @@ global autoVectorFlag, autoVectorCoarseCoords
 autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
+
+
+C3D_SEARCH_BASE = f'{os.environ["PROJDIR"]}/software/c3d/c3d_search -p=$CONFIGDIR/'
+
 IMAGES_PER_FILE = 500 # default images per HDF5 data file for Eiger
 EXTERNAL_TRIGGER = 2 # external trigger for detector
 #12/19 - general comments. This file takes the brunt of the near daily changes and additions the scientists request. Some duplication and sloppiness reflects that.
@@ -341,7 +345,7 @@ def autoVector(currentRequest): #12/19 - not tested!
   return 1
 
 def rasterScreen(currentRequest):
-  if (daq_utils.beamline == "fmx"):
+  if (daq_utils.beamline == "fmx" and getBlConfig("scannerType") == "PI"):
     gridRaster(currentRequest)
     return
   
@@ -372,7 +376,7 @@ def rasterScreen(currentRequest):
     rasterH = 510
   rasterReqID = defineRectRaster(currentRequest,rasterW,rasterH,gridStep)     
   db_lib.updatePriority(rasterReqID, -1)
-  snakeRaster(rasterReqID)
+  RE(snakeRaster(rasterReqID))
   
 
 def multiCol(currentRequest):
@@ -692,9 +696,11 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     roiMode = beamline_support.getPvValFromDescriptor("detectorROIMode")
     if roiMode == 1:
         detector = "eiger4m"
-    else:
+    elif daq_utils.beamline in ("amx", "fmx"):
         detector = beamline_support.getPvValFromDescriptor("detectorDescription")
         detector = ''.join(detector.split()[1::]).lower() #format for dozor
+    else:
+        detector = "eiger2-9m"
     nx = beamline_support.getPvValFromDescriptor("detectorNx")
     ny = beamline_support.getPvValFromDescriptor("detectorNy")
     
@@ -705,6 +711,10 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
     src = Template(inputTemplate.read())
     dozorRowDir = makeDozorRowDir(directory,rowIndex)
     dozorSpotLevel = getBlConfig(RASTER_DOZOR_SPOT_LEVEL)
+    if daq_utils.beamline == "nyx":
+        dozorPlugin = "/nsls2/software/mx/nyx/bin/dectris-neggia.so"
+    else:
+        dozorPlugin = "/usr/lib64/dectris-neggia.so"
     templateDict = {"detector": detector,
                     "nx": nx,
                     "ny": ny,
@@ -715,7 +725,8 @@ def makeDozorInputFile(directory,prefix,rowIndex,rowCellCount,seqNum,rasterReqOb
                     "first_image_number": firstImageNumber,
                     "number_images": rowCellCount,
                     "spot_level": dozorSpotLevel,
-                    "name_template_image": hdf5TemplateImage,}
+                    "name_template_image": hdf5TemplateImage,
+                    "processing_plugin": dozorPlugin,}
     with open("".join([dozorRowDir,f"h5_row_{rowIndex}.dat"]),"w") as f:
         f.write(src.substitute(templateDict))
     return dozorRowDir
@@ -1815,10 +1826,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
-      return
+
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -1841,18 +1849,24 @@ def snakeRasterBluesky(rasterReqID, grain=""):
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
     total_exposure_time = exptimePerCell*totalImages
+    detDist /= 1000  # TODO find a way to standardize detector distance settings
 
-    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        raster_flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
-    raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
+    start_time = time.time()
+    arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
                        num_images_per_file=numsteps)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time() - start_time} seconds.")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
+      return
     raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
@@ -2091,7 +2105,7 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
       beamline_lib.mvaDescriptor("sampleX",xMotAbsoluteMove+(j*stepX)+(stepX/2.0),"sampleY",yMotAbsoluteMove-(j*stepY)-(stepY/2.0),"sampleZ",zMotAbsoluteMove-(j*stepZ)-(stepZ/2.0))
       vectorSync()
       if (j == 0):
-        zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3)
+        RE(zebraDaqNoDet(sweep_start_angle,range_degrees,img_width_per_cell,exptimePerCell,filePrefix,data_directory_name,file_number_start,3))
       else:
         angle_start = sweep_start_angle
         scanWidth = range_degrees
@@ -2115,88 +2129,6 @@ def snakeStepRaster(rasterReqID,grain=""): #12/19 - only tested recently, but ap
     gov_lib.setGovRobot(gov_robot, 'SA')
   return 1
 
-
-def snakeStepRasterSpec(rasterReqID,grain=""): #12/19 - only tested recently, but apparently works. I'm not going to remove any commented lines.
-  rasterRequest = db_lib.getRequestByID(rasterReqID)
-  reqObj = rasterRequest["request_obj"]
-  sweep_start_angle = reqObj["sweep_start"]
-  sweep_end_angle = reqObj["sweep_end"]
-  range_degrees = sweep_end_angle-sweep_start_angle
-  imgWidth = reqObj["img_width"]
-  numImagesPerStep = int((sweep_end_angle - sweep_start_angle) / imgWidth)  
-  data_directory_name = str(reqObj["directory"])
-  os.system("mkdir -p " + data_directory_name)
-  filePrefix = str(reqObj["file_prefix"])
-  file_number_start = reqObj["file_number_start"]  
-  dataFilePrefix = reqObj["directory"]+"/"+reqObj["file_prefix"]  
-  exptimePerCell = reqObj["exposure_time"]
-  img_width_per_cell = reqObj["img_width"]
-  rasterDef = reqObj["rasterDef"]
-  stepsize = float(rasterDef["stepsize"])
-  omega = float(rasterDef["omega"])
-  rasterStartX = float(rasterDef["x"]) #these are real sample motor positions
-  rasterStartY = float(rasterDef["y"])
-  rasterStartZ = float(rasterDef["z"])
-  omegaRad = math.radians(omega)
-  rasterFilePrefix = dataFilePrefix
-  for i in range(len(rasterDef["rowDefs"])):
-    if (daq_lib.abort_flag == 1):
-      return 0
-    numsteps = int(rasterDef["rowDefs"][i]["numsteps"])
-    startX = rasterDef["rowDefs"][i]["start"]["x"]
-    endX = rasterDef["rowDefs"][i]["end"]["x"]
-    startY = rasterDef["rowDefs"][i]["start"]["y"]
-    endY = rasterDef["rowDefs"][i]["end"]["y"]
-    deltaX = abs(endX-startX)
-    deltaY = abs(endY-startY)
-    if (deltaX>deltaY): #horizontal raster - I think this was decided in the rasterDefine, and we're just checking
-      startY = startY + (stepsize/2.0)
-      endY = startY
-    else: #vertical raster
-      startX = startX + (stepsize/2.0)
-      endX = startX
-    xRelativeMove = startX
-    yzRelativeMove = startY*math.sin(omegaRad)
-    yyRelativeMove = startY*math.cos(omegaRad)
-    logger.info("x rel move = " + str(xRelativeMove))
-    xMotAbsoluteMove = rasterStartX+xRelativeMove #note we convert relative to absolute moves, using the raster center that was saved in x,y,z
-    yMotAbsoluteMove = rasterStartY-yyRelativeMove
-    zMotAbsoluteMove = rasterStartZ-yzRelativeMove
-    xRelativeMove = endX-startX
-    yRelativeMove = endY-startY
-    
-    yyRelativeMove = yRelativeMove*math.cos(omegaRad)
-    yzRelativeMove = yRelativeMove*math.sin(omegaRad)
-
-    xEnd = xMotAbsoluteMove + xRelativeMove
-    yEnd = yMotAbsoluteMove - yyRelativeMove
-    zEnd = zMotAbsoluteMove - yzRelativeMove
-
-    if (i%2 != 0): #this is to scan opposite direction for snaking
-      xEndSave = xEnd
-      yEndSave = yEnd
-      zEndSave = zEnd
-      xEnd = xMotAbsoluteMove
-      yEnd = yMotAbsoluteMove
-      zEnd = zMotAbsoluteMove
-      xMotAbsoluteMove = xEndSave
-      yMotAbsoluteMove = yEndSave
-      zMotAbsoluteMove = zEndSave
-    if (deltaX>deltaY): #horizontal raster - I think this was decided in the rasterDefine, and we're just checking      
-      stepX = (xEnd-xMotAbsoluteMove)/numsteps
-      stepY = (yEnd-yMotAbsoluteMove)/numsteps
-      stepZ = (zEnd-zMotAbsoluteMove)/numsteps
-    else:
-      stepX = -(xEnd-xMotAbsoluteMove)/numsteps
-      stepY = -(yEnd-yMotAbsoluteMove)/numsteps
-      stepZ = -(zEnd-zMotAbsoluteMove)/numsteps
-    for j in range (0,numsteps): #so maybe I have everything here and just need to bump the appropriate motors each step increment, not sure about signs
-      beamline_lib.mvaDescriptor("sampleX",xMotAbsoluteMove+(j*stepX)+(stepX/2.0),"sampleY",yMotAbsoluteMove-(j*stepY)-(stepY/2.0),"sampleZ",zMotAbsoluteMove-(j*stepZ)-(stepZ/2.0))
-      collectSpec(data_directory_name+"/"+filePrefix+"_"+str(file_number_start),gotoSA=False)    
-  db_lib.updatePriority(rasterReqID,-1)  
-  if (lastOnSample()):  
-    gov_lib.setGovRobot(gov_robot, 'SA')
-  return 1
 
 def setGridRasterParams(xsep,ysep,xstep,ystep,sizex,sizey,stepsize):
   """setGridRasterParams(xsep,ysep,xstep,ystep,sizex,sizey,stepsize)"""
@@ -2246,7 +2178,7 @@ def gridRaster(currentRequest):
       beamline_lib.mvaDescriptor("sampleX",rasterStartX+(j*xsep),"sampleY",rasterStartY+(i*yyRelativeMove),"sampleZ",rasterStartZ+(i*yzRelativeMove))
       beamline_lib.mvaDescriptor("omega",omega)      
       rasterReqID = defineRectRaster(currentRequest,sizex,sizey,stepsize)      
-      snakeRaster(rasterReqID)
+      RE(snakeRaster(rasterReqID))
 
 
 def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
@@ -2254,26 +2186,26 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
   if (rasterType=="Fine"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,90,90,10)
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Coarse"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,630,390,30)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="autoVector"):
     daq_lib.set_field("xrecRasterFlag","100")    
     rasterReqID = defineRectRaster(currentRequest,615,375,15)     
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
   elif (rasterType=="Line"):  
     daq_lib.set_field("xrecRasterFlag","100")    
     beamline_lib.mvrDescriptor("omega",90)
     rasterReqID = defineRectRaster(currentRequest,10,290,10)    
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
     daq_lib.set_field("xrecRasterFlag","100")    
   else:
     rasterReqID = getXrecLoopShape(currentRequest)
     logger.info("snake raster " + str(rasterReqID))
     time.sleep(1) #I think I really need this, not sure why
-    snakeRaster(rasterReqID)
+    RE(snakeRaster(rasterReqID))
 
 def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag
@@ -2431,7 +2363,7 @@ def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of wha
   newReqObj["pos_x"] = hitCoords['x']
   newReqObj["pos_y"] = hitCoords['y']
   newReqObj["pos_z"] = hitCoords['z']
-  newReqObj["fastDP"] = False
+  newReqObj["fastDP"] = True
   newReqObj["fastEP"] = False
   newReqObj["dimple"] = False    
   newReqObj["xia2"] = False
@@ -2891,7 +2823,7 @@ def vectorZebraStepScan(vecRequest):
     setPvDesc("vectorEndZ",z_vec_start+(i*zvecStep)+(zvecStep/2.0))  
     setPvDesc("vectorframeExptime",expTime*1000.0)
     setPvDesc("vectorNumFrames",numImagesPerStep)
-    zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start)
+    RE(zebraDaqNoDet(sweep_start_angle+(i*scanWidthPerStep),scanWidthPerStep,imgWidth,expTime,file_prefix,data_directory_name,file_number_start))
   if (lastOnSample()):  
     gov_lib.setGovRobot(gov_robot, 'SA')
   det_lib.detector_stop_acquire()
@@ -2919,17 +2851,20 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   collect_and_characterize_success = 0
   dna_have_strategy_results = 0
   dna_have_index_results = 0  
-  dg2rd = 3.14159265 / 180.0  
   if (daq_utils.detector_id == "ADSC-Q315"):
     det_radius = 157.5
   elif (daq_utils.detector_id == "ADSC-Q210"):
     det_radius = 105.0
   elif (daq_utils.detector_id == "PILATUS-6"):
     det_radius = 212.0
+  elif daq_utils.detector_id == "EIGER-16" and daq_utils.beamline in ("amx", "nyx"):
+    det_radius = 233.1  # Eiger2-9M
+  elif daq_utils.detector_id == "EIGER-16":  # FMX
+    det_radius = 311.1  # Eiger2-16M
   else: #default Pilatus
     det_radius = 212.0
   theta_radians = 0.0
-  wave = 12398.5/beamline_lib.get_mono_energy() #for now
+  wave = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
   dx = det_radius/(math.tan(2.0*(math.asin(wave/(2.0*dna_res)))-theta_radians))
   logger.info("distance = %s" % dx)
 #skinner - could move distance and wave and scan axis here, leave wave alone for now
@@ -2937,11 +2872,6 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
   dna_image_info = {}
   for i in range(0,int(dna_number_of_images)): # 7/17 no idea what this is
     logger.info("skinner prefix7 = " + prefix[0:7] +  " " + str(start_image_number) + "\n")
-    if (len(prefix)> 8):
-      if ((prefix[0:7] == "postref") and (start_image_number == 1)):
-        logger.info("skinner postref bail\n")
-        time.sleep(float(dna_number_of_images*float(dna_exptime)))        
-        break
   #skinner roi - maybe I can measure and use that for dna_start so that first image is face on.
     colstart = float(dna_start) + (i*(abs(overlap)+float(dna_range)))
     dna_prefix = "ref-"+prefix
@@ -2959,7 +2889,7 @@ def dna_execute_collection3(dna_startIgnore,dna_range,dna_number_of_images,dna_e
     
     dna_filename_list.append(filename) #TODO actually contains directory structure for cbf, but filename of h5
     picture_taken = 1
-  edna_energy_ev = (12.3985/wave) * 1000.0
+  edna_energy_ev = beamline_lib.motorPosFromDescriptor("energy") * 1000.0
   if (daq_utils.beamline == "fmx"):   # a kludge b/c edna wants a square beam, so where making a 4x4 micron beam be the sqrt(1*1.5) for x and y on fmx
     xbeam_size = .004
     ybeam_size = .004
@@ -3147,8 +3077,23 @@ def setAttens(transmission): #where transmission = 0.0-1.0
     setPvDesc(pvKeyName,1)
     logger.info(pvKeyName)
 
-def importSpreadsheet(fname):
-  parseSheet.importSpreadsheet(fname,daq_utils.owner)
+def importSpreadsheet(fname, owner=None):
+  if owner is None:
+    owner = daq_utils.owner
+  parseSheet.importSpreadsheet(fname, owner)
+
+
+def zebraDaqPrep():
+
+  setPvDesc("zebraReset",1)
+  time.sleep(2.0)
+  setPvDesc("zebraTTlSel",31)
+
+  setPvDesc("zebraM1SetPosProc",1)
+  setPvDesc("zebraM2SetPosProc",1)
+  setPvDesc("zebraM3SetPosProc",1)
+  setPvDesc("zebraArmTrigSource",1)
+
 
 def zebraArm():
   setPvDesc("zebraArm",1)
@@ -3195,7 +3140,8 @@ def loop_center_mask():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   beamline_lib.mvrDescriptor("omega",90.0)
   daq_utils.take_crystal_picture(filename="findslice_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopslice.txt"
+  comm_s = f'{C3D_SEARCH_BASE}find_loopslice.txt'
+  logger.debug(f'loop_center_mask: {comm_s}')
   os.system(comm_s)
   os.system("dos2unix res0.txt")
   os.system("echo \"\n\">>res0.txt")    
@@ -3219,7 +3165,8 @@ def loop_center_mask():
 def getLoopSize():
   os.system("cp $CONFIGDIR/bkgrnd.jpg .")
   daq_utils.take_crystal_picture(filename="findsize_0")
-  comm_s = os.environ["PROJDIR"] + "/software/bin/c3d_search -p=$CONFIGDIR/find_loopSize.txt"
+  comm_s = f'{C3D_SEARCH_BASE}find_loopSize.txt'
+  logger.debug(f'getLoopSize: {comm_s}')
   os.system(comm_s)
   os.system("dos2unix loopSizeOut0.txt")
   os.system("echo \"\n\">>loopSizeOut0.txt")    
@@ -3315,7 +3262,7 @@ def loop_center_xrec():
 
   
 
-def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
+def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
 
 #imgWidth will be something like 40 for xtalCenter
@@ -3328,7 +3275,7 @@ def zebraCamDaq(zebra,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,file
   setPvDesc("vectorNumFrames",numImages)    
   setPvDesc("vectorframeExptime",exposurePeriodPerImage*1000.0)
   setPvDesc("vectorHold",0)
-  yield from zebra_daq_prep(zebra)
+  zebraDaqPrep()
   setPvDesc("zebraEncoder",scanEncoder)
   setPvDesc("zebraDirection",0)  #direction 0 = positive
   setPvDesc("zebraGateSelect",0)
@@ -3391,10 +3338,6 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
 
     logger.info("in Zebra Daq Bluesky #1")
     logger.info(f" with vector: {vector_params}")
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
-      return
 
     x_vec_start=vector_params["vecStart"]["x"]
     y_vec_start=vector_params["vecStart"]["y"]
@@ -3420,17 +3363,29 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
-        flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
 
-    flyer.update_parameters(angle_start=angle_start, scan_width=scanWidth, img_width=imgWidth, num_images=num_images, exposure_period_per_image=exposurePeriodPerImage, \
-                   x_start_um=x_vec_start, y_start_um=y_vec_start, z_start_um=z_vec_start, \
-                   x_end_um=x_vec_end, y_end_um=y_vec_end, z_end_um=z_vec_end, \
-                   file_prefix=filePrefix, data_directory_name=data_directory_name, file_number_start=file_number_start,\
-                   x_beam=vector_params["x_beam"], y_beam=vector_params["y_beam"], wavelength=vector_params["wavelength"], det_distance_m=vector_params["det_distance_m"],\
-                   detector_dead_time=detectorDeadTime, scan_encoder=scanEncoder, change_state=changeState, transmission=vector_params["transmission"],\
-                   data_path=data_path)
+    required_parameters = {'angle_start':angle_start, 'scan_width':scanWidth, 'img_width':imgWidth,
+                           'num_images':num_images, 'exposure_period_per_image':exposurePeriodPerImage,
+                           'x_start_um':x_vec_start, 'y_start_um':y_vec_start, 'z_start_um':z_vec_start,
+                           'x_end_um':x_vec_end, 'y_end_um':y_vec_end, 'z_end_um':z_vec_end, 'file_prefix':filePrefix,
+                           'data_directory_name':data_directory_name, 'file_number_start':file_number_start,
+                           'x_beam':vector_params["x_beam"], 'y_beam':vector_params["y_beam"],
+                           'wavelength':vector_params["wavelength"], 'det_distance_m':vector_params["det_distance_m"],
+                           'detector_dead_time':detectorDeadTime, 'scan_encoder':scanEncoder,
+                           'change_state':changeState, 'transmission':vector_params["transmission"],
+                           'data_path':data_path}
+    start_time = time.time()
+    arm_status = flyer.detector_arm(**required_parameters)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait()
+    logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
+      return
+
+    flyer.update_parameters(**required_parameters)
 
     yield from bp.fly([flyer])
 
@@ -3960,7 +3915,7 @@ def fmx_expTime_to_10MGy(beamsizeV = 3.0, beamsizeH = 5.0, vectorL = 100, energy
   if (not os.path.exists("2vb1.pdb")):
     os.system("ln -s $CONFIGDIR/2vb1.pdb .")
     os.system("mkdir rd3d")
-  raddoseLib.fmx_expTime_to_10MGy(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
+  raddoseLib.fmx_expTime(beamsizeV = beamsizeV, beamsizeH = beamsizeH, vectorL = vectorL, energy = energy, wedge = wedge, flux = flux, verbose = verbose)
 #  why doesn't this work? raddoseLib.fmx_expTime_to_10MGy(beamsizeV, beamsizeH, vectorL, energy, wedge, flux, verbose)
 
 def unlockGUI():

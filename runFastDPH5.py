@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2023-1.0/bin/python
+#!/opt/conda_envs/lsdc-server-2023-2-latest/bin/python
 import os
 import sys
 import db_lib
@@ -40,7 +40,7 @@ os.system(comm_s)
 fastDPResultFile = runningDir+"/fast_dp.xml"
 fd = open(fastDPResultFile)
 resultObj = xmltodict.parse(fd.read())
-logger.info("finished fast_dp")
+logger.info(f"finished fast_dp {request_id}")
 resultID = db_lib.addResultforRequest("fastDP",request_id,owner,resultObj,beamline=os.environ["BEAMLINE_ID"])
 newResult = db_lib.getResult(resultID)
 visitName = getBlConfig("visitName")

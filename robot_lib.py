@@ -33,7 +33,6 @@ def unmountRobotSample(gov_robot, puck_pos, pin_pos, samp_id):
   if status != UNMOUNT_STEP_SUCCESSFUL:
       return status
   
-  status = UNMOUNT_SUCCESSFUL
   if robot.control_type() == "Bluesky":
     RE(robot.unmount(gov_robot, puck_pos, pin_pos, samp_id))
   

@@ -49,6 +49,7 @@ from gui.dialog import (
     UserScreenDialog,
 )
 from gui.raster import RasterCell, RasterGroup
+from gui.vector import VectorMarker
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -4293,7 +4294,7 @@ class ControlMain(QtWidgets.QMainWindow):
         }
 
     def getVectorObject(
-        self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None
+        self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None, pointName=None
     ):
         """Creates and returns a vector start or end point
 
@@ -4321,20 +4322,12 @@ class ControlMain(QtWidgets.QMainWindow):
         markWidth = 10
         # TODO: Place vecMarker in such a way that it matches any arbitrary gonioCoords given to this function
         # currently vecMarker will be placed at the center of the sample cam
-        vecMarker = self.scene.addEllipse(
-            self.centerMarker.x()
-            - (markWidth / 2.0)
-            - 1
-            + self.centerMarkerCharOffsetX,
-            self.centerMarker.y()
-            - (markWidth / 2.0)
-            - 1
-            + self.centerMarkerCharOffsetY,
-            markWidth,
-            markWidth,
-            pen,
-            brush,
-        )
+        marker_x = self.centerMarker.x() - (markWidth / 2.0) - 1 + self.centerMarkerCharOffsetX
+        marker_y = self.centerMarker.y() - (markWidth / 2.0) - 1 + self.centerMarkerCharOffsetY
+        
+        vecMarker = VectorMarker(marker_x, marker_y, markWidth, markWidth, pen=pen, 
+                                 brush=brush, parent=self, pointName=pointName)
+        self.scene.addItem(vecMarker)
         if not gonioCoords:
             gonioCoords = {
                 "x": self.sampx_pv.get(),
@@ -4377,7 +4370,7 @@ class ControlMain(QtWidgets.QMainWindow):
             brush = QtGui.QBrush(QtCore.Qt.red)
         else:
             brush = QtGui.QBrush(QtCore.Qt.blue)
-        point = self.getVectorObject(prevVectorPoint=point, brush=brush)
+        point = self.getVectorObject(prevVectorPoint=point, brush=brush, pointName=pointName)
         setattr(self, pointName, point)
         if self.vectorStart and self.vectorEnd:
             self.drawVector()
@@ -4404,7 +4397,6 @@ class ControlMain(QtWidgets.QMainWindow):
             + self.centerMarkerCharOffsetY,
             pen,
         )
-        self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
 
     def clearVectorCB(self):
         if self.vectorStart:

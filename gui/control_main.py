@@ -203,8 +203,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.raddoseTimer.setInterval(1000)
         self.raddoseTimer.timeout.connect(self.spawnRaddoseThread)
 
-        self.createSampleTab()
         self.vector_widget = VectorWidget(main_window=self)
+        self.createSampleTab()
 
         self.initCallbacks()
         if self.scannerType != "PI":

@@ -12,7 +12,7 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         self.blue_color = QtCore.Qt.GlobalColor.blue
         brush = kwargs.pop("brush", QtGui.QBrush())
         pen = kwargs.pop("pen", QtGui.QPen(self.blue_color))
-        self.parent = kwargs.pop("parent", None)
+        self.parent: VectorWidget = kwargs.pop("parent", None)
         self.point_name = kwargs.pop("point_name", None)
         self.coords = kwargs.pop("coords")
         self.gonio_coords = kwargs.pop("gonio_coords")
@@ -27,18 +27,18 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            if self.parent and self.parent.vecLine:
-                self.parent.scene.removeItem(self.parent.vecLine)
-                self.parent.drawVector()
+            if self.parent and self.parent.vector_line:
+                self.parent.main_window.scene.removeItem(self.parent.vector_line)
+                self.parent.main_window.drawVector()
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         print("New position:", self.pos())
         if self.parent:
-            micron_x = self.parent.screenXPixels2microns(self.pos().x())
-            micron_y = self.parent.screenYPixels2microns(self.pos().y())
+            micron_x = self.parent.main_window.screenXPixels2microns(self.pos().x())
+            micron_y = self.parent.main_window.screenYPixels2microns(self.pos().y())
             if self.point_name and getattr(self.parent, self.point_name):
-                omega = self.parent.omegaRBV_pv.get()
+                omega = self.parent.main_window.omegaRBV_pv.get()
                 point: VectorMarker = getattr(self.parent, self.point_name)
                 (
                     gonio_offset_x,
@@ -47,9 +47,9 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
                     omega,
                 ) = daq_utils.lab2gonio(micron_x, -micron_y, 0, omega)
                 gonio_coords = {
-                    "x": self.parent.sampx_pv.get() + gonio_offset_x,
-                    "y": self.parent.sampy_pv.get() + gonio_offset_y,
-                    "z": self.parent.sampz_pv.get() + gonio_offset_z,
+                    "x": self.parent.main_window.sampx_pv.get() + gonio_offset_x,
+                    "y": self.parent.main_window.sampy_pv.get() + gonio_offset_y,
+                    "z": self.parent.main_window.sampz_pv.get() + gonio_offset_z,
                     "omega": omega,
                 }
                 vectorCoords = self.parent.transform_vector_coords(
@@ -64,12 +64,10 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
 class VectorWidget(QtWidgets.QWidget):
     def __init__(
         self,
-        parent: QtWidgets.QWidget | None = None,
-        flags=...,
-        scene: QtWidgets.QGraphicsScene = ...,
-        main_window: ControlMain = ...,
+        main_window: "ControlMain",
+        parent: "QtWidgets.QWidget | None" = None,
     ) -> None:
-        super().__init__(parent, flags)
+        super().__init__(parent)
         self.main_window = main_window
         self.vector_start: "None | VectorMarker" = None
         self.vector_end: "None | VectorMarker" = None
@@ -114,7 +112,7 @@ class VectorWidget(QtWidgets.QWidget):
         pos_rbv: int,
         mot_id: str,
         center_marker: QtCore.QPointF,
-        offset: tuple[int, int],
+        offset: "tuple[int, int]",
     ):
         if (
             self.vector_start is not None
@@ -134,8 +132,8 @@ class VectorWidget(QtWidgets.QWidget):
                 self.vector_end.y() + self.vector_start.center_marker.y() + offset[1],
             )
 
-    def get_length(self) -> tuple[int, int, int, np.floating[typing.Any]]:
-        trans_total = np.floating(0.0)
+    def get_length(self) -> "tuple[int, int, int, np.floating[typing.Any]]":
+        trans_total = 0.0
         x_vec = y_vec = z_vec = 0
 
         if self.vector_start and self.vector_end:
@@ -153,7 +151,7 @@ class VectorWidget(QtWidgets.QWidget):
 
     def get_length_and_speed(
         self, osc_end: float, osc_range: float, exposure_time: float
-    ) -> tuple[int, int, int, np.floating[typing.Any], np.floating[typing.Any]]:
+    ) -> "tuple[int, int, int, np.floating[typing.Any], np.floating[typing.Any]]":
         total_exposure_time: float = (osc_end / osc_range) * exposure_time
         x_vec, y_vec, z_vec, vector_length = self.get_length()
         speed = vector_length / total_exposure_time
@@ -188,11 +186,11 @@ class VectorWidget(QtWidgets.QWidget):
         if self.vector_start and self.vector_end:
             self.draw_vector(center, scene)
 
-    def draw_vector(self, center: tuple[float, float], scene: QtWidgets.QGraphicsScene):
+    def draw_vector(self, center: "tuple[float, float]", scene: QtWidgets.QGraphicsScene):
         pen = QtGui.QPen(self.blue_color)
 
         if self.vector_start is not None and self.vector_end is not None:
-            self.vecLine = scene.addLine(
+            self.vector_line = scene.addLine(
                 center[0] + self.vector_start.x(),
                 center[1] + self.vector_start.y(),
                 center[0] + self.vector_end.x(),
@@ -266,9 +264,9 @@ class VectorWidget(QtWidgets.QWidget):
         if self.vector_end:
             scene.removeItem(self.vector_end)
             self.vector_end = None
-        if self.vecLine:
-            scene.removeItem(self.vecLine)
-            self.vecLine = None
+        if self.vector_line:
+            scene.removeItem(self.vector_line)
+            self.vector_line = None
 
     def transform_vector_coords(
         self, prev_coords: "dict[str, float]", current_raw_coords: "dict[str, float]"

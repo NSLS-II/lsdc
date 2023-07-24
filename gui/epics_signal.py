@@ -1,6 +1,5 @@
-from PyQt5.QtCore import pyqtSignal, QObject
+from qtpy.QtCore import Signal, QObject
 from epics import PV
-import threading
 
 
 class EpicsQObject(QObject):
@@ -11,7 +10,7 @@ class EpicsQObject(QObject):
     """
 
     # Define the PyQt signal
-    epics_pv_changed = pyqtSignal(object)
+    epics_pv_changed = Signal(object)
 
     def __init__(self, pv_name, qt_callback, use_string=False, pv_callback=None):
         super().__init__()
@@ -33,3 +32,6 @@ class EpicsQObject(QObject):
 
     def get(self):
         return self.pv.get()
+
+    def put(self, *args, **kwargs):
+        self.pv.put(*args, **kwargs)

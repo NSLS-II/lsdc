@@ -158,7 +158,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
         self.gripTemp_pv = EpicsQObject(daq_utils.pvLookupDict["gripTemp"], self.processGripTemp)
         if getBlConfig(CRYOSTREAM_ONLINE):
-            self.cryostreamTemp_pv = EpicsQObject(cryostreamTempPV[daq_utils.beamline], self.processCryostreamTemp))
+            self.cryostreamTemp_pv = EpicsQObject(cryostreamTempPV[daq_utils.beamline], self.processCryostreamTemp)
         if daq_utils.beamline == "fmx":
             self.slit1XGapSP_pv = PV(f"{daq_utils.motor_dict['slit1XGap']}.VAL")
             self.slit1YGapSP_pv = PV(f"{daq_utils.motor_dict['slit1YGap']}.VAL")
@@ -4792,7 +4792,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.overlayColorActionGroup.setExclusive(True)
         
         # Connect all of the trigger callbacks to their respective actions
-        for color_name, action in self.overlay_actions.keys():
+        for color_name, action in self.overlay_actions.items():
             color = colors[color_name]
             action.triggered.connect(lambda: self.colorOverlayTriggeredCB(color))
             self.overlayColorActionGroup.addAction(action)

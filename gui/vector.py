@@ -6,11 +6,13 @@ import daq_utils
 if typing.TYPE_CHECKING:
     from gui.control_main import ControlMain
 
-
-class VectorMarker(QtWidgets.QGraphicsEllipseItem):
+class VectorMarkerSignals(QtCore.QObject):
     marker_pos_changed = QtCore.Signal(object)
     marker_dropped = QtCore.Signal(object)
 
+
+class VectorMarker(QtWidgets.QGraphicsEllipseItem):
+    
     def __init__(self, *args, **kwargs):
         self.blue_color = QtCore.Qt.GlobalColor.blue
         brush = kwargs.pop("brush", QtGui.QBrush())
@@ -27,16 +29,31 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         self.setFlag(
             QtWidgets.QGraphicsEllipseItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
+        self.signals = VectorMarkerSignals()
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            self.marker_pos_changed.emit(value)
+            self.signals.marker_pos_changed.emit(value)
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         print("New position:", self.pos())
-        self.marker_dropped.emit(self)
+        self.signals.marker_dropped.emit(self)
         return super().mouseReleaseEvent(event)
+    
+    def hoverEnterEvent(self, event):
+        cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
+        self.setCursor(cursor)
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+        super().hoverLeaveEvent(event)
+
+    def mousePressEvent(self, event: "QGraphicsSceneMouseEvent") -> None:
+        cursor = QtGui.QCursor(QtCore.Qt.ClosedHandCursor)
+        self.setCursor(cursor)
+        super().mousePressEvent(event)
 
 
 class VectorWidget(QtWidgets.QWidget):
@@ -235,8 +252,8 @@ class VectorWidget(QtWidgets.QWidget):
             gonio_coords=gonio_coords,
             center_marker=self.main_window.centerMarker,
         )
-        vecMarker.marker_dropped.connect(self.update_marker_position)
-        vecMarker.marker_pos_changed.connect(self.update_vector_position)
+        vecMarker.signals.marker_dropped.connect(self.update_marker_position)
+        vecMarker.signals.marker_pos_changed.connect(self.update_vector_position)
         return vecMarker
 
     def update_vector_position(self, value):

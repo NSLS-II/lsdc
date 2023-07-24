@@ -8,6 +8,9 @@ if typing.TYPE_CHECKING:
 
 
 class VectorMarker(QtWidgets.QGraphicsEllipseItem):
+    marker_pos_changed = QtCore.Signal(object)
+    marker_dropped = QtCore.Signal(object)
+
     def __init__(self, *args, **kwargs):
         self.blue_color = QtCore.Qt.GlobalColor.blue
         brush = kwargs.pop("brush", QtGui.QBrush())
@@ -27,37 +30,12 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
-            if self.parent and self.parent.vector_line:
-                self.parent.main_window.scene.removeItem(self.parent.vector_line)
-                self.parent.main_window.drawVector()
+            self.marker_pos_changed.emit(value)
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
         print("New position:", self.pos())
-        if self.parent:
-            micron_x = self.parent.main_window.screenXPixels2microns(self.pos().x())
-            micron_y = self.parent.main_window.screenYPixels2microns(self.pos().y())
-            if self.point_name and getattr(self.parent, self.point_name):
-                omega = self.parent.main_window.omegaRBV_pv.get()
-                point: VectorMarker = getattr(self.parent, self.point_name)
-                (
-                    gonio_offset_x,
-                    gonio_offset_y,
-                    gonio_offset_z,
-                    omega,
-                ) = daq_utils.lab2gonio(micron_x, -micron_y, 0, omega)
-                gonio_coords = {
-                    "x": self.parent.main_window.sampx_pv.get() + gonio_offset_x,
-                    "y": self.parent.main_window.sampy_pv.get() + gonio_offset_y,
-                    "z": self.parent.main_window.sampz_pv.get() + gonio_offset_z,
-                    "omega": omega,
-                }
-                vectorCoords = self.parent.transform_vector_coords(
-                    point.coords, gonio_coords
-                )
-                point.coords = vectorCoords
-                point.gonio_coords = gonio_coords
-
+        self.marker_dropped.emit(self)
         return super().mouseReleaseEvent(event)
 
 
@@ -186,7 +164,9 @@ class VectorWidget(QtWidgets.QWidget):
         if self.vector_start and self.vector_end:
             self.draw_vector(center, scene)
 
-    def draw_vector(self, center: "tuple[float, float]", scene: QtWidgets.QGraphicsScene):
+    def draw_vector(
+        self, center: "tuple[float, float]", scene: QtWidgets.QGraphicsScene
+    ):
         pen = QtGui.QPen(self.blue_color)
 
         if self.vector_start is not None and self.vector_end is not None:
@@ -255,7 +235,39 @@ class VectorWidget(QtWidgets.QWidget):
             gonio_coords=gonio_coords,
             center_marker=self.main_window.centerMarker,
         )
+        vecMarker.marker_dropped.connect(self.update_marker_position)
+        vecMarker.marker_pos_changed.connect(self.update_vector_position)
         return vecMarker
+
+    def update_vector_position(self, value):
+        if self.vector_line:
+            self.main_window.scene.removeItem(self.vector_line)
+            self.main_window.drawVector()
+
+    def update_marker_position(self, point: VectorMarker):
+        # First convert the distance moved by the point from pixels to microns
+        micron_x = self.main_window.screenXPixels2microns(point.pos().x())
+        micron_y = self.main_window.screenYPixels2microns(point.pos().y())
+        omega = self.main_window.omegaRBV_pv.get()
+
+        # Then translate the delta from microns in the lab co-ordinate system to gonio
+        (
+            gonio_offset_x,
+            gonio_offset_y,
+            gonio_offset_z,
+            omega,
+        ) = daq_utils.lab2gonio(micron_x, -micron_y, 0, omega)
+
+        # Then add the delta to the current gonio co-ordinates
+        gonio_coords = {
+            "x": self.main_window.sampx_pv.get() + gonio_offset_x,
+            "y": self.main_window.sampy_pv.get() + gonio_offset_y,
+            "z": self.main_window.sampz_pv.get() + gonio_offset_z,
+            "omega": omega,
+        }
+        vectorCoords = self.transform_vector_coords(point.coords, gonio_coords)
+        point.coords = vectorCoords
+        point.gonio_coords = gonio_coords
 
     def clear_vector(self, scene: QtWidgets.QGraphicsScene):
         if self.vector_start:

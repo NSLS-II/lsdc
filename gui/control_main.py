@@ -3111,7 +3111,7 @@ class ControlMain(QtWidgets.QMainWindow):
             reqID=rasterReq["uid"],
             rasterHeatJpeg=jpegImageFilename,
         )
-        self.send_to_server(f"ispybLib.insertRasterResult('{rasterReq['uid']}', '{visitName}'")
+        self.send_to_server(f"ispybLib.insertRasterResult('{rasterReq['uid']}', '{visitName}')")
 
     def reFillPolyRaster(self):
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())

@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 #12/19 - I'm leaving all commented lines alone on this. Karl Levik, DLS, is an immense help with this.
 
-conf_file = os.environ["CONFIGDIR"] + "ispybConfig.cfg"
+conf_file = "/etc/ispyb/ispybConfig.cfg"
 visit = 'mx99999-1'
 # Get a list of request dicts
 #request_dicts = lsdb2.getColRequestsByTimeInterval('2018-02-14T00:00:00','2018-02-15T00:00:00')

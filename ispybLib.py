@@ -20,7 +20,7 @@ visit = 'mx99999-1'
 #request_dicts = lsdb2.getColRequestsByTimeInterval('2018-02-14T00:00:00','2018-02-15T00:00:00')
 
 # Connect to ISPyB, get the relevant data area objects
-conn = ispyb.open(credentials=conf_file)
+conn = ispyb.open(conf_file)
 core = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.CORE, conn)
 mxacquisition = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXACQUISITION, conn)
 mxprocessing = ispyb.factory.create_data_area(ispyb.factory.DataAreaType.MXPROCESSING, conn)
@@ -57,7 +57,6 @@ def maxVisitNumfromProposal(propNum):
   
 
 def createPerson(firstName,lastName,loginName):
-  return
   params = core.get_person_params()  
   params['given_name'] = firstName
   params['family_name'] = lastName
@@ -67,7 +66,6 @@ def createPerson(firstName,lastName,loginName):
   
 
 def createProposal(propNum,PI_login="boaty"):
-  return
   pid = personIdFromLogin(PI_login)
   if (pid == 0):
     createPerson("Not","Sure",PI_login)
@@ -82,7 +80,6 @@ def createProposal(propNum,PI_login="boaty"):
   cnx.commit()  #not sure why I needed to do this. Maybe mistake in stored proc?
 
 def createVisitName(propNum): # this is for the GUI to know what a datapath would be in row_clicked
-  return
   logger.info("creating visit Name for propnum " + str(propNum))
   propID = proposalIdFromProposal(propNum)
   if (propID == 0): #proposal doesn't exist, just create and assign to boaty
@@ -98,7 +95,6 @@ def createVisitName(propNum): # this is for the GUI to know what a datapath woul
 
 
 def createVisit(propNum):
-  return
   visitName, newVisitNum = createVisitName(propNum)
   personID = personIdFromProposal(propNum)
   params = core.get_session_for_proposal_code_number_params()
@@ -167,7 +163,6 @@ def createVisit(propNum):
   return visitName  
 
 def addPersonToProposal(personLogin,propNum):
-  return
   personID = personIdFromLogin(personLogin)
   if (personID == 0):
     createPerson("Not","Sure",personLogin)
@@ -185,7 +180,6 @@ def addPersonToProposal(personLogin,propNum):
   
 
 def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal):
-  return
   params = mxprocessing.get_quality_indicators_params()
   params['datacollectionid'] = dc_id
   params['imageNumber'] = imageNumber
@@ -198,7 +192,6 @@ def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,
 
 def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None): #xmlfilename for fastDP
 #keep in mind that request type can be standard and result type be fastDP - multiple results per req.
- return
 
  try:
    sessionid = core.retrieve_visit_id(visitName)
@@ -337,7 +330,6 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
 
 
 def createDataCollection(directory, filePrefix, jpegImageFilename, params, request_obj, sessionid):
-    return
     params['starttime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     params['endtime'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
     dcg_id = mxacquisition.insert_data_collection_group(list(params.values()))
@@ -388,7 +380,6 @@ def createDataCollection(directory, filePrefix, jpegImageFilename, params, reque
 #           params['overlap'] = 89.0
                  
 def insertRasterResult(request,visitName): 
- return
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:

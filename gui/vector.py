@@ -30,6 +30,7 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
             QtWidgets.QGraphicsEllipseItem.GraphicsItemFlag.ItemSendsGeometryChanges
         )
         self.signals = VectorMarkerSignals()
+        self.setAcceptHoverEvents(True)
 
     def itemChange(self, change, value):
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
@@ -37,15 +38,14 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        print("New position:", self.pos())
+        cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
+        self.setCursor(cursor)
         self.signals.marker_dropped.emit(self)
         return super().mouseReleaseEvent(event)
 
     def hoverEnterEvent(self, event):
         cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
         self.setCursor(cursor)
-        if self.cursor.shape() != cursor:
-            self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):
@@ -180,6 +180,7 @@ class VectorWidget(QtWidgets.QWidget):
         )
         setattr(self, point_name, point)
         scene.addItem(point)
+        point.setZValue(2.0)
         if self.vector_start and self.vector_end:
             self.draw_vector(center, scene)
 

@@ -6,13 +6,13 @@ import daq_utils
 if typing.TYPE_CHECKING:
     from gui.control_main import ControlMain
 
+
 class VectorMarkerSignals(QtCore.QObject):
     marker_pos_changed = QtCore.Signal(object)
     marker_dropped = QtCore.Signal(object)
 
 
 class VectorMarker(QtWidgets.QGraphicsEllipseItem):
-    
     def __init__(self, *args, **kwargs):
         self.blue_color = QtCore.Qt.GlobalColor.blue
         brush = kwargs.pop("brush", QtGui.QBrush())
@@ -40,10 +40,12 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         print("New position:", self.pos())
         self.signals.marker_dropped.emit(self)
         return super().mouseReleaseEvent(event)
-    
+
     def hoverEnterEvent(self, event):
         cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
         self.setCursor(cursor)
+        if self.cursor.shape() != cursor:
+            self.setCursor(QtCore.Qt.CursorShape.PointingHandCursor)
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):

@@ -162,7 +162,7 @@ class VectorWidget(QtWidgets.QWidget):
     ):
         point = getattr(self, point_name)
         if point:
-            scene.removeItem(point["graphicsitem"])
+            scene.removeItem(point)
             if self.vector_line:
                 scene.removeItem(self.vector_line)
         if point_name == "vector_end":

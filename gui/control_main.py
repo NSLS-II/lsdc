@@ -17,7 +17,7 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 
 import albulaUtils
 import daq_utils
@@ -26,6 +26,7 @@ import lsdcOlog
 from config_params import (
     CRYOSTREAM_ONLINE,
     HUTCH_TIMER_DELAY,
+    SERVER_CHECK_DELAY,
     RASTER_GUI_XREC_FILL_DELAY,
     SAMPLE_TIMER_DELAY,
     VALID_DET_DIST,
@@ -50,7 +51,7 @@ from gui.dialog import (
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
-from threads import RaddoseThread, VideoThread
+from threads import RaddoseThread, VideoThread, ServerCheckThread
 
 logger = logging.getLogger()
 
@@ -1390,21 +1391,25 @@ class ControlMain(QtWidgets.QMainWindow):
             self.vidActionRasterDefRadio.setDisabled(True)
             self.vidActionDefineCenterRadio.setDisabled(True)
 
-        hutchCornerCamThread = VideoThread(
+        self.hutchCornerCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchCornerCamURL")
         )
-        hutchCornerCamThread.frame_ready.connect(
+        self.hutchCornerCamThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item_HutchCorner, frame)
         )
-        hutchCornerCamThread.start()
+        self.hutchCornerCamThread.start()
 
-        hutchTopCamThread = VideoThread(
+        self.hutchTopCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchTopCamURL")
         )
-        hutchTopCamThread.frame_ready.connect(
+        self.hutchTopCamThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame)
         )
-        hutchTopCamThread.start()
+        self.hutchTopCamThread.start()
+        serverCheckThread = ServerCheckThread(
+            parent=self, delay=SERVER_CHECK_DELAY)
+        serverCheckThread.visit_dir_changed.connect(QApplication.instance().quit)
+        serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
@@ -1698,20 +1703,16 @@ class ControlMain(QtWidgets.QMainWindow):
             if reqID != None:
                 filePrefix = db_lib.getRequestByID(reqID)["request_obj"]["file_prefix"]
                 imagePath = (
-                    os.getcwd() + "/snapshots/" + filePrefix + str(int(now)) + ".jpg"
+                    f"{getBlConfig('visitDirectory')}/snapshots/{filePrefix}{int(now)}.jpg"
                 )
             else:
                 if self.dataPathGB.prefix_ledit.text() != "":
                     imagePath = (
-                        os.getcwd()
-                        + "/snapshots/"
-                        + str(self.dataPathGB.prefix_ledit.text())
-                        + str(int(now))
-                        + ".jpg"
+                        f"{getBlConfig('visitDirectory')}/snapshots/{self.dataPathGB.prefix_ledit.text()}{int(now)}.jpg"
                     )
                 else:
                     imagePath = (
-                        os.getcwd() + "/snapshots/capture" + str(int(now)) + ".jpg"
+                        f"{getBlConfig('visitDirectory')}/snapshots/capture{int(now)}.jpg"
                     )
         else:
             imagePath = rasterHeatJpeg
@@ -4976,7 +4977,11 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def closeAll(self):
-        QtWidgets.QApplication.closeAllWindows()
+        self.hutchCornerCamThread.stop()
+        self.hutchTopCamThread.stop()
+        self.hutchCornerCamThread.wait()
+        self.hutchTopCamThread.wait()
+        QtWidgets.QApplication.instance().quit()
 
     def initCallbacks(self):
         self.beamSizeSignal.connect(self.processBeamSize)

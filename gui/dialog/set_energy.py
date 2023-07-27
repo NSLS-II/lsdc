@@ -25,6 +25,7 @@ class DCM(Device):
 
 
 class SetEnergyDialog(QtWidgets.QDialog):
+    energy_changed_signal = QtCore.Signal(object)
     def __init__(self, parent: "ControlMain"):
         self.hdcm = DCM('XF:17IDA-OP:FMX{Mono:DCM', name='hdcm')
         super().__init__(parent)
@@ -68,12 +69,15 @@ class SetEnergyDialog(QtWidgets.QDialog):
 
         self.hdcm.e.user_readback.subscribe(self.update_energy, run=True)
 
+        self.energy_changed_signal.connect(lambda value: self.current_energy_value_label.setText(f"{value:.2f}"))
+
         self.setLayout(layout)
         self.setModal(True)
         self.show()
 
-    def update_energy(self, value):
-        print(value)
+    def update_energy(self, value, old_value, **kwargs):
+        self.energy_changed_signal.emit(value)
+        
     
     def check_value(self):
         if abs(float(self.setpoint_edit.text()) - self.hdcm.e.user_readback.get()) > 10:
@@ -85,15 +89,13 @@ class SetEnergyDialog(QtWidgets.QDialog):
             
             
         else:
-            comm_s = 'mvaDescriptor("energy",' + str(self.energy_ledit.text()) + ")"
+            comm_s = 'mvaDescriptor("energy",' + str(self.setpoint_edit.text()) + ")"
             print(f"executing {comm_s}")
-            # self.parent().send_to_server(comm_s)
+            self.parent().send_to_server(comm_s)
 
     def set_energy(self):
-        import traceback
-        print("set_energy was called")
-        traceback.print_stack()
-        print(r'Executing: self.parent().send_to_server(f"setELsdc({self.setpoint_edit.text()})")')
+        print('Executing: ')
+        self.parent().send_to_server(f"set_energy({self.setpoint_edit.text()})")
 
     def cancel_set_energy(self):
         print("Clicked cancel")

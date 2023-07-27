@@ -38,6 +38,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
+from setenergy_lsdc import setELsdc
 
 try:
   import ispybLib
@@ -85,6 +86,9 @@ def abortBS():
       RE.abort()
     except super_state_machine.errors.TransitionError:
       logger.error("caught BS")
+  
+def set_energy(energy):
+  RE(setELsdc(energy))
 
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)

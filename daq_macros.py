@@ -29,6 +29,7 @@ from string import Template
 from collections import OrderedDict
 from threading import Thread
 from config_params import *
+from ophyd.status import SubscriptionStatus
 from kafka_producer import send_kafka_message
 
 import gov_lib
@@ -3693,10 +3694,21 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                            'change_state':changeState, 'transmission':vector_params["transmission"],
                            'data_path':data_path}
     start_time = time.time()
-    #flyer.detector_arm(**required_parameters)
+    flyer.detector_arm(**required_parameters)
+
+    def armed_callback(value, old_value, **kwargs):
+        if old_value == 0 and value == 1:
+            return True
+        return False
+
+    arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
+
+    flyer.detector.cam.acquire.put(1)
+
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    #arm_status.wait()
     time.sleep(0.5)
+    govStatus.wait()
+    arm_status.wait()
     logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
       logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")

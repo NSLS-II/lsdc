@@ -48,6 +48,7 @@ from gui.dialog import (
     SnapCommentDialog,
     StaffScreenDialog,
     UserScreenDialog,
+    SetEnergyDialog,
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
@@ -562,7 +563,8 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams3.addWidget(colEnergyLabel)
         hBoxColParams3.addWidget(self.energyReadback)
         hBoxColParams3.addWidget(energySPLabel)
-        hBoxColParams3.addWidget(self.energy_ledit)
+        # hBoxColParams3.addWidget(self.energy_ledit)
+        hBoxColParams3.addWidget(moveEnergyButton)
         hBoxColParams22.addWidget(colTransmissionLabel)
         hBoxColParams22.addWidget(self.transmissionReadback_ledit)
         hBoxColParams22.addWidget(transmisionSPLabel)
@@ -1411,8 +1413,7 @@ class ControlMain(QtWidgets.QMainWindow):
             lambda frame: self.updateCam(self.pixmap_item_HutchTop, frame)
         )
         self.hutchTopCamThread.start()
-        serverCheckThread = ServerCheckThread(
-            parent=self, delay=SERVER_CHECK_DELAY)
+        serverCheckThread = ServerCheckThread(parent=self, delay=SERVER_CHECK_DELAY)
         serverCheckThread.visit_dir_changed.connect(QApplication.instance().quit)
         serverCheckThread.start()
 
@@ -1707,18 +1708,12 @@ class ControlMain(QtWidgets.QMainWindow):
         if rasterHeatJpeg == None:
             if reqID != None:
                 filePrefix = db_lib.getRequestByID(reqID)["request_obj"]["file_prefix"]
-                imagePath = (
-                    f"{getBlConfig('visitDirectory')}/snapshots/{filePrefix}{int(now)}.jpg"
-                )
+                imagePath = f"{getBlConfig('visitDirectory')}/snapshots/{filePrefix}{int(now)}.jpg"
             else:
                 if self.dataPathGB.prefix_ledit.text() != "":
-                    imagePath = (
-                        f"{getBlConfig('visitDirectory')}/snapshots/{self.dataPathGB.prefix_ledit.text()}{int(now)}.jpg"
-                    )
+                    imagePath = f"{getBlConfig('visitDirectory')}/snapshots/{self.dataPathGB.prefix_ledit.text()}{int(now)}.jpg"
                 else:
-                    imagePath = (
-                        f"{getBlConfig('visitDirectory')}/snapshots/capture{int(now)}.jpg"
-                    )
+                    imagePath = f"{getBlConfig('visitDirectory')}/snapshots/capture{int(now)}.jpg"
         else:
             imagePath = rasterHeatJpeg
         logger.info("saving " + imagePath)
@@ -2709,6 +2704,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server(comm_s)
 
     def moveEnergyCB(self):
+        """
         energyRequest = float(str(self.energy_ledit.text()))
         if abs(energyRequest - self.energy_pv.get()) > 10.0:
             self.popupServerMessage("Energy change must be less than 10 ev")
@@ -2717,6 +2713,8 @@ class ControlMain(QtWidgets.QMainWindow):
             comm_s = 'mvaDescriptor("energy",' + str(self.energy_ledit.text()) + ")"
             logger.info(comm_s)
             self.send_to_server(comm_s)
+        """
+        set_energy = SetEnergyDialog(parent=self)
 
     def setLifetimeCB(self, lifetime):
         if hasattr(self, "sampleLifetimeReadback_ledit"):

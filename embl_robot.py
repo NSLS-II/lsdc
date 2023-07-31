@@ -262,9 +262,6 @@ class EMBLRobot:
             else:
               robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
               if (robotStatus != "Ready"):
-                if (daq_utils.beamline == "fmx"):
-                  daq_macros.homePins()
-                  time.sleep(3.0)
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
                   return MOUNT_FAILURE
@@ -361,6 +358,8 @@ class EMBLRobot:
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
           gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
+        if daq_utils.beamline == "fmx":
+            beamline_lib.mvaDescriptor("omega", 0)
         daq_lib.setRobotGovState("SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

@@ -4058,8 +4058,8 @@ class ControlMain(QtWidgets.QMainWindow):
                     x_vec, y_vec, z_vec, trans_total = self.updateVectorLengthAndSpeed()
                     framesPerPoint = int(self.vectorFPP_ledit.text())
                     vectorParams = {
-                        "vecStart": self.vector_widget.vector_start["coords"],
-                        "vecEnd": self.vector_widget.vector_end["coords"],
+                        "vecStart": self.vector_widget.vector_start.coords,
+                        "vecEnd": self.vector_widget.vector_end.coords,
                         "x_vec": x_vec,
                         "y_vec": y_vec,
                         "z_vec": z_vec,

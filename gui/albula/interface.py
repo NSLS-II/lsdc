@@ -20,13 +20,9 @@ class AlbulaInterface:
             self.open(args, kwargs)
 
     def _call(self, code):
-        response = ""
         if self._process:
             print(code, file=self._process.stdin, flush=True)
 
-            if self._process.stdout:
-                response = self._process.stdout.readline()
-        return response
 
     def open_file(self, filename):
         if isinstance(filename, str):
@@ -36,9 +32,7 @@ class AlbulaInterface:
             index = filename[1]
             filename = filename[0]
             
-        print(filename, index)
-        result = self._call(f'albulaController.disp_file("{filename}", {index})')
-        print(result)
+        self._call(f'albulaController.disp_file("{filename}", {index})')
 
     def close(self):
         if self._process is None:
@@ -46,6 +40,7 @@ class AlbulaInterface:
         if self._process.stdin:
             self._process.stdin.close()
         self._process.terminate()
+        
 
     def open(self, args, kwargs):
         if self._process is not None:
@@ -65,3 +60,4 @@ class AlbulaInterface:
             self._call(
                 f'albulaController.setup_monitor("{kwargs["ip"]}", "{kwargs["gov_message_pv_name"]}")'
             )
+

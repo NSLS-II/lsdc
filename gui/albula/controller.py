@@ -65,21 +65,20 @@ class AlbulaController:
         self.gov_message_pv.add_callback(self.handle_monitor)
         self._stop = threading.Event()
         self._stop.clear()
-        self.imageDaemon = threading.Thread(target=self.updateImage, args=())
-        self.imageDaemon.daemon = True
         self.startup()
         return json.dumps({"message": "monitor setup complete"})
 
     def handle_monitor(self, char_value, **kwargs):
         if char_value == GovState.DA.value:
             self.startup()
+            self._stop.clear()
+            self.imageDaemon = threading.Thread(target=self.updateImage, args=())
             if not self.imageDaemon.is_alive():
                 self.imageDaemon.start()
         else:
-            self._stop.clear()
+            self._stop.set()
 
     def startup(self):
-        print('Starting up... startup()')
         if self.albulaFrame is None:
             logger.debug("starting up albula")
             self.albulaFrame = dectris.albula.openMainFrame()
@@ -88,18 +87,6 @@ class AlbulaController:
         if self.albulaSubFrame is None:
             self.albulaSubFrame = self.albulaFrame.openSubFrame()
             self.albulaSubFrame.setColorMode("Heat")
-        
-        """
-        if self.monitorSubFrame is None:
-            self.monitorSubFrame = self.albulaFrame.openSubFrame()
-            self.monitorSubFrame.setColorMode("Heat")
-        else:
-            try: 
-                self.monitorSubFrame.enableClose()
-            except:
-                self.monitorSubFrame = self.albulaFrame.openSubFrame()
-                self.monitorSubFrame.setColorMode("Heat")
-        """
         
 
 
@@ -113,11 +100,9 @@ class AlbulaController:
 
     def disp_file(self, filename, index=None):
         self.startup()
-        print(f"Loaded filename: {filename}")
         try:
             if not (self.currentMasterH5 == filename) and self.albulaSubFrame:
                 logger.info("reading file: %s" % filename)
-                print("reading file: %s" % filename)
                 self.albulaSubFrame.loadFile(filename)
                 self.currentMasterH5 = filename
                 # Sleep to allow Albula to load file. Otherwise the following goTo() is ignored
@@ -137,9 +122,6 @@ class AlbulaController:
         Run an endless loop, stopped by keyboard interrupt or exception
         """
         self.startup()
-
-        # Temp to be removed
-        # self.imageDaemon.start()
 
         while not self._stop.is_set():
             try:
@@ -163,7 +145,6 @@ class AlbulaController:
                 data = self.getEigerMonitorImage()
                 dimage = dectris.albula.DImage(data)
                 self.albulaSubFrame.loadImage(dimage)
-
                 self.albulaSubFrame.setTitle("MONITOR")
             except Exception as e:
                 logging.error("updateImage exception: {}".format(e))

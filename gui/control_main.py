@@ -1485,6 +1485,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.processSampMove(self.sampx_pv.get(), "x")
                     self.processSampMove(self.sampy_pv.get(), "y")
                     self.processSampMove(self.sampz_pv.get(), "z")
+                    self.processSampMove(self.omega_pv.get(), "omega")
         if self.vectorStart != None:
             self.processSampMove(self.sampx_pv.get(), "x")
             self.processSampMove(self.sampy_pv.get(), "y")

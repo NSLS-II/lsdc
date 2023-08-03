@@ -2769,26 +2769,34 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             color_ids = np.full(my_array.shape, color_id)
 
+        index = 0
         for i in range(len(rasterDef["rowDefs"])):
-            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
+            numsteps = rasterDef["rowDefs"][i]["numsteps"]
+            rowStartIndex = cellCounter
+            for j in range(numsteps):
+                if i % 2 == 0:  # this is trying to figure out row direction
+                    index = cellCounter
+                else:
+                    index = rowStartIndex + ((numsteps - 1) - j)
+                print(index)
                 if color_id is None:
-                    param = my_array[cellCounter]
+                    #param = my_array[cellCounter]
                     if rasterEvalOption == "Resolution":
-                        color = int(255 - color_ids[cellCounter])
+                        color = int(255 - color_ids[index])
                     else:
-                        color = int(color_ids[cellCounter])
-                    self.currentRasterCellList[cellCounter].setBrush(
+                        color = int(color_ids[index])
+                    self.currentRasterCellList[index].setBrush(
                         QtGui.QBrush(QtGui.QColor(0, color, 0, 127))
                     )
                 else:
-                    self.currentRasterCellList[cellCounter].setBrush(
+                    self.currentRasterCellList[index].setBrush(
                         QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
                     )
                 cellResult = cellResults[cellCounter]
-                self.currentRasterCellList[cellCounter].setData(0, cellResult.get("spot_count_no_ice", 0))
-                self.currentRasterCellList[cellCounter].setData(1, cellResult.get("image", "empty"))
-                self.currentRasterCellList[cellCounter].setData(2, cellResult.get("dmin", 50.0))
-                self.currentRasterCellList[cellCounter].setData(3, cellResult.get("total_intensity", 0))
+                self.currentRasterCellList[index].setData(0, cellResult.get("spot_count_no_ice", 0))
+                self.currentRasterCellList[index].setData(1, cellResult.get("image", "empty"))
+                self.currentRasterCellList[index].setData(2, cellResult.get("dmin", 50.0))
+                self.currentRasterCellList[index].setData(3, cellResult.get("total_intensity", 0))
                 cellCounter += 1
 
     def takeRasterSnapshot(self, rasterReq):

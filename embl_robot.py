@@ -310,7 +310,7 @@ class EMBLRobot:
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
-                mountStat = self.mount(puckPos,pinPos,sampID, kwargs)
+                mountStat = self.mount(gov_robot, puckPos,pinPos,sampID, **kwargs)
                 if (mountStat == MOUNT_STEP_SUCCESSFUL):
                   retryMountCount = 0
                 return mountStat

@@ -86,131 +86,84 @@ def abortBS():
     except super_state_machine.errors.TransitionError:
       logger.error("caught BS")
 
-def changeImageCenterLowMag(x,y,czoom):
-  zoom = int(czoom)
-  zoomMinXRBV = getPvDesc("lowMagZoomMinXRBV")
-  zoomMinYRBV = getPvDesc("lowMagZoomMinYRBV")
-  minXRBV = getPvDesc("lowMagMinXRBV")
-  minYRBV = getPvDesc("lowMagMinYRBV")
-  
-  sizeXRBV = getPvDesc("lowMagZoomSizeXRBV")
-  sizeYRBV = getPvDesc("lowMagZoomSizeYRBV")
-  sizeXRBV = 640.0
-  sizeYRBV = 512.0
-  roiSizeXRBV = getPvDesc("lowMagROISizeXRBV")
-  roiSizeYRBV = getPvDesc("lowMagROISizeYRBV")  
-  roiSizeZoomXRBV = getPvDesc("lowMagZoomROISizeXRBV")
-  roiSizeZoomYRBV = getPvDesc("lowMagZoomROISizeYRBV")
-  inputSizeZoomXRBV = getPvDesc("lowMagZoomMaxSizeXRBV")
-  inputSizeZoomYRBV = getPvDesc("lowMagZoomMaxSizeYRBV")      
-  inputSizeXRBV = getPvDesc("lowMagMaxSizeXRBV")
-  inputSizeYRBV = getPvDesc("lowMagMaxSizeYRBV")      
-  x_click = float(x)
-  y_click = float(y)
-  binningFactor = 2.0  
-  if (zoom):
-    xclickFullFOV = x_click + zoomMinXRBV
-    yclickFullFOV = y_click + zoomMinYRBV
-  else:
-    binningFactor = 2.0
-    xclickFullFOV = (x_click * binningFactor) + minXRBV
-    yclickFullFOV = (y_click * binningFactor) + minYRBV    
-  new_minXZoom = xclickFullFOV-(sizeXRBV/2.0)
-  new_minYZoom = yclickFullFOV-(sizeYRBV/2.0)
-  new_minX = new_minXZoom - (sizeXRBV/2.0)
-  new_minY = new_minYZoom - (sizeYRBV/2.0)
-  noZoomCenterX = sizeXRBV/2.0
-  noZoomCenterY = sizeYRBV/2.0  
-  if (new_minX < 0):
-    new_minX = 0
-    noZoomCenterX = (new_minXZoom+(sizeXRBV/2.0))/binningFactor
-  if (new_minY < 0):
-    new_minY = 0    
-    noZoomCenterY = (new_minYZoom+(sizeYRBV/2.0))/binningFactor
-  if (new_minX+roiSizeXRBV>inputSizeXRBV):
-    new_minX = inputSizeXRBV-roiSizeXRBV    
-    noZoomCenterX = ((new_minXZoom+(sizeXRBV/2.0)) - new_minX)/binningFactor
-  if (new_minY+roiSizeYRBV>inputSizeYRBV):
-    new_minY = inputSizeYRBV-roiSizeYRBV
-    noZoomCenterY = ((new_minYZoom+(sizeYRBV/2.0)) - new_minY)/binningFactor    
-  if (new_minXZoom+roiSizeZoomXRBV>inputSizeZoomXRBV):
-    new_minXZoom = inputSizeZoomXRBV-roiSizeZoomXRBV
-  if (new_minXZoom < 0):
-    new_minXZoom = 0
-  setPvDesc("lowMagZoomMinX",new_minXZoom)    
-  if (new_minYZoom+roiSizeZoomYRBV>inputSizeZoomYRBV):
-    new_minYZoom = inputSizeZoomYRBV-roiSizeZoomYRBV
-  if (new_minYZoom < 0):
-    new_minYZoom = 0
-  setPvDesc("lowMagZoomMinY",new_minYZoom)        
-  setPvDesc("lowMagMinX",new_minX)
-  setPvDesc("lowMagMinY",new_minY)    
-  setPvDesc("lowMagCursorX",noZoomCenterX)
-  setPvDesc("lowMagCursorY",noZoomCenterY)  
-      
+def changeImageCenter(x_clicked, y_clicked, is_zoomed, magnification="low"):
+    """Updates the center and ROI of an image based on user click and zoom level."""
 
-def changeImageCenterHighMag(x,y,czoom):
-  zoom = int(czoom)
-  zoomMinXRBV = getPvDesc("highMagZoomMinXRBV")
-  zoomMinYRBV = getPvDesc("highMagZoomMinYRBV")
-  minXRBV = getPvDesc("highMagMinXRBV")
-  minYRBV = getPvDesc("highMagMinYRBV")
-  
-  sizeXRBV = getPvDesc("highMagZoomSizeXRBV")
-  sizeYRBV = getPvDesc("highMagZoomSizeYRBV")
-  sizeXRBV = 640.0
-  sizeYRBV = 512.0
-  roiSizeXRBV = getPvDesc("highMagROISizeXRBV")
-  roiSizeYRBV = getPvDesc("highMagROISizeYRBV")  
-  roiSizeZoomXRBV = getPvDesc("highMagZoomROISizeXRBV")
-  roiSizeZoomYRBV = getPvDesc("highMagZoomROISizeYRBV")
-  inputSizeZoomXRBV = getPvDesc("highMagZoomMaxSizeXRBV")
-  inputSizeZoomYRBV = getPvDesc("highMagZoomMaxSizeYRBV")      
-  inputSizeXRBV = getPvDesc("highMagMaxSizeXRBV")
-  inputSizeYRBV = getPvDesc("highMagMaxSizeYRBV")      
-  x_click = float(x)
-  y_click = float(y)
-  binningFactor = 2.0  
-  if (zoom):
-    xclickFullFOV = x_click + zoomMinXRBV
-    yclickFullFOV = y_click + zoomMinYRBV
-  else:
-    binningFactor = 2.0
-    xclickFullFOV = (x_click * binningFactor) + minXRBV
-    yclickFullFOV = (y_click * binningFactor) + minYRBV    
-  new_minXZoom = xclickFullFOV-(sizeXRBV/2.0)
-  new_minYZoom = yclickFullFOV-(sizeYRBV/2.0)
-  new_minX = new_minXZoom - (sizeXRBV/2.0)
-  new_minY = new_minYZoom - (sizeYRBV/2.0)
-  noZoomCenterX = sizeXRBV/2.0
-  noZoomCenterY = sizeYRBV/2.0  
-  if (new_minX < 0):
-    new_minX = 0
-    noZoomCenterX = (new_minXZoom+(sizeXRBV/2.0))/binningFactor
-  if (new_minY < 0):
-    new_minY = 0    
-    noZoomCenterY = (new_minYZoom+(sizeYRBV/2.0))/binningFactor
-  if (new_minX+roiSizeXRBV>inputSizeXRBV):
-    new_minX = inputSizeXRBV-roiSizeXRBV    
-    noZoomCenterX = ((new_minXZoom+(sizeXRBV/2.0)) - new_minX)/binningFactor
-  if (new_minY+roiSizeYRBV>inputSizeYRBV):
-    new_minY = inputSizeYRBV-roiSizeYRBV
-    noZoomCenterY = ((new_minYZoom+(sizeYRBV/2.0)) - new_minY)/binningFactor    
+    # Constants for image size
+    full_image_width = 640.0
+    full_image_height = 512.0
 
-  if (new_minXZoom+roiSizeZoomXRBV>inputSizeZoomXRBV):
-    new_minXZoom = inputSizeZoomXRBV-roiSizeZoomXRBV
-  if (new_minXZoom < 0):
-    new_minXZoom = 0
-  if (new_minYZoom+roiSizeZoomYRBV>inputSizeZoomYRBV):
-    new_minYZoom = inputSizeZoomYRBV-roiSizeZoomYRBV
-  if (new_minYZoom < 0):
-    new_minYZoom = 0
-  setPvDesc("highMagZoomMinX",new_minXZoom)
-  setPvDesc("highMagZoomMinY",new_minYZoom)
-  setPvDesc("highMagMinX",new_minX)
-  setPvDesc("highMagMinY",new_minY)    
-  setPvDesc("highMagCursorX",noZoomCenterX)
-  setPvDesc("highMagCursorY",noZoomCenterY)
+    # Getting PVs for different parameters of the camera feed
+    roi_width = getPvDesc(f"{magnification}MagROISizeXRBV")
+    roi_height = getPvDesc(f"{magnification}MagROISizeYRBV")
+    zoom_roi_width = getPvDesc(f"{magnification}MagZoomROISizeXRBV")
+    zoom_roi_height = getPvDesc(f"{magnification}MagZoomROISizeYRBV")
+    zoom_input_width = getPvDesc(f"{magnification}MagZoomMaxSizeXRBV")
+    zoom_input_height = getPvDesc(f"{magnification}MagZoomMaxSizeYRBV")
+    input_width = getPvDesc(f"{magnification}MagMaxSizeXRBV")
+    input_height = getPvDesc(f"{magnification}MagMaxSizeYRBV")
+    
+    # Converting click coordinates to float
+    x_click = float(x_clicked)
+    y_click = float(y_clicked)
+
+    binning_factor = 2.0
+
+    # Calculate the full Field Of View (FOV) click position, depending on the zoom level
+    if is_zoomed:
+        x_click_full_fov = x_click + getPvDesc(f"{magnification}MagZoomMinXRBV")
+        y_click_full_fov = y_click + getPvDesc(f"{magnification}MagZoomMinYRBV")
+    else:
+        x_click_full_fov = (x_click * binning_factor) + getPvDesc(f"{magnification}MagMinXRBV")
+        y_click_full_fov = (y_click * binning_factor) + getPvDesc(f"{magnification}MagMinYRBV")
+
+    # Calculate half size of image
+    half_width = center_x = full_image_width / 2.0
+    half_height = center_y = full_image_height / 2.0
+
+    # Calculate new position of the zoomed ROI and full ROI
+    zoom_min_x = x_click_full_fov - half_width
+    zoom_min_y = y_click_full_fov - half_height
+    full_roi_min_x = zoom_min_x - half_width
+    full_roi_min_y = zoom_min_y - half_height
+
+    # Make sure ROIs are within valid boundaries and recalculate the center positions
+    if full_roi_min_x < 0:
+        full_roi_min_x = 0
+        center_x = (zoom_min_x + half_width) / binning_factor
+
+    if full_roi_min_y < 0:
+        full_roi_min_y = 0
+        center_y = (zoom_min_y + half_height) / binning_factor
+
+    if full_roi_min_x + roi_width > input_width:
+        full_roi_min_x = input_width - roi_width
+        center_x = ((zoom_min_x + half_width) - full_roi_min_x) / binning_factor
+
+    if full_roi_min_y + roi_height > input_height:
+        full_roi_min_y = input_height - roi_height
+        center_y = ((zoom_min_y + half_height) - full_roi_min_y) / binning_factor
+
+    if zoom_min_x + zoom_roi_width > zoom_input_width:
+        zoom_min_x = zoom_input_width - zoom_roi_width
+
+    if zoom_min_x < 0:
+        zoom_min_x = 0
+
+    if zoom_min_y + zoom_roi_height > zoom_input_height:
+        zoom_min_y = zoom_input_height - zoom_roi_height
+
+    if zoom_min_y < 0:
+        zoom_min_y = 0
+
+    # Update the EPICS PVs with the newly calculated ROI positions and center positions
+    setPvDesc(f"{magnification}MagZoomMinX", zoom_min_x)
+    setPvDesc(f"{magnification}MagZoomMinY", zoom_min_y)
+    setPvDesc(f"{magnification}MagMinX", full_roi_min_x)
+    setPvDesc(f"{magnification}MagMinY", full_roi_min_y)
+    setPvDesc(f"{magnification}MagCursorX", center_x)
+    setPvDesc(f"{magnification}MagCursorY", center_y)
+
   
 
 def autoRasterLoop(currentRequest):

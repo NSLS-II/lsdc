@@ -17,7 +17,7 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QGraphicsScene
 
 import albulaUtils
 import daq_utils
@@ -49,6 +49,8 @@ from gui.dialog import (
     UserScreenDialog,
 )
 from gui.raster import RasterCell, RasterGroup
+from gui.camera.zoom_widget import ZoomSlider
+from gui.camera.scene import CustomView
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -278,18 +280,6 @@ class ControlMain(QtWidgets.QMainWindow):
     def closeEvent(self, evnt):
         evnt.accept()
         sys.exit()  # doing this to close any windows left open
-
-    def initVideo2(self, frequency):
-        self.captureHighMag = cv2.VideoCapture(daq_utils.highMagCamURL)
-        logger.debug('highMagCamURL: "' + daq_utils.highMagCamURL + '"')
-
-    def initVideo4(self, frequency):
-        self.captureHighMagZoom = cv2.VideoCapture(daq_utils.highMagZoomCamURL)
-        logger.debug('highMagZoomCamURL: "' + daq_utils.highMagZoomCamURL + '"')
-
-    def initVideo3(self, frequency):
-        self.captureLowMagZoom = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
-        logger.debug('lowMagZoomCamURL: "' + daq_utils.lowMagZoomCamURL + '"')
 
     def createSampleTab(self):
         sampleTab = QtWidgets.QWidget()
@@ -904,25 +894,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.VidFrame = QFrame()
         self.VidFrame.setFixedWidth(680)
         vBoxVidLayout = QtWidgets.QVBoxLayout()
-        self.captureLowMag = None
-        self.captureHighMag = None
-        self.captureHighMagZoom = None
-        self.captureLowMagZoom = None
-        if daq_utils.has_xtalview:
-            if self.zoom3FrameRatePV.get() != 0:
-                _thread.start_new_thread(self.initVideo2, (0.25,))  # highMag
-            if self.zoom4FrameRatePV.get() != 0:
-                _thread.start_new_thread(
-                    self.initVideo4, (0.25,)
-                )  # this sets up highMagDigiZoom
-            if self.zoom2FrameRatePV.get() != 0:
-                _thread.start_new_thread(
-                    self.initVideo3, (0.25,)
-                )  # this sets up lowMagDigiZoom
-            if self.zoom1FrameRatePV.get() != 0:
-                self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
-                logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
-        self.capture = self.captureLowMag
+                
+        self.capture = cv2.VideoCapture(daq_utils.sampleCameraConfig[0]['url'])
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)
         self.timerSample.start(SAMPLE_TIMER_DELAY)
@@ -933,12 +906,13 @@ class ControlMain(QtWidgets.QMainWindow):
         self.polyPointItems = []
         self.rasterPoly = None
         self.measureLine = None
-        self.scene = QtWidgets.QGraphicsScene(0, 0, 640, 512, self)
+        self.scene = QGraphicsScene(0, 0, 640, 512, self)
         hBoxHutchVidsLayout = QtWidgets.QHBoxLayout()
         self.sceneHutchCorner = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
         self.sceneHutchTop = QtWidgets.QGraphicsScene(0, 0, 320, 180, self)
         self.scene.keyPressEvent = self.sceneKey
-        self.view = QtWidgets.QGraphicsView(self.scene)
+        # self.view = QtWidgets.QGraphicsView(self.scene)
+        self.view = CustomView(self.scene, parent=self)
         self.viewHutchCorner = QtWidgets.QGraphicsView(self.sceneHutchCorner)
         self.viewHutchTop = QtWidgets.QGraphicsView(self.sceneHutchTop)
         self.pixmap_item = QtWidgets.QGraphicsPixmapItem(None)
@@ -970,31 +944,10 @@ class ControlMain(QtWidgets.QMainWindow):
             daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX,
             daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY,
         )
-        self.zoomRadioGroup = QtWidgets.QButtonGroup()
-        self.zoom1Radio = QtWidgets.QRadioButton("Mag1")
-        self.zoom1Radio.setChecked(True)
-        self.zoom1Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom1")
-        )
-        self.zoomRadioGroup.addButton(self.zoom1Radio)
-        self.zoom2Radio = QtWidgets.QRadioButton("Mag2")
-        self.zoom2Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom2")
-        )
-        self.zoom3Radio = QtWidgets.QRadioButton("Mag3")
-        self.zoom3Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom3")
-        )
-        self.zoom4Radio = QtWidgets.QRadioButton("Mag4")
-        self.zoom4Radio.toggled.connect(
-            functools.partial(self.zoomLevelToggledCB, "Zoom4")
-        )
-        if daq_utils.sampleCameraCount >= 2:
-            self.zoomRadioGroup.addButton(self.zoom2Radio)
-            if daq_utils.sampleCameraCount >= 3:
-                self.zoomRadioGroup.addButton(self.zoom3Radio)
-                if daq_utils.sampleCameraCount >= 4:
-                    self.zoomRadioGroup.addButton(self.zoom4Radio)
+        
+        self.zoomSlider = ZoomSlider(config=daq_utils.sampleCameraConfig, parent=self)
+        self.view.y_value.connect(self.zoomSlider.handle_wheel)
+
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30
@@ -1133,15 +1086,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.hideRastersCheckBox = QCheckBox("Hide\nRasters")
         self.hideRastersCheckBox.setChecked(False)
         self.hideRastersCheckBox.stateChanged.connect(self.hideRastersCB)
-        hBoxVidControlLayout.addWidget(self.zoom1Radio)
-        if (
-            daq_utils.sampleCameraCount >= 2
-        ):  # Button naming assumes sequential camera ordering
-            hBoxVidControlLayout.addWidget(self.zoom2Radio)
-            if daq_utils.sampleCameraCount >= 3:
-                hBoxVidControlLayout.addWidget(self.zoom3Radio)
-                if daq_utils.sampleCameraCount >= 4:
-                    hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        hBoxVidControlLayout.addWidget(self.zoomSlider)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)
@@ -1151,6 +1096,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxVidControlLayout.addWidget(annealButton)
         hBoxVidControlLayout.addWidget(annealTimeLabel)
         hBoxVidControlLayout.addWidget(self.annealTime_ledit)
+        
         hBoxSampleAlignLayout = QtWidgets.QHBoxLayout()
         centerLoopButton = QtWidgets.QPushButton("Center\nLoop")
         centerLoopButton.clicked.connect(self.autoCenterLoopCB)
@@ -1371,7 +1317,7 @@ class ControlMain(QtWidgets.QMainWindow):
         sampleTab.setLayout(vBoxlayout)
         self.tabs.addTab(sampleTab, "Collect")
         # 12/19 - uncomment this to expose the PyMCA XRF interface. It's not connected to anything.
-        self.zoomLevelToggledCB("Zoom1")
+        
 
         if daq_utils.beamline == "nyx":  # Temporarily disabling unusued buttons on NYX
             self.protoRasterRadio.setDisabled(True)
@@ -1539,6 +1485,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.processSampMove(self.sampx_pv.get(), "x")
                     self.processSampMove(self.sampy_pv.get(), "y")
                     self.processSampMove(self.sampz_pv.get(), "z")
+                    self.processSampMove(self.omega_pv.get(), "omega")
         if self.vectorStart != None:
             self.processSampMove(self.sampx_pv.get(), "x")
             self.processSampMove(self.sampy_pv.get(), "y")
@@ -1559,126 +1506,6 @@ class ControlMain(QtWidgets.QMainWindow):
             if commTime > 0.01:
                 return
 
-    def zoomLevelToggledCB(self, identifier):
-        fov = {}
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom2Radio.isChecked():
-            self.flushBuffer(self.captureLowMagZoom)
-            self.capture = self.captureLowMagZoom
-            fov["x"] = daq_utils.lowMagFOVx / 2.0
-            fov["y"] = daq_utils.lowMagFOVy / 2.0
-            unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom1Radio.isChecked():
-            self.flushBuffer(self.captureLowMag)
-            self.capture = self.captureLowMag
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
-            self.centerMarker.setPos(
-                self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom4Radio.isChecked():
-            self.flushBuffer(self.captureHighMagZoom)
-            self.capture = self.captureHighMagZoom
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
-            unzoomedCursorX = (
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            )
-            unzoomedCursorY = (
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        elif self.zoom3Radio.isChecked():
-            self.flushBuffer(self.captureHighMag)
-            self.capture = self.captureHighMag
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
-            self.centerMarker.setPos(
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        self.adjustGraphics4ZoomChange(fov)
-        self.sampleZoomChangeSignal.emit(self.capture)
 
     def saveVidSnapshotButtonCB(self):
         comment, useOlog, ok = SnapCommentDialog.getComment()
@@ -1811,110 +1638,10 @@ class ControlMain(QtWidgets.QMainWindow):
         pass
 
     def processLowMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom2Radio.isChecked():  # lowmagzoom
-            unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        else:
-            self.centerMarker.setPos(
-                self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
+        self.zoomSlider.zoom_level_toggled()
 
     def processHighMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
-        if self.zoom4Radio.isChecked():  # highmagzoom
-            unzoomedCursorX = (
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
-            )
-            unzoomedCursorY = (
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
-                zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
-                zoomedCursorY = unzoomedCursorY * 2.0
-            if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
-            ):
-                zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
-            if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
-            ):
-                zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
-            self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
-        else:
-            self.centerMarker.setPos(
-                self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX,
-                self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY,
-            )
-            self.beamSizeXPixels = self.screenXmicrons2pixels(self.tempBeamSizeXMicrons)
-            self.beamSizeYPixels = self.screenYmicrons2pixels(self.tempBeamSizeYMicrons)
-            self.beamSizeOverlay.setRect(
-                self.overlayPosOffsetX
-                + self.centerMarker.x()
-                - (self.beamSizeXPixels / 2),
-                self.overlayPosOffsetY
-                + self.centerMarker.y()
-                - (self.beamSizeYPixels / 2),
-                self.beamSizeXPixels,
-                self.beamSizeYPixels,
-            )
+        self.zoomSlider.zoom_level_toggled()
 
     def processSampMove(self, posRBV, motID):
         #      print "new " + motID + " pos=" + str(posRBV)
@@ -2817,13 +2544,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def focusTweakCB(self, tv):
         tvf = float(tv) * daq_utils.unitScaling
 
-        current_viewangle = daq_utils.mag1ViewAngle
-        if self.zoom2Radio.isChecked():
-            current_viewangle = daq_utils.mag2ViewAngle
-        elif self.zoom3Radio.isChecked():
-            current_viewangle = daq_utils.mag3ViewAngle
-        elif self.zoom4Radio.isChecked():
-            current_viewangle = daq_utils.mag4ViewAngle
+        current_viewangle = self.zoomSlider.get_current_viewangle()
 
         if current_viewangle == daq_utils.CAMERA_ANGLE_BEAM:
             view_omega_offset = 0
@@ -2944,11 +2665,13 @@ class ControlMain(QtWidgets.QMainWindow):
     def fillPolyRaster(
         self, rasterReq, waitTime=1
     ):  # at this point I should have a drawn polyRaster
-        time.sleep(waitTime)
         logger.info("filling poly for " + str(rasterReq["uid"]))
-        resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
         rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])
+        
+        if not rasterResults:
+            return
         rasterResult = {}
+        
         for i in range(0, len(rasterResults)):
             if rasterResults[i]["result_type"] == "rasterResult":
                 rasterResult = rasterResults[i]
@@ -2958,6 +2681,7 @@ class ControlMain(QtWidgets.QMainWindow):
         except KeyError:
             db_lib.deleteRequest(rasterReq["uid"])
             return
+        
         rasterListIndex = 0
         for i in range(len(self.rasterList)):
             if self.rasterList[i] != None:
@@ -2974,12 +2698,18 @@ class ControlMain(QtWidgets.QMainWindow):
         self.currentRasterCellList = currentRasterGroup.childItems()
         cellResults = rasterResult["result_obj"]["rasterCellResults"]["resultObj"]
         numLines = len(cellResults)
-        cellResults_array = [{} for i in range(numLines)]
+        # cellResults_array = [{} for i in range(numLines)]
         my_array = np.zeros(numLines)
         spotLineCounter = 0
         cellIndex = 0
         rowStartIndex = 0
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
+        if rasterEvalOption == "Spot Count":
+            cell_result_key = "spot_count_no_ice"
+        elif rasterEvalOption == "Intensity":
+            cell_result_key = "total_intensity"
+        else:
+            cell_result_key = "d_min"
         lenX = abs(
             rasterDef["rowDefs"][0]["end"]["x"] - rasterDef["rowDefs"][0]["start"]["x"]
         )  # ugly for tile flip/noflip
@@ -2998,12 +2728,7 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                try:
-                    spotcount = cellResult["spot_count_no_ice"]
-                    filename = cellResult["image"]
-                except TypeError:
-                    spotcount = 0
-                    filename = "empty"
+                
 
                 if (
                     lenX > 180 and self.scannerType == "PI"
@@ -3014,16 +2739,12 @@ class ControlMain(QtWidgets.QMainWindow):
                         cellIndex = spotLineCounter
                     else:
                         cellIndex = rowStartIndex + ((numsteps - 1) - j)
+                
                 try:
-                    if rasterEvalOption == "Spot Count":
-                        my_array[cellIndex] = spotcount
-                    elif rasterEvalOption == "Intensity":
-                        my_array[cellIndex] = cellResult["total_intensity"]
-                    else:
-                        if float(cellResult["d_min"]) == -1:
-                            my_array[cellIndex] = 50.0
-                        else:
-                            my_array[cellIndex] = float(cellResult["d_min"])
+                    my_array[cellIndex] = cellResult[cell_result_key]
+                    if cell_result_key == 'd_min' and my_array[cellIndex] == -1:
+                        my_array[cellIndex] = 50.0
+
                 except IndexError:
                     logger.error("caught index error #2")
                     logger.error("numlines = " + str(numLines))
@@ -3031,59 +2752,52 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                cellResults_array[
-                    cellIndex
-                ] = cellResult  # instead of just grabbing filename, get everything. Not sure why I'm building my own list of results. How is this different from cellResults?
-                # I don't think cellResults_array is different from cellResults, could maybe test that below by subtituting one for the other. It may be a remnant of trying to store less than the whole result set.
                 spotLineCounter += 1
         floor = np.amin(my_array)
         ceiling = np.amax(my_array)
+        
         cellCounter = 0
-        for i in range(len(rasterDef["rowDefs"])):
-            rowCellCount = 0
-            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
-                cellResult = cellResults_array[cellCounter]
-                try:
-                    spotcount = int(cellResult["spot_count_no_ice"])
-                    cellFilename = cellResult["image"]
-                    d_min = float(cellResult["d_min"])
-                    if d_min == -1:
-                        d_min = 50.0  # trying to handle frames with no spots
-                    total_intensity = int(cellResult["total_intensity"])
-                except TypeError:
-                    spotcount = 0
-                    cellFilename = "empty"
-                    d_min = 50.0
-                    total_intensity = 0
+        color_id = None
+        if ceiling == 0:
+            color_id = 255
+        elif ceiling == floor:
+            if rasterEvalOption == "Resolution":
+                color_id = 0
+            else:
+                color_id = 255
+        if color_id is None:
+            color_ids = ((my_array - floor) / (ceiling - floor)) * 255.0
+        else:
+            color_ids = np.full(my_array.shape, color_id)
 
-                if rasterEvalOption == "Spot Count":
-                    param = spotcount
-                elif rasterEvalOption == "Intensity":
-                    param = total_intensity
+        index = 0
+        for i in range(len(rasterDef["rowDefs"])):
+            numsteps = rasterDef["rowDefs"][i]["numsteps"]
+            rowStartIndex = cellCounter
+            for j in range(numsteps):
+                if i % 2 == 0:  # this is trying to figure out row direction
+                    index = cellCounter
                 else:
-                    param = d_min
-                if ceiling == 0:
-                    color_id = 255
-                elif ceiling == floor:
+                    index = rowStartIndex + ((numsteps - 1) - j)
+                print(index)
+                if color_id is None:
+                    #param = my_array[cellCounter]
                     if rasterEvalOption == "Resolution":
-                        color_id = 0
+                        color = int(255 - color_ids[index])
                     else:
-                        color_id = 255
-                elif rasterEvalOption == "Resolution":
-                    color_id = int(
-                        255.0 * (float(param - floor) / float(ceiling - floor))
+                        color = int(color_ids[index])
+                    self.currentRasterCellList[index].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, color, 0, 127))
                     )
                 else:
-                    color_id = int(
-                        255 - (255.0 * (float(param - floor) / float(ceiling - floor)))
+                    self.currentRasterCellList[index].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
                     )
-                self.currentRasterCellList[cellCounter].setBrush(
-                    QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
-                )
-                self.currentRasterCellList[cellCounter].setData(0, spotcount)
-                self.currentRasterCellList[cellCounter].setData(1, cellFilename)
-                self.currentRasterCellList[cellCounter].setData(2, d_min)
-                self.currentRasterCellList[cellCounter].setData(3, total_intensity)
+                cellResult = cellResults[cellCounter]
+                self.currentRasterCellList[index].setData(0, cellResult.get("spot_count_no_ice", 0))
+                self.currentRasterCellList[index].setData(1, cellResult.get("image", "empty"))
+                self.currentRasterCellList[index].setData(2, cellResult.get("dmin", 50.0))
+                self.currentRasterCellList[index].setData(3, cellResult.get("total_intensity", 0))
                 cellCounter += 1
 
     def takeRasterSnapshot(self, rasterReq):
@@ -3267,26 +2981,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.scene.removeItem(self.rasterPoly)
 
     def getCurrentFOV(self):
-        fov = {"x": 0.0, "y": 0.0}
-        if self.zoom2Radio.isChecked():  # lowmagzoom
-            if (
-                daq_utils.sampleCameraCount == 2
-            ):  # this is a hard assumption that when there are 2 cameras the second uses highmagfov
-                fov["x"] = daq_utils.highMagFOVx
-                fov["y"] = daq_utils.highMagFOVy
-            else:
-                fov["x"] = daq_utils.lowMagFOVx / 2.0
-                fov["y"] = daq_utils.lowMagFOVy / 2.0
-        elif self.zoom1Radio.isChecked():
-            fov["x"] = daq_utils.lowMagFOVx
-            fov["y"] = daq_utils.lowMagFOVy
-        elif self.zoom4Radio.isChecked():
-            fov["x"] = daq_utils.highMagFOVx / 2.0
-            fov["y"] = daq_utils.highMagFOVy / 2.0
-        else:
-            fov["x"] = daq_utils.highMagFOVx
-            fov["y"] = daq_utils.highMagFOVy
-        return fov
+        return self.zoomSlider.getFOV()
 
     def screenXPixels2microns(self, pixels):
         fov = self.getCurrentFOV()
@@ -3448,7 +3143,6 @@ class ControlMain(QtWidgets.QMainWindow):
             rasterDef = rasterReq["request_obj"]["rasterDef"]
         except KeyError:
             return
-        beamSize = self.screenXmicrons2pixels(rasterDef["beamWidth"])
         stepsizeX = self.screenXmicrons2pixels(rasterDef["stepsize"])
         stepsizeY = self.screenYmicrons2pixels(rasterDef["stepsize"])
         pen = QtGui.QPen(QtCore.Qt.red)
@@ -3463,54 +3157,33 @@ class ControlMain(QtWidgets.QMainWindow):
                 rasterDir = "vertical"
         except IndexError:
             return
+        newItemGroup = RasterGroup(self)
+        self.scene.addItem(newItemGroup)
+
         for i in range(len(rasterDef["rowDefs"])):
             rowCellCount = 0
+            x = self.screenXmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["x"]
+                        ) + self.centerMarker.x() + self.centerMarkerCharOffsetX
+            y = self.screenYmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["y"]
+                        ) + self.centerMarker.y() + self.centerMarkerCharOffsetY
             for j in range(rasterDef["rowDefs"][i]["numsteps"]):
                 if rasterDir == "horizontal":
-                    newCellX = (
-                        self.screenXmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["x"]
-                        )
-                        + (j * stepsizeX)
-                        + self.centerMarker.x()
-                        + self.centerMarkerCharOffsetX
-                    )
-                    newCellY = (
-                        self.screenYmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["y"]
-                        )
-                        + self.centerMarker.y()
-                        + self.centerMarkerCharOffsetY
-                    )
+                    newCellX = x + (j * stepsizeX)
+                    newCellY = y
                 else:
-                    newCellX = (
-                        self.screenXmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["x"]
-                        )
-                        + self.centerMarker.x()
-                        + self.centerMarkerCharOffsetX
-                    )
-                    newCellY = (
-                        self.screenYmicrons2pixels(
-                            rasterDef["rowDefs"][i]["start"]["y"]
-                        )
-                        + (j * stepsizeY)
-                        + self.centerMarker.y()
-                        + self.centerMarkerCharOffsetY
-                    )
-                if rowCellCount == 0:  # start of a new row
-                    rowStartX = newCellX
-                    rowStartY = newCellY
+                    newCellX = x
+                    newCellY = y + (j * stepsizeY)
+                        
                 newCellX = int(newCellX)
                 newCellY = int(newCellY)
                 newCell = RasterCell(newCellX, newCellY, stepsizeX, stepsizeY, self)
                 newRasterCellList.append(newCell)
+                newItemGroup.addToGroup(newCell)
                 newCell.setPen(pen)
                 rowCellCount = rowCellCount + 1  # really just for test of new row
-        newItemGroup = RasterGroup(self)
-        self.scene.addItem(newItemGroup)
-        for i in range(len(newRasterCellList)):
-            newItemGroup.addToGroup(newRasterCellList[i])
+        
         newRasterGraphicsDesc = {
             "uid": rasterReq["uid"],
             "coords": {
@@ -3536,6 +3209,7 @@ class ControlMain(QtWidgets.QMainWindow):
         qimage = QtGui.QImage(
             self.currentFrame, width, height, 3 * width, QtGui.QImage.Format_RGB888
         )
+        qimage = qimage.scaledToHeight(int(self.scene.height()))
         qimage = qimage.rgbSwapped()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item.setPixmap(pixmap_orig)
@@ -3573,42 +3247,7 @@ class ControlMain(QtWidgets.QMainWindow):
         penGreen = QtGui.QPen(QtCore.Qt.green)
         penRed = QtGui.QPen(QtCore.Qt.red)
         if self.vidActionDefineCenterRadio.isChecked():
-            self.vidActionC2CRadio.setChecked(
-                True
-            )  # because it's easy to forget defineCenter is on
-            if self.zoom4Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterHighMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",1)"
-                )
-            elif self.zoom3Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterHighMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",0)"
-                )
-            if self.zoom2Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterLowMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",1)"
-                )
-            elif self.zoom1Radio.isChecked():
-                comm_s = (
-                    "changeImageCenterLowMag("
-                    + str(x_click)
-                    + ","
-                    + str(y_click)
-                    + ",0)"
-                )
-            self.send_to_server(comm_s)
+            self.define_center(x_click, y_click)
             return
         if self.vidActionRasterDefRadio.isChecked():
             self.click_positions.append(event.pos())
@@ -3626,13 +3265,7 @@ class ControlMain(QtWidgets.QMainWindow):
             y_click - (self.centerMarker.y() + self.centerMarkerCharOffsetY)
         )
 
-        current_viewangle = daq_utils.mag1ViewAngle
-        if self.zoom2Radio.isChecked():
-            current_viewangle = daq_utils.mag2ViewAngle
-        elif self.zoom3Radio.isChecked():
-            current_viewangle = daq_utils.mag3ViewAngle
-        elif self.zoom4Radio.isChecked():
-            current_viewangle = daq_utils.mag4ViewAngle
+        current_viewangle = self.zoomSlider.get_current_viewangle()
 
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
@@ -3645,6 +3278,16 @@ class ControlMain(QtWidgets.QMainWindow):
             self.threeClickCount = 0
             self.click3Button.setStyleSheet("background-color: None")
         return
+
+    def define_center(self, x_click, y_click):
+        self.vidActionC2CRadio.setChecked(
+            True
+        )  # because it's easy to forget defineCenter is on
+        zoom, mag = self.zoomSlider.get_zoom_mag()
+        
+        comm_s = f"changeImageCenter({x_click}, {y_click}, {zoom}, '{mag}')"
+        self.send_to_server(comm_s)
+
 
     def editScreenParamsCB(self):
         self.screenDefaultsDialog = ScreenDefaultsDialog(self)
@@ -4465,8 +4108,7 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.info("No sample selected, cannot mount")
             return
         self.send_to_server('mountSample("' + str(self.selectedSampleID) + '")')
-        self.zoom2Radio.setChecked(True)
-        self.zoomLevelToggledCB("Zoom2")
+        self.zoomSlider.slider.setValue(2)
         self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("standard")))
         self.protoComboActivatedCB("standard")
 

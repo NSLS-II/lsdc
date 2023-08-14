@@ -2,6 +2,38 @@
  Release History
 =================
 
+2.0.2 (2023-09-xx, a.k.a. 2023-3)
+=================================
+
+Fixes and other changes
+-----------------------
+
+* GUI
+
+  * GUI code split up into its own module
+  * Fixes for lifetime calculation
+  * Improve Albula handling
+
+* Server and GUI security improvements
+
+  * Use external file to determine visit directory
+  * Use same visit directory location for server and GUI, and force all files acquired by LSDC to be written to that directory
+  * Enforce GUI and server starting in the visit directory
+  * Ensure server is started as one of the known LSDC service users (as opposed to a staff member in n2sn-inststaff-<tla>)
+
+
+* Improved synchronization of detector and governor
+* Re-enable ISPyB storage of data collections and processing results
+* Standardize handling of FMX towards AMX when mounting a sample
+* Move storage of raster results in ISPyB onto server, to remove ISPyB dependence in GUI
+
+* NYX-specific (2023-2-nyx)
+
+  * GUI improvements
+
+    * General layout
+    * NYX-specific changes
+
 2.0.1 (2023-04-20, a.k.a. 2023-2)
 =================================
 

@@ -2761,7 +2761,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def moveOmegaCB(self):
         comm_s = (
-            'mvaDescriptor("omega",'
+            'omegaMoveAbs('
             + str(self.sampleOmegaMoveLedit.getEntry().text())
             + ")"
         )

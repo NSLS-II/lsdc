@@ -85,6 +85,15 @@ from ophyd import Component as Cpt
 class ABBIXMercury(Mercury1, SoftDXPTrigger):
     pass
 
+
+class MD2Device(Device):
+    omega = Cpt(EpicsSignal, 'MD2S:OmegaPosition',name='omega')
+    x = Cpt(EpicsSignal, 'MD2S:AlignmentXPosition',name='x')
+    y = Cpt(EpicsSignal, 'MD2S:AlignmentYPosition',name='y')
+    z = Cpt(EpicsSignal, 'MD2S:AlignmentZPosition',name='z')
+    cx = Cpt(EpicsSignal, 'MD2S:CenteringXPosition',name='cx')
+    cy = Cpt(EpicsSignal, 'MD2S:CenteringYPosition',name='cy')
+
 class VerticalDCM(Device):
     b = Cpt(EpicsMotor, '-Ax:B}Mtr')
     g = Cpt(EpicsMotor, '-Ax:G}Mtr')
@@ -179,6 +188,8 @@ elif beamline=="nyx":
     robot = OphydRobot(ophyd_robot) # OphydRobot is the robot_lib API-compatible object
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
+
+    md2 = MD2Device(name="md2")
 
     back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 

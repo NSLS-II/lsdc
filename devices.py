@@ -50,11 +50,13 @@ class MD2SimpleHVDevice(Device):
     # 2: OFF, just below the OAV.
     # 3: UNKNOWN, not in a predefined position (this cannot be set).
 
-class MD2Device(Device):
+class GonioDevice(Device):
     omega = Cpt(MD2Positioner, 'Omega',name='omega')
     x = Cpt(MD2Positioner, 'AlignmentX',name='x')
     y = Cpt(MD2Positioner, 'AlignmentY',name='y')
     z = Cpt(MD2Positioner, 'AlignmentZ',name='z')
+
+class MD2Device(GonioDevice):
     cx = Cpt(MD2Positioner, 'CentringX',name='cx')
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')

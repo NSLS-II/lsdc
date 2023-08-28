@@ -37,12 +37,12 @@ class BeamstopDevice(Device):
     x = Cpt(MD2Positioner, "BeamstopX", name="x")
     y = Cpt(MD2Positioner, "BeamstopY", name="y")
     z = Cpt(MD2Positioner, "BeamstopZ", name="z")
-    position = Cpt(EpicsSignal, "BeamstopPosition", name="position")
+    pos = Cpt(EpicsSignal, "BeamstopPosition", name="pos")
 
 class MD2SimpleHVDevice(Device):
     horizontal = Cpt(MD2Positioner, "HVHorizontal", name="horizontal")
     vertical = Cpt(MD2Positioner, "HVVertical", name="vertical")
-    position = Cpt(EpicsSignal, "HVPosition", name="position")
+    pos = Cpt(EpicsSignal, "HVPosition", name="pos")
     # Current aperture/scintillator/capillary predifined position.
     # Enum: the aperture position:
     # 0: PARK, under cover.

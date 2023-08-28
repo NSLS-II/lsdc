@@ -990,6 +990,9 @@ class ControlMain(QtWidgets.QMainWindow):
             if self.zoom1FrameRatePV.get() != 0:
                 self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
                 logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
+
+        _thread.start_new_thread(self.initVideo3, (0.25,))
+        #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
         self.timerSample = QTimer()
         self.timerSample.timeout.connect(self.timerSampleRefresh)

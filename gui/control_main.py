@@ -19,7 +19,8 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QApplication, QCheckBox, QFrame, QGraphicsPixmapItem
+from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
+from devices import GonioDevice
 
 import daq_utils
 import db_lib
@@ -171,6 +172,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
                                                gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
         self.initUI()
+        self.initOphyd()
         self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])
         self.zoom1FrameRatePV = PV(daq_utils.pvLookupDict["zoom1FrameRate"])
         self.zoom2FrameRatePV = PV(daq_utils.pvLookupDict["zoom2FrameRate"])
@@ -214,17 +216,17 @@ class ControlMain(QtWidgets.QMainWindow):
         self.initCallbacks()
         if self.scannerType != "PI":
             self.motPos = {
-                "x": self.sampx_pv.get(),
-                "y": self.sampy_pv.get(),
-                "z": self.sampz_pv.get(),
-                "omega": self.omega_pv.get(),
+                "x": self.gon.x.val(),
+                "y": self.gon.y.val(),
+                "z": self.gon.z.val(),
+                "omega": self.gon.omega.val(),
             }
         else:
             self.motPos = {
-                "x": self.sampx_pv.get(),
-                "y": self.sampy_pv.get(),
-                "z": self.sampz_pv.get(),
-                "omega": self.omega_pv.get(),
+                "x": self.gon.x.val(),
+                "y": self.gon.y.val(),
+                "z": self.gon.z.val(),
+                "omega": self.gon.omega.val(),
                 "fineX": self.sampFineX_pv.get(),
                 "fineY": self.sampFineY_pv.get(),
                 "fineZ": self.sampFineZ_pv.get(),
@@ -1177,14 +1179,14 @@ class ControlMain(QtWidgets.QMainWindow):
         setDC2CPButton.setFixedWidth(50)
         setDC2CPButton.clicked.connect(self.setDCStartCB)
         omegaLabel = QtWidgets.QLabel("Omega:")
-        omegaMonitorPV = str(getBlConfig("omegaMonitorPV"))
+        #omegaMonitorPV = str(getBlConfig("omegaMonitorPV"))
         self.sampleOmegaRBVLedit = QtEpicsPVLabel(
-            daq_utils.motor_dict["omega"] + "." + omegaMonitorPV, self, 70
+            self.gon.omega.readback.pvname, self, 70
         )
         omegaSPLabel = QtWidgets.QLabel("SetPoint:")
         omegaSPLabel.setFixedWidth(70)
         self.sampleOmegaMoveLedit = QtEpicsPVEntry(
-            daq_utils.motor_dict["omega"] + ".VAL", self, 70, 2
+            self.gon.omega.setpoint.pvname, self, 70, 2
         )
         self.sampleOmegaMoveLedit.getEntry().returnPressed.connect(self.moveOmegaCB)
         moveOmegaButton = QtWidgets.QPushButton("Move")
@@ -1666,9 +1668,9 @@ class ControlMain(QtWidgets.QMainWindow):
             self.processSampMove(self.sampy_pv.get(), "y")
             self.processSampMove(self.sampz_pv.get(), "z")
         if self.centeringMarksList != []:
-            self.processSampMove(self.sampx_pv.get(), "x")
-            self.processSampMove(self.sampy_pv.get(), "y")
-            self.processSampMove(self.sampz_pv.get(), "z")
+            self.processSampMove(self.gon.x.val(), "x")
+            self.processSampMove(self.gon.y.val(), "y")
+            self.processSampMove(self.gon.z.val(), "z")
 
     def flushBuffer(self, vidStream):
         if vidStream == None:
@@ -2900,13 +2902,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
         if self.controlEnabled():
             tvY = tvf * (
-                math.cos(math.radians(view_omega_offset + self.motPos["omega"]))
+                math.cos(math.radians(view_omega_offset + self.gon.omega.val()))
             )  # these are opposite C2C
             tvZ = tvf * (
-                math.sin(math.radians(view_omega_offset + self.motPos["omega"]))
+                math.sin(math.radians(view_omega_offset + self.gon.omega.val()))
             )
-            self.sampyTweak_pv.put(tvY)
-            self.sampzTweak_pv.put(tvZ)
+            self.gon.y.move(self.gon.y.val() + tvY)
+            self.gon.z.move(self.gon.z.val() + tvZ)
         else:
             self.popupServerMessage("You don't have control")
 
@@ -3267,9 +3269,9 @@ class ControlMain(QtWidgets.QMainWindow):
         marker.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable, True)
         self.centeringMark = {
             "sampCoords": {
-                "x": self.sampx_pv.get(),
-                "y": self.sampy_pv.get(),
-                "z": self.sampz_pv.get(),
+                "x": self.gon.x.val(),
+                "y": self.gon.y.val(),
+                "z": self.gon.z.val(),
             },
             "graphicsItem": marker,
             "centerCursorX": self.centerMarker.x(),
@@ -3398,10 +3400,10 @@ class ControlMain(QtWidgets.QMainWindow):
                 "beamWidth": beamWidth,
                 "beamHeight": beamHeight,
                 "status": RasterStatus.NEW.value,
-                "x": self.sampx_pv.get() + self.sampFineX_pv.get(),
-                "y": self.sampy_pv.get() + self.sampFineY_pv.get(),
-                "z": self.sampz_pv.get() + self.sampFineZ_pv.get(),
-                "omega": self.omega_pv.get(),
+                "x": self.gon.x.val() + self.sampFineX_pv.get(),
+                "y": self.gon.y.val() + self.sampFineY_pv.get(),
+                "z": self.gon.z.val() + self.sampFineZ_pv.get(),
+                "omega": self.gon.omega.val(),
                 "stepsize": stepsize,
                 "rowDefs": [],
             }  # just storing step as microns, not using her
@@ -3411,10 +3413,10 @@ class ControlMain(QtWidgets.QMainWindow):
                 "beamWidth": beamWidth,
                 "beamHeight": beamHeight,
                 "status": RasterStatus.NEW.value,
-                "x": self.sampx_pv.get(),
-                "y": self.sampy_pv.get(),
-                "z": self.sampz_pv.get(),
-                "omega": self.omega_pv.get(),
+                "x": self.gon.x.val(),
+                "y": self.gon.y.val(),
+                "z": self.gon.z.val(),
+                "omega": self.gon.omega.val(),
                 "stepsize": stepsize,
                 "rowDefs": [],
             }  # just storing step as microns, not using here
@@ -4107,9 +4109,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 centeringOption == "Interactive"
                 and self.mountedPin_pv.get() == self.selectedSampleID
             ) or centeringOption == "Testing":  # user centered manually
-                reqObj["pos_x"] = float(self.sampx_pv.get())
-                reqObj["pos_y"] = float(self.sampy_pv.get())
-                reqObj["pos_z"] = float(self.sampz_pv.get())
+                reqObj["pos_x"] = float(self.gon.x.val())
+                reqObj["pos_y"] = float(self.gon.y.val())
+                reqObj["pos_z"] = float(self.gon.z.val())
             reqObj["runNum"] = runNum
             try:
                 reqObj["sweep_start"] = float(self.osc_start_ledit.text())
@@ -4538,13 +4540,13 @@ class ControlMain(QtWidgets.QMainWindow):
                 and self.selectedSampleRequest["sample"]  # with control enabled
                 == self.mountedPin_pv.get()
             ):  # And the sample of the selected request is mounted
-                self.processSampMove(self.sampx_pv.get(), "x")
-                self.processSampMove(self.sampy_pv.get(), "y")
-                self.processSampMove(self.sampz_pv.get(), "z")
+                self.processSampMove(self.gon.x.val(), "x")
+                self.processSampMove(self.gon.y.val(), "y")
+                self.processSampMove(self.gon.z.val(), "z")
                 if (
                     abs(
                         selectedSampleRequest["request_obj"]["rasterDef"]["omega"]
-                        - self.omega_pv.get()
+                        - self.gon.omega.val()
                     )
                     > 5.0
                 ):
@@ -4832,6 +4834,9 @@ class ControlMain(QtWidgets.QMainWindow):
         pauseButtonStateVar = value
         self.pauseButtonStateSignal.emit(pauseButtonStateVar)
 
+    def initOphyd(self):
+        self.gon = GonioDevice("XF:19IDC-ES{MD2}:", name="gonio")
+
     def initUI(self):
         self.tabs = QtWidgets.QTabWidget()
         self.comm_pv = PV(daq_utils.beamlineComm + "command_s")
@@ -5060,12 +5065,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.energyChangeSignal.connect(self.processEnergyChange)
         self.energy_pv.add_callback(self.processEnergyChangeCB, motID="x")
 
-        self.sampx_pv = PV(daq_utils.motor_dict["sampleX"] + ".RBV")
+        self.sampx_pv = PV(self.gon.x.readback.pvname)
         self.sampMoveSignal.connect(self.processSampMove)
         self.sampx_pv.add_callback(self.processSampMoveCB, motID="x")
-        self.sampy_pv = PV(daq_utils.motor_dict["sampleY"] + ".RBV")
+        self.sampy_pv = PV(self.gon.y.readback.pvname)
         self.sampy_pv.add_callback(self.processSampMoveCB, motID="y")
-        self.sampz_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RBV")
+        self.sampz_pv = PV(self.gon.z.readback.pvname)
         self.sampz_pv.add_callback(self.processSampMoveCB, motID="z")
 
         if self.scannerType == "PI":
@@ -5076,14 +5081,14 @@ class ControlMain(QtWidgets.QMainWindow):
             self.sampFineZ_pv = PV(daq_utils.motor_dict["fineZ"] + ".RBV")
             self.sampFineZ_pv.add_callback(self.processSampMoveCB, motID="fineZ")
 
-        self.omega_pv = PV(daq_utils.motor_dict["omega"] + ".VAL")
-        self.omegaTweak_pv = PV(daq_utils.motor_dict["omega"] + ".RLV")
-        self.sampyTweak_pv = PV(daq_utils.motor_dict["sampleY"] + ".RLV")
-        if daq_utils.beamline == "nyx":
-            self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleX"] + ".RLV")
-        else:
-            self.sampzTweak_pv = PV(daq_utils.motor_dict["sampleZ"] + ".RLV")
-        self.omegaRBV_pv = PV(daq_utils.motor_dict["omega"] + ".RBV")
+        self.omega_pv = PV(self.gon.omega.setpoint.pvname)
+        self.omegaTweak_pv = PV(self.gon.omega.setpoint.pvname)
+        self.sampyTweak_pv = PV(self.gon.y.setpoint.pvname)
+        #if daq_utils.beamline == "nyx":
+        #    self.sampzTweak_pv = PV(self.gon.x.setpoint.pvname + ".RLV")
+        #else:
+        self.sampzTweak_pv = PV(self.gon.z.setpoint.pvname)
+        self.omegaRBV_pv = PV(self.gon.omega.readback.pvname)
         self.omegaRBV_pv.add_callback(
             self.processSampMoveCB, motID="omega"
         )  # I think monitoring this allows for the textfield to monitor val and this to deal with the graphics. Else next line has two callbacks on same thing.

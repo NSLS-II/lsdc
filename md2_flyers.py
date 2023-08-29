@@ -17,7 +17,7 @@ EXTERNAL_ENABLE = 3
 
 class MD2StandardFlyer():
     def __init__(self, md2, detector=None) -> None:
-        self.name = "MD2Flyer"
+        self.name = "MD2StandardFlyer"
         self.detector = detector
         self.md2 = md2
         self.collection_params = {}
@@ -107,3 +107,30 @@ class MD2StandardFlyer():
     def collect_asset_docs(self):
         for _ in ():
             yield _
+
+class MD2VectorFlyer(MD2StandardFlyer):
+    def __init__(self, md2, detector=None) -> None:
+        super().__init__(md2, detector)
+        self.name = "MD2VectorFlyer"
+
+    def kickoff(self):
+        # params used are start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z
+        self.md2.vector_scan(start_angle=self.collection_params["start_angle"],
+                             scan_range=self.collection_params["scan_range"],
+                             exposure_time=self.collection_params["exposure_time"],
+                             start_y=self.collection_params["start_y"],
+                             start_z=self.collection_params["start_z"],
+                             stop_y=self.collection_params["stop_y"],
+                             stop_z=self.collection_params["stop_z"],)
+        return NullStatus()
+    
+    def update_parameters(self, start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z):
+        self.collection_params = {
+            "start_angle": start_angle,
+            "scan_range": scan_range,
+            "exposure_time": exposure_time,
+            "start_y": start_y,
+            "start_z": start_z,
+            "stop_y": stop_y,
+            "stop_z": stop_z,
+        }

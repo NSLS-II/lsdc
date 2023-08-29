@@ -3403,7 +3403,7 @@ def standardDaq(currentRequest):
     # arm the detector
     # perform governor and phase transitions
     # update flyer parameters
-    # flylogger.info("gathering vector parameters")
+    # fly
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
@@ -3457,10 +3457,65 @@ def vectorDaq(currentRequest):
     # collect all parameters
     # perform preparatory movements
     # arm the detector
-    # perform governor transitions
+    # perform governor and phase transitions
     # update flyer parameters
     # fly
-    pass
+    x_beam = getPvDesc("beamCenterX")
+    y_beam = getPvDesc("beamCenterY")
+    wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+    det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist") / 1000
+    reqObj = currentRequest["request_obj"]
+    file_prefix = str(reqObj["file_prefix"])
+    data_directory_name = str(reqObj["directory"])
+    file_number_start = reqObj["file_number_start"]
+    sweep_start_angle = reqObj["sweep_start"]
+    sweep_end_angle = reqObj["sweep_end"]
+    exposure_time = reqObj["exposure_time"]
+    file_prefix = str(reqObj["file_prefix"])
+    data_directory_name = str(reqObj["directory"])
+    file_number_start = reqObj["file_number_start"]
+    img_width = reqObj["img_width"]
+    exposure_per_image = reqObj["exposure_time"]
+    total_num_images = int((sweep_end_angle - sweep_start_angle) / img_width)
+    scan_range = float(total_num_images)*img_width
+    angle_start = sweep_start_angle
+    num_images_per_file = total_num_images
+    wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+
+    vector_params = reqObj["vectorParams"]
+    #x_vec_start=vector_params["vecStart"]["x"]
+    start_y=vector_params["vecStart"]["y"]
+    start_z=vector_params["vecStart"]["z"]
+    #x_vec_end=vector_params["vecEnd"]["x"]
+    stop_y=vector_params["vecEnd"]["y"]
+    stop_z=vector_params["vecEnd"]["z"]
+
+    if flyer.detector.cam.armed.get() == 1:
+        daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
+                            'should check the most recent collection to determine if it was successful. Cancelling'
+                            'this collection, retry when ready.')
+        logger.warning("Detector was in the armed state prior to this attempted collection.")
+        return 0
+    start_time = time.time()
+    flyer.configure_detector(file_prefix, data_directory_name)
+    flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
+                     file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
+                     wavelength, det_distance_m, num_images_per_file)
+    def armed_callback(value, old_value, **kwargs):
+        return (old_value == 0 and value == 1)
+    arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
+    flyer.detector.cam.acquire.put(1)
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    arm_status.wait(timeout=20)
+    govStatus.wait(timeout=20)
+    logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
+    if govStatus.exception():
+        logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
+        return
+    md2.phase.set(2) # TODO: Enum for MD2 phases and states
+    md2.ready_status().wait(timeout=20)
+    flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
+    yield from bp.fly([flyer])
 
 def clean_up_collection():
     # this is a plan that should will always be run after a collection is complete

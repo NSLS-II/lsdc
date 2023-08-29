@@ -140,6 +140,7 @@ class GonioDevice(Device):
     z = Cpt(MD2Positioner, 'AlignmentZ',name='z')
 
 class MD2Device(GonioDevice):
+    # TODO: Enum for MD2 phases and states
     cx = Cpt(MD2Positioner, 'CentringX',name='cx')
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
     state = Cpt(EpicsSignalRO, 'State',name='state')

@@ -1,4 +1,7 @@
 from ophyd import Device, Component as Cpt, EpicsSignal, EpicsSignalRO, PVPositioner
+import socket
+from ophyd.status import SubscriptionStatus
+import os
 
 class MD2Positioner(PVPositioner):
     setpoint = Cpt(EpicsSignal, 'Position', name='setpoint')
@@ -11,6 +14,86 @@ class MD2Positioner(PVPositioner):
 
     def val(self):
         return self.get().readback
+
+class ExporterComponent(Cpt):
+    def __init__(self, address, port, name, **kwargs):
+        super().__init__(self, **kwargs)
+        self.name = name
+        self.address = address
+        self.port = port
+        self.sock = None # socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        #self.sock.settimeout(5)
+
+    def get(self):
+        return ()
+
+    def connect(self):
+        # for establishing connection, using context manager is preferred
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.address, self.port))
+
+    def disconnect(self):
+        self.sock.close()
+        self.sock = None
+
+    def send_data(self, data):
+        STX = chr(2)
+        ETX = chr(3)
+        data = STX + data + ETX
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.connect((self.address, self.port))
+            s.sendto(data.encode(), (self.address, self.port))
+            state = s.recv(4096)
+            print(f'state: {self.decipher_reply(state)}')
+            ret = None
+            while ret == None:
+                output = s.recv(4096)
+                output = self.decipher_reply(output)
+                ret = self.process_ret(output)
+            return ret
+
+    def read_stream(self):
+        output = None
+        while output == None:
+            output, addr = self.sock.recvfrom(4096)
+            print(f'output:{self.decipher_reply(output)}')
+            output = None
+
+    def write(self, attribute, value):
+        return self.send_data('WRTE ' + attribute + ' ' + str(value))
+
+    def read(self, attribute):
+        return (self.send_data('READ ' + attribute + ' ')).split(" ")[0][4:]
+
+    def cmd(self, method, parameters):
+        parameters = map(str, parameters)
+        params = "\t".join(parameters)
+        return self.send_data('EXEC ' + method + ' ' + str(params))
+
+    def decipher_reply(self, reply):
+        # Specifically for decoding MD2 Exporter replies
+        reply = str(reply)
+        reply = reply.replace("\\x03", "")
+        reply = reply.replace("\\x1f", ", ")
+        reply = reply.replace("\\x02", "\n")
+        reply = reply.replace("\\t", " ")
+        return reply[2:-1]
+
+    def process_ret(self, ret):
+        # Returns only when an error or return value is found, 
+        # ignores events to ensure flyer kickoff functions as expected
+        for line in ret.split("\n"):
+            if "ERR:" in line:
+                print(f"error: {line}")
+                return line
+            elif "RET:" in line:
+                print(f"returned: {line}")
+                return line
+            elif "NULL" in line:
+                print(f"null error: {line}")
+                return line
+            elif "EVT:" in line:
+                pass #return self.process_evt(line)
 
 class FrontLightDevice(Device):
     control = Cpt(EpicsSignal, 'FrontLightIsOn', name='control')
@@ -59,15 +142,25 @@ class GonioDevice(Device):
 class MD2Device(GonioDevice):
     cx = Cpt(MD2Positioner, 'CentringX',name='cx')
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
+    state = Cpt(EpicsSignalRO, 'State',name='state')
+    phase = Cpt(EpicsSignal, 'CurrentPhase',name='phase')
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')
     detector_state = Cpt(EpicsSignal, 'DetectorState',name='det_state')
     detector_gate_pulse_enabled = Cpt(EpicsSignal, 'DetectorGatePulseEnabled',name='det_gate_pulse_enabled')
+    exporter = Cpt(ExporterComponent, address=os.environ['EXPORTER_HOST'], port=os.environ['EXPORTER_PORT'], name='exporter')
+
+    def ready_status(self):
+        # returns an ophyd status object that monitors the state pv for operations to complete
+        def check_ready(*, old_value, value, **kwargs):
+            "Return True when the MD2 is ready"
+            return (old_value == 3 and value == 2)
+        return SubscriptionStatus(self.state, check_ready)
 
     def standard_scan(self, 
             frame_number=0, # int: frame ID just for logging purposes.
             num_images=1, # int: number of frames. Needed solely when the detector use gate enabled trigger.
             start_angle=0, # double: angle (deg) at which the shutter opens and omega speed is stable.
-            scan_range=1, # double: omega relative move angle (deg) before closing the shutter.
+            scan_range=0.1, # double: omega relative move angle (deg) before closing the shutter.
             exposure_time=0.1, # double: exposure time (sec) to control shutter command.
             num_passes=1 # int: number of moves forward and reverse between start angle and stop angle
             ):

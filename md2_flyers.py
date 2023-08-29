@@ -16,7 +16,6 @@ EXTERNAL_SERIES = 2
 EXTERNAL_ENABLE = 3
 
 class MD2StandardFlyer():
-    # this is a bluesky flyer class
     def __init__(self, md2, detector=None) -> None:
         self.name = "MD2Flyer"
         self.detector = detector
@@ -37,7 +36,6 @@ class MD2StandardFlyer():
                                start_angle=self.collection_params["start_angle"],
                                scan_range=self.collection_params["img_width"],
                                exposure_time=self.collection_params["exposure_per_image"])
-                               
         return NullStatus()
 
     def update_parameters(self, angle_start, img_width, total_num_images, exposure_per_image):
@@ -90,8 +88,10 @@ class MD2StandardFlyer():
         yield status
 
     def complete(self):
-        # monitor md2 status, wait for ready and then return
-        yield NullStatus()
+        # monitor md2 status, wait for ready or timeout and then return
+        ready_status = self.md2.ready_status()
+        ready_status.wait(timeout=20)
+        return ready_status
 
     def describe_collect(self):
         return {"stream_name": {}}

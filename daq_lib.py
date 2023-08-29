@@ -701,22 +701,30 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     file_prefix_minus_directory = file_prefix_minus_directory[file_prefix_minus_directory.rindex("/")+1:len(file_prefix_minus_directory)]
   except ValueError: 
     pass
-  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
-    logger.info("vectorSync " + str(time.time()))    
-    daq_macros.vectorSync()
-    logger.info("zebraDaq " + str(time.time()))
-   
-    vector_params = daq_macros.gatherStandardVectorParams()
-    logger.debug(f"vector_params: {vector_params}") 
-    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
-  elif (protocol == "vector"):
-    RE(daq_macros.vectorZebraScan(currentRequest))
-  elif (protocol == "stepVector"):
-    daq_macros.vectorZebraStepScan(currentRequest)
-  else:
-    pass
+  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
+  
+  if(getBlConfig("ophydCollections") == True):
+      logger.info("ophyd collections enabled")
+      if (protocol == "standard"):
+        RE(daq_macros.standard_plan_wrapped(currentRequest))
+      elif (protocol == "vector"):
+        RE(daq_macros.vector_plan_wrapped(currentRequest))
+  else:  
+    if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
+      logger.info("vectorSync " + str(time.time()))    
+      daq_macros.vectorSync()
+      logger.info("zebraDaq " + str(time.time()))
+    
+      vector_params = daq_macros.gatherStandardVectorParams()
+      logger.debug(f"vector_params: {vector_params}") 
+      RE(daq_macros.standard_zebra_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
+    elif (protocol == "vector"):
+      RE(daq_macros.vectorZebraScan(currentRequest))
+    elif (protocol == "stepVector"):
+      daq_macros.vectorZebraStepScan(currentRequest)
+    else:
+      pass
   return 
 
 

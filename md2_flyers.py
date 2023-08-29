@@ -34,21 +34,19 @@ class MD2StandardFlyer():
     def kickoff(self):
         self.md2.standard_scan(num_images=self.collection_params["total_num_images"],
                                start_angle=self.collection_params["start_angle"],
-                               scan_range=self.collection_params["img_width"],
-                               exposure_time=self.collection_params["exposure_per_image"])
+                               scan_range=self.collection_params["scan_range"],
+                               exposure_time=self.collection_params["exposure_time"])
         return NullStatus()
 
-    def update_parameters(self, angle_start, img_width, total_num_images, exposure_per_image):
+    def update_parameters(self, total_num_images, start_angle, scan_range, exposure_time):
         self.collection_params = {
-            "angle_start": angle_start,
-            "img_width": img_width,
             "total_num_images": total_num_images,
-            "exposure_per_image": exposure_per_image,
+            "start_angle": start_angle,
+            "scan_range": scan_range,
+            "exposure_time": exposure_time,
         }
         
-    def configure_detector(self, *args, **kwargs):
-        file_prefix = kwargs["file_prefix"]
-        data_directory_name = kwargs["data_directory_name"]
+    def configure_detector(self, file_prefix, data_directory_name):
         self.detector.file.external_name.put(file_prefix, wait=True)
         self.detector.file.write_path_template = data_directory_name
 

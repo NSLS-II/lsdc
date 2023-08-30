@@ -32,10 +32,11 @@ class MD2StandardFlyer():
         self._collection_dictionary = None
 
     def kickoff(self):
-        self.md2.standard_scan(num_images=self.collection_params["total_num_images"],
+        md2_msg = self.md2.standard_scan(num_images=self.collection_params["total_num_images"],
                                start_angle=self.collection_params["start_angle"],
                                scan_range=self.collection_params["scan_range"],
                                exposure_time=self.collection_params["exposure_time"])
+        logger.info(f"md2_msg: {md2_msg}")
         return NullStatus()
 
     def update_parameters(self, total_num_images, start_angle, scan_range, exposure_time):
@@ -115,13 +116,14 @@ class MD2VectorFlyer(MD2StandardFlyer):
 
     def kickoff(self):
         # params used are start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z
-        self.md2.vector_scan(start_angle=self.collection_params["start_angle"],
+        md2_msg = self.md2.vector_scan(start_angle=self.collection_params["start_angle"],
                              scan_range=self.collection_params["scan_range"],
                              exposure_time=self.collection_params["exposure_time"],
                              start_y=self.collection_params["start_y"],
                              start_z=self.collection_params["start_z"],
                              stop_y=self.collection_params["stop_y"],
                              stop_z=self.collection_params["stop_z"],)
+        logger.info(f"md2_msg: {md2_msg}")
         return NullStatus()
     
     def update_parameters(self, start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z):

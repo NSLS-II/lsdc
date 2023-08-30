@@ -154,7 +154,7 @@ class MD2Device(GonioDevice):
         # returns an ophyd status object that monitors the state pv for operations to complete
         def check_ready(*, old_value, value, **kwargs):
             "Return True when the MD2 is ready"
-            return (old_value == 7 and value == 4)
+            return (value == 4)
         return SubscriptionStatus(self.state, check_ready)
 
     def standard_scan(self, 

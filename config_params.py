@@ -64,7 +64,7 @@ class OnMountAvailOptions(Enum):
     AUTO_RASTER = 2 # Mounts, centers and takes 2 orthogonal rasters
 
 HUTCH_TIMER_DELAY = 500
-SAMPLE_TIMER_DELAY = 0
+SAMPLE_TIMER_DELAY = 50
 SERVER_CHECK_DELAY = 2000
 
 FAST_DP_MIN_NODES = 4

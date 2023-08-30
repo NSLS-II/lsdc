@@ -3449,7 +3449,7 @@ def standardDaq(currentRequest):
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
     start_time = time.time()
-    md2.phase.set(2) # TODO: Enum for MD2 phases and states
+    yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=20)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     flyer.update_parameters(total_num_images, angle_start, scan_range, exposure_time)
@@ -3515,7 +3515,7 @@ def vectorDaq(currentRequest):
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
     start_time = time.time()
-    md2.phase.set(2) # TODO: Enum for MD2 phases and states
+    yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=20)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     vector_flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
@@ -3528,7 +3528,7 @@ def clean_up_collection(currentRequest):
     if (lastOnSample()):
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
         gov_status.wait(timeout=30)
-    md2.phase.set(0)
+    yield from bps.mv(md2.phase, 0)
     md2.ready_status().wait(timeout=30)
     logger.info(f"clean_up took {time.time()-start_time} seconds.")
 

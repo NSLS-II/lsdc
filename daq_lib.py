@@ -784,7 +784,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
     scale_y = md2_y / lsdc_y
     x = x * scale_x
     y = y * scale_y
-    str_coords = f'x: {x}, y: {y}'
+    str_coords = f'{x} {y}'
     logger.info(f'center_on_click: {str_coords}')
     setPvDesc("MD2C2C", str_coords)
     return

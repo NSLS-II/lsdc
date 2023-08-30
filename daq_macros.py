@@ -3777,7 +3777,7 @@ def vectorDaq(currentRequest):
     flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
     yield from bp.fly([flyer])
 
-def clean_up_collection():
+def clean_up_collection(currentRequest):
     # this is a plan that should will always be run after a collection is complete
     yield from bps.mv(flyer.detector.cam.acquire, 0)
     if (lastOnSample()):

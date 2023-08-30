@@ -1050,7 +1050,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
                 logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
 
-        _thread.start_new_thread(self.initVideo3, (0.25,))
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
         self.timerSample = QTimer()

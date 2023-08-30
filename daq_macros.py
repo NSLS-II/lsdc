@@ -3490,21 +3490,21 @@ def vectorDaq(currentRequest):
     stop_y=vector_params["vecEnd"]["y"]
     stop_z=vector_params["vecEnd"]["z"]
 
-    if flyer.detector.cam.armed.get() == 1:
+    if vector_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
     start_time = time.time()
-    flyer.configure_detector(file_prefix, data_directory_name)
-    flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
+    vector_flyer.configure_detector(file_prefix, data_directory_name)
+    vector_flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
-    arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
-    flyer.detector.cam.acquire.put(1)
+    arm_status = SubscriptionStatus(vector_flyer.detector.cam.armed, armed_callback, run=False)
+    vector_flyer.detector.cam.acquire.put(1)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
     arm_status.wait(timeout=20)
     govStatus.wait(timeout=20)
@@ -3514,8 +3514,8 @@ def vectorDaq(currentRequest):
         return
     md2.phase.set(2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
-    flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
-    yield from bp.fly([flyer])
+    vector_flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
+    yield from bp.fly([vector_flyer])
 
 def clean_up_collection(currentRequest):
     # this is a plan that should will always be run after a collection is complete

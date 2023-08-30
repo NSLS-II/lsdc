@@ -162,7 +162,7 @@ class MD2Device(GonioDevice):
         self.phase.put(phase)
         def check_transition_state(*, old_value, value, **kwargs):
             "Return True when the MD2 is ready"
-            return old_value == 7 and value == 4 and self.phase.get() == phase
+            return (value == 4 and self.phase.get() == phase)
         return SubscriptionStatus(self.state, check_transition_state)
 
     def standard_scan(self, 

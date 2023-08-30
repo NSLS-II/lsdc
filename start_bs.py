@@ -184,13 +184,21 @@ elif beamline=="nyx":
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
+    md2 = MD2Device("XF:19IDC-ES{MD2}:", name="md2")
+    shutter = ShutterDevice('XF:19IDC-ES{MD2}:', name='shutter')
+    beamstop = BeamstopDevice('XF:19IDC-ES{MD2}:', name='beamstop')
+    front_light = FrontLightDevice('XF:19IDC-ES{MD2}:', name='front_light')
+    aperature = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Aperature', name='aperature')
+    scintillator = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Scintillator', name='scintillator')
+    capillary = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Capillary', name='capillary')
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
     from mxtools.eiger import EigerSingleTriggerV26
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
-    from nyxtools.flyer_eiger2 import NYXEiger2Flyer
-    flyer = NYXEiger2Flyer(vector, zebra, detector)
+    #from nyxtools.flyer_eiger2 import NYXEiger2Flyer
+    from md2_flyers import MD2StandardFlyer
+    flyer = MD2StandardFlyer(md2, detector)
     from nyxtools.nyx_raster_flyer import NYXRasterFlyer
     raster_flyer = NYXRasterFlyer(vector, zebra, detector)
 
@@ -201,13 +209,6 @@ elif beamline=="nyx":
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
 
-    md2 = MD2Device("XF:19IDC-ES{MD2}:", name="md2")
-    shutter = ShutterDevice('XF:19IDC-ES{MD2}:', name='shutter')
-    beamstop = BeamstopDevice('XF:19IDC-ES{MD2}:', name='beamstop')
-    front_light = FrontLightDevice('XF:19IDC-ES{MD2}:', name='front_light')
-    aperature = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Aperature', name='aperature')
-    scintillator = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Scintillator', name='scintillator')
-    capillary = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Capillary', name='capillary')
     
     back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 

@@ -3448,8 +3448,10 @@ def standardDaq(currentRequest):
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
+    start_time = time.time()
     md2.phase.set(2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=20)
+    logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     flyer.update_parameters(total_num_images, angle_start, scan_range, exposure_time)
     yield from bp.fly([flyer])
 
@@ -3512,19 +3514,23 @@ def vectorDaq(currentRequest):
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
+    start_time = time.time()
     md2.phase.set(2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=20)
+    logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     vector_flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
     yield from bp.fly([vector_flyer])
 
 def clean_up_collection(currentRequest):
     # this is a plan that should will always be run after a collection is complete
+    start_time = time.time()
     yield from bps.mv(flyer.detector.cam.acquire, 0)
     if (lastOnSample()):
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
         gov_status.wait(timeout=30)
     md2.phase.set(0)
     md2.ready_status().wait(timeout=30)
+    logger.info(f"clean_up took {time.time()-start_time} seconds.")
 
 def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):
 

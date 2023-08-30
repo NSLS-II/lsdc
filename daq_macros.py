@@ -3773,7 +3773,7 @@ def vectorDaq(currentRequest):
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
     md2.phase.set(2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=20)
+    md2.ready_status().wait(timeout=10)
     flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
     yield from bp.fly([flyer])
 
@@ -3783,6 +3783,8 @@ def clean_up_collection(currentRequest):
     if (lastOnSample()):
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
         gov_status.wait()
+    md2.phase.set(1)
+    md2.ready_status().wait(timeout=10)
 
 def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):
 

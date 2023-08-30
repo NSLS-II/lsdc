@@ -148,7 +148,7 @@ class MD2Device(GonioDevice):
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')
     detector_state = Cpt(EpicsSignal, 'DetectorState',name='det_state')
     detector_gate_pulse_enabled = Cpt(EpicsSignal, 'DetectorGatePulseEnabled',name='det_gate_pulse_enabled')
-    exporter = Cpt(ExporterComponent, address=os.environ['EXPORTER_HOST'], port=os.environ['EXPORTER_PORT'], name='exporter')
+    exporter = Cpt(ExporterComponent, address=os.environ['EXPORTER_HOST'], port=int(os.environ['EXPORTER_PORT']), name='exporter')
 
     def ready_status(self):
         # returns an ophyd status object that monitors the state pv for operations to complete

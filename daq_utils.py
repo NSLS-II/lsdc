@@ -34,7 +34,7 @@ global CAMERA_ANGLE_BEAM,CAMERA_ANGLE_ABOVE, CAMERA_ANGLE_BELOW
 CAMERA_ANGLE_BEAM = 0 # viewing angle is in line with beam, upstream from the sample, facing downstream, top toward ceiling
 CAMERA_ANGLE_ABOVE = 1 # viewing angle is directly above sample facing downward, top of view is downstream
 CAMERA_ANGLE_BELOW = 2 # viewing angle is directly below sample facing upward, top of view is downstream
-global mag1ViewAngle, mag2ViewAngle, mag3VivewAngle, mag4ViewAngle
+global mag1ViewAngle, mag2ViewAngle, mag3ViewAngle, mag4ViewAngle
 mag1ViewAngle = CAMERA_ANGLE_BEAM
 mag2ViewAngle = CAMERA_ANGLE_BEAM
 mag3ViewAngle = CAMERA_ANGLE_BEAM

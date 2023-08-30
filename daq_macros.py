@@ -3433,7 +3433,9 @@ def standardDaq(currentRequest):
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
     start_time = time.time()
+    logger.info(f"Configuring detector for standard collection with file_prefix {file_prefix} and data_directory_name {data_directory_name}")
     flyer.configure_detector(file_prefix, data_directory_name)
+    logger.info(f"Arming detector for standard collection with angle_start {angle_start}, img_width {img_width}, total_num_images {total_num_images}, exposure_per_image {exposure_per_image}, file_prefix {file_prefix}, data_directory_name {data_directory_name}, file_number_start {file_number_start}, x_beam {x_beam}, y_beam {y_beam}, wavelength {wavelength}, det_distance_m {det_distance_m}, num_images_per_file {num_images_per_file}")
     flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)

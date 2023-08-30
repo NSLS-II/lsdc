@@ -48,7 +48,7 @@ class MD2StandardFlyer():
         }
         
     def configure_detector(self, file_prefix, data_directory_name):
-        self.detector.file.external_name.put(file_prefix, wait=True)
+        self.detector.file.external_name.put(file_prefix)
         self.detector.file.write_path_template = data_directory_name
 
     def detector_arm(self, angle_start, img_width, total_num_images, exposure_per_image, 
@@ -63,9 +63,9 @@ class MD2StandardFlyer():
         self.detector.cam.acquire_time.put(exposure_per_image)
         self.detector.cam.acquire_period.put(exposure_per_image)
         self.detector.cam.num_triggers.put(total_num_images)
-        self.detector.cam.file_path.put(data_directory_name, wait=True)
-        self.detector.cam.fw_name_pattern.put(f"{file_prefix_minus_directory}_$id", wait=True)
-        self.detector.cam.sequence_id.put(file_number_start, wait=True)
+        self.detector.cam.file_path.put(data_directory_name)
+        self.detector.cam.fw_name_pattern.put(f"{file_prefix_minus_directory}_$id")
+        self.detector.cam.sequence_id.put(file_number_start)
         self.detector.cam.beam_center_x.put(x_beam)
         self.detector.cam.beam_center_y.put(y_beam)
         self.detector.cam.omega_incr.put(img_width)
@@ -75,7 +75,7 @@ class MD2StandardFlyer():
         self.detector.cam.trigger_mode.put(
             EXTERNAL_ENABLE
         )  # must be external_enable to get the correct number of triggers and stop acquire
-        self.detector.file.file_write_images_per_file.put(num_images_per_file, wait=True)
+        self.detector.file.file_write_images_per_file.put(num_images_per_file)
 
         def armed_callback(value, old_value, **kwargs):
             if old_value == 0 and value == 1:

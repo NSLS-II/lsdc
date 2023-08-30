@@ -778,6 +778,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
   #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
 
   if daq_utils.beamline == "nyx":
+    logger.info("center_on_click: %s" % str((x,y)))
     lsdc_x = daq_utils.screenPixX
     lsdc_y = daq_utils.screenPixY
     md2_x = getPvDesc("md2CenterPixelX") * 2
@@ -787,6 +788,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
     x = x * scale_x
     y = y * scale_y
     str_coords = f'x: {x}, y: {y}'
+    logger.info(f'center_on_click: {str_coords}')
     setPvDesc("MD2C2C", str_coords)
     return
 

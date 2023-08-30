@@ -156,6 +156,14 @@ class MD2Device(GonioDevice):
             "Return True when the MD2 is ready"
             return (value == 4)
         return SubscriptionStatus(self.state, check_ready)
+    
+    def phase_transition(self, phase):
+        # returns an ophyd status object that monitors the phase pv for operations to complete
+        self.phase.put(phase)
+        def check_transition_state(*, old_value, value, **kwargs):
+            "Return True when the MD2 is ready"
+            return old_value == 7 and value == 4 and self.phase.get() == phase
+        return SubscriptionStatus(self.state, check_transition_state)
 
     def standard_scan(self, 
             frame_number=0, # int: frame ID just for logging purposes.

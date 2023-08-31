@@ -3038,7 +3038,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.threeClickCount = 1
         self.click3Button.setStyleSheet("background-color: yellow")
         if(daq_utils.exporter_enabled):
-            self.md2.exporter.cmd("startManualSampleCentering")
+            self.md2.exporter.cmd("startManualSampleCentering", "")
         else:
             self.send_to_server("mvaDescriptor", ["omega", 0])
 

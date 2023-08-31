@@ -3018,7 +3018,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.threeClickCount = 1
         self.click3Button.setStyleSheet("background-color: yellow")
         if(daq_utils.exporter_enabled):
-            self.md2.exporter.cmd("startManualSampleCentering", "")
+            self.md2.exporter.cmd("startManualSampleCentring", "")
         else:
             self.send_to_server('mvaDescriptor("omega",0)')
 
@@ -3718,7 +3718,7 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
             if daq_utils.exporter_enabled:
-                self.md2.exporter.cmd("setCenteringClick", f"{correctedC2C_x} {correctedC2C_y}")
+                self.md2.exporter.cmd("setCentringClick", f"{correctedC2C_x} {correctedC2C_y}")
                 return
             else:
                 comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'

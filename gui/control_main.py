@@ -3727,6 +3727,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 correctedC2C_x = correctedC2C_x * scale_x
                 correctedC2C_y = correctedC2C_y * scale_y
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
+                if self.threeClickCount == 4:
+                    self.threeClickCount = 0
+                    self.click3Button.setStyleSheet("background-color: None")
                 return
             else:
                 comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'

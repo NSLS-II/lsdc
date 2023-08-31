@@ -145,6 +145,7 @@ class MD2Device(GonioDevice):
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
     center_pixel_x = Cpt(EpicsSignalRO, 'BeamPositionHorizontal',name='center_pixel_x')
     center_pixel_y = Cpt(EpicsSignalRO, 'BeamPositionVertical',name='center_pixel_y')
+    centring_click = Cpt(EpicsSignal, 'setCentringClick',name='centring_click')
     state = Cpt(EpicsSignalRO, 'State',name='state')
     phase = Cpt(EpicsSignal, 'CurrentPhase',name='phase')
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')

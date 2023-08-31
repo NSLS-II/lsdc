@@ -8,7 +8,7 @@ from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
-from devices import FrontLightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
+from devices import LightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
 from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
                                  TopAlignerFast, TopAlignerSlow, GoniometerStack)
@@ -187,7 +187,8 @@ elif beamline=="nyx":
     md2 = MD2Device("XF:19IDC-ES{MD2}:", name="md2")
     shutter = ShutterDevice('XF:19IDC-ES{MD2}:', name='shutter')
     beamstop = BeamstopDevice('XF:19IDC-ES{MD2}:', name='beamstop')
-    front_light = FrontLightDevice('XF:19IDC-ES{MD2}:', name='front_light')
+    front_light = LightDevice('XF:19IDC-ES{MD2}:Front', name='front_light')
+    back_light = LightDevice('XF:19IDC-ES{MD2}:Back', name='back_light')
     aperature = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Aperature', name='aperature')
     scintillator = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Scintillator', name='scintillator')
     capillary = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Capillary', name='capillary')
@@ -211,7 +212,7 @@ elif beamline=="nyx":
     gov_robot = govs.gov.Robot
 
     
-    back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
+    #back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 
     back_light_high_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:HighLimit-RB",name="back_light_high_limit")
     back_light_range = (back_light_low_limit.get(), back_light_high_limit.get())

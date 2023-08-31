@@ -95,10 +95,10 @@ class ExporterComponent(Cpt):
             elif "EVT:" in line:
                 pass #return self.process_evt(line)
 
-class FrontLightDevice(Device):
-    control = Cpt(EpicsSignal, 'FrontLightIsOn', name='control')
-    factor = Cpt(EpicsSignal, 'FrontLightFactor', name='factor')
-    level = Cpt(EpicsSignal, 'FrontLightLevel', name='level')
+class LightDevice(Device):
+    control = Cpt(EpicsSignal, 'LightIsOn', name='control')
+    factor = Cpt(EpicsSignal, 'LightFactor', name='factor')
+    level = Cpt(EpicsSignal, 'LightLevel', name='level')
     
     def is_on(self):
         return self.control.get() == 1

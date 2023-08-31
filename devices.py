@@ -143,6 +143,8 @@ class MD2Device(GonioDevice):
     # TODO: Enum for MD2 phases and states
     cx = Cpt(MD2Positioner, 'CentringX',name='cx')
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
+    center_pixel_x = Cpt(EpicsSignalRO, 'BeamPositionHorizontal',name='center_pixel_x')
+    center_pixel_y = Cpt(EpicsSignalRO, 'BeamPositionVertical',name='center_pixel_y')
     state = Cpt(EpicsSignalRO, 'State',name='state')
     phase = Cpt(EpicsSignal, 'CurrentPhase',name='phase')
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')

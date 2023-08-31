@@ -3717,8 +3717,16 @@ class ControlMain(QtWidgets.QMainWindow):
 
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
-            if daq_utils.exporter_enabled:
-                self.md2.exporter.cmd("setCentringClick", f"{correctedC2C_x} {correctedC2C_y}")
+            if daq_utils.exporter_enabled: 
+                lsdc_x = daq_utils.screenPixX
+                lsdc_y = daq_utils.screenPixY
+                md2_x = self.md2.center_pixel_x.get() * 2
+                md2_y = self.md2.center_pixel_y.get() * 2
+                scale_x = md2_x / lsdc_x
+                scale_y = md2_y / lsdc_y
+                correctedC2C_x = correctedC2C_x * scale_x
+                correctedC2C_y = correctedC2C_y * scale_y
+                self.md2.exporter.cmd("setCentringClick", f"0 {correctedC2C_x} {correctedC2C_y}")
                 return
             else:
                 comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'

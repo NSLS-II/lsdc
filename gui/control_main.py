@@ -3709,6 +3709,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.threeClickCount = self.threeClickCount + 1
             if daq_utils.exporter_enabled:
                 self.md2.exporter.cmd("setCenteringClick", f"{correctedC2C_x} {correctedC2C_y}")
+                return
             else:
                 comm_s = (
                 "center_on_click",

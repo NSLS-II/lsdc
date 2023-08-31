@@ -18,7 +18,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
-from devices import GonioDevice, CameraDevice
+from devices import GonioDevice, CameraDevice, MD2Device, LightDevice
 
 import albulaUtils
 import daq_utils
@@ -3017,7 +3017,10 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info("3-click center loop")
         self.threeClickCount = 1
         self.click3Button.setStyleSheet("background-color: yellow")
-        self.send_to_server('mvaDescriptor("omega",0)')
+        if(daq_utils.exporter_enabled):
+            self.md2.exporter.cmd("startManualSampleCentering")
+        else:
+            self.send_to_server('mvaDescriptor("omega",0)')
 
     def fillPolyRaster(
         self, rasterReq, waitTime=1
@@ -3714,7 +3717,10 @@ class ControlMain(QtWidgets.QMainWindow):
 
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
-            comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'
+            if daq_utils.exporter_enabled:
+                self.md2.exporter.cmd("setCenteringClick", (correctedC2C_x, correctedC2C_y))
+            else:
+                comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'
         else:
             comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
         if not self.vidActionRasterExploreRadio.isChecked():
@@ -4949,8 +4955,14 @@ class ControlMain(QtWidgets.QMainWindow):
         self.pauseButtonStateSignal.emit(pauseButtonStateVar)
 
     def initOphyd(self):
-        self.gon = GonioDevice("XF:19IDC-ES{MD2}:", name="gonio")
-        self.camera = CameraDevice("XF:19IDC-ES{MD2}:", name="camera")
+        if daq_utils.beamline == "nyx":
+            self.gon = GonioDevice("XF:19IDC-ES{MD2}:", name="gonio")
+            self.camera = CameraDevice("XF:19IDC-ES{MD2}:", name="camera")
+            self.md2 = MD2Device("XF:19IDC-ES{MD2}:", name="camera")
+            self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
+            self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
+        else:
+            pass
 
     def initUI(self):
         self.tabs = QtWidgets.QTabWidget()

@@ -72,6 +72,7 @@ def init_environment():
   highMagPixY = float(getBlConfig("highMagPixY"))
   screenPixX = float(getBlConfig("screenPixX"))
   screenPixY = float(getBlConfig("screenPixY"))
+  exporter_enabled = bool(getBlConfig("exporterEnabled"))
 
   try: 
     unitScaling = float(getBlConfig("unitScaling"))

@@ -206,13 +206,13 @@ class MD2Device(GonioDevice):
         if start_cy is None:
             start_cy = self.cy.val()
         if stop_y is None:
-            stop_y = self.y.val()+0.1
+            stop_y = self.y.val()
         if stop_z is None:
-            stop_z = self.z.val()+0.1
+            stop_z = self.z.val()
         if stop_cx is None:
-            stop_cx = self.cx.val()+0.1
+            stop_cx = self.cx.val()
         if stop_cy is None:
-            stop_cy = self.cy.val()+0.1
+            stop_cy = self.cy.val()
 
         # List of scan parameters values, comma separated. The axes start values define the beginning
         # of the exposure, that is when all the axes have a steady speed and when the shutter/detector

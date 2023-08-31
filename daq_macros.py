@@ -3695,11 +3695,11 @@ def standardDaq(currentRequest):
     start_time = time.time()
     logger.info(f"Configuring detector for standard collection with file_prefix {file_prefix} and data_directory_name {data_directory_name}")
     flyer.configure_detector(file_prefix, data_directory_name)
-    flyer.detector.stage()
     logger.info(f"Arming detector for standard collection with angle_start {angle_start}, img_width {img_width}, total_num_images {total_num_images}, exposure_per_image {exposure_per_image}, file_prefix {file_prefix}, data_directory_name {data_directory_name}, file_number_start {file_number_start}, x_beam {x_beam}, y_beam {y_beam}, wavelength {wavelength}, det_distance_m {det_distance_m}, num_images_per_file {num_images_per_file}")
     flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)
+    flyer.detector.stage()
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
@@ -3713,7 +3713,7 @@ def standardDaq(currentRequest):
         return
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=20)
+    md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     flyer.update_parameters(total_num_images, angle_start, scan_range, exposure_time)
     yield from bp.fly([flyer])
@@ -3766,6 +3766,7 @@ def vectorDaq(currentRequest):
     vector_flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)
+    flyer.detector.stage()
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(vector_flyer.detector.cam.armed, armed_callback, run=False)
@@ -3779,7 +3780,7 @@ def vectorDaq(currentRequest):
         return
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=20)
+    md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     vector_flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
     yield from bp.fly([vector_flyer])
@@ -3793,7 +3794,7 @@ def clean_up_collection(currentRequest):
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
         gov_status.wait(timeout=30)
     yield from bps.mv(md2.phase, 0)
-    md2.ready_status().wait(timeout=30)
+    md2.ready_status().wait(timeout= 20)
     logger.info(f"clean_up took {time.time()-start_time} seconds.")
 
 def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):

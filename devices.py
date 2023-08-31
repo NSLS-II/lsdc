@@ -277,3 +277,12 @@ class ShutterDevice(Device):
 
     def close_shutter(self):
         self.control.set(0)#self.pos_cls.get())
+
+class CameraDevice(Device):
+    # MD2 camera has the following attributes:
+    # CoaxCamScaleX
+    # CoaxCamScaleY
+    # CoaxialCameraZoomValue
+    scale_x = Cpt(EpicsSignalRO, 'CoaxCamScaleX', name='scale_x')
+    scale_y = Cpt(EpicsSignalRO, 'CoaxCamScaleY', name='scale_y')
+    zoom = Cpt(EpicsSignal, 'CoaxialCameraZoomValue', name='zoom')

@@ -18,7 +18,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
-from devices import GonioDevice
+from devices import GonioDevice, CameraDevice
 
 import albulaUtils
 import daq_utils
@@ -1065,6 +1065,18 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.zoomRadioGroup.addButton(self.zoom3Radio)
                 if daq_utils.sampleCameraCount >= 4:
                     self.zoomRadioGroup.addButton(self.zoom4Radio)
+        else:
+            self.zoomLevelComboBox = QtWidgets.QComboBox(self)
+            self.zoomLevelComboBox.addItems(["1","2","3","4","5","6","7"])
+            self.zoomLevelComboBox.activated[str].connect(self.zoomLevelComboActivatedCB)
+            self.zoom1Radio.hide()
+            self.zoom2Radio.hide()
+            self.zoom3Radio.hide()
+            self.zoom4Radio.hide()
+            hBoxZoomLevelLayout = QtWidgets.QHBoxLayout()
+            hBoxZoomLevelLayout.addWidget(self.zoomLevelComboBox)
+            
+
         beamOverlayPen = QtGui.QPen(QtCore.Qt.red)
         self.tempBeamSizeXMicrons = 30
         self.tempBeamSizeYMicrons = 30
@@ -1210,6 +1222,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 hBoxVidControlLayout.addWidget(self.zoom3Radio)
                 if daq_utils.sampleCameraCount >= 4:
                     hBoxVidControlLayout.addWidget(self.zoom4Radio)
+        else:
+            hBoxVidControlLayout.addLayout(hBoxZoomLevelLayout)
         hBoxVidControlLayout.addWidget(focusLabel)
         hBoxVidControlLayout.addWidget(focusPlusButton)
         hBoxVidControlLayout.addWidget(focusMinusButton)
@@ -1631,6 +1645,9 @@ class ControlMain(QtWidgets.QMainWindow):
             commTime = etime - stime
             if commTime > 0.01:
                 return
+
+    def zoomLevelComboActivatedCB(self, identifier):
+        self.camera.zoom.set(identifier)
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}
@@ -4933,6 +4950,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def initOphyd(self):
         self.gon = GonioDevice("XF:19IDC-ES{MD2}:", name="gonio")
+        self.camera = CameraDevice("XF:19IDC-ES{MD2}:", name="camera")
 
     def initUI(self):
         self.tabs = QtWidgets.QTabWidget()

@@ -1700,7 +1700,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 return
 
     def zoomLevelComboActivatedCB(self, identifier):
-        self.camera.zoom.set(identifier)
+        self.camera.zoom.put(identifier)
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}

@@ -55,6 +55,8 @@ class MD2StandardFlyer():
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file):
         self.detector.cam.save_files.put(1)
+        self.detector.cam.sequence_id.put(file_number_start)
+        self.detector.cam.det_distance.put(det_distance_m)
         self.detector.cam.file_owner.put(getpass.getuser())
         self.detector.cam.file_owner_grp.put(grp.getgrgid(os.getgid())[0])
         self.detector.cam.file_perms.put(420)
@@ -68,23 +70,21 @@ class MD2StandardFlyer():
         )  # must be external_enable to get the correct number of triggers and stop acquire
         self.detector.cam.file_path.put(data_directory_name)
         self.detector.cam.fw_name_pattern.put(f"{file_prefix_minus_directory}_$id")
-        self.detector.cam.sequence_id.put(file_number_start)
         self.detector.cam.beam_center_x.put(x_beam)
         self.detector.cam.beam_center_y.put(y_beam)
         self.detector.cam.omega_incr.put(img_width)
         self.detector.cam.omega_start.put(angle_start)
         self.detector.cam.wavelength.put(wavelength)
-        self.detector.cam.det_distance.put(det_distance_m)
         self.detector.file.file_write_images_per_file.put(num_images_per_file)
 
-        def armed_callback(value, old_value, **kwargs):
-            if old_value == 0 and value == 1:
-                return True
-            return False
+        #def armed_callback(value, old_value, **kwargs):
+        #   if old_value == 0 and value == 1:
+        #       return True
+        #   return False
 
-        status = SubscriptionStatus(self.detector.cam.armed, armed_callback, run=False)
-        self.detector.cam.acquire.put(1)
-        yield status
+        #status = SubscriptionStatus(self.detector.cam.armed, armed_callback, run=False)
+        #self.detector.cam.acquire.put(1)
+        #yield status
 
     def complete(self):
         # monitor md2 status, wait for ready or timeout and then return

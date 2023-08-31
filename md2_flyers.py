@@ -62,6 +62,10 @@ class MD2StandardFlyer():
         file_prefix_minus_directory = file_prefix_minus_directory.split("/")[-1]
         self.detector.cam.acquire_time.put(exposure_per_image)
         self.detector.cam.acquire_period.put(exposure_per_image)
+        self.detector.cam.trigger_mode.put(
+            EXTERNAL_ENABLE
+        )  # must be external_enable to get the correct number of triggers and stop acquire
+        self.detector.cam.num_images.put(total_num_images)
         self.detector.cam.num_triggers.put(total_num_images)
         self.detector.cam.file_path.put(data_directory_name)
         self.detector.cam.fw_name_pattern.put(f"{file_prefix_minus_directory}_$id")
@@ -72,9 +76,6 @@ class MD2StandardFlyer():
         self.detector.cam.omega_start.put(angle_start)
         self.detector.cam.wavelength.put(wavelength)
         self.detector.cam.det_distance.put(det_distance_m)
-        self.detector.cam.trigger_mode.put(
-            EXTERNAL_ENABLE
-        )  # must be external_enable to get the correct number of triggers and stop acquire
         self.detector.file.file_write_images_per_file.put(num_images_per_file)
 
         def armed_callback(value, old_value, **kwargs):

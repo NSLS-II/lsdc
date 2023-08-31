@@ -3726,7 +3726,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 scale_y = md2_y / lsdc_y
                 correctedC2C_x = correctedC2C_x * scale_x
                 correctedC2C_y = correctedC2C_y * scale_y
-                self.md2.exporter.cmd("setCentringClick", f"0 {correctedC2C_x} {correctedC2C_y}")
+                self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
                 return
             else:
                 comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",jog=90,viewangle={current_viewangle})'

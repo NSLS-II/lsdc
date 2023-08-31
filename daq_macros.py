@@ -3699,7 +3699,6 @@ def standardDaq(currentRequest):
     flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)
-    flyer.detector.stage()
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
@@ -3711,6 +3710,7 @@ def standardDaq(currentRequest):
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
+    flyer.detector.stage()
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
@@ -3766,7 +3766,6 @@ def vectorDaq(currentRequest):
     vector_flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
                      wavelength, det_distance_m, num_images_per_file)
-    flyer.detector.stage()
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(vector_flyer.detector.cam.armed, armed_callback, run=False)
@@ -3778,6 +3777,7 @@ def vectorDaq(currentRequest):
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
         return
+    flyer.detector.stage()
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)

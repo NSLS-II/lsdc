@@ -12,11 +12,11 @@ esac
 case $servorws in
 	ws*)
 		echo Workstation - activating GUI env
-		CONDA_ENV_BASE=/opt/conda_envs/lsdc-gui-2023-2-latest
+		CONDA_ENV_BASE=/opt/conda_envs/lsdc-gui-2023-3-latest
 		;;
 	*)
 		echo Server - activating server env
-		CONDA_ENV_BASE=/opt/conda_envs/lsdc-server-2023-2-latest
+		CONDA_ENV_BASE=/opt/conda_envs/lsdc-server-2023-3-latest
 		;;
 esac
 echo Running MT_LoadCheck script

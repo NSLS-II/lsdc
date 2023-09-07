@@ -1,4 +1,4 @@
-#!/opt/conda_envs/lsdc-server-2023-2-latest/bin/ipython -i
+#!/opt/conda_envs/lsdc-server-2023-3-latest/bin/ipython -i
 """
 The server run when lsdcRemote is used
 """
@@ -15,6 +15,7 @@ import logging
 from logging import handlers
 from start_bs import robot
 from embl_robot import EMBLRobot
+
 if isinstance(robot, EMBLRobot):
     print("loading RobotControlLib")
     import RobotControlLib
@@ -23,21 +24,26 @@ else:
 
 logger = logging.getLogger()
 logging.getLogger().setLevel(logging.INFO)
-logging.getLogger('ophyd').setLevel(logging.WARN)
-logging.getLogger('caproto').setLevel(logging.WARN)
-handler1 = handlers.RotatingFileHandler('lsdcServerLog.txt', maxBytes=5000000, backupCount=100)
-handler2 = handlers.RotatingFileHandler('/var/log/dama/%slsdcServerLog.txt' % os.environ['BEAMLINE_ID'], maxBytes=5000000, backupCount=100)
-myformat = logging.Formatter('%(asctime)s %(name)-8s %(levelname)-8s %(message)s')
+logging.getLogger("ophyd").setLevel(logging.WARN)
+logging.getLogger("caproto").setLevel(logging.WARN)
+handler1 = handlers.RotatingFileHandler(
+    "lsdcServerLog.txt", maxBytes=5000000, backupCount=100
+)
+handler2 = handlers.RotatingFileHandler(
+    "/var/log/dama/%slsdcServerLog.txt" % os.environ["BEAMLINE_ID"],
+    maxBytes=5000000,
+    backupCount=100,
+)
+myformat = logging.Formatter("%(asctime)s %(name)-8s %(levelname)-8s %(message)s")
 handler1.setFormatter(myformat)
 handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 logger.addHandler(handler2)
 
 sitefilename = ""
-global command_list,immediate_command_list,z
+global command_list, immediate_command_list, z
 command_list = []
 immediate_command_list = []
 z = 25
 
 pybass_init()
-

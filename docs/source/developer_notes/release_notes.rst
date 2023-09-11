@@ -2,7 +2,7 @@
  Release History
 =================
 
-2.0.2 (2023-09-xx, a.k.a. 2023-3)
+2.0.2 (2023-09-12, a.k.a. 2023-3)
 =================================
 
 Fixes and other changes
@@ -26,8 +26,10 @@ Fixes and other changes
 * Re-enable ISPyB storage of data collections and processing results
 * Standardize handling of FMX towards AMX when mounting a sample
 * Move storage of raster results in ISPyB onto server, to remove ISPyB dependence in GUI
+* Save FMX flux reference after energy change
+* Make FMX behave more like AMX after sample mount - move omega to 0 before SA-SE governor change, do not home pins after sample mount
 
-* NYX-specific (2023-2-nyx)
+* NYX-specific (2023-2-nyx) - not merged into master due to significant differences
 
   * GUI improvements
 

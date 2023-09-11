@@ -27,7 +27,6 @@ Fixes and other changes
 * Standardize handling of FMX towards AMX when mounting a sample
 * Move storage of raster results in ISPyB onto server, to remove ISPyB dependence in GUI
 * Save FMX flux reference after energy change
-* Make FMX behave more like AMX after sample mount - move omega to 0 before SA-SE governor change, do not home pins after sample mount
 
 * NYX-specific (2023-2-nyx) - not merged into master due to significant differences
 

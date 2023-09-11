@@ -1071,7 +1071,7 @@ def slit1_flux_reference(flux_df,slit1Gap):
 def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 1000, transSet='All'):
     """
     Sets Slit 1 X gap and Slit 1 Y gap to a list of settings,
-    and returns flux reference values in a pandas DataFrame.
+    and stores flux reference values in a global pandas DataFrame.
     
     Parameters
     ----------

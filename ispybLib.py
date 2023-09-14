@@ -204,7 +204,7 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
      comm = mx_data_reduction_dict['AutoProcProgramContainer']['AutoProcProgram']['processingCommandLine']
-     mx_data_reduction_dict['AutoProcProgramContainer']['AutoProcProgram']['processingCommandLine'] = comm[:255]
+     mx_data_reduction_dict['AutoProcProgramContainer']['AutoProcProgram']['processingCommandLine'] = comm[(len(comm)-255:]
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
      mxprocessing.upsert_program_ex(program_id=app_id,status=1)
          

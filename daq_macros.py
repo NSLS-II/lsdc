@@ -3674,13 +3674,13 @@ def standardDaq(currentRequest):
     file_number_start = reqObj["file_number_start"]
     sweep_start_angle = reqObj["sweep_start"]
     sweep_end_angle = reqObj["sweep_end"]
-    exposure_time = reqObj["exposure_time"]
     file_prefix = str(reqObj["file_prefix"])
     data_directory_name = str(reqObj["directory"])
     file_number_start = reqObj["file_number_start"]
     img_width = reqObj["img_width"]
     exposure_per_image = reqObj["exposure_time"]
     total_num_images = int((sweep_end_angle - sweep_start_angle) / img_width)
+    total_exposure_time = exposure_per_image * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle
     num_images_per_file = total_num_images
@@ -3715,7 +3715,7 @@ def standardDaq(currentRequest):
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
-    flyer.update_parameters(total_num_images, angle_start, scan_range, exposure_time)
+    flyer.update_parameters(total_num_images, angle_start, scan_range, total_exposure_time)
     yield from bp.fly([flyer])
 
 def vectorDaq(currentRequest):
@@ -3735,13 +3735,13 @@ def vectorDaq(currentRequest):
     file_number_start = reqObj["file_number_start"]
     sweep_start_angle = reqObj["sweep_start"]
     sweep_end_angle = reqObj["sweep_end"]
-    exposure_time = reqObj["exposure_time"]
     file_prefix = str(reqObj["file_prefix"])
     data_directory_name = str(reqObj["directory"])
     file_number_start = reqObj["file_number_start"]
     img_width = reqObj["img_width"]
     exposure_per_image = reqObj["exposure_time"]
     total_num_images = int((sweep_end_angle - sweep_start_angle) / img_width)
+    total_exposure_time = reqObj["exposure_time"] * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle
     num_images_per_file = total_num_images
@@ -3782,7 +3782,7 @@ def vectorDaq(currentRequest):
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
-    vector_flyer.update_parameters(angle_start, scan_range, exposure_time, start_y, start_z, stop_y, stop_z)
+    vector_flyer.update_parameters(angle_start, scan_range, total_exposure_time, start_y, start_z, stop_y, stop_z)
     yield from bp.fly([vector_flyer])
 
 def clean_up_collection(currentRequest):

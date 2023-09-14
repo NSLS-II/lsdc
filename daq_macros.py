@@ -3716,7 +3716,9 @@ def standardDaq(currentRequest):
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     flyer.update_parameters(total_num_images, angle_start, scan_range, total_exposure_time)
+    logger.info(f"flyer handoff")
     yield from bp.fly([flyer])
+    logger.info(f"fly complete")
 
 def vectorDaq(currentRequest):
     # collect all parameters

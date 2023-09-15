@@ -89,7 +89,8 @@ class MD2StandardFlyer():
     def complete(self):
         # monitor md2 status, wait for ready or timeout and then return
         ready_status = self.md2.ready_status()
-        ready_status.wait(timeout=20)
+        timeout = self.collection_params["exposure_time"] + 10
+        ready_status.wait(timeout=timeout)
         return ready_status
 
     def describe_collect(self):

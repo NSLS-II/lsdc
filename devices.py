@@ -153,6 +153,9 @@ class MD2Device(GonioDevice):
     detector_gate_pulse_enabled = Cpt(EpicsSignal, 'DetectorGatePulseEnabled',name='det_gate_pulse_enabled')
     exporter = Cpt(ExporterComponent, address=os.environ['EXPORTER_HOST'], port=int(os.environ['EXPORTER_PORT']), name='exporter')
 
+    def is_ready(self):
+        return self.state.get() == 4
+
     def ready_status(self):
         # returns an ophyd status object that monitors the state pv for operations to complete
         def check_ready(*, old_value, value, **kwargs):

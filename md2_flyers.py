@@ -215,3 +215,54 @@ class MD2VectorFlyer(MD2StandardFlyer):
             "stop_y": stop_y,
             "stop_z": stop_z,
         }
+
+class MD2RasterFlyer(MD2StandardFlyer):
+        # List of scan parameters values, "/t" separated. The axes start values define the beginning
+        # of the exposure, that is when all the axes have a steady speed and when the shutter/detector
+        # are triggered.
+        # The axes stop values are for the end of detector exposure and define the position at the
+        # beginning of the deceleration.
+        # Inputs names: "omega_range", "line_range", "total_uturn_range", "start_omega", "start_y",
+        # "start_z", "start_cx", "start_cy", "number_of_lines", "frames_per_lines", "exposure_time",
+        # "invert_direction", "use_centring_table", "use_fast_mesh_scans"
+
+    def __init__(self, md2, detector=None) -> None:
+        super().__init__(md2, detector)
+        self.name = "MD2RasterFlyer"
+
+    def kickoff(self):
+        # params used are start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z
+        md2_msg = self.md2.raster_scan(omega_range=self.collection_params["omega_range"],
+                             line_range=self.collection_params["line_range"],
+                             total_uturn_range=self.collection_params["total_uturn_range"],
+                             start_omega=self.collection_params["start_omega"],
+                             start_y=self.collection_params["start_y"],
+                             start_z=self.collection_params["start_z"],
+                             start_cx=self.collection_params["start_cx"],
+                             start_cy=self.collection_params["start_cy"],
+                             number_of_lines=self.collection_params["number_of_lines"],
+                             frames_per_lines=self.collection_params["frames_per_lines"],
+                             exposure_time=self.collection_params["exposure_time"],
+                             invert_direction=self.collection_params["invert_direction"],
+                             use_centring_table=self.collection_params["use_centring_table"],
+                             use_fast_mesh_scans=self.collection_params["use_fast_mesh_scans"])
+        logger.info(f"md2_msg: {md2_msg}")
+        return NullStatus()
+    
+    def update_parameters(self, omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_lines, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans):
+        self.collection_params = {
+            "omega_range": omega_range,
+            "line_range": line_range,
+            "total_uturn_range": total_uturn_range,
+            "start_omega": start_omega,
+            "start_y": start_y,
+            "start_z": start_z,
+            "start_cx": start_cx,
+            "start_cy": start_cy,
+            "number_of_lines": number_of_lines,
+            "frames_per_lines": frames_per_lines,
+            "exposure_time": exposure_time,
+            "invert_direction": invert_direction,
+            "use_centring_table": use_centring_table,
+            "use_fast_mesh_scans": use_fast_mesh_scans,
+        }

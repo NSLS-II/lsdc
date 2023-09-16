@@ -244,7 +244,7 @@ class MD2Device(GonioDevice):
             frames_per_line=5, # int: number of frames on the horizontal range.
             exposure_time=1.2, # double: exposure time (sec) to control shutter command. +1, based on the exaples given
             invert_direction=True, # boolean: true to enable passes in the reverse direction.
-            use_table_centering=False, # boolean: true to use the centring table to do the pitch movements.
+            use_table_centering=True, # boolean: true to use the centring table to do the pitch movements.
             use_fast_mesh_scans=True # boolean: true to use the fast raster scan if available (power PMAC).
             ):
 

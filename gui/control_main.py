@@ -3615,7 +3615,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.capture is None:
             return
         retval, self.currentFrame = self.capture.read()
-        self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_AREA)
+        self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_LINEAR)
+        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
         if self.currentFrame is None:
             logger.debug(
                 "no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct"

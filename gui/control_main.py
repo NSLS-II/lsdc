@@ -1701,6 +1701,11 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
+        daq_utils.lowMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
+        daq_utils.lowMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
+        daq_utils.highMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
+        daq_utils.highMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
+        
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}
@@ -4880,6 +4885,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.md2 = MD2Device("XF:19IDC-ES{MD2}:", name="camera")
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
+            daq_utils.lowMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
+            daq_utils.lowMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
+            daq_utils.highMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
+            daq_utils.highMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
         else:
             pass
 

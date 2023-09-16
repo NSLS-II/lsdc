@@ -198,11 +198,10 @@ elif beamline=="nyx":
     from mxtools.eiger import EigerSingleTriggerV26
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     #from nyxtools.flyer_eiger2 import NYXEiger2Flyer
-    from md2_flyers import MD2StandardFlyer, MD2VectorFlyer
+    from md2_flyers import MD2StandardFlyer, MD2VectorFlyer, MD2RasterFlyer
     flyer = MD2StandardFlyer(md2, detector)
     vector_flyer = MD2VectorFlyer(md2, detector)
-    from nyxtools.nyx_raster_flyer import NYXRasterFlyer
-    raster_flyer = NYXRasterFlyer(vector, zebra, detector)
+    raster_flyer = MD2RasterFlyer(md2, detector)
 
     from nyxtools.isara_robot import IsaraRobotDevice
     from denso_robot import OphydRobot
@@ -211,7 +210,7 @@ elif beamline=="nyx":
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
 
-    
+
     #back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 
     back_light_high_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:HighLimit-RB",name="back_light_high_limit")

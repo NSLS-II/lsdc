@@ -320,9 +320,10 @@ def read_db():
 
 def init_motors():
   global motor_channel_dict
+  md2_motors = ["omega","sampleX","sampleY","sampleZ", "finex", "finey", "finez"]
 
   for key in list(motor_dict.keys()):
-    if beamline_designation == "XF:19ID" and ((key == "omega") or (key == "sampleX") or (key == "sampleY") or (key == "sampleZ")):
+    if beamline_designation == "XF:19ID" and key in md2_motors:
       motor_channel_dict[motor_dict[key]] = MD2Positioner(motor_dict[key],name = key)
     else:
       motor_channel_dict[motor_dict[key]] = EpicsMotor(motor_dict[key],name = key)

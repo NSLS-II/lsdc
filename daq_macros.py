@@ -3492,10 +3492,12 @@ def vectorDaq(currentRequest):
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
     vector_params = reqObj["vectorParams"]
-    #x_vec_start=vector_params["vecStart"]["x"]
     start_y=vector_params["vecStart"]["y"]
     start_z=vector_params["vecStart"]["z"]
-    #x_vec_end=vector_params["vecEnd"]["x"]
+    start_cx=vector_params["vecStart"]["finex"]
+    start_cy=vector_params["vecStart"]["finey"]
+    stop_cx=vector_params["vecEnd"]["finex"]
+    stop_cy=vector_params["vecEnd"]["finey"]
     stop_y=vector_params["vecEnd"]["y"]
     stop_z=vector_params["vecEnd"]["z"]
 
@@ -3526,7 +3528,7 @@ def vectorDaq(currentRequest):
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
-    vector_flyer.update_parameters(angle_start, scan_range, total_exposure_time, start_y, start_z, stop_y, stop_z)
+    vector_flyer.update_parameters(angle_start, scan_range, total_exposure_time, start_y, start_z, stop_y, stop_z, start_cx, start_cy, stop_cx, stop_cy)
     yield from bp.fly([vector_flyer])
 
 def clean_up_collection(currentRequest):

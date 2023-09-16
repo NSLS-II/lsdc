@@ -3608,6 +3608,7 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.capture is None:
             return
         retval, self.currentFrame = self.capture.read()
+        self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_AREA)
         if self.currentFrame is None:
             logger.debug(
                 "no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct"
@@ -4438,15 +4439,18 @@ class ControlMain(QtWidgets.QMainWindow):
                 "x": self.gon.x.val(),
                 "y": self.gon.y.val(),
                 "z": self.gon.z.val(),
+                "finex": self.gon.cx.val(),
+                "finey": self.gon.cy.val(),
                 "omega": self.gon.omega.val(),
             }
+        logger.info(f"adding coords {gonioCoords}")
         if prevVectorPoint:
             vectorCoords = self.transform_vector_coords(
                 prevVectorPoint["coords"], gonioCoords
             )
         else:
             vectorCoords = {
-                k: v for k, v in gonioCoords.items() if k in ["x", "y", "z"]
+                k: v for k, v in gonioCoords.items() if k in ["x", "y", "z", "finex", "finey"]
             }
         return {
             "coords": vectorCoords,

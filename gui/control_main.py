@@ -4443,15 +4443,15 @@ class ControlMain(QtWidgets.QMainWindow):
                 "finey": self.gon.cy.val(),
                 "omega": self.gon.omega.val(),
             }
-        logger.info(f"adding coords {gonioCoords}")
-        if prevVectorPoint:
-            vectorCoords = self.transform_vector_coords(
-                prevVectorPoint["coords"], gonioCoords
-            )
-        else:
-            vectorCoords = {
+        #if prevVectorPoint:
+        #    vectorCoords = self.transform_vector_coords(
+        #        prevVectorPoint["coords"], gonioCoords
+        #    )
+        #else:
+        vectorCoords = {
                 k: v for k, v in gonioCoords.items() if k in ["x", "y", "z", "finex", "finey"]
             }
+        logger.info("vector coords: %s" % vectorCoords)
         return {
             "coords": vectorCoords,
             "gonioCoords": gonioCoords,

@@ -1701,11 +1701,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
-        daq_utils.lowMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
-        daq_utils.lowMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
-        daq_utils.highMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
-        daq_utils.highMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
-        
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}
@@ -3383,24 +3378,32 @@ class ControlMain(QtWidgets.QMainWindow):
         return fov
 
     def screenXPixels2microns(self, pixels):
-        fov = self.getCurrentFOV()
-        fovX = fov["x"]*1000
-        return float(pixels) * (fovX / daq_utils.screenPixX)
+        md2_img_width = self.md2.center_pixel_x.get() * 2.0
+        lsdc_img_width = daq_utils.screenPixX
+        img_scale_factor = md2_img_width / lsdc_img_width
+        pixels_per_micron = self.camera.scale_x.get() * 1000
+        return float(pixels * img_scale_factor) / pixels_per_micron
 
     def screenYPixels2microns(self, pixels):
-        fov = self.getCurrentFOV()
-        fovY = fov["y"]*1000
-        return float(pixels) * (fovY / daq_utils.screenPixY)
+        md2_img_height = self.md2.center_pixel_y.get() * 2.0
+        lsdc_img_height = daq_utils.screenPixY
+        pixels_per_micron = self.camera.scale_y.get() * 1000
+        img_scale_factor = md2_img_height / lsdc_img_height
+        return float(pixels * img_scale_factor) / pixels_per_micron
 
     def screenXmicrons2pixels(self, microns):
-        fov = self.getCurrentFOV()
-        fovX = fov["x"]*1000
-        return int(round(microns * (daq_utils.screenPixX / fovX)))
+        md2_img_width = self.md2.center_pixel_x.get() * 2.0
+        lsdc_img_width = daq_utils.screenPixX
+        pixels_per_micron = self.camera.scale_x.get() * 1000
+        img_scale_factor = md2_img_width / lsdc_img_width
+        return float(microns * pixels_per_micron) / img_scale_factor
 
     def screenYmicrons2pixels(self, microns):
-        fov = self.getCurrentFOV()
-        fovY = fov["y"]*1000
-        return int(round(microns * (daq_utils.screenPixY / fovY)))
+        md2_img_height = self.md2.center_pixel_y.get() * 2.0
+        lsdc_img_height = daq_utils.screenPixY
+        pixels_per_micron = self.camera.scale_y.get() * 1000
+        img_scale_factor = md2_img_height / lsdc_img_height
+        return float(microns * pixels_per_micron) / img_scale_factor
 
     def definePolyRaster(
         self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y, stepsize
@@ -4885,10 +4888,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.md2 = MD2Device("XF:19IDC-ES{MD2}:", name="camera")
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
-            daq_utils.lowMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
-            daq_utils.lowMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
-            daq_utils.highMagFOVx = (self.md2.center_pixel_x.get() * 2) / self.camera.scale_x.get()
-            daq_utils.highMagFOVy = (self.md2.center_pixel_y.get() * 2) / self.camera.scale_y.get()
         else:
             pass
 

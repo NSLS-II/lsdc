@@ -49,6 +49,13 @@ from gui.dialog import (
     StaffScreenDialog,
     UserScreenDialog,
 )
+from gui.acquisition import (
+    VectorParamsFrame,
+    MultiColParamsFrame,
+    CharacterizeParamsFrame,
+    RasterParamsFrame,
+    ProcessingOptionsFrame,
+)
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread, ServerCheckThread
@@ -191,7 +198,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
-        self.rasterStepDefs = {"Coarse": 20.0, "Fine": 10.0, "VFine": 5.0}
 
         # Timer that waits for a second before calling raddose 3d
         # This is to prevent multiple calls when transmission textbox is changing
@@ -565,22 +571,6 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams22.insertSpacing(5, 100)
         hBoxColParams22.addWidget(beamsizeLabel)
         hBoxColParams22.addWidget(self.beamsizeComboBox)
-        hBoxColParams4 = QtWidgets.QHBoxLayout()
-        colBeamWLabel = QtWidgets.QLabel("Beam Width:")
-        colBeamWLabel.setFixedWidth(140)
-        colBeamWLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.beamWidth_ledit = QtWidgets.QLineEdit()
-        self.beamWidth_ledit.setFixedWidth(60)
-        colBeamHLabel = QtWidgets.QLabel("Beam Height:")
-        colBeamHLabel.setFixedWidth(140)
-        colBeamHLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.beamHeight_ledit = QtWidgets.QLineEdit()
-        self.beamHeight_ledit.setFixedWidth(60)
-        hBoxColParams4.addWidget(colBeamWLabel)
-        hBoxColParams4.addWidget(self.beamWidth_ledit)
-        hBoxColParams4.addWidget(colBeamHLabel)
-        hBoxColParams4.addWidget(self.beamHeight_ledit)
-        hBoxColParams5 = QtWidgets.QHBoxLayout()
         colResoLabel = QtWidgets.QLabel("Edge Resolution:")
         colResoLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.resolution_ledit = QtWidgets.QLineEdit()
@@ -684,163 +674,12 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams7.addWidget(self.centeringComboBox)
         hBoxColParams7.addWidget(colResoLabel)
         hBoxColParams7.addWidget(self.resolution_ledit)
-        self.processingOptionsFrame = QFrame()
-        self.hBoxProcessingLayout1 = QtWidgets.QHBoxLayout()
-        self.hBoxProcessingLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        procOptionLabel = QtWidgets.QLabel("Processing Options:")
-        procOptionLabel.setFixedWidth(200)
-        self.autoProcessingCheckBox = QCheckBox("AutoProcessing On")
-        self.autoProcessingCheckBox.setChecked(True)
-        self.autoProcessingCheckBox.stateChanged.connect(self.autoProcessingCheckCB)
-        self.fastEPCheckBox = QCheckBox("FastEP")
-        self.fastEPCheckBox.setChecked(False)
-        self.fastEPCheckBox.setEnabled(False)
-        self.dimpleCheckBox = QCheckBox("Dimple")
-        self.dimpleCheckBox.setChecked(True)
-        self.xia2CheckBox = QCheckBox("Xia2")
-        self.xia2CheckBox.setChecked(False)
-        self.hBoxProcessingLayout1.addWidget(self.autoProcessingCheckBox)
-        self.hBoxProcessingLayout1.addWidget(self.fastEPCheckBox)
-        self.hBoxProcessingLayout1.addWidget(self.dimpleCheckBox)
-        self.processingOptionsFrame.setLayout(self.hBoxProcessingLayout1)
-        self.rasterParamsFrame = QFrame()
-        self.vBoxRasterParams = QtWidgets.QVBoxLayout()
-        self.hBoxRasterLayout1 = QtWidgets.QHBoxLayout()
-        self.hBoxRasterLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        self.hBoxRasterLayout2 = QtWidgets.QHBoxLayout()
-        self.hBoxRasterLayout2.setAlignment(QtCore.Qt.AlignLeft)
-        rasterStepLabel = QtWidgets.QLabel("Raster Step")
-        rasterStepLabel.setFixedWidth(110)
-        self.rasterStepEdit = QtWidgets.QLineEdit(str(self.rasterStepDefs["Coarse"]))
-        self.rasterStepEdit.textChanged[str].connect(self.rasterStepChanged)
-        self.rasterStepEdit.setFixedWidth(60)
-        self.rasterGrainRadioGroup = QtWidgets.QButtonGroup()
-        self.rasterGrainCoarseRadio = QtWidgets.QRadioButton("Coarse")
-        self.rasterGrainCoarseRadio.setChecked(False)
-        self.rasterGrainCoarseRadio.toggled.connect(
-            functools.partial(self.rasterGrainToggledCB, "Coarse")
-        )
-        self.rasterGrainRadioGroup.addButton(self.rasterGrainCoarseRadio)
-        self.rasterGrainFineRadio = QtWidgets.QRadioButton("Fine")
-        self.rasterGrainFineRadio.setChecked(False)
-        self.rasterGrainFineRadio.toggled.connect(
-            functools.partial(self.rasterGrainToggledCB, "Fine")
-        )
-        self.rasterGrainRadioGroup.addButton(self.rasterGrainFineRadio)
-        self.rasterGrainVFineRadio = QtWidgets.QRadioButton("VFine")
-        self.rasterGrainVFineRadio.setChecked(False)
-        self.rasterGrainVFineRadio.toggled.connect(
-            functools.partial(self.rasterGrainToggledCB, "VFine")
-        )
-        self.rasterGrainRadioGroup.addButton(self.rasterGrainVFineRadio)
-        self.rasterGrainCustomRadio = QtWidgets.QRadioButton("Custom")
-        self.rasterGrainCustomRadio.setChecked(True)
-        self.rasterGrainCustomRadio.toggled.connect(
-            functools.partial(self.rasterGrainToggledCB, "Custom")
-        )
-        self.rasterGrainRadioGroup.addButton(self.rasterGrainCustomRadio)
-        rasterEvalLabel = QtWidgets.QLabel("Raster\nEvaluate By:")
-        rasterEvalOptionList = ["Spot Count", "Resolution", "Intensity"]
-        self.rasterEvalComboBox = QtWidgets.QComboBox(self)
-        self.rasterEvalComboBox.addItems(rasterEvalOptionList)
-        self.rasterEvalComboBox.setCurrentIndex(
-            db_lib.beamlineInfo(daq_utils.beamline, "rasterScoreFlag")["index"]
-        )
-        self.rasterEvalComboBox.activated[str].connect(self.rasterEvalComboActivatedCB)
-        self.hBoxRasterLayout1.addWidget(rasterStepLabel)
-        self.hBoxRasterLayout1.addWidget(self.rasterStepEdit)
-        self.hBoxRasterLayout1.addWidget(self.rasterGrainCoarseRadio)
-        self.hBoxRasterLayout1.addWidget(self.rasterGrainFineRadio)
-        self.hBoxRasterLayout1.addWidget(self.rasterGrainVFineRadio)
-        self.hBoxRasterLayout1.addWidget(self.rasterGrainCustomRadio)
-        self.hBoxRasterLayout1.addWidget(rasterEvalLabel)
-        self.hBoxRasterLayout1.addWidget(self.rasterEvalComboBox)
-        self.vBoxRasterParams.addLayout(self.hBoxRasterLayout1)
-        self.vBoxRasterParams.addLayout(self.hBoxRasterLayout2)
-        self.rasterParamsFrame.setLayout(self.vBoxRasterParams)
-        self.multiColParamsFrame = (
-            QFrame()
-        )  # something for criteria to decide on which hotspots to collect on for multi-xtal
-        self.hBoxMultiColParamsLayout1 = QtWidgets.QHBoxLayout()
-        self.hBoxMultiColParamsLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        multiColCutoffLabel = QtWidgets.QLabel("Diffraction Cutoff")
-        multiColCutoffLabel.setFixedWidth(110)
-        self.multiColCutoffEdit = QtWidgets.QLineEdit(
-            "320"
-        )  # may need to store this in DB at some point, it's a silly number for now
-        self.multiColCutoffEdit.setFixedWidth(60)
-        self.hBoxMultiColParamsLayout1.addWidget(multiColCutoffLabel)
-        self.hBoxMultiColParamsLayout1.addWidget(self.multiColCutoffEdit)
-        self.multiColParamsFrame.setLayout(self.hBoxMultiColParamsLayout1)
-        self.characterizeParamsFrame = QFrame()
-        vBoxCharacterizeParams1 = QtWidgets.QVBoxLayout()
-        self.hBoxCharacterizeLayout1 = QtWidgets.QHBoxLayout()
-        self.characterizeTargetLabel = QtWidgets.QLabel("Characterization Targets")
-        characterizeResoLabel = QtWidgets.QLabel("Resolution")
-        characterizeResoLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeResoEdit = QtWidgets.QLineEdit("3.0")
-        characterizeISIGLabel = QtWidgets.QLabel("I/Sigma")
-        characterizeISIGLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeISIGEdit = QtWidgets.QLineEdit("2.0")
-        self.characterizeAnomCheckBox = QCheckBox("Anomolous")
-        self.characterizeAnomCheckBox.setChecked(False)
-        self.hBoxCharacterizeLayout2 = QtWidgets.QHBoxLayout()
-        characterizeCompletenessLabel = QtWidgets.QLabel("Completeness")
-        characterizeCompletenessLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeCompletenessEdit = QtWidgets.QLineEdit("0.99")
-        characterizeMultiplicityLabel = QtWidgets.QLabel("Multiplicity")
-        characterizeMultiplicityLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeMultiplicityEdit = QtWidgets.QLineEdit("auto")
-        characterizeDoseLimitLabel = QtWidgets.QLabel("Dose Limit")
-        characterizeDoseLimitLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeDoseLimitEdit = QtWidgets.QLineEdit("100")
-        characterizeSpaceGroupLabel = QtWidgets.QLabel("Space Group")
-        characterizeSpaceGroupLabel.setAlignment(QtCore.Qt.AlignCenter)
-        self.characterizeSpaceGroupEdit = QtWidgets.QLineEdit("P1")
-        self.hBoxCharacterizeLayout1.addWidget(characterizeResoLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeResoEdit)
-        self.hBoxCharacterizeLayout1.addWidget(characterizeISIGLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeISIGEdit)
-        self.hBoxCharacterizeLayout1.addWidget(characterizeSpaceGroupLabel)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeSpaceGroupEdit)
-        self.hBoxCharacterizeLayout1.addWidget(self.characterizeAnomCheckBox)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeCompletenessLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeCompletenessEdit)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeMultiplicityLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeMultiplicityEdit)
-        self.hBoxCharacterizeLayout2.addWidget(characterizeDoseLimitLabel)
-        self.hBoxCharacterizeLayout2.addWidget(self.characterizeDoseLimitEdit)
-        vBoxCharacterizeParams1.addWidget(self.characterizeTargetLabel)
-        vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout1)
-        vBoxCharacterizeParams1.addLayout(self.hBoxCharacterizeLayout2)
-        self.characterizeParamsFrame.setLayout(vBoxCharacterizeParams1)
-        self.vectorParamsFrame = QFrame()
-        hBoxVectorLayout1 = QtWidgets.QHBoxLayout()
-        setVectorStartButton = QtWidgets.QPushButton("Vector\nStart")
-        setVectorStartButton.setStyleSheet("background-color: blue")
-        setVectorStartButton.clicked.connect(
-            lambda: self.setVectorPointCB("vectorStart")
-        )
-        setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd")
-        setVectorEndButton.setStyleSheet("background-color: red")
-        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        self.processingOptionsFrame = ProcessingOptionsFrame(self)
+        self.rasterParamsFrame = RasterParamsFrame(self)
+        self.multiColParamsFrame = MultiColParamsFrame(self)
+        self.characterizeParamsFrame = CharacterizeParamsFrame(self)
+        self.vectorParamsFrame = VectorParamsFrame(self)
         self.vecLine = None
-        vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
-        self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
-        self.vectorFPP_ledit.setValidator(QIntValidator(self))
-        vecLenLabel = QtWidgets.QLabel("    Length(microns):")
-        self.vecLenLabelOutput = QtWidgets.QLabel("---")
-        vecSpeedLabel = QtWidgets.QLabel("    Speed(microns/s):")
-        self.vecSpeedLabelOutput = QtWidgets.QLabel("---")
-        hBoxVectorLayout1.addWidget(setVectorStartButton)
-        hBoxVectorLayout1.addWidget(setVectorEndButton)
-        hBoxVectorLayout1.addWidget(vectorFPPLabel)
-        hBoxVectorLayout1.addWidget(self.vectorFPP_ledit)
-        hBoxVectorLayout1.addWidget(vecLenLabel)
-        hBoxVectorLayout1.addWidget(self.vecLenLabelOutput)
-        hBoxVectorLayout1.addWidget(vecSpeedLabel)
-        hBoxVectorLayout1.addWidget(self.vecSpeedLabelOutput)
-        self.vectorParamsFrame.setLayout(hBoxVectorLayout1)
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxColParams2)
         vBoxColParams1.addLayout(hBoxColParams25)
@@ -1374,9 +1213,9 @@ class ControlMain(QtWidgets.QMainWindow):
             self.protoStandardRadio.setDisabled(True)
             self.protoVectorRadio.setDisabled(True)
             self.protoOtherRadio.setDisabled(True)
-            self.autoProcessingCheckBox.setDisabled(True)
-            self.fastEPCheckBox.setDisabled(True)
-            self.dimpleCheckBox.setDisabled(True)
+            self.processingOptionsFrame.autoProcessingCheckBox.setDisabled(True)
+            self.processingOptionsFrame.fastEPCheckBox.setDisabled(True)
+            self.processingOptionsFrame.dimpleCheckBox.setDisabled(True)
             self.centeringComboBox.setDisabled(True)
             self.beamsizeComboBox.setDisabled(True)
             annealButton.setDisabled(True)
@@ -1454,22 +1293,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.stillModeCheckBox.setChecked(True)
             else:
                 self.stillModeCheckBox.setChecked(False)
-
-    def autoProcessingCheckCB(self, state):
-        if state == QtCore.Qt.Checked:
-            self.dimpleCheckBox.setEnabled(True)
-            self.xia2CheckBox.setEnabled(True)
-        else:
-            self.fastEPCheckBox.setEnabled(False)
-            self.dimpleCheckBox.setEnabled(False)
-            self.xia2CheckBox.setEnabled(False)
-
-    def rasterGrainToggledCB(self, identifier):
-        if identifier == "Coarse" or identifier == "Fine" or identifier == "VFine":
-            cellSize = self.rasterStepDefs[identifier]
-            self.rasterStepEdit.setText(str(cellSize))
-            self.beamWidth_ledit.setText(str(cellSize))
-            self.beamHeight_ledit.setText(str(cellSize))
 
     def vidActionToggledCB(self):
         if len(self.rasterList) > 0:
@@ -2293,10 +2116,6 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             pass
 
-    def rasterStepChanged(self, text):
-        self.beamWidth_ledit.setText(text)
-        self.beamHeight_ledit.setText(text)
-
     def updateVectorLengthAndSpeed(self):
         x_vec_end = self.vectorEnd["coords"]["x"]
         y_vec_end = self.vectorEnd["coords"]["y"]
@@ -2310,14 +2129,14 @@ class ControlMain(QtWidgets.QMainWindow):
         trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
         if daq_utils.beamline == "nyx":
             trans_total *= 1000
-        self.vecLenLabelOutput.setText(str(int(trans_total)))
+        self.vectorParamsFrame.vecLenLabelOutput.setText(str(int(trans_total)))
         totalExpTime = (
             float(self.osc_end_ledit.text()) / float(self.osc_range_ledit.text())
         ) * float(
             self.exp_time_ledit.text()
         )  # (range/inc)*exptime
         speed = trans_total / totalExpTime
-        self.vecSpeedLabelOutput.setText(str(int(speed)))
+        self.vectorParamsFrame.vecSpeedLabelOutput.setText(str(int(speed)))
         return x_vec, y_vec, z_vec, trans_total
 
     def totalExpChanged(self, text):
@@ -2582,15 +2401,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.protoOtherRadio.setChecked(True)
         self.totalExpChanged("")
 
-    def rasterEvalComboActivatedCB(self, text):
-        db_lib.beamlineInfo(
-            daq_utils.beamline,
-            "rasterScoreFlag",
-            info_dict={"index": self.rasterEvalComboBox.findText(str(text))},
-        )
-        if self.currentRasterCellList != []:
-            self.reFillPolyRaster()
-
     def popBaseDirectoryDialogCB(self):
         fname = QtWidgets.QFileDialog.getExistingDirectory(
             self, "Choose Directory", "", QtWidgets.QFileDialog.DontUseNativeDialog
@@ -2743,7 +2553,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vecLen = 0
         if self.protoVectorRadio.isChecked():
             try:
-                vecLen = float(self.vecLenLabelOutput.text())
+                vecLen = float(self.vectorParamsFrame.vecLenLabelOutput.text())
             except:
                 pass
         
@@ -2899,8 +2709,8 @@ class ControlMain(QtWidgets.QMainWindow):
         raster_h = int(self.polyBoundingRect.height())
         center_x = int(self.polyBoundingRect.center().x())
         center_y = int(self.polyBoundingRect.center().y())
-        stepsizeXPix = self.screenXmicrons2pixels(float(self.rasterStepEdit.text()))
-        stepsizeYPix = self.screenYmicrons2pixels(float(self.rasterStepEdit.text()))
+        stepsizeXPix = self.screenXmicrons2pixels(self.rasterParamsFrame.rasterStep)
+        stepsizeYPix = self.screenYmicrons2pixels(self.rasterParamsFrame.rasterStep)
         self.click_positions = []
         self.definePolyRaster(
             raster_w, raster_h, stepsizeXPix, stepsizeYPix, center_x, center_y
@@ -2975,7 +2785,7 @@ class ControlMain(QtWidgets.QMainWindow):
         spotLineCounter = 0
         cellIndex = 0
         rowStartIndex = 0
-        rasterEvalOption = str(self.rasterEvalComboBox.currentText())
+        rasterEvalOption = str(self.rasterParamsFrame.rasterEvalComboBox.currentText())
         lenX = abs(
             rasterDef["rowDefs"][0]["end"]["x"] - rasterDef["rowDefs"][0]["start"]["x"]
         )  # ugly for tile flip/noflip
@@ -3115,7 +2925,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server(f"ispybLib.insertRasterResult('{rasterReq['uid']}', '{visitName}')")
 
     def reFillPolyRaster(self):
-        rasterEvalOption = str(self.rasterEvalComboBox.currentText())
+        rasterEvalOption = str(self.rasterParamsFrame.rasterEvalComboBox.currentText())
         for i in range(len(self.rasterList)):
             if self.rasterList[i] != None:
                 currentRasterGroup = self.rasterList[i]["graphicsItem"]
@@ -3306,7 +3116,7 @@ class ControlMain(QtWidgets.QMainWindow):
     ):  # all come in as pixels, raster_w and raster_h are bounding box of drawn graphic
         # raster status - 0=nothing done, 1=run, 2=displayed
         stepTime = float(self.exp_time_ledit.text())
-        stepsize = float(self.rasterStepEdit.text())
+        stepsize = self.rasterParamsFrame.rasterStep
         if (stepsize / 1000.0) / stepTime > 2.0:
             self.popupServerMessage(
                 "Stage speed exceeded. Increase exposure time, or decrease step size. Limit is 2mm/s."
@@ -3315,8 +3125,7 @@ class ControlMain(QtWidgets.QMainWindow):
             return
 
         try:
-            beamWidth = float(self.beamWidth_ledit.text())
-            beamHeight = float(self.beamHeight_ledit.text())
+            beamWidth = beamHeight = self.rasterParamsFrame.rasterStep
         except ValueError:
             logger.error("bad value for beam width or beam height")
             self.popupServerMessage("bad value for beam width or beam height")
@@ -3682,8 +3491,8 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.dataPathGB.file_numstart_ledit.text()
                 )
             reqObj["attenuation"] = float(self.transmission_ledit.text())
-            reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-            reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+            reqObj["slit_width"] = self.rasterParamsFrame.rasterStep
+            reqObj["slit_height"] = self.rasterParamsFrame.rasterStep
             reqObj["energy"] = float(self.energy_ledit.text())
             wave = daq_utils.energy2wave(float(self.energy_ledit.text()), digits=6)
             reqObj["wavelength"] = wave
@@ -3694,15 +3503,17 @@ class ControlMain(QtWidgets.QMainWindow):
             return
         reqObj["fastDP"] = (
             self.staffScreenDialog.fastDPCheckBox.isChecked()
-            or self.fastEPCheckBox.isChecked()
-            or self.dimpleCheckBox.isChecked()
+            or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+            or self.processingOptionsFrame.dimpleCheckBox.isChecked()
         )
-        reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-        reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-        reqObj["xia2"] = self.xia2CheckBox.isChecked()
+        reqObj["fastEP"] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+        reqObj["dimple"] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+        reqObj["xia2"] = self.processingOptionsFrame.xia2CheckBox.isChecked()
         reqObj["protocol"] = str(self.protoComboBox.currentText())
         if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
-            reqObj["vectorParams"]["fpp"] = int(self.vectorFPP_ledit.text())
+            reqObj["vectorParams"]["fpp"] = int(
+                self.vectorParamsFrame.vectorFPP_ledit.text()
+            )
         colRequest["request_obj"] = reqObj
         db_lib.updateRequest(colRequest)
         self.treeChanged_pv.put(1)
@@ -3953,8 +3764,8 @@ class ControlMain(QtWidgets.QMainWindow):
                             self.dataPathGB.file_numstart_ledit.text()
                         )
                         reqObj["attenuation"] = float(self.transmission_ledit.text())
-                        reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-                        reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+                        reqObj["slit_width"] = self.rasterParamsFrame.rasterStep
+                        reqObj["slit_height"] = self.rasterParamsFrame.rasterStep
                         reqObj["energy"] = float(self.energy_ledit.text())
                         wave = daq_utils.energy2wave(
                             float(self.energy_ledit.text()), digits=6
@@ -3978,27 +3789,25 @@ class ControlMain(QtWidgets.QMainWindow):
                     )
                     reqObj["fastDP"] = (
                         self.staffScreenDialog.fastDPCheckBox.isChecked()
-                        or self.fastEPCheckBox.isChecked()
-                        or self.dimpleCheckBox.isChecked()
+                        or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                        or self.processingOptionsFrame.dimpleCheckBox.isChecked()
                     )
-                    reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-                    reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-                    reqObj["xia2"] = self.xia2CheckBox.isChecked()
+                    reqObj[
+                        "fastEP"
+                    ] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                    reqObj[
+                        "dimple"
+                    ] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+                    reqObj[
+                        "xia2"
+                    ] = self.processingOptionsFrame.xia2CheckBox.isChecked()
                     if (
                         reqObj["protocol"] == "characterize"
                         or reqObj["protocol"] == "ednaCol"
                     ):
-                        characterizationParams = {
-                            "aimed_completeness": float(
-                                self.characterizeCompletenessEdit.text()
-                            ),
-                            "aimed_multiplicity": str(
-                                self.characterizeMultiplicityEdit.text()
-                            ),
-                            "aimed_resolution": float(self.characterizeResoEdit.text()),
-                            "aimed_ISig": float(self.characterizeISIGEdit.text()),
-                        }
-                        reqObj["characterizationParams"] = characterizationParams
+                        reqObj[
+                            "characterizationParams"
+                        ] = self.characterizeParamsFrame.get_params()
                     colRequest["request_obj"] = reqObj
                     newSampleRequestID = db_lib.addRequesttoSample(
                         self.selectedSampleID,
@@ -4085,15 +3894,19 @@ class ControlMain(QtWidgets.QMainWindow):
                 else:
                     reqObj["fastDP"] = (
                         self.staffScreenDialog.fastDPCheckBox.isChecked()
-                        or self.fastEPCheckBox.isChecked()
-                        or self.dimpleCheckBox.isChecked()
+                        or self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                        or self.processingOptionsFrame.dimpleCheckBox.isChecked()
                     )
-                    reqObj["fastEP"] = self.fastEPCheckBox.isChecked()
-                    reqObj["dimple"] = self.dimpleCheckBox.isChecked()
-                reqObj["xia2"] = self.xia2CheckBox.isChecked()
+                    reqObj[
+                        "fastEP"
+                    ] = self.processingOptionsFrame.fastEPCheckBox.isChecked()
+                    reqObj[
+                        "dimple"
+                    ] = self.processingOptionsFrame.dimpleCheckBox.isChecked()
+                reqObj["xia2"] = self.processingOptionsFrame.xia2CheckBox.isChecked()
                 reqObj["attenuation"] = float(self.transmission_ledit.text())
-                reqObj["slit_width"] = float(self.beamWidth_ledit.text())
-                reqObj["slit_height"] = float(self.beamHeight_ledit.text())
+                reqObj["slit_width"] = self.rasterParamsFrame.rasterStep
+                reqObj["slit_height"] = self.rasterParamsFrame.rasterStep
                 reqObj["energy"] = float(self.energy_ledit.text())
             except ValueError:
                 message = "Please ensure that all boxes that expect numerical values have numbers in them"
@@ -4114,23 +3927,19 @@ class ControlMain(QtWidgets.QMainWindow):
                 logger.error("set dist to %s in exception handler 1" % new_distance)
                 reqObj["detDist"] = new_distance
             if reqObj["protocol"] == "multiCol" or reqObj["protocol"] == "multiColQ":
-                reqObj["gridStep"] = float(self.rasterStepEdit.text())
-                reqObj["diffCutoff"] = float(self.multiColCutoffEdit.text())
+                reqObj["gridStep"] = self.rasterParamsFrame.rasterStep
+                reqObj["diffCutoff"] = float(
+                    self.multiColParamsFrame.multiColCutoffEdit.text()
+                )
             if reqObj["protocol"] == "rasterScreen":
-                reqObj["gridStep"] = float(self.rasterStepEdit.text())
+                reqObj["gridStep"] = self.rasterParamsFrame.rasterStep
             if rasterDef != None:
                 reqObj["rasterDef"] = rasterDef
-                reqObj["gridStep"] = float(self.rasterStepEdit.text())
+                reqObj["gridStep"] = self.rasterParamsFrame.rasterStep
             if reqObj["protocol"] == "characterize" or reqObj["protocol"] == "ednaCol":
-                characterizationParams = {
-                    "aimed_completeness": float(
-                        self.characterizeCompletenessEdit.text()
-                    ),
-                    "aimed_multiplicity": str(self.characterizeMultiplicityEdit.text()),
-                    "aimed_resolution": float(self.characterizeResoEdit.text()),
-                    "aimed_ISig": float(self.characterizeISIGEdit.text()),
-                }
-                reqObj["characterizationParams"] = characterizationParams
+                reqObj[
+                    "characterizationParams"
+                ] = self.characterizeParamsFrame.get_params()
             if reqObj["protocol"] == "vector" or reqObj["protocol"] == "stepVector":
                 if float(self.osc_end_ledit.text()) < 5.0:
                     self.popupServerMessage(
@@ -4140,7 +3949,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 selectedCenteringFound = 1
                 try:
                     x_vec, y_vec, z_vec, trans_total = self.updateVectorLengthAndSpeed()
-                    framesPerPoint = int(self.vectorFPP_ledit.text())
+                    framesPerPoint = int(self.vectorParamsFrame.vectorFPP_ledit.text())
                     vectorParams = {
                         "vecStart": self.vectorStart["coords"],
                         "vecEnd": self.vectorEnd["coords"],
@@ -4406,8 +4215,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.vectorEnd:
             self.scene.removeItem(self.vectorEnd["graphicsitem"])
             self.vectorEnd = None
-            self.vecLenLabelOutput.setText("---")
-            self.vecSpeedLabelOutput.setText("---")
+            self.vectorParamsFrame.vecLenLabelOutput.setText("---")
+            self.vectorParamsFrame.vecSpeedLabelOutput.setText("---")
         if self.vecLine:
             self.scene.removeItem(self.vecLine)
             self.vecLine = None
@@ -4494,18 +4303,18 @@ class ControlMain(QtWidgets.QMainWindow):
             }
         )
         self.dataPathGB.setFileNumstart_ledit(str(reqObj["file_number_start"]))
-        self.beamWidth_ledit.setText(str(reqObj["slit_width"]))
-        self.beamHeight_ledit.setText(str(reqObj["slit_height"]))
+        self.rasterParamsFrame.rasterStep = reqObj["slit_width"]
+        # self.rasterParamsFrame.beamHeight = reqObj["slit_height"]
         if "fastDP" in reqObj:
             self.staffScreenDialog.fastDPCheckBox.setChecked(
                 (reqObj["fastDP"] or reqObj["fastEP"] or reqObj["dimple"])
             )
         if "fastEP" in reqObj:
-            self.fastEPCheckBox.setChecked(reqObj["fastEP"])
+            self.processingOptionsFrame.fastEPCheckBox.setChecked(reqObj["fastEP"])
         if "dimple" in reqObj:
-            self.dimpleCheckBox.setChecked(reqObj["dimple"])
+            self.processingOptionsFrame.dimpleCheckBox.setChecked(reqObj["dimple"])
         if "xia2" in reqObj:
-            self.xia2CheckBox.setChecked(reqObj["xia2"])
+            self.processingOptionsFrame.xia2CheckBox.setChecked(reqObj["xia2"])
         reqObj["energy"] = float(self.energy_ledit.text())
         self.energy_ledit.setText(str(reqObj["energy"]))
         energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))
@@ -4547,15 +4356,8 @@ class ControlMain(QtWidgets.QMainWindow):
                                 f"Master HDF5 file {firstFilename} could not be validated",
                                 QtWidgets.QMessageBox.Ok,
                             )
-        self.rasterStepEdit.setText(str(reqObj["gridStep"]))
-        if reqObj["gridStep"] == self.rasterStepDefs["Coarse"]:
-            self.rasterGrainCoarseRadio.setChecked(True)
-        elif reqObj["gridStep"] == self.rasterStepDefs["Fine"]:
-            self.rasterGrainFineRadio.setChecked(True)
-        elif reqObj["gridStep"] == self.rasterStepDefs["VFine"]:
-            self.rasterGrainVFineRadio.setChecked(True)
-        else:
-            self.rasterGrainCustomRadio.setChecked(True)
+        self.rasterParamsFrame.setGridStep(reqObj["gridStep"])
+
         rasterStep = int(reqObj["gridStep"])
         if not self.hideRastersCheckBox.isChecked() and (
             reqObj["protocol"] in ("raster", "stepRaster", "multiCol")

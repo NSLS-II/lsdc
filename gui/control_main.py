@@ -3615,8 +3615,11 @@ class ControlMain(QtWidgets.QMainWindow):
     def timerSampleRefresh(self):
         if self.capture is None:
             return
+        start_time = time.time()
         retval, self.currentFrame = self.capture.read()
-        self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_LINEAR)
+        capture_time = time.time()
+        # uncomment this for frame resizing
+        # self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_LINEAR)
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
         if self.currentFrame is None:
             logger.debug(
@@ -3628,8 +3631,11 @@ class ControlMain(QtWidgets.QMainWindow):
             self.currentFrame, width, height, 3 * width, QtGui.QImage.Format_RGB888
         )
         qimage = qimage.rgbSwapped()
+        swap_time = time.time()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item.setPixmap(pixmap_orig)
+        end_time = time.time()
+        logger.info(f"capture time: {capture_time - start_time}, swap time: {end_time - swap_time}, total time: {end_time - start_time}")
 
     def sceneKey(self, event):
         if (

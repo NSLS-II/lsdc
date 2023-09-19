@@ -3619,15 +3619,23 @@ class ControlMain(QtWidgets.QMainWindow):
         }
         self.rasterList.append(newRasterGraphicsDesc)
 
+    def sampleCameraThread(self):
+        while self.cameraThreadActive:
+            if self.capture is None:
+                return
+            self.timerSampleRefresh()
+            time.sleep(SAMPLE_TIMER_DELAY)
+        return
+
     def timerSampleRefresh(self):
         if self.capture is None:
             return
-        start_time = time.time()
-        retval, self.currentFrame = self.capture.read()
-        capture_time = time.time()
         # uncomment this for frame resizing
         # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
+        start_time = time.time()
+        retval, self.currentFrame = self.capture.read()
+        capture_time = time.time()
         if self.currentFrame is None:
             logger.debug(
                 "no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct"
@@ -3638,11 +3646,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.currentFrame, width, height, 3 * width, QtGui.QImage.Format_RGB888
         )
         qimage = qimage.rgbSwapped()
-        swap_time = time.time()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         self.pixmap_item.setPixmap(pixmap_orig)
         end_time = time.time()
-        logger.info(f"capture time: {capture_time - start_time}, swap time: {end_time - swap_time}, total time: {end_time - start_time}")
+        logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
 
     def sceneKey(self, event):
         if (

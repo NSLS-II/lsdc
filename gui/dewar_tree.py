@@ -35,7 +35,7 @@ class DewarTree(QtWidgets.QTreeView):
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)
         self.model = QtGui.QStandardItemModel()
-        self.model.itemChanged.connect(self.queueSelectedSample)
+        
         # self.isExpanded = 1
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openMenu)
@@ -112,10 +112,10 @@ class DewarTree(QtWidgets.QTreeView):
         dewarContents = db_lib.getContainerByName(
             daq_utils.primaryDewarName, daq_utils.beamline
         )["content"]
+        parentItem = self.model.invisibleRootItem()
         for i, puck_id in enumerate(
             dewarContents
         ):  # dewar contents is the list of puck IDs
-            parentItem = self.model.invisibleRootItem()
             puck = ""
             puckName = ""
             if puck_id:
@@ -130,18 +130,18 @@ class DewarTree(QtWidgets.QTreeView):
             item.setData(puckName, 32)
             item.setData("container", 33)
             parentItem.appendRow(item)
-            parentItem = item
             if puck != "" and puckName != "private":
                 puckContents = puck.get("content", [])
-                self.add_samples_to_puck_tree(puckContents, parentItem)
-                self.setModel(self.model)
+                self.add_samples_to_puck_tree(puckContents, item, index_s)
+        self.setModel(self.model)
+        self.model.itemChanged.connect(self.queueSelectedSample)
         if self.isExpanded:
             self.expandAll()
         else:
             self.collapseAll()
         self.scrollTo(self.currentIndex(), QtWidgets.QAbstractItemView.PositionAtCenter)
 
-    def add_samples_to_puck_tree(self, puckContents, parentItem: QtGui.QStandardItem):
+    def add_samples_to_puck_tree(self, puckContents, parentItem: QtGui.QStandardItem, index_label):
         # Method will attempt to add samples to the puck. If you don't belong to the proposal,
         # it will not add samples and clear the puck information
         selectedIndex = None
@@ -162,13 +162,19 @@ class DewarTree(QtWidgets.QTreeView):
                 sampleDict.setdefault(sample_id, db_lib.getSampleByID(sample_id)),
             )
 
-            if not self.is_proposal_member(sample["proposal"]) and not IS_STAFF:
+            #if not IS_STAFF and not self.is_proposal_member(sample["proposalID"]):
+            if not self.is_proposal_member(sample["proposalID"]):
                 # If the user is not part of the proposal or is not staff, don't fill tree
                 # Clear the puck information and don't make it selectable
-                parentItem.clearData()
-                parentItem.setText("")
+                # parentItem.clearData()
+                parentItem.setText(index_label)
                 current_flags = parentItem.flags()
                 parentItem.setFlags(current_flags & ~Qt.ItemFlag.ItemIsSelectable)  # type: ignore
+                position_s = f'{j+1}-{sample.get("name", "")}'
+                item = QtGui.QStandardItem(
+                    QtGui.QIcon(ICON),
+                    position_s,
+                )
                 return
 
             position_s = f'{j+1}-{sample.get("name", "")}'
@@ -227,12 +233,13 @@ class DewarTree(QtWidgets.QTreeView):
             r = requests.get(f"{os.environ['NSLS_API_URL']}/proposal/{proposal}")
             r.raise_for_status()
             response = r.json()
-            if getpass.getuser() not in [
+            if "users" in response and getpass.getuser()  in [
                 user["username"] for user in response["users"] if "username" in user
             ]:
-                self.proposal_membership[proposal] = False
-            else:
                 self.proposal_membership[proposal] = True
+            else:
+                logger.info(f"Users not found in response: {response}")
+                self.proposal_membership[proposal] = False
         return self.proposal_membership[proposal]
 
     def create_request_item(self, request) -> QtGui.QStandardItem:
@@ -362,16 +369,17 @@ class DewarTree(QtWidgets.QTreeView):
         self.expandAll()
 
     def queueSelectedSample(self, item):
-        reqID = str(item.data(32))
-        checkedSampleRequest = db_lib.getRequestByID(reqID)  # line not needed???
-        if item.checkState() == Qt.Checked:
-            db_lib.updatePriority(reqID, 5000)
-        else:
-            db_lib.updatePriority(reqID, 0)
-        item.setBackground(QtGui.QColor("white"))
-        self.parent.treeChanged_pv.put(
-            self.parent.processID
-        )  # the idea is touch the pv, but have this gui instance not refresh
+        if item.data(33) == "request":
+            reqID = str(item.data(32))
+            checkedSampleRequest = db_lib.getRequestByID(reqID)  # line not needed???
+            if item.checkState() == Qt.Checked:
+                db_lib.updatePriority(reqID, 5000)
+            else:
+                db_lib.updatePriority(reqID, 0)
+            item.setBackground(QtGui.QColor("white"))
+            self.parent.treeChanged_pv.put(
+                self.parent.processID
+            )  # the idea is touch the pv, but have this gui instance not refresh
 
     def queueAllSelectedCB(self):
         selmod = self.selectionModel()

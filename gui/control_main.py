@@ -3649,7 +3649,7 @@ class ControlMain(QtWidgets.QMainWindow):
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
         while(self.frame_queue.qsize() > 1):
             self.frame_queue.get() # remove old frames
-            self.frame_queue.put(pixmap_orig)
+        self.frame_queue.put(pixmap_orig)
         end_time = time.time()
         logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
 

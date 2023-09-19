@@ -1053,9 +1053,10 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
-        #self.timerSample = QTimer()
-        #self.timerSample.timeout.connect(self.timerSampleRefresh)
-        #self.timerSample.start(SAMPLE_TIMER_DELAY)
+        self.timerSample = QTimer()
+        self.sampleFrameEvent = threading.Event()
+        self.timerSample.timeout.connect(self.sampleFrameEvent.set)
+        self.timerSample.start(SAMPLE_TIMER_DELAY)
         self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadLoop)
         self.sampleCameraThread.start()
 
@@ -3625,10 +3626,10 @@ class ControlMain(QtWidgets.QMainWindow):
     def sampleCameraThreadLoop(self):
         self.cameraThreadActive = True
         while self.cameraThreadActive:
+            self.sampleFrameEvent.wait()
             if self.capture is None:
                 return
             self.timerSampleRefresh()
-            time.sleep(SAMPLE_TIMER_DELAY/1000)
         return
 
     def timerSampleRefresh(self):

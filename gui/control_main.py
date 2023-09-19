@@ -3626,8 +3626,8 @@ class ControlMain(QtWidgets.QMainWindow):
         retval, self.currentFrame = self.capture.read()
         capture_time = time.time()
         # uncomment this for frame resizing
-        # self.currentFrame = cv2.resize(self.currentFrame, (640,512), interpolation=cv2.INTER_LINEAR)
-        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+        # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
         if self.currentFrame is None:
             logger.debug(
                 "no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct"

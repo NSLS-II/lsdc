@@ -998,6 +998,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
+        self.capture.set(cv2.CAP_PROP_BUFFER_SIZE, 1)
         self.frame_queue = Queue()
         self.active_camera_threads = []
         self.timerSample = QTimer()
@@ -3641,7 +3642,7 @@ class ControlMain(QtWidgets.QMainWindow):
         # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
         start_time = time.time()
         retval, self.currentFrame = self.capture.read()
-        self.currentFrame.set(cv2.CAP_PROP_BUFFER_SIZE, 1)
+        self.capture.set(cv2.CAP_PROP_BUFFER_SIZE, 1)
         capture_time = time.time()
         if self.currentFrame is None:
             logger.debug(

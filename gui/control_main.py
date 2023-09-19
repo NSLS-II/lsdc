@@ -5,6 +5,7 @@ import math
 import os
 import sys
 import time
+import threading
 
 import cv2
 import numpy as np
@@ -993,9 +994,11 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
-        self.timerSample = QTimer()
-        self.timerSample.timeout.connect(self.timerSampleRefresh)
-        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        #self.timerSample = QTimer()
+        #self.timerSample.timeout.connect(self.timerSampleRefresh)
+        #self.timerSample.start(SAMPLE_TIMER_DELAY)
+        self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadCB)
+        self.sampleCameraThread.start()
 
         self.centeringMarksList = []
         self.rasterList = []
@@ -3612,7 +3615,8 @@ class ControlMain(QtWidgets.QMainWindow):
         }
         self.rasterList.append(newRasterGraphicsDesc)
 
-    def sampleCameraThread(self):
+    def sampleCameraThreadLoop(self):
+        self.cameraThreadActive = True
         while self.cameraThreadActive:
             if self.capture is None:
                 return

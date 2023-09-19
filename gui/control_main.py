@@ -17,8 +17,8 @@ from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
 from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
-from qtpy import QtCore, QtGui, QtWidgets, pyqtSignal, pyqtSlot
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
+from qtpy import QtCore, QtGui, QtWidgets
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, Signal, Slot
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice
@@ -3625,7 +3625,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterList.append(newRasterGraphicsDesc)
 
     def sampleCameraThreadLoop(self):
-        self.frame_ready = pyqtSignal(np.ndarray)
         self.cameraThreadActive = True
         while self.cameraThreadActive:
             self.sampleFrameEvent.wait()
@@ -3635,6 +3634,7 @@ class ControlMain(QtWidgets.QMainWindow):
         return
 
     def timerSampleRefresh(self):
+        self.frame_ready = Signal(np.ndarray)
         if self.capture is None:
             return
         # uncomment this for frame resizing
@@ -3659,7 +3659,7 @@ class ControlMain(QtWidgets.QMainWindow):
         end_time = time.time()
         logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
 
-    @pyqtSlot(np.ndarray)
+    @Slot(np.ndarray)
     def updateSampleImage(self, frame):
         self.pixmap_item.setPixmap(frame)
 

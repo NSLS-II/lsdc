@@ -374,7 +374,7 @@ def setProposalID(proposalID,createVisit=True):
       else:
         visitName, visitNum = ispybLib.createVisitName(proposalID)
     except Exception as e:
-      visitName = "999999-1234"
+      visitName = f"mx{proposalID}-1"
       logger.error("ispyb error in set proposal. Error: %s" % e)
     setVisitName(visitName)
 

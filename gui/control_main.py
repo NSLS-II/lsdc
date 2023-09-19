@@ -1053,12 +1053,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
+        self.frame_ready = Signal(np.ndarray)
+        self.frame_ready.connect(self.updateSampleImage)
         self.timerSample = QTimer()
         self.sampleFrameEvent = threading.Event()
         self.timerSample.timeout.connect(self.sampleFrameEvent.set)
         self.timerSample.start(SAMPLE_TIMER_DELAY)
         self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadLoop)
-        self.sampleCameraThread.frame_ready.connect(self.updateSampleImage)
         self.sampleCameraThread.start()
 
         self.centeringMarksList = []
@@ -3634,7 +3635,6 @@ class ControlMain(QtWidgets.QMainWindow):
         return
 
     def timerSampleRefresh(self):
-        self.frame_ready = Signal(np.ndarray)
         if self.capture is None:
             return
         # uncomment this for frame resizing

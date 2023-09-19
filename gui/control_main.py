@@ -3621,7 +3621,7 @@ class ControlMain(QtWidgets.QMainWindow):
             if self.capture is None:
                 return
             self.timerSampleRefresh()
-            time.sleep(SAMPLE_TIMER_DELAY)
+            time.sleep(SAMPLE_TIMER_DELAY/1000)
         return
 
     def timerSampleRefresh(self):

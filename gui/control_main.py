@@ -20,7 +20,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
-from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
+from devices import GonioDevice, CameraDevice, MD2Device, LightDevice
 
 import albulaUtils
 import daq_utils
@@ -527,10 +527,7 @@ class ControlMain(QtWidgets.QMainWindow):
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")
-        if daq_utils.beamline == "nyx":
-            beamSizeOptionList = self.aperture.get_diameter_list()
-        else:
-            beamSizeOptionList = ["V0H0", "V0H1", "V1H0", "V1H1"]
+        beamSizeOptionList = ["V0H0", "V0H1", "V1H0", "V1H1"]
         self.beamsizeComboBox = QtWidgets.QComboBox(self)
         self.beamsizeComboBox.addItems(beamSizeOptionList)
         self.beamsizeComboBox.setCurrentIndex(int(self.beamSize_pv.get()))
@@ -2600,12 +2597,9 @@ class ControlMain(QtWidgets.QMainWindow):
             pass
 
     def beamsizeComboActivatedCB(self, text):
-        if daq_utils.beamline == "nyx":
-            self.aperture.set_diameter(text)
-        else:
-            comm_s = 'set_beamsize("' + str(text[0:2]) + '","' + str(text[2:4]) + '")'
-            logger.info(comm_s)
-            self.send_to_server(comm_s)
+        comm_s = 'set_beamsize("' + str(text[0:2]) + '","' + str(text[2:4]) + '")'
+        logger.info(comm_s)
+        self.send_to_server(comm_s)
 
     def protoComboActivatedCB(self, text):
         self.showProtParams()
@@ -5016,7 +5010,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.md2 = MD2Device("XF:19IDC-ES{MD2}:", name="camera")
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
-            self.aperture = MD2ApertureDevice("XF:19IDC-ES{MD2}:", name="aperture")
         else:
             pass
 

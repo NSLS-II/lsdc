@@ -15,8 +15,8 @@ from PyMca5.PyMcaGui.pymca.McaWindow import McaWindow, ScanWindow
 from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
-from qtpy import QtCore, QtGui, QtWidgets
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, pyqtSignal, pyqtSlot
+from qtpy import QtCore, QtGui, QtWidgets, pyqtSignal, pyqtSlot
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice

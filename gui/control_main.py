@@ -9,6 +9,7 @@ import time
 from typing import Dict, List, Optional
 import threading
 
+from queue import Queue
 import cv2
 import numpy as np
 from epics import PV
@@ -18,7 +19,7 @@ from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, Signal, Slot
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice
@@ -1053,14 +1054,11 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
         self.capture = self.captureLowMag
-        self.frame_ready = Signal(np.ndarray)
-        self.frame_ready.connect(self.updateSampleImage)
+        self.frame_queue = Queue()
+        self.active_camera_threads = []
         self.timerSample = QTimer()
-        self.sampleFrameEvent = threading.Event()
-        self.timerSample.timeout.connect(self.sampleFrameEvent.set)
+        self.timerSample.timeout.connect(self.sampleFrameCB)
         self.timerSample.start(SAMPLE_TIMER_DELAY)
-        self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadLoop)
-        self.sampleCameraThread.start()
 
         self.centeringMarksList = []
         self.rasterList = []
@@ -3625,14 +3623,16 @@ class ControlMain(QtWidgets.QMainWindow):
         }
         self.rasterList.append(newRasterGraphicsDesc)
 
-    def sampleCameraThreadLoop(self):
-        self.cameraThreadActive = True
-        while self.cameraThreadActive:
-            self.sampleFrameEvent.wait()
-            if self.capture is None:
-                return
-            self.timerSampleRefresh()
-        return
+    def sampleFrameCB(self):
+        for thread in self.active_camera_threads:
+            if not thread.is_alive(): # remove old threads
+                self.active_camera_threads.remove(thread)
+        if not len(self.active_camera_threads) > 0:
+            self.active_camera_threads.append(threading.Thread(target=self.timerSampleRefresh))
+            self.active_camera_threads[-1].start()
+
+        if not self.frame_queue.empty():
+            self.pixmap_item.setPixmap(self.frame_queue.get())
 
     def timerSampleRefresh(self):
         if self.capture is None:
@@ -3654,14 +3654,9 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         qimage = qimage.rgbSwapped()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        #self.pixmap_item.setPixmap(pixmap_orig)
-        self.frame_ready.emit(pixmap_orig)
+        self.frame_queue.put(pixmap_orig)
         end_time = time.time()
         logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
-
-    @Slot(np.ndarray)
-    def updateSampleImage(self, frame):
-        self.pixmap_item.setPixmap(frame)
 
     def sceneKey(self, event):
         if (

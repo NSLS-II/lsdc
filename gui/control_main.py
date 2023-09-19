@@ -1056,7 +1056,7 @@ class ControlMain(QtWidgets.QMainWindow):
         #self.timerSample = QTimer()
         #self.timerSample.timeout.connect(self.timerSampleRefresh)
         #self.timerSample.start(SAMPLE_TIMER_DELAY)
-        self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadCB)
+        self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadLoop)
         self.sampleCameraThread.start()
 
         self.centeringMarksList = []

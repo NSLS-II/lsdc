@@ -16,7 +16,7 @@ from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, pyqtSignal, pyqtSlot
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice
@@ -999,6 +999,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.timerSample.timeout.connect(self.sampleFrameEvent.set)
         self.timerSample.start(SAMPLE_TIMER_DELAY)
         self.sampleCameraThread = threading.Thread(target=self.sampleCameraThreadLoop)
+        self.sampleCameraThread.frame_ready.connect(self.updateSampleImage)
         self.sampleCameraThread.start()
 
         self.centeringMarksList = []
@@ -3617,6 +3618,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterList.append(newRasterGraphicsDesc)
 
     def sampleCameraThreadLoop(self):
+        self.frame_ready = pyqtSignal(np.ndarray)
         self.cameraThreadActive = True
         while self.cameraThreadActive:
             self.sampleFrameEvent.wait()
@@ -3645,9 +3647,14 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         qimage = qimage.rgbSwapped()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        self.pixmap_item.setPixmap(pixmap_orig)
+        #self.pixmap_item.setPixmap(pixmap_orig)
+        self.frame_ready.emit(pixmap_orig)
         end_time = time.time()
         logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
+
+    @pyqtSlot(np.ndarray)
+    def updateSampleImage(self, frame):
+        self.pixmap_item.setPixmap(frame)
 
     def sceneKey(self, event):
         if (

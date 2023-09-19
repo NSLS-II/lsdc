@@ -3410,7 +3410,6 @@ def standardDaq(currentRequest):
     # perform governor and phase transitions
     # update flyer parameters
     # fly
-    logger.info(f"req object: {reqObj}")
     x_beam = getPvDesc("beamCenterX")
     y_beam = getPvDesc("beamCenterY")
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
@@ -3479,7 +3478,6 @@ def vectorDaq(currentRequest):
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
     det_distance_m = beamline_lib.motorPosFromDescriptor("detectorDist") / 1000
     reqObj = currentRequest["request_obj"]
-    logger.info(f"req object: {reqObj}")
     file_prefix = str(reqObj["file_prefix"])
     data_directory_name = str(reqObj["directory"])
     file_number_start = reqObj["file_number_start"]

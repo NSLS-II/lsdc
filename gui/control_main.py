@@ -1483,9 +1483,11 @@ class ControlMain(QtWidgets.QMainWindow):
             self.vidActionRasterDefRadio.setEnabled(True)
             self.vidActionDefineCenterRadio.setDisabled(True)
 
-
+        
+        self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+        self.capture = self.captureLowMag
         self.sampleCameraThread = VideoThread(
-            parent=self, delay=SAMPLE_TIMER_DELAY, url=getBlConfig("lowMagCamURL")
+            parent=self, delay=SAMPLE_TIMER_DELAY, camera_object=self.capture
         )
         self.sampleCameraThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item, frame)

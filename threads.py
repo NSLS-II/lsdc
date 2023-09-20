@@ -1,6 +1,7 @@
 from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt, QObject
 from qtpy import QtGui
 from PIL import Image, ImageQt
+import cv2
 import os
 import sys
 import urllib
@@ -34,6 +35,8 @@ class VideoThread(QThread):
                     self.showing_error = True
 
         if self.camera_object:
+            # https://stackoverflow.com/questions/30032063/opencv-videocapture-lag-due-to-the-capture-buffer
+            self.camera_object.set(cv2.CAP_PROP_POS_FRAMES, 0)
             retval,self.currentFrame = self.camera_object.read()
             if self.currentFrame is None:
                 logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')

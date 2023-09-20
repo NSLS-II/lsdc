@@ -993,14 +993,14 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
                 logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
 
-        self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
-        self.capture = self.captureLowMag
-        self.capture.set(cv2.CAP_PROP_BUFFER_SIZE, 1)
-        self.frame_queue = Queue()
-        self.active_camera_threads = []
-        self.timerSample = QTimer()
-        self.timerSample.timeout.connect(self.sampleFrameCB)
-        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+        #self.capture = self.captureLowMag
+        #self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        #self.frame_queue = Queue()
+        #self.active_camera_threads = []
+        #self.timerSample = QTimer()
+        #self.timerSample.timeout.connect(self.sampleFrameCB)
+        #self.timerSample.start(SAMPLE_TIMER_DELAY)
 
         self.centeringMarksList = []
         self.rasterList = []
@@ -1482,6 +1482,15 @@ class ControlMain(QtWidgets.QMainWindow):
             self.vidActionRasterExploreRadio.setEnabled(True)
             self.vidActionRasterDefRadio.setEnabled(True)
             self.vidActionDefineCenterRadio.setDisabled(True)
+
+
+        self.sampleCameraThread = VideoThread(
+            parent=self, delay=SAMPLE_TIMER_DELAY, url=getBlConfig("lowMagCamURL")
+        )
+        self.sampleCameraThread.frame_ready.connect(
+            lambda frame: self.updateCam(self.pixmap_item, frame)
+        )
+        self.sampleCameraThread.start()
 
         self.hutchCornerCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchCornerCamURL")
@@ -3636,7 +3645,7 @@ class ControlMain(QtWidgets.QMainWindow):
         # self.currentFrame = self.capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
         start_time = time.time()
         retval, self.currentFrame = self.capture.read()
-        self.capture.set(cv2.CAP_PROP_BUFFER_SIZE, 1)
+        self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         capture_time = time.time()
         if self.currentFrame is None:
             logger.debug(

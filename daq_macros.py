@@ -3429,7 +3429,6 @@ def standardDaq(currentRequest):
     total_exposure_time = exposure_per_image * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle
-    num_images_per_file = total_num_images
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
     if flyer.detector.cam.armed.get() == 1:
@@ -3444,7 +3443,7 @@ def standardDaq(currentRequest):
     logger.info(f"Arming detector for standard collection with angle_start {angle_start}, img_width {img_width}, total_num_images {total_num_images}, exposure_per_image {exposure_per_image}, file_prefix {file_prefix}, data_directory_name {data_directory_name}, file_number_start {file_number_start}, x_beam {x_beam}, y_beam {y_beam}, wavelength {wavelength}, det_distance_m {det_distance_m}, num_images_per_file {num_images_per_file}")
     flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-                     wavelength, det_distance_m, num_images_per_file)
+                     wavelength, det_distance_m)
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
@@ -3492,7 +3491,6 @@ def vectorDaq(currentRequest):
     total_exposure_time = reqObj["exposure_time"] * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle
-    num_images_per_file = total_num_images
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
     vector_params = reqObj["vectorParams"]
@@ -3515,7 +3513,7 @@ def vectorDaq(currentRequest):
     vector_flyer.configure_detector(file_prefix, data_directory_name)
     vector_flyer.detector_arm(angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-                     wavelength, det_distance_m, num_images_per_file)
+                     wavelength, det_distance_m)
     def armed_callback(value, old_value, **kwargs):
         return (old_value == 0 and value == 1)
     arm_status = SubscriptionStatus(vector_flyer.detector.cam.armed, armed_callback, run=False)

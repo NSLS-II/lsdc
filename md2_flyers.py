@@ -53,7 +53,7 @@ class MD2StandardFlyer():
 
     def detector_arm(self, angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-                     wavelength, det_distance_m, num_images_per_file):
+                     wavelength, det_distance_m):
         self.detector.cam.save_files.put(1)
         self.detector.cam.sequence_id.put(file_number_start)
         self.detector.cam.det_distance.put(det_distance_m)
@@ -75,7 +75,7 @@ class MD2StandardFlyer():
         self.detector.cam.omega_incr.put(img_width)
         self.detector.cam.omega_start.put(angle_start)
         self.detector.cam.wavelength.put(wavelength)
-        self.detector.file.file_write_images_per_file.put(num_images_per_file)
+        self.detector.file.file_write_images_per_file.put(500)
 
         #def armed_callback(value, old_value, **kwargs):
         #   if old_value == 0 and value == 1:

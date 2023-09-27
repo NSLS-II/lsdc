@@ -299,15 +299,15 @@ class ControlMain(QtWidgets.QMainWindow):
         sys.exit()  # doing this to close any windows left open
 
     def initVideo2(self, frequency):
-        self.captureHighMag = cv2.VideoCapture(daq_utils.highMagCamURL)
+        #self.captureHighMag = cv2.VideoCapture(daq_utils.highMagCamURL)
         logger.debug('highMagCamURL: "' + daq_utils.highMagCamURL + '"')
 
     def initVideo4(self, frequency):
-        self.captureHighMagZoom = cv2.VideoCapture(daq_utils.highMagZoomCamURL)
+        #self.captureHighMagZoom = cv2.VideoCapture(daq_utils.highMagZoomCamURL)
         logger.debug('highMagZoomCamURL: "' + daq_utils.highMagZoomCamURL + '"')
 
     def initVideo3(self, frequency):
-        self.captureLowMagZoom = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
+        #self.captureLowMagZoom = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
         logger.debug('lowMagZoomCamURL: "' + daq_utils.lowMagZoomCamURL + '"')
 
     def createSampleTab(self):
@@ -1050,16 +1050,16 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.initVideo3, (0.25,)
                 )  # this sets up lowMagDigiZoom
             if self.zoom1FrameRatePV.get() != 0:
-                self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+                #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
                 logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
 
         #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
-        #self.capture = self.captureLowMag
-        #self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.capture = self.captureLowMag
         #self.frame_queue = Queue()
         #self.active_camera_threads = []
-        #self.timerSample = QTimer()
+        self.timerSample = QTimer()
         #self.timerSample.timeout.connect(self.sampleFrameCB)
+        #self.timerSample.timeout.connect(self.timerSampleRefresh)
         #self.timerSample.start(SAMPLE_TIMER_DELAY)
 
         self.centeringMarksList = []
@@ -1547,15 +1547,23 @@ class ControlMain(QtWidgets.QMainWindow):
             self.vidActionDefineCenterRadio.setDisabled(True)
 
         
-        self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+        #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+        #self.captureLowMag.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        self.captureLowMag = daq_utils.lowMagCamURL
         self.capture = self.captureLowMag
+        
+        #self.sampleCameraThread = VideoThread(
+        #    parent=self, delay=SAMPLE_TIMER_DELAY, camera_object=self.capture
+        #)
         self.sampleCameraThread = VideoThread(
-            parent=self, delay=SAMPLE_TIMER_DELAY, camera_object=self.capture
+            parent=self, delay=HUTCH_TIMER_DELAY, url=daq_utils.highMagCamURL
         )
         self.sampleCameraThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item, frame)
         )
         self.sampleCameraThread.start()
+        
+        
 
         self.hutchCornerCamThread = VideoThread(
             parent=self, delay=HUTCH_TIMER_DELAY, url=getBlConfig("hutchCornerCamURL")
@@ -1718,6 +1726,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
+        #self.flushBuffer(self.capture)
+        #self.capture.release()
+        #self.capture = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}
@@ -2707,7 +2718,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.dataPathGB.setBasePath_ledit(fname)
 
     def popImportDialogCB(self):
-        self.timerSample.stop()
+        #self.timerSample.stop()
         fname = QtWidgets.QFileDialog.getOpenFileName(
             self,
             "Choose Spreadsheet File",
@@ -2715,7 +2726,7 @@ class ControlMain(QtWidgets.QMainWindow):
             filter="*.xls *.xlsx",
             options=QtWidgets.QFileDialog.DontUseNativeDialog,
         )
-        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        #self.timerSample.start(SAMPLE_TIMER_DELAY)
         if fname != "":
             self.send_to_server("importSpreadsheet", [fname[0], daq_utils.owner])
 
@@ -3636,6 +3647,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterList.append(newRasterGraphicsDesc)
 
     def sampleFrameCB(self):
+        frames = str(self.capture.get(cv2.CAP_PROP_BUFFERSIZE))
+        text = frames + " frames"
+        self.imageScaleText = self.scene.addSimpleText(
+            text, font=QtGui.QFont("Times", 13)
+        )
+        '''
         for thread in self.active_camera_threads:
             if not thread.is_alive(): # remove old threads
                 self.active_camera_threads.remove(thread)
@@ -3645,7 +3662,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         if not self.frame_queue.empty():
             self.pixmap_item.setPixmap(self.frame_queue.get())
-
+            '''
     def timerSampleRefresh(self):
         if self.capture is None:
             return
@@ -3667,11 +3684,12 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         qimage = qimage.rgbSwapped()
         pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        while(self.frame_queue.qsize() > 1):
-            self.frame_queue.get() # remove old frames
-        self.frame_queue.put(pixmap_orig)
+        self.pixmap_item.setPixmap(pixmap_orig)
+        #while(self.frame_queue.qsize() > 1):
+        #    self.frame_queue.get() # remove old frames
+        #self.frame_queue.put(pixmap_orig)
         end_time = time.time()
-        logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
+        #logger.info(f"capture time: {capture_time - start_time}, total time: {end_time - start_time}")
 
     def sceneKey(self, event):
         if (
@@ -4370,7 +4388,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def restartServerCB(self):
         if self.controlEnabled():
             msg = "Desperation move. Are you sure?"
-            self.timerSample.stop()
+            #self.timerSample.stop()
             reply = QtWidgets.QMessageBox.question(
                 self,
                 "Message",
@@ -4378,7 +4396,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.Yes,
                 QtWidgets.QMessageBox.No,
             )
-            self.timerSample.start(SAMPLE_TIMER_DELAY)
+            #self.timerSample.start(SAMPLE_TIMER_DELAY)
             if reply == QtWidgets.QMessageBox.Yes:
                 if daq_utils.beamline == "fmx" or daq_utils.beamline == "amx":
                     restart_pv = PV(daq_utils.beamlineComm + "RestartServerSignal")
@@ -4404,9 +4422,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.photonShutterClose_pv.put(1)
 
     def removePuckCB(self):
-        self.timerSample.stop()
+        #self.timerSample.stop()
         dewarPos, ok = DewarDialog.getDewarPos(parent=self, action="remove")
-        self.timerSample.start(SAMPLE_TIMER_DELAY)
+        #self.timerSample.start(SAMPLE_TIMER_DELAY)
 
     def setVectorPointCB(self, pointName):
         """Callback function to update a vector point
@@ -4459,13 +4477,13 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def puckToDewarCB(self):
         while 1:
-            self.timerSample.stop()
+            #self.timerSample.stop()
             puckName, ok = PuckDialog.getPuckName()
-            self.timerSample.start(SAMPLE_TIMER_DELAY)
+            #self.timerSample.start(SAMPLE_TIMER_DELAY)
             if ok:
-                self.timerSample.stop()
+                #self.timerSample.stop()
                 dewarPos, ok = DewarDialog.getDewarPos(parent=self, action="add")
-                self.timerSample.start(SAMPLE_TIMER_DELAY)
+                #self.timerSample.start(SAMPLE_TIMER_DELAY)
                 if ok and dewarPos is not None and puckName is not None:
                     ipos = int(dewarPos) + 1
                     db_lib.insertIntoContainer(

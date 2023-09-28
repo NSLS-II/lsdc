@@ -404,7 +404,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_end_ledit.textChanged[str].connect(
             functools.partial(self.totalExpChanged, "oscEnd")
         )
-        self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
+        if daq_utils.beamline == "fmx": 
+            self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
         hBoxColParams1.addWidget(colStartLabel)
         hBoxColParams1.addWidget(self.osc_start_ledit)
         hBoxColParams1.addWidget(self.colEndLabel)

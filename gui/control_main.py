@@ -565,7 +565,7 @@ class ControlMain(QtWidgets.QMainWindow):
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")
         if daq_utils.beamline == "nyx":
             # beamSizeOptionList = self.aperture.get_diameter_list() PV not working, needs investigation
-            beamSizeOptionList = ["5", "10", "20", "30", "50", "100"]
+            beamSizeOptionList = ["10", "20", "30", "50", "100"]
             current_index = self.aperture.current_index.get()
         else:
             beamSizeOptionList = BEAMSIZE_OPTIONS.keys()

@@ -5041,12 +5041,18 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def initOphyd(self):
         if daq_utils.beamline == "nyx":
+            # initialize devices
             self.gon = GonioDevice("XF:19IDC-ES{MD2}:", name="gonio")
             self.camera = CameraDevice("XF:19IDC-ES{MD2}:", name="camera")
             self.md2 = MD2Device("XF:19IDC-ES{MD2}:", name="camera")
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
             self.aperture = MD2ApertureDevice("XF:19IDC-ES{MD2}:", name="aperture")
+
+            # initialize parameters for gui elements
+            print(f"Aperature diameters: {self.aperture.diameters.get()}")
+            logger.info(f"Aperature diameters: {self.aperture.diameters.get()}")
+            logger.info(f"Zoom level: {self.camera.zoom.get()}")
         else:
             pass
 

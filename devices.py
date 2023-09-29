@@ -92,7 +92,7 @@ class ExporterComponent(Cpt):
             elif "NULL" in line:
                 print(f"null error: {line}")
                 return line
-            elif "EVT:" in line:
+            elif "EVT:" in line: # print here if you want to see the events
                 pass #return self.process_evt(line)
 
 class LightDevice(Device):
@@ -271,6 +271,18 @@ class MD2Device(GonioDevice):
                 start_cx, start_cy, number_of_lines, frames_per_line, exposure_time, 
                 invert_direction, use_table_centering, use_fast_mesh_scans]
         return self.exporter.cmd(command, param_list)
+    
+class MD2ApertureDevice(MD2SimpleHVDevice):
+    # this device needs additional signals for "CurrentApertureDiameterIndex" and "ApertureDiameters"
+    current_index = Cpt(EpicsSignal, 'CurrentApertureDiameterIndex', name='current_diameter')
+    diameters = Cpt(EpicsSignalRO, 'ApertureDiameters', name='diameters')
+
+    def get_diameter_list(self):
+        return self.diameters.get()
+    
+    def set_diameter(self, diameter):
+        if diameter in self.get_diameter_list():
+            self.current_index.put(self.get_diameter_list().index(diameter))
 
 class ShutterDevice(Device):
     control = Cpt(EpicsSignal, '{MD2}:FastShutterIsOpen', name='control') # PV to send control signal

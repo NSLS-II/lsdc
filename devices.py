@@ -272,9 +272,9 @@ class MD2Device(GonioDevice):
                 invert_direction, use_table_centering, use_fast_mesh_scans]
         return self.exporter.cmd(command, param_list)
     
-class MD2ApertureDevice(MD2SimpleHVDevice):
+class MD2ApertureDevice(Device):
     # this device needs additional signals for "CurrentApertureDiameterIndex" and "ApertureDiameters"
-    current_index = Cpt(EpicsSignal, 'CurrentApertureDiameterIndex', name='current_diameter')
+    current_index = Cpt(EpicsSignal, 'CurrentApertureDiameterIndex', name='current_index')
     diameters = Cpt(EpicsSignalRO, 'ApertureDiameters', name='diameters')
 
     def get_diameter_list(self):

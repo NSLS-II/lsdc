@@ -2631,7 +2631,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def beamsizeComboActivatedCB(self, text):
         if daq_utils.beamline == "nyx":
             index = self.beamsizeComboBox.findText(str(text))
-            self.aperture.current_index.set(index)
+            self.aperture.current_index.put(index)
         else:
             self.send_to_server("set_beamsize", BEAMSIZE_OPTIONS[text])
 

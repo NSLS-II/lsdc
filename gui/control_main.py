@@ -1319,6 +1319,7 @@ class ControlMain(QtWidgets.QMainWindow):
         clearGraphicsButton.clicked.connect(self.eraseCB)
         self.click3Button = QtWidgets.QPushButton("3-Click\nCenter")
         self.click3Button.clicked.connect(self.center3LoopCB)
+        
         self.threeClickCount = 0
         saveCenteringButton = QtWidgets.QPushButton("Save\nCenter")
         saveCenteringButton.clicked.connect(self.saveCenterCB)
@@ -1332,6 +1333,7 @@ class ControlMain(QtWidgets.QMainWindow):
             hBoxSampleAlignLayout.addWidget(self.click3Button)
         hBoxSampleAlignLayout.addWidget(snapshotButton)
         hBoxSampleAlignLayout.addWidget(self.hideRastersCheckBox)
+        self.click3Button.setMaximumSize(self.click3Button.sizeHint())
         hBoxRadioLayout100 = QtWidgets.QHBoxLayout()
         vidActionLabel = QtWidgets.QLabel("Video Click Mode:")
         self.vidActionRadioGroup = QtWidgets.QButtonGroup()

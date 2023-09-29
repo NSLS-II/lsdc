@@ -528,12 +528,15 @@ class ControlMain(QtWidgets.QMainWindow):
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")
         if daq_utils.beamline == "nyx":
-            beamSizeOptionList = self.aperture.get_diameter_list()
+            # beamSizeOptionList = self.aperture.get_diameter_list() PV not working, needs investigation
+            beamSizeOptionList = ["5", "10", "20", "30", "50", "100"]
+            current_index = self.aperture.current_index.get()
         else:
             beamSizeOptionList = ["V0H0", "V0H1", "V1H0", "V1H1"]
+            current_index = int(self.beamSize_pv.get())
         self.beamsizeComboBox = QtWidgets.QComboBox(self)
         self.beamsizeComboBox.addItems(beamSizeOptionList)
-        self.beamsizeComboBox.setCurrentIndex(int(self.beamSize_pv.get()))
+        self.beamsizeComboBox.setCurrentIndex(current_index)
         self.beamsizeComboBox.activated[str].connect(self.beamsizeComboActivatedCB)
         if daq_utils.beamline == "amx" or self.energy_pv.get() < 9000:
             self.beamsizeComboBox.setEnabled(False)
@@ -1473,7 +1476,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.fastEPCheckBox.setVisible(False)
             self.dimpleCheckBox.setVisible(False)
             self.centeringComboBox.setVisible(False)
-            self.beamsizeComboBox.setVisible(False)
             annealButton.setVisible(False)
             centerLoopButton.setVisible(False)
             clearGraphicsButton.setVisible(False)
@@ -2624,7 +2626,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def beamsizeComboActivatedCB(self, text):
         if daq_utils.beamline == "nyx":
-            self.aperture.set_diameter(text)
+            self.aperture.current_index.mv(int(text))
         else:
             comm_s = 'set_beamsize("' + str(text[0:2]) + '","' + str(text[2:4]) + '")'
             logger.info(comm_s)
@@ -5048,11 +5050,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
             self.aperture = MD2ApertureDevice("XF:19IDC-ES{MD2}:", name="aperture")
-
-            # initialize parameters for gui elements
-            print(f"Aperature diameters: {self.aperture.diameters.get()}")
-            logger.info(f"Aperature diameters: {self.aperture.diameters.get()}")
-            logger.info(f"Zoom level: {self.camera.zoom.get()}")
         else:
             pass
 

@@ -278,6 +278,8 @@ class MD2ApertureDevice(Device):
     diameters = Cpt(EpicsSignalRO, 'ApertureDiameters', name='diameters')
 
     def get_diameter_list(self):
+        # must format list for GUI
+        # also, can't currently get from PV
         return self.diameters.get()
     
     def set_diameter(self, diameter):

@@ -35,7 +35,7 @@ class DewarTree(QtWidgets.QTreeView):
         self.setDragDropMode(QtWidgets.QAbstractItemView.InternalMove)
         self.setAnimated(True)
         self.model = QtGui.QStandardItemModel()
-        
+
         # self.isExpanded = 1
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openMenu)
@@ -141,7 +141,9 @@ class DewarTree(QtWidgets.QTreeView):
             self.collapseAll()
         self.scrollTo(self.currentIndex(), QtWidgets.QAbstractItemView.PositionAtCenter)
 
-    def add_samples_to_puck_tree(self, puckContents, parentItem: QtGui.QStandardItem, index_label):
+    def add_samples_to_puck_tree(
+        self, puckContents, parentItem: QtGui.QStandardItem, index_label
+    ):
         # Method will attempt to add samples to the puck. If you don't belong to the proposal,
         # it will not add samples and clear the puck information
         selectedIndex = None
@@ -162,11 +164,9 @@ class DewarTree(QtWidgets.QTreeView):
                 sampleDict.setdefault(sample_id, db_lib.getSampleByID(sample_id)),
             )
 
-            #if not IS_STAFF and not self.is_proposal_member(sample["proposalID"]):
-            if not self.is_proposal_member(sample["proposalID"]):
-                # If the user is not part of the proposal or is not staff, don't fill tree
+            if not IS_STAFF and not self.is_proposal_member(sample["proposalID"]):
+                # If the user is not part of the proposal and is not staff, don't fill tree
                 # Clear the puck information and don't make it selectable
-                # parentItem.clearData()
                 parentItem.setText(index_label)
                 current_flags = parentItem.flags()
                 parentItem.setFlags(current_flags & ~Qt.ItemFlag.ItemIsSelectable)  # type: ignore
@@ -227,20 +227,20 @@ class DewarTree(QtWidgets.QTreeView):
             self.setCurrentIndex(current_index)
             self.parent.row_clicked(current_index)
 
-    def is_proposal_member(self, proposal) -> bool:
+    def is_proposal_member(self, proposal_id) -> bool:
         # Check if the user running LSDC is part of the sample's proposal
-        if proposal not in self.proposal_membership:
-            r = requests.get(f"{os.environ['NSLS_API_URL']}/proposal/{proposal}")
+        if proposal_id not in self.proposal_membership:
+            r = requests.get(f"{os.environ['NSLS2_API_URL']}/proposal/{proposal_id}")
             r.raise_for_status()
             response = r.json()
-            if "users" in response and getpass.getuser()  in [
+            if "users" in response and getpass.getuser() in [
                 user["username"] for user in response["users"] if "username" in user
             ]:
-                self.proposal_membership[proposal] = True
+                self.proposal_membership[proposal_id] = True
             else:
                 logger.info(f"Users not found in response: {response}")
-                self.proposal_membership[proposal] = False
-        return self.proposal_membership[proposal]
+                self.proposal_membership[proposal_id] = False
+        return self.proposal_membership[proposal_id]
 
     def create_request_item(self, request) -> QtGui.QStandardItem:
         col_item = QtGui.QStandardItem(

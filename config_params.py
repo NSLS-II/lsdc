@@ -1,4 +1,5 @@
 from enum import Enum
+import os, grp
 
 # BlConfig parameter variable names
 
@@ -109,3 +110,8 @@ VALID_TRANSMISSION = {
 }
 
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
+IS_STAFF = (
+    True
+    if os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    else False
+)

@@ -201,7 +201,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.raddoseTimer.timeout.connect(self.spawnRaddoseThread)
 
         self.createSampleTab()
-
+        self.userScreenDialog = UserScreenDialog(self)
         self.initCallbacks()
         if self.scannerType != "PI":
             self.motPos = {
@@ -224,14 +224,13 @@ class ControlMain(QtWidgets.QMainWindow):
         if daq_utils.beamline == "nyx":  # requires staffScreenDialog to be present
             self.staffScreenDialog.fastDPCheckBox.setDisabled(True)
 
-        self.dewarTree.refreshTreeDewarView()
         if self.mountedPin_pv.get() == "":
             mountedPin = db_lib.beamlineInfo(daq_utils.beamline, "mountedSample")[
                 "sampleID"
             ]
             self.mountedPin_pv.put(mountedPin)
         self.rasterExploreDialog = RasterExploreDialog()
-        self.userScreenDialog = UserScreenDialog(self)
+        
         self.detDistMotorEntry.getEntry().setText(
             self.detDistRBVLabel.getEntry().text()
         )  # this is to fix the current val being overwritten by reso
@@ -241,6 +240,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.changeControlMasterCB(1)
                 self.controlMasterCheckBox.setChecked(True)
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
+        #self.dewarTree.refreshTreeDewarView()
 
     def setGuiValues(self, values):
         for item, value in values.items():
@@ -4625,6 +4625,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self, index
     ):  # I need "index" here? seems like I get it from selmod, but sometimes is passed
         selmod = self.dewarTree.selectionModel()
+        if not selmod:
+            return
         selection = selmod.selection()
         indexes = selection.indexes()
         if len(indexes) == 0:

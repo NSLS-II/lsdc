@@ -193,7 +193,7 @@ def perform_checks():
     breadth first search. DAGs allow certain tests to be run only after passing
     specific tests. For example
     """
-    check_functions = [check_daq_utils, check_working_directory, check_db]
+    check_functions = [check_daq_utils, check_working_directory, check_db, check_env_variables]
     run_checks(check_functions)
 
 

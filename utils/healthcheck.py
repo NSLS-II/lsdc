@@ -173,7 +173,7 @@ def check_env_variables() -> bool:
     env_vars = ["STAFF_GROUP", "NSLS2_API_URL"]
     missing_vars = [var for var in env_vars if var not in os.environ]
     if missing_vars:
-        check_env_variables.remidiation = f"Environment variable(s) not found: {','.join(missing_vars)}"
+        check_env_variables.remediation = f"Environment variable(s) not found: {','.join(missing_vars)}"
         return False
     return True
 
@@ -183,7 +183,7 @@ def check_env_file() -> bool:
 
     env_path = Path(f"/nsls2/software/mx/current_visit_lsdc_{daq_utils.beamline}")
     if not env_path.exists():
-        check_env_file.remidiation = f"Environment file not found at {env_path}"
+        check_env_file.remediation = f"Environment file not found at {env_path}"
         return False
     return True
 

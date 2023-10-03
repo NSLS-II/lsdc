@@ -8,6 +8,7 @@ from epics import PV
 import db_lib
 import det_lib
 import time
+from PIL import Image
 import logging
 logger = logging.getLogger(__name__)
 

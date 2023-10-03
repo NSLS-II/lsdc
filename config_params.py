@@ -112,6 +112,6 @@ VALID_TRANSMISSION = {
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
 IS_STAFF = (
     True
-    if os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    if os.environ.get("STAFF_GROUP") is not None and os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
     else False
 )

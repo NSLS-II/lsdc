@@ -226,8 +226,8 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      daq_utils.take_crystal_picture(filename=jpegImagePrefix)
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
-     logger.info('resizing image: %s' % comm_s)
      resizeRatio = 0.4
+     logger.info(f'resizing image: ratio: {resizeRatio} filename: {jpegImageThumbFilename}')
      fullSnapshot = Image.open(jpegImageFilename)
      resizeWidth = fullSnapshot.width * resizeRatio
      resizeHeight = fullSnapshot.height * resizeRatio

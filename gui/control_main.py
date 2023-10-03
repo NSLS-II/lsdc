@@ -3420,27 +3420,32 @@ class ControlMain(QtWidgets.QMainWindow):
         md2_img_width = self.md2.center_pixel_x.get() * 2.0
         lsdc_img_width = daq_utils.screenPixX
         img_scale_factor = md2_img_width / lsdc_img_width
-        pixels_per_micron = self.camera.scale_x.get() * 1000
+        pixels_per_mm = self.camera.scale_x.get()
+        pixels_per_micron = pixels_per_mm / 1000.0
         return float(pixels * img_scale_factor) / pixels_per_micron
+        print(f"pixels per micron = {pixels_per_micron}")
 
     def screenYPixels2microns(self, pixels):
         md2_img_height = self.md2.center_pixel_y.get() * 2.0
         lsdc_img_height = daq_utils.screenPixY
-        pixels_per_micron = self.camera.scale_y.get() * 1000
+        pixels_per_mm = self.camera.scale_y.get()
+        pixels_per_micron = pixels_per_mm / 1000.0
         img_scale_factor = md2_img_height / lsdc_img_height
         return float(pixels * img_scale_factor) / pixels_per_micron
 
     def screenXmicrons2pixels(self, microns):
         md2_img_width = self.md2.center_pixel_x.get() * 2.0
         lsdc_img_width = daq_utils.screenPixX
-        pixels_per_micron = self.camera.scale_x.get() * 1000
+        pixels_per_mm = self.camera.scale_x.get()
+        pixels_per_micron = pixels_per_mm / 1000.0
         img_scale_factor = md2_img_width / lsdc_img_width
         return float(microns * pixels_per_micron) / img_scale_factor
 
     def screenYmicrons2pixels(self, microns):
         md2_img_height = self.md2.center_pixel_y.get() * 2.0
         lsdc_img_height = daq_utils.screenPixY
-        pixels_per_micron = self.camera.scale_y.get() * 1000
+        pixels_per_mm = self.camera.scale_y.get()
+        pixels_per_micron = pixels_per_mm / 1000.0
         img_scale_factor = md2_img_height / lsdc_img_height
         return float(microns * pixels_per_micron) / img_scale_factor
 

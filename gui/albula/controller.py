@@ -72,7 +72,7 @@ class AlbulaController:
         if char_value == GovState.DA.value:
             self.startup()
             self._stop.clear()
-            self.imageDaemon = threading.Thread(target=self.updateImage, args=())
+            self.imageDaemon = threading.Thread(target=self.update_image, args=())
             if not self.imageDaemon.is_alive():
                 self.imageDaemon.start()
         else:
@@ -87,8 +87,6 @@ class AlbulaController:
         if self.albulaSubFrame is None:
             self.albulaSubFrame = self.albulaFrame.openSubFrame()
             self.albulaSubFrame.setColorMode("Heat")
-        
-
 
     def disp_image(self, dimage):
         self.startup()
@@ -135,14 +133,14 @@ class AlbulaController:
                 logging.error("main exception: {}".format(e))
                 self._stop.set()
 
-    def updateImage(self):
+    def update_image(self):
         """
         Endless loop polling for monitor images
         """
         logging.info("polling {} for monitor image".format(self.ip))
         while not self._stop.is_set():  # stop flag
             try:
-                data = self.getEigerMonitorImage()
+                data = self.get_eiger_monitor_image()
                 dimage = dectris.albula.DImage(data)
                 self.albulaSubFrame.loadImage(dimage)
                 self.albulaSubFrame.setTitle("MONITOR")
@@ -151,7 +149,7 @@ class AlbulaController:
                 time.sleep(self.pause)
         self.albulaSubFrame.unsetTitle()
 
-    def getEigerMonitorImage(self):  # for EIGER1
+    def get_eiger_monitor_image(self):  # for EIGER1
         urlData = "http://{}/monitor/api/{}/images/monitor".format(
             self.ip, self.api_version
         )

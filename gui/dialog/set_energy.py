@@ -49,22 +49,20 @@ class SetEnergyDialog(QtWidgets.QDialog):
         self.message = QtWidgets.QLabel("")
         layout.addWidget(self.message, 2, 0, 1, 2)
 
-        self.confirm_button = QtWidgets.QPushButton("Confirm")
-        self.confirm_button.setAutoDefault(False)
-        self.confirm_button.setEnabled(False)
-        self.confirm_button.clicked.connect(self.set_energy)
+        self.monochromator_button = QtWidgets.QPushButton("Monochromator")
+        self.monochromator_button.setAutoDefault(False)
+        self.monochromator_button.clicked.connect(self.set_monochromator_energy)
         
-        self.cancel_button = QtWidgets.QPushButton("Cancel")
-        self.cancel_button.setEnabled(False)
-        self.cancel_button.setAutoDefault(False)
-        self.cancel_button.clicked.connect(self.cancel_set_energy)
+        self.full_alignment_button = QtWidgets.QPushButton("Full Alignment")
+        self.full_alignment_button.setAutoDefault(False)
+        self.full_alignment_button.clicked.connect(self.set_full_alignment_energy)
 
         self.close_button = QtWidgets.QPushButton("Close")
         self.close_button.clicked.connect(self.close)
         self.close_button.setAutoDefault(False)
 
-        layout.addWidget(self.confirm_button, 3, 0)
-        layout.addWidget(self.cancel_button, 3, 1)
+        layout.addWidget(self.monochromator_button, 3, 0)
+        layout.addWidget(self.full_alignment_button, 3, 1)
         layout.addWidget(self.close_button, 4, 0, 1, 2)
 
         self.hdcm.e.user_readback.subscribe(self.update_energy, run=True)
@@ -81,25 +79,22 @@ class SetEnergyDialog(QtWidgets.QDialog):
     
     def check_value(self):
         if abs(float(self.setpoint_edit.text()) - self.hdcm.e.user_readback.get()) > 10:
-            #
-            self.message.setText("Energy change is greater than 10 eV.\nConfirm by clicking button or cancel")
-            self.confirm_button.setEnabled(True)
-            self.setpoint_edit.setEnabled(False)
-            self.cancel_button.setEnabled(True)
+            self.message.setText("Energy change is greater than 10 eV.\nMonochromator cannot be used for alignment")
+            self.monochromator_button.setDisabled(True)
+        else:
+            self.message.setText("Energy change less than 10 eV")
+            self.monochromator_button.setDisabled(False)
             
-            
+
+    def set_full_alignment_energy(self):
+        print('Executing: ')
+        self.parent().send_to_server(f"set_energy({self.setpoint_edit.text()})")
+
+    def set_monochromator_energy(self):
+        if abs(float(self.setpoint_edit.text()) - self.hdcm.e.user_readback.get()) > 10:
+            self.message.setText("Energy change is greater than 10 eV.\nMonochromator cannot be used for alignment")
         else:
             comm_s = 'mvaDescriptor("energy",' + str(self.setpoint_edit.text()) + ")"
             print(f"executing {comm_s}")
             self.parent().send_to_server(comm_s)
-
-    def set_energy(self):
-        print('Executing: ')
-        self.parent().send_to_server(f"set_energy({self.setpoint_edit.text()})")
-
-    def cancel_set_energy(self):
-        print("Clicked cancel")
-        self.setpoint_edit.setEnabled(True)
-        self.confirm_button.setEnabled(False)
-        self.cancel_button.setEnabled(False)
 

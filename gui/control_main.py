@@ -2714,7 +2714,11 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.info(comm_s)
             self.send_to_server(comm_s)
         """
-        set_energy = SetEnergyDialog(parent=self)
+        if self.controlEnabled():
+            set_energy = SetEnergyDialog(parent=self)
+        else:
+            self.popupServerMessage("You don't have control")
+        
 
     def setLifetimeCB(self, lifetime):
         if hasattr(self, "sampleLifetimeReadback_ledit"):

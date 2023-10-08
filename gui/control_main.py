@@ -1484,6 +1484,8 @@ class ControlMain(QtWidgets.QMainWindow):
             saveCenteringButton.setVisible(False)
             selectAllCenteringButton.setVisible(False)
             snapshotButton.setVisible(False)
+            annealTimeLabel.setVisible(False)
+            self.annealTime_ledit.setVisible(False)
             self.vidActionDefineCenterRadio.setVisible(False)
             self.hideRastersCheckBox.setEnabled(True)
             self.vidActionC2CRadio.setEnabled(True)

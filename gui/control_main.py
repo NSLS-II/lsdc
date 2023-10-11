@@ -1108,8 +1108,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.centerMarker.setFont(font)
         self.scene.addItem(self.centerMarker)
         self.centerMarker.setPos(
-            daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX,
-            daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY,
+            self.getMD2BeamCenterX() - self.centerMarkerCharOffsetX,
+            self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY,
         )
         self.zoomRadioGroup = QtWidgets.QButtonGroup()
         self.zoom1Radio = QtWidgets.QRadioButton("Mag1")
@@ -1742,8 +1742,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelToggledCB(self, identifier):
         fov = {}
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
+        zoomedCursorX = self.getMD2BeamCenterX() - self.centerMarkerCharOffsetX
+        zoomedCursorY = self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY
         if self.zoom2Radio.isChecked():
             self.flushBuffer(self.captureLowMagZoom)
             self.capture = self.captureLowMagZoom
@@ -1751,18 +1751,18 @@ class ControlMain(QtWidgets.QMainWindow):
             fov["y"] = daq_utils.lowMagFOVy / 2.0
             unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
+            if unzoomedCursorX * 2.0 < self.getMD2BeamCenterX():
                 zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
+            if unzoomedCursorY * 2.0 < self.getMD2BeamCenterY():
                 zoomedCursorY = unzoomedCursorY * 2.0
             if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
+                unzoomedCursorX - self.getMD2BeamCenterX()
+                > self.getMD2BeamCenterX() / 2
             ):
                 zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
             if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
+                unzoomedCursorY - self.getMD2BeamCenterY()
+                > self.getMD2BeamCenterY() / 2
             ):
                 zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
             self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
@@ -1810,18 +1810,18 @@ class ControlMain(QtWidgets.QMainWindow):
             unzoomedCursorY = (
                 self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
+            if unzoomedCursorX * 2.0 < self.getMD2BeamCenterX():
                 zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
+            if unzoomedCursorY * 2.0 < self.getMD2BeamCenterY():
                 zoomedCursorY = unzoomedCursorY * 2.0
             if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
+                unzoomedCursorX - self.getMD2BeamCenterX()
+                > self.getMD2BeamCenterX() / 2
             ):
                 zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
             if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
+                unzoomedCursorY - self.getMD2BeamCenterY()
+                > self.getMD2BeamCenterY() / 2
             ):
                 zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
             self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
@@ -1982,23 +1982,23 @@ class ControlMain(QtWidgets.QMainWindow):
         pass
 
     def processLowMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
+        zoomedCursorX = self.getMD2BeamCenterX() - self.centerMarkerCharOffsetX
+        zoomedCursorY = self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY
         if self.zoom2Radio.isChecked():  # lowmagzoom
             unzoomedCursorX = self.lowMagCursorX_pv.get() - self.centerMarkerCharOffsetX
             unzoomedCursorY = self.lowMagCursorY_pv.get() - self.centerMarkerCharOffsetY
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
+            if unzoomedCursorX * 2.0 < self.getMD2BeamCenterX():
                 zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
+            if unzoomedCursorY * 2.0 < self.getMD2BeamCenterY():
                 zoomedCursorY = unzoomedCursorY * 2.0
             if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
+                unzoomedCursorX - self.getMD2BeamCenterX()
+                > self.getMD2BeamCenterX() / 2
             ):
                 zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
             if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
+                unzoomedCursorY - self.getMD2BeamCenterY()
+                > self.getMD2BeamCenterY() / 2
             ):
                 zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
             self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
@@ -2033,8 +2033,8 @@ class ControlMain(QtWidgets.QMainWindow):
             )
 
     def processHighMagCursorChange(self, posRBV, ID):
-        zoomedCursorX = daq_utils.screenPixCenterX - self.centerMarkerCharOffsetX
-        zoomedCursorY = daq_utils.screenPixCenterY - self.centerMarkerCharOffsetY
+        zoomedCursorX = self.getMD2BeamCenterX() - self.centerMarkerCharOffsetX
+        zoomedCursorY = self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY
         if self.zoom4Radio.isChecked():  # highmagzoom
             unzoomedCursorX = (
                 self.highMagCursorX_pv.get() - self.centerMarkerCharOffsetX
@@ -2042,18 +2042,18 @@ class ControlMain(QtWidgets.QMainWindow):
             unzoomedCursorY = (
                 self.highMagCursorY_pv.get() - self.centerMarkerCharOffsetY
             )
-            if unzoomedCursorX * 2.0 < daq_utils.screenPixCenterX:
+            if unzoomedCursorX * 2.0 < self.getMD2BeamCenterX():
                 zoomedCursorX = unzoomedCursorX * 2.0
-            if unzoomedCursorY * 2.0 < daq_utils.screenPixCenterY:
+            if unzoomedCursorY * 2.0 < self.getMD2BeamCenterY():
                 zoomedCursorY = unzoomedCursorY * 2.0
             if (
-                unzoomedCursorX - daq_utils.screenPixCenterX
-                > daq_utils.screenPixCenterX / 2
+                unzoomedCursorX - self.getMD2BeamCenterX()
+                > self.getMD2BeamCenterX() / 2
             ):
                 zoomedCursorX = (unzoomedCursorX * 2.0) - daq_utils.screenPixX
             if (
-                unzoomedCursorY - daq_utils.screenPixCenterY
-                > daq_utils.screenPixCenterY / 2
+                unzoomedCursorY - self.getMD2BeamCenterY()
+                > self.getMD2BeamCenterY() / 2
             ):
                 zoomedCursorY = (unzoomedCursorY * 2.0) - daq_utils.screenPixY
             self.centerMarker.setPos(zoomedCursorX, zoomedCursorY)
@@ -3780,10 +3780,10 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.drawInteractiveRasterCB()
             return
         fov = self.getCurrentFOV()
-        correctedC2C_x = daq_utils.screenPixCenterX + (
+        correctedC2C_x = self.getMD2BeamCenterX() + (
             x_click - (self.centerMarker.x() + self.centerMarkerCharOffsetX)
         )
-        correctedC2C_y = daq_utils.screenPixCenterY + (
+        correctedC2C_y = self.getMD2BeamCenterY() + (
             y_click - (self.centerMarker.y() + self.centerMarkerCharOffsetY)
         )
 

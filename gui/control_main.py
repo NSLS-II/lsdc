@@ -3411,37 +3411,45 @@ class ControlMain(QtWidgets.QMainWindow):
         return fov
 
     def screenXPixels2microns(self, pixels):
-        md2_img_width = daq_utils.highMagPixX * 2.0
-        lsdc_img_width = daq_utils.screenPixX
-        img_scale_factor = md2_img_width / lsdc_img_width
+        img_scale_factor = self.getMD2ImageXRatio()
         pixels_per_mm = 1 / self.camera.scale_x.get()
         pixels_per_micron = pixels_per_mm / 1000.0
         return float(pixels * img_scale_factor) / pixels_per_micron
         print(f"pixels per micron = {pixels_per_micron}")
 
     def screenYPixels2microns(self, pixels):
-        md2_img_height = daq_utils.highMagPixY * 2.0
-        lsdc_img_height = daq_utils.screenPixY
         pixels_per_mm = 1 / self.camera.scale_y.get()
         pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = md2_img_height / lsdc_img_height
+        img_scale_factor = self.getMD2ImageYRatio()
         return float(pixels * img_scale_factor) / pixels_per_micron
 
     def screenXmicrons2pixels(self, microns):
-        md2_img_width = daq_utils.highMagPixX * 2.0
-        lsdc_img_width = daq_utils.screenPixX
         pixels_per_mm = 1 / self.camera.scale_x.get()
         pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = md2_img_width / lsdc_img_width
+        img_scale_factor = self.getMD2ImageXRatio()
         return float(microns * pixels_per_micron) / img_scale_factor
 
     def screenYmicrons2pixels(self, microns):
-        md2_img_height = daq_utils.highMagPixY * 2.0
-        lsdc_img_height = daq_utils.screenPixY
         pixels_per_mm = 1 / self.camera.scale_y.get()
         pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = md2_img_height / lsdc_img_height
+        img_scale_factor = self.getMD2ImageYRatio()
         return float(microns * pixels_per_micron) / img_scale_factor
+
+    def getMD2ImageXRatio(self):
+        md2_img_width = daq_utils.highMagPixX
+        lsdc_img_width = daq_utils.screenPixX
+        return float(md2_img_width) / float(lsdc_img_width)
+    
+    def getMD2ImageYRatio(self):
+        md2_img_height = daq_utils.highMagPixY
+        lsdc_img_height = daq_utils.screenPixY
+        return float(md2_img_height) / float(lsdc_img_height)
+    
+    def getMD2BeamCenterX(self):
+        return self.md2.center_pixel_x.get() / self.getMD2ImageXRatio()
+    
+    def getMD2BeamCenterY(self):
+        return self.md2.center_pixel_y.get() / self.getMD2ImageYRatio()
 
     def definePolyRaster(
         self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y

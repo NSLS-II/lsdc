@@ -109,3 +109,8 @@ VALID_TRANSMISSION = {
 }
 
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
+
+EMBL_SERVER_PV_BASE = {
+    "amx": "XF:17IDB-ES:AMX{EMBL}",
+    "fmx": "XF:17IDC-ES:FMX{EMBL}"
+}

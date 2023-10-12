@@ -105,7 +105,7 @@ class SetEnergyDialog(QtWidgets.QDialog):
         return msg_box
 
     def set_full_alignment_energy(self):
-        if not self._parent.mountedPin_pv.get():
+        if self._parent.mountedPin_pv.get():
             # If sample is mounted, ask user to unmount cold
             response = self.unmount_cold_dialog().exec_()
 
@@ -114,18 +114,19 @@ class SetEnergyDialog(QtWidgets.QDialog):
             else:
                 return
 
-        if self._parent.governorMessage.getEntry() not in [
-            "State SE",
-            "State BA",
-            "State BL",
-            "State XF",
-            "State SA",
+        if self._parent.governorMessage.getEntry().text() not in [
+            "state SE",
+            "state BA",
+            "state BL",
+            "state XF",
+            "state SA",
         ]:
             self.message.setText("Governor not in a valid state, call staff!")
             return
         else:
             self._parent.send_to_server("setGovRobot(gov_robot, 'SA')")
 
+        print("Run set energy")
         self._parent.send_to_server(f"set_energy({self.setpoint_edit.text()})")
 
     def set_monochromator_energy(self):

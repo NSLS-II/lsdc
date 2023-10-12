@@ -71,11 +71,13 @@ class StaffScreenDialog(QtWidgets.QFrame):
 
         # Set energy checkbox
         self.set_energy_checkbox = QCheckBox("Set Energy")
+        hBoxColParams1.addWidget(self.set_energy_checkbox)
         if getBlConfig(SET_ENERGY_CHECK) == 1:
             self.set_energy_checkbox.setChecked(True)
         else:
             self.set_energy_checkbox.setChecked(False)
         self.set_energy_checkbox.stateChanged.connect(self.set_energy_check_cb)
+
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)

@@ -17,7 +17,7 @@ from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
-from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
+from qtpy.QtWidgets import QApplication, QCheckBox, QFrame, QGraphicsPixmapItem
 
 import albulaUtils
 import daq_utils
@@ -26,9 +26,10 @@ import lsdcOlog
 from config_params import (
     CRYOSTREAM_ONLINE,
     HUTCH_TIMER_DELAY,
-    SERVER_CHECK_DELAY,
     RASTER_GUI_XREC_FILL_DELAY,
     SAMPLE_TIMER_DELAY,
+    SERVER_CHECK_DELAY,
+    SET_ENERGY_CHECK,
     VALID_DET_DIST,
     VALID_EXP_TIMES,
     VALID_TOTAL_EXP_TIMES,
@@ -45,14 +46,14 @@ from gui.dialog import (
     PuckDialog,
     RasterExploreDialog,
     ScreenDefaultsDialog,
+    SetEnergyDialog,
     SnapCommentDialog,
     StaffScreenDialog,
     UserScreenDialog,
-    SetEnergyDialog,
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
-from threads import RaddoseThread, VideoThread, ServerCheckThread
+from threads import RaddoseThread, ServerCheckThread, VideoThread
 
 logger = logging.getLogger()
 try:
@@ -563,8 +564,14 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxColParams3.addWidget(colEnergyLabel)
         hBoxColParams3.addWidget(self.energyReadback)
         hBoxColParams3.addWidget(energySPLabel)
-        # hBoxColParams3.addWidget(self.energy_ledit)
-        hBoxColParams3.addWidget(moveEnergyButton)
+        if daq_utils.beamline == "fmx":
+            if getBlConfig(SET_ENERGY_CHECK):
+                hBoxColParams3.addWidget(moveEnergyButton)
+            else:
+                hBoxColParams3.addWidget(self.energy_ledit)
+        else:
+            hBoxColParams3.addWidget(self.energy_ledit)
+
         hBoxColParams22.addWidget(colTransmissionLabel)
         hBoxColParams22.addWidget(self.transmissionReadback_ledit)
         hBoxColParams22.addWidget(transmisionSPLabel)
@@ -2718,7 +2725,6 @@ class ControlMain(QtWidgets.QMainWindow):
             set_energy = SetEnergyDialog(parent=self)
         else:
             self.popupServerMessage("You don't have control")
-        
 
     def setLifetimeCB(self, lifetime):
         if hasattr(self, "sampleLifetimeReadback_ledit"):

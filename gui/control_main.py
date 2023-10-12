@@ -1682,6 +1682,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
+        self.centerMarker.setPos(self.getMD2BeamCenterX()-self.centerMarkerCharOffsetX, self.getMD2BeamCenterY()-self.centerMarkerCharOffsetY)
         #self.flushBuffer(self.capture)
         #self.capture.release()
         #self.capture = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)

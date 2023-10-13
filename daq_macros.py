@@ -3798,42 +3798,48 @@ def rasterDaq(rasterReqID):
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, start_omega, start_x, start_y, start_z, omegaRad, number_of_lines, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,number_of_lines)]
     processedRasterRowCount = 0
-    rasterEncoderMap = {}
-
-    xbeam = getPvDesc("beamCenterX")
-    ybeam = getPvDesc("beamCenterY")
-
     rasterRequest = db_lib.getRequestByID(rasterReqID)
     reqObj = rasterRequest["request_obj"]
     parentReqID = reqObj["parentReqID"]
-    parentReqProtocol = ""
     if (parentReqID != -1):
       parentRequest = db_lib.getRequestByID(parentReqID)
       parentReqObj = parentRequest["request_obj"]
-      parentReqProtocol = parentReqObj["protocol"]
       detDist = parentReqObj["detDist"]
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
 
-    logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exptimePerCell}, {img_width_per_cell}, {wave}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {totalImages}, {rows}")
+    #logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exptimePerCell}, {img_width_per_cell}, {wave}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {totalImages}, {rows}")
     logger.info(f"req_obj: {reqObj}")
 
     #    zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
     #    vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
     #    yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
-    #omega_range
-    line_range = img_width_per_cell * num_cells
-    total_uturn_range = line_range * num_lines
-    #start_y
-    #start_z
-    #start_cx
-    #start_cy
-    #number_of_lines
-    #frames_per_lines
-    #exposure_time = exptimePerCell * totalImages
-    #invert_direction = True
-    #use_centring_table = True
-    #use_fast_mesh_scans = True
+    line_range = img_width_per_cell * numsteps
+    total_uturn_range = line_range * number_of_lines
+    start_y = rows[0]['y']
+    start_z = rows[0]['z']
+    start_cx = 0
+    start_cy = 0
+    frames_per_line = numsteps
+    total_exposure_time = exptimePerCell * totalImages
+    invert_direction = True
+    use_centring_table = True
+    use_fast_mesh_scans = True
+    logger.info(f"omega_range = {omegaRad}")
+    logger.info(f"line_range = {line_range}")
+    logger.info(f"total_uturn_range = {total_uturn_range}")
+    logger.info(f"start_omega = {start_omega}")
+    logger.info(f"start_y = {start_y}")
+    logger.info(f"start_z = {start_z}")
+    logger.info(f"start_cx = {start_cx}")
+    logger.info(f"start_cy = {start_cy}")
+    logger.info(f"number_of_lines = {number_of_lines}")
+    logger.info(f"frames_per_line = {frames_per_line}")
+    logger.info(f"total_exposure_time = {total_exposure_time}")
+    logger.info(f"invert_direction = {invert_direction}")
+    logger.info(f"use_centring_table = {use_centring_table}")
+    logger.info(f"use_fast_mesh_scans = {use_fast_mesh_scans}")
+
 
     #if raster_flyer.detector.cam.armed.get() == 1:
     #    daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
@@ -3843,9 +3849,9 @@ def rasterDaq(rasterReqID):
     #    return 0
     #start_time = time.time()
     #raster_flyer.configure_detector(rasterFilePrefix, data_directory_name)
-    #raster_flyer.detector_arm(start_omega, img_width, total_num_images, exposure_per_image, 
+    #raster_flyer.detector_arm(start_omega, img_width_per_cell, total_num_images, exposure_per_image, 
     #                 file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-    #                 wavelength, det_distance_m, num_images_per_file)
+    #                 wavelength, det_distance_m)
     #def armed_callback(value, old_value, **kwargs):
     #    return (old_value == 0 and value == 1)
     #arm_status = SubscriptionStatus(raster_flyer.detector.cam.armed, armed_callback, run=False)
@@ -3862,7 +3868,7 @@ def rasterDaq(rasterReqID):
     #yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     #md2.ready_status().wait(timeout=10)
     #logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
-    #raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_lines, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
+    #raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, total_exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
     #yield from bp.fly([raster_flyer])
 
   

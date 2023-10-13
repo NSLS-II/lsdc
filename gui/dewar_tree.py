@@ -1,16 +1,19 @@
+import getpass
 import logging
+import os
 import typing
-import os, getpass
+
+import requests
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
-import requests
+
 import daq_utils
 import db_lib
 from config_params import (
     DEWAR_SECTORS,
+    IS_STAFF,
     PUCKS_PER_DEWAR_SECTOR,
     SAMPLE_TIMER_DELAY,
-    IS_STAFF,
 )
 
 if typing.TYPE_CHECKING:
@@ -109,20 +112,17 @@ class DewarTree(QtWidgets.QTreeView):
     def refreshTreeDewarView(self):
         puck = ""
         self.model.clear()
-        dewarContents = db_lib.getContainerByName(
+        dewar_data, puck_data, sample_data, request_data = db_lib.get_dewar_tree_data(
             daq_utils.primaryDewarName, daq_utils.beamline
-        )["content"]
+        )
         parentItem = self.model.invisibleRootItem()
         for i, puck_id in enumerate(
-            dewarContents
+            dewar_data["content"]
         ):  # dewar contents is the list of puck IDs
             puck = ""
             puckName = ""
             if puck_id:
-                puck = containerDict.get(
-                    puck_id,
-                    containerDict.setdefault(puck_id, db_lib.getContainerByID(puck_id)),
-                )
+                puck = puck_data[puck_id]
                 puckName = puck["name"]
             sector, puck_pos = divmod(i, self.pucksPerDewarSector)
             index_s = f"{sector+1}{chr(puck_pos + ord('A'))}"
@@ -132,7 +132,9 @@ class DewarTree(QtWidgets.QTreeView):
             parentItem.appendRow(item)
             if puck != "" and puckName != "private":
                 puckContents = puck.get("content", [])
-                self.add_samples_to_puck_tree(puckContents, item, index_s)
+                self.add_samples_to_puck_tree(
+                    puckContents, item, index_s, sample_data, request_data
+                )
         self.setModel(self.model)
         self.model.itemChanged.connect(self.queueSelectedSample)
         if self.isExpanded:
@@ -142,7 +144,12 @@ class DewarTree(QtWidgets.QTreeView):
         self.scrollTo(self.currentIndex(), QtWidgets.QAbstractItemView.PositionAtCenter)
 
     def add_samples_to_puck_tree(
-        self, puckContents, parentItem: QtGui.QStandardItem, index_label
+        self,
+        puckContents,
+        parentItem: QtGui.QStandardItem,
+        index_label,
+        sample_data,
+        request_data,
     ):
         # Method will attempt to add samples to the puck. If you don't belong to the proposal,
         # it will not add samples and clear the puck information
@@ -159,10 +166,7 @@ class DewarTree(QtWidgets.QTreeView):
                 parentItem.appendRow(item)
                 continue
 
-            sample = sampleDict.get(
-                sample_id,
-                sampleDict.setdefault(sample_id, db_lib.getSampleByID(sample_id)),
-            )
+            sample = sample_data[sample_id]
 
             if not IS_STAFF and not self.is_proposal_member(sample["proposalID"]):
                 # If the user is not part of the proposal and is not staff, don't fill tree
@@ -196,7 +200,7 @@ class DewarTree(QtWidgets.QTreeView):
             if sample_id == self.parent.selectedSampleID:
                 logger.info("found " + str(self.parent.SelectedItemData))
                 selectedSampleIndex = self.model.indexFromItem(item)
-            sampleRequestList = db_lib.getRequestsBySampleID(sample_id)
+            sampleRequestList = request_data[sample_id]
             for request in sampleRequestList:
                 if not ("protocol" in request["request_obj"]):
                     continue

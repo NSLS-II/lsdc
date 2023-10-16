@@ -115,3 +115,8 @@ IS_STAFF = (
     if os.environ.get("STAFF_GROUP") is not None and os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
     else False
 )
+
+EMBL_SERVER_PV_BASE = {
+    "amx": "XF:17IDB-ES:AMX{EMBL}",
+    "fmx": "XF:17IDC-ES:FMX{EMBL}"
+}

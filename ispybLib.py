@@ -8,6 +8,7 @@ from epics import PV
 import db_lib
 import det_lib
 import time
+from PIL import Image
 import logging
 logger = logging.getLogger(__name__)
 
@@ -228,10 +229,13 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      daq_utils.take_crystal_picture(filename=jpegImagePrefix)
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
-     node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
-     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}resize.sh {jpegImageFilename} {jpegImageThumbFilename} 40% \"&"
-     logger.info('resizing image: %s' % comm_s)
-     os.system(comm_s)
+     resizeRatio = 0.4
+     logger.info(f'resizing image: ratio: {resizeRatio} filename: {jpegImageThumbFilename}')
+     fullSnapshot = Image.open(jpegImageFilename)
+     resizeWidth = fullSnapshot.width * resizeRatio
+     resizeHeight = fullSnapshot.height * resizeRatio
+     thumbSnapshot = fullSnapshot.resize((int(resizeWidth), int(resizeHeight)))
+     thumbSnapshot.save(jpegImageThumbFilename)
      
      seqNum = int(det_lib.detector_get_seqnum())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")

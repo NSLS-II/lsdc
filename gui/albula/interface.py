@@ -3,23 +3,24 @@ import os
 
 
 class AlbulaInterface:
-    _instance = None  # For a singleton
+    _instance = None  # All these variables are used to create a singleton
     _init_args = None
     _process = None
 
     def __new__(cls, *args, **kwargs):
         if cls._instance is None:
             cls._instance = super(AlbulaInterface, cls).__new__(cls)
-            # cls._init_args = (args, kwargs)
         return cls._instance
 
     def __init__(self, *args, **kwargs):
-        print("Initializing Albula")
-        self.use_separate_process = True
-
+        
         if self._init_args is None:
             self._init_args = (args, kwargs)
             print("Opening Albula")
+            self.use_separate_process = False
+            if "python_path" in kwargs:
+                self.use_separate_process = True
+
             self.open(args, kwargs)
 
     def _call(self, code):
@@ -36,7 +37,8 @@ class AlbulaInterface:
         if self.use_separate_process:
             self._call(f'albulaController.disp_file("{filename}", {index})')
         else:
-            gui.albula.controller.albulaController.setup_monitor(filename, index)
+            from gui.albula.controller import albulaController
+            albulaController.disp_file(filename, index)
 
     def close(self):
         if self._process is None:
@@ -60,16 +62,15 @@ class AlbulaInterface:
                 stdout=subprocess.PIPE,
                 universal_newlines=True,
             )
-        else:
-            import gui.albula.controller
+        
         if "ip" in kwargs and "gov_message_pv_name" in kwargs:
             if self.use_separate_process:
                 self._call(
                     f'albulaController.setup_monitor("{kwargs["ip"]}", "{kwargs["gov_message_pv_name"]}")'
                 )
             else:
-                import gui.albula.controller
+                from gui.albula.controller import albulaController
 
-                gui.albula.controller.albulaController.setup_monitor(
+                albulaController.setup_monitor(
                     kwargs["ip"], kwargs["gov_message_pv_name"]
                 )

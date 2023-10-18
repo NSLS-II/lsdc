@@ -209,7 +209,7 @@ def createDefaultRequest(sample_id,createVisit=True):
       setProposalID(propNum,createVisit)
     screenDist, screenEnergy, screenExptime, screenPhiend, screenPhist, screenReso, screenTransmissionPercent, screenWidth, screenbeamHeight, screenbeamWidth = getScreenDefaultParams()
     sampleName = str(db_lib.getSampleNamebyID(sample_id))
-    basePath = os.getcwd()
+    basePath = getBlConfig("visitDirectory")
     runNum = db_lib.getSampleRequestCount(sample_id)
     (puckPosition,samplePositionInContainer,containerID) = db_lib.getCoordsfromSampleID(beamline,sample_id)          
     request = {"sample": sample_id}
@@ -284,7 +284,7 @@ def create_filename(prefix,number):
   else:
     tmp_filename = "%s_%05d.cbf" % (prefix,int(number))
   if (prefix[0] != "/"):
-    cwd = os.getcwd()
+    cwd = getBlConfig("visitDirectory")
     filename = "%s/%s" % (cwd,tmp_filename)
   else:
     filename = tmp_filename

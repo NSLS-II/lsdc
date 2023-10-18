@@ -1,4 +1,5 @@
 from enum import Enum
+import os, grp
 
 # BlConfig parameter variable names
 
@@ -54,6 +55,7 @@ class RasterStatus(Enum):
 
 HUTCH_TIMER_DELAY = 500
 SAMPLE_TIMER_DELAY = 0
+SERVER_CHECK_DELAY = 2000
 
 ROBOT_MIN_DISTANCE = 200.0
 ROBOT_DISTANCE_TOLERANCE = 0.050
@@ -105,4 +107,16 @@ VALID_TRANSMISSION = {
     "amx": {"min": 0.001, "max": 1.0, "digits": 3},
     "fmx": {"min": 0.001, "max": 1.0, "digits": 3},
     "nyx": {"min": 0.001, "max": 0.999, "digits": 3},
+}
+
+LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
+IS_STAFF = (
+    True
+    if os.environ.get("STAFF_GROUP") is not None and os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    else False
+)
+
+EMBL_SERVER_PV_BASE = {
+    "amx": "XF:17IDB-ES:AMX{EMBL}",
+    "fmx": "XF:17IDC-ES:FMX{EMBL}"
 }

@@ -5,13 +5,14 @@ The main server for the LSDC system
 import sys
 import os
 from daq_main_common import pybass_init, run_server
-
+from utils.healthcheck import perform_server_checks
 #TODO understand why imports are required here - GUI requires imports in daq_main_common
 from daq_macros import *
 from daq_lib import *
 from robot_lib import *
 from beamline_lib import *
 from gov_lib import setGovRobot
+import getpass
 from start_bs import robot
 from embl_robot import EMBLRobot
 if isinstance(robot, EMBLRobot):
@@ -19,7 +20,6 @@ if isinstance(robot, EMBLRobot):
     import RobotControlLib
 else:
     print("not importing RobotControlLib")
-
 
 import logging
 from logging import handlers
@@ -35,6 +35,8 @@ handler2.setFormatter(myformat)
 logger.addHandler(handler1)
 logger.addHandler(handler2)
 
+perform_server_checks()
+setBlConfig("visitDirectory", os.getcwd())
 sitefilename = ""
 global command_list,immediate_command_list,z
 command_list = []

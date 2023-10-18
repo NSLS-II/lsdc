@@ -181,7 +181,8 @@ class DewarTree(QtWidgets.QTreeView):
                 )
                 return
 
-            parentItem.setText(f"{index_label} pass-{sample['proposalID']}")
+            if not parentItem.text().endswith(f"pass-{sample['proposalID']}"):
+                parentItem.setText(f"{parentItem.text()} pass-{sample['proposalID']}")
 
             position_s = f'{j+1}-{sample.get("name", "")}'
             item = QtGui.QStandardItem(

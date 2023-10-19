@@ -62,6 +62,17 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.dryGripperButton = QtWidgets.QPushButton("Dry Gripper")
         self.dryGripperButton.clicked.connect(self.dryGripperCB)
 
+        self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
+        hBoxColParams3.addWidget(self.queueCollectOnCheckBox)
+        if daq_utils.getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
+ 
+
         hBoxColParams3.addWidget(self.unmountColdButton)
         hBoxColParams3.addWidget(self.testRobotButton)
         hBoxColParams3.addWidget(self.recoverRobotButton)
@@ -254,3 +265,15 @@ class UserScreenDialog(QtWidgets.QFrame):
 
     def screenDefaultsOKCB(self):
         self.done(QtWidgets.QDialog.Accepted)
+
+    def queueCollectOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            daq_utils.setBlConfig("queueCollect", 1)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
+        else:
+            daq_utils.setBlConfig("queueCollect", 0)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.parent.row_clicked(
+            0
+        )  # This is so that appropriate boxes are filled when toggling queue collect
+

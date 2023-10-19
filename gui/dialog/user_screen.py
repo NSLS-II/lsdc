@@ -64,12 +64,7 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams3.addWidget(self.queueCollectOnCheckBox)
-        if daq_utils.getBlConfig("queueCollect") == 1:
-            self.queueCollectOnCheckBox.setChecked(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
-        else:
-            self.queueCollectOnCheckBox.setChecked(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
  
 
@@ -206,6 +201,10 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
+    
+    def show(self):
+        self.checkQueueCollect()
+        super().show()
 
     def setSlit1XCB(self):
         comm_s = "setSlit1X(" + str(self.slit1XMotor_ledit.text()) + ")"
@@ -277,3 +276,10 @@ class UserScreenDialog(QtWidgets.QFrame):
             0
         )  # This is so that appropriate boxes are filled when toggling queue collect
 
+    def checkQueueCollect(self):
+        if daq_utils.getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")

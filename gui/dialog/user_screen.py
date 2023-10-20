@@ -66,7 +66,6 @@ class UserScreenDialog(QtWidgets.QFrame):
         hBoxColParams3.addWidget(self.queueCollectOnCheckBox)
         self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
- 
 
         hBoxColParams3.addWidget(self.unmountColdButton)
         hBoxColParams3.addWidget(self.testRobotButton)
@@ -201,7 +200,7 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
-    
+
     def show(self):
         self.checkQueueCollect()
         super().show()
@@ -279,7 +278,5 @@ class UserScreenDialog(QtWidgets.QFrame):
     def checkQueueCollect(self):
         if daq_utils.getBlConfig("queueCollect") == 1:
             self.queueCollectOnCheckBox.setChecked(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
         else:
             self.queueCollectOnCheckBox.setChecked(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")

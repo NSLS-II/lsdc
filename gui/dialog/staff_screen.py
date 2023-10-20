@@ -201,7 +201,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
         if show:
             self.show()
-        
+
     def show(self):
         self.checkQueueCollect()
         super().show()
@@ -349,11 +349,9 @@ class StaffScreenDialog(QtWidgets.QFrame):
         if getBlConfig("queueCollect") == 1:
             self.queueCollectOnCheckBox.setChecked(True)
             self.gripperUnmountColdCheckBox.setEnabled(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
         else:
             self.queueCollectOnCheckBox.setChecked(False)
             self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
 
     def enableMountCheckCB(self, state):
         if state == QtCore.Qt.Checked:

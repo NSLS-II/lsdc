@@ -244,7 +244,7 @@ class MD2Device(GonioDevice):
             frames_per_line=5, # int: number of frames on the horizontal range.
             exposure_time=1.2, # double: exposure time (sec) to control shutter command. +1, based on the exaples given
             invert_direction=True, # boolean: true to enable passes in the reverse direction.
-            use_table_centering=True, # boolean: true to use the centring table to do the pitch movements.
+            use_centring_table=True, # boolean: true to use the centring table to do the pitch movements.
             use_fast_mesh_scans=True # boolean: true to use the fast raster scan if available (power PMAC).
             ):
 
@@ -269,7 +269,7 @@ class MD2Device(GonioDevice):
         # "invert_direction", "use_centring_table", "use_fast_mesh_scans"
         param_list = [omega_range, line_range, total_uturn_range, start_omega, start_y, start_z,
                 start_cx, start_cy, number_of_lines, frames_per_line, exposure_time, 
-                invert_direction, use_table_centering, use_fast_mesh_scans]
+                invert_direction, use_centring_table, use_fast_mesh_scans]
         return self.exporter.cmd(command, param_list)
     
 class MD2ApertureDevice(Device):

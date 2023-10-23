@@ -3548,18 +3548,16 @@ def rasterDaq(rasterReqID):
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
 
-    #logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exptimePerCell}, {img_width_per_cell}, {wave}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {totalImages}, {rows}")
-    logger.info(f"req_obj: {reqObj}")
+    logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exptimePerCell}, {img_width_per_cell}, {wave}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {totalImages}, {rows}")
+    #logger.info(f"req_obj: {reqObj}")
 
     #    zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
     #    vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
     #    yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
     line_range = img_width_per_cell * numsteps
     total_uturn_range = line_range * number_of_lines
-    start_y = rows[0]['y']
-    start_z = rows[0]['z']
-    start_cx = 0
-    start_cy = 0
+    start_cx = md2.cx.get()
+    start_cy = md2.cx.get()
     frames_per_line = numsteps
     total_exposure_time = exptimePerCell * totalImages
     invert_direction = True

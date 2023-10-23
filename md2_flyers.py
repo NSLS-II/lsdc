@@ -242,7 +242,7 @@ class MD2RasterFlyer(MD2StandardFlyer):
                              start_cx=self.collection_params["start_cx"],
                              start_cy=self.collection_params["start_cy"],
                              number_of_lines=self.collection_params["number_of_lines"],
-                             frames_per_lines=self.collection_params["frames_per_lines"],
+                             frames_per_line=self.collection_params["frames_per_line"],
                              exposure_time=self.collection_params["exposure_time"],
                              invert_direction=self.collection_params["invert_direction"],
                              use_centring_table=self.collection_params["use_centring_table"],
@@ -250,7 +250,7 @@ class MD2RasterFlyer(MD2StandardFlyer):
         logger.info(f"md2_msg: {md2_msg}")
         return NullStatus()
     
-    def update_parameters(self, omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_lines, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans):
+    def update_parameters(self, omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans):
         self.collection_params = {
             "omega_range": omega_range,
             "line_range": line_range,
@@ -261,7 +261,7 @@ class MD2RasterFlyer(MD2StandardFlyer):
             "start_cx": start_cx,
             "start_cy": start_cy,
             "number_of_lines": number_of_lines,
-            "frames_per_lines": frames_per_lines,
+            "frames_per_line": frames_per_line,
             "exposure_time": exposure_time,
             "invert_direction": invert_direction,
             "use_centring_table": use_centring_table,

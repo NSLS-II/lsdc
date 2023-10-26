@@ -88,7 +88,12 @@ def abortBS():
       logger.error("caught BS")
   
 def set_energy(energy):
-  RE(setELsdc(energy))
+  try:
+    daq_lib.set_field("program_state","Setting Energy")
+    RE(setELsdc(energy))
+  except Exception as e:
+    logger.error(f"Exception while running set_energy: {e}")
+    daq_lib.set_field("program_state","Program Ready")
 
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)

@@ -43,7 +43,8 @@ class SetEnergyDialog(QtWidgets.QDialog):
 
         self.setpoint_label = QtWidgets.QLabel("Energy setpoint: ")
         validator = QtGui.QDoubleValidator()
-        validator.setBottom(5.0)
+        validator.setBottom(5000)
+        validator.setTop(15000)
         self.setpoint_edit = QtWidgets.QLineEdit()
         self.setpoint_edit.setValidator(validator)
         self.setpoint_edit.returnPressed.connect(self.check_value)
@@ -92,9 +93,9 @@ class SetEnergyDialog(QtWidgets.QDialog):
             self.message.setText("Energy change less than 10 eV")
             self.monochromator_button.setDisabled(False)
 
-        if float(self.setpoint_edit.text()) <= 10:
+        if float(self.setpoint_edit.text()) <= 10000:
             self.message.setText(
-                f"{self.message.text()} \n <font color='red'>Beam shape not automatically optimized for energies between 5 keV and 10 keV</font>"
+                f"{self.message.text()} \n Beam shape not automatically optimized \nfor energies between 5 keV and 10 keV"
             )
 
     def unmount_cold_dialog(self):

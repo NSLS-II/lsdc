@@ -5173,6 +5173,11 @@ class ControlMain(QtWidgets.QMainWindow):
         print(message_s)
 
     def colorProgramState(self, programState_s):
+        if programState_s == "Setting Energy":
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+
         if programState_s.find("Ready") == -1:
             self.statusLabel.setColor("yellow")
         else:

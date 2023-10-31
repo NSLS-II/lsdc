@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QCheckBox
 
 from config_params import BEAM_CHECK, TOP_VIEW_CHECK, UNMOUNT_COLD_CHECK
 from daq_utils import getBlConfig, setBlConfig
+import db_lib
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -122,6 +123,8 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.homePinsButton.clicked.connect(self.homePinsCB)
         self.clearMountedSampleButton = QtWidgets.QPushButton("Clear Mounted Sample")
         self.clearMountedSampleButton.clicked.connect(self.clearMountedSampleCB)
+        self.refreshDewarListButton = QtWidgets.QPushButton("Refresh Dewar Tree")
+        self.refreshDewarListButton.clicked.connect(self.refresh_dewar_tree)
         hBoxColParams2.addWidget(self.openPort1Button)
         hBoxColParams2.addWidget(self.closePortsButton)
         hBoxColParams2.addWidget(self.unmountColdButton)
@@ -129,6 +132,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
         hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
+        hBoxColParams2.addWidget(self.refreshDewarListButton)
         hBoxColParams1.addWidget(self.homePinsButton)
         self.setFastDPNodesButton = QtWidgets.QPushButton("Set FastDP Nodes")
         self.setFastDPNodesButton.clicked.connect(self.setFastDPNodesCB)
@@ -208,6 +212,9 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
         if show:
             self.show()
+
+    def refresh_dewar_tree(self):
+        self.parent.dewarTree.refreshTreeDewarView(get_latest_pucks=True)
 
     def getSpotNodeList(self):
         nodeList = []

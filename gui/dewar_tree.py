@@ -109,11 +109,11 @@ class DewarTree(QtWidgets.QTreeView):
         font.setOverline(True)
         item.setFont(font)
 
-    def refreshTreeDewarView(self):
+    def refreshTreeDewarView(self, get_latest_pucks=False):
         puck = ""
         self.model.clear()
         dewar_data, puck_data, sample_data, request_data = db_lib.get_dewar_tree_data(
-            daq_utils.primaryDewarName, daq_utils.beamline
+            daq_utils.primaryDewarName, daq_utils.beamline, get_latest_pucks
         )
         parentItem = self.model.invisibleRootItem()
         for i, puck_id in enumerate(

@@ -162,7 +162,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.redPen = QtGui.QPen(QtCore.Qt.red)
         self.bluePen = QtGui.QPen(QtCore.Qt.blue)
         self.yellowPen = QtGui.QPen(QtCore.Qt.yellow)
-        self.albulaInterface = AlbulaInterface(ip="xf17id1-dcu2.nsls2.bnl.local", 
+        self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
                                                gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
         self.initUI()
         self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])

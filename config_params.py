@@ -118,4 +118,7 @@ IS_STAFF = (
     else False
 )
 
-EMBL_SERVER_PV_BASE = {"amx": "XF:17IDB-ES:AMX{EMBL}", "fmx": "XF:17IDC-ES:FMX{EMBL}"}
+EMBL_SERVER_PV_BASE = {
+    "amx": "XF:17IDB-ES:AMX{EMBL}", 
+    "fmx": "XF:17IDC-ES:FMX{EMBL}"
+}

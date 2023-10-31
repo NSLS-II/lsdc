@@ -356,8 +356,8 @@ class EMBLRobot:
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
         if daq_utils.beamline == "fmx":
             beamline_lib.mvaDescriptor("omega", 0)
         daq_lib.setRobotGovState("SE")
@@ -390,10 +390,10 @@ class EMBLRobot:
           logger.error(message)
           return UNMOUNT_FAILURE
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE)
-        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
-          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
+        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE[daq_utils.beamline] - 1.0)):
+          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE[daq_utils.beamline]}")
           return UNMOUNT_FAILURE
       return UNMOUNT_STEP_SUCCESSFUL
 

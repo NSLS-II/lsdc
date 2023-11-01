@@ -23,7 +23,9 @@ class AlbulaInterface:
 
             self.open(args, kwargs)
 
-    def _call(self, code):
+    def _call(self, code: str):
+        # This method passes any code as string to the spawned python process
+        # The code is executed in the python process's interactive shell
         if self._process:
             print(code, file=self._process.stdin, flush=True)
 

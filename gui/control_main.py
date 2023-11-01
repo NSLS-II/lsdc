@@ -1417,12 +1417,6 @@ class ControlMain(QtWidgets.QMainWindow):
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
 
-    def albulaCheckCB(self, state):
-        if state != QtCore.Qt.Checked:
-            self.albulaInterface.close()
-        else:
-            self.albulaInterface = AlbulaInterface()
-
     def annealButtonCB(self):
         try:
             ftime = float(self.annealTime_ledit.text())

@@ -1,6 +1,7 @@
 from qtpy.QtCore import QThread, QTimer, QEventLoop, Signal, QPoint, Qt, QObject
 from qtpy import QtGui
 from PIL import Image, ImageQt
+import cv2
 import os
 import sys
 import urllib
@@ -8,6 +9,10 @@ from io import BytesIO
 import logging
 from config_params import SERVER_CHECK_DELAY
 import raddoseLib
+import cv2
+import time
+import numpy as np
+import requests
 
 logger = logging.getLogger()
 
@@ -34,17 +39,29 @@ class VideoThread(QThread):
                     self.showing_error = True
 
         if self.camera_object:
-            retval,self.currentFrame = self.camera_object.read()
+            self.camera_object.set(cv2.CAP_PROP_POS_FRAMES, 0)
+            # Initialize a variable to store the most recent frame
+            most_recent_frame = None
+
+            timeout = self.delay / 1000.0
+            start_time = time.time()
+            if self.camera_object.grab():
+                retval, frame = self.camera_object.retrieve()
+                if retval:
+                    most_recent_frame = frame
+            self.currentFrame = most_recent_frame
+
             if self.currentFrame is None:
-                logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
+                #logger.debug('no frame read from stream URL - ensure the URL does not end with newline and that the filename is correct')
                 return
+            
             height,width=self.currentFrame.shape[:2]
             qimage= QtGui.QImage(self.currentFrame,width,height,3*width,QtGui.QImage.Format_RGB888)
             qimage = qimage.rgbSwapped()
             pixmap_orig = QtGui.QPixmap.fromImage(qimage)
             if self.width and self.height:
                 pixmap_orig = pixmap_orig.scaled(self.width, self.height)
-        
+            
         if not self.showing_error:
             self.frame_ready.emit(pixmap_orig)
             
@@ -55,6 +72,10 @@ class VideoThread(QThread):
         self.height = height
         self.url = url
         self.camera_object = camera_object
+        if self.camera_object:
+            self.camera_object = cv2.VideoCapture(camera_object) #camera_object
+            self.camera_object.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            
         self.showing_error = False
         self.is_running = True
         QThread.__init__(self, *args, **kwargs)
@@ -66,6 +87,7 @@ class VideoThread(QThread):
         while self.is_running:
             self.camera_refresh()
             self.msleep(self.delay)
+
     
     def stop(self):
         self.is_running = False

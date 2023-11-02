@@ -8,6 +8,7 @@ from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
+from devices import LightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
 
 #12/19 - author unknown. DAMA can help
@@ -85,6 +86,7 @@ from ophyd import Component as Cpt
 class ABBIXMercury(Mercury1, SoftDXPTrigger):
     pass
 
+
 class VerticalDCM(Device):
     b = Cpt(EpicsMotor, '-Ax:B}Mtr')
     g = Cpt(EpicsMotor, '-Ax:G}Mtr')
@@ -105,9 +107,9 @@ def filter_camera_data(camera):
     camera.stats5.read_attrs = ['total', 'centroid']
 
 class SampleXYZ(Device):
-    x = Cpt(EpicsMotor, ':GX}Mtr')
-    y = Cpt(EpicsMotor, ':PY}Mtr')
-    z = Cpt(EpicsMotor, ':PZ}Mtr')
+    x = Cpt(EpicsMotor, ':X}Mtr')
+    y = Cpt(EpicsMotor, ':Y}Mtr')
+    z = Cpt(EpicsMotor, ':Z}Mtr')
     omega = Cpt(EpicsMotor, ':O}Mtr')
 
 if (beamline=="amx"):
@@ -163,15 +165,24 @@ elif beamline=="nyx":
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
+    md2 = MD2Device("XF:19IDC-ES{MD2}:", name="md2")
+    shutter = ShutterDevice('XF:19IDC-ES{MD2}:', name='shutter')
+    beamstop = BeamstopDevice('XF:19IDC-ES{MD2}:', name='beamstop')
+    front_light = LightDevice('XF:19IDC-ES{MD2}:Front', name='front_light')
+    back_light = LightDevice('XF:19IDC-ES{MD2}:Back', name='back_light')
+    aperature = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Aperature', name='aperature')
+    scintillator = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Scintillator', name='scintillator')
+    capillary = MD2SimpleHVDevice('XF:19IDC-ES{MD2}:Capillary', name='capillary')
     zebra = Zebra('XF:19IDC-ES{Zeb:1}:', name='zebra')
     from nyxtools.vector import VectorProgram
     vector = VectorProgram("XF:19IDC-ES{Gon:1-Vec}", name="vector")
     from mxtools.eiger import EigerSingleTriggerV26
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
-    from nyxtools.flyer_eiger2 import NYXEiger2Flyer
-    flyer = NYXEiger2Flyer(vector, zebra, detector)
-    from mxtools.raster_flyer import MXRasterFlyer
-    raster_flyer = MXRasterFlyer(vector, zebra, detector)
+    #from nyxtools.flyer_eiger2 import NYXEiger2Flyer
+    from md2_flyers import MD2StandardFlyer, MD2VectorFlyer, MD2RasterFlyer
+    flyer = MD2StandardFlyer(md2, detector)
+    vector_flyer = MD2VectorFlyer(md2, detector)
+    raster_flyer = MD2RasterFlyer(md2, detector)
 
     from nyxtools.isara_robot import IsaraRobotDevice
     from denso_robot import OphydRobot
@@ -180,10 +191,12 @@ elif beamline=="nyx":
     govs = _make_governors("XF:19IDC-ES", name="govs")
     gov_robot = govs.gov.Robot
 
-    back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
+
+    #back_light = EpicsSignal(read_pv="XF:19IDD-CT{DIODE-Box_D1:4}InCh00:Data-RB",write_pv="XF:19IDD-CT{DIODE-Box_D1:4}OutCh00:Data-SP",name="back_light")
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 
     back_light_high_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:HighLimit-RB",name="back_light_high_limit")
     back_light_range = (back_light_low_limit.get(), back_light_high_limit.get())
+    samplexyz = SampleXYZ("XF:19IDC-ES{Gon:1-Ax", name="samplexyz")
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")
 

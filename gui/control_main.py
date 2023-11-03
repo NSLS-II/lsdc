@@ -3782,10 +3782,10 @@ class ControlMain(QtWidgets.QMainWindow):
             return
         fov = self.getCurrentFOV()
         correctedC2C_x = self.getMD2BeamCenterX() + (
-            x_click - (self.centerMarker.x() + self.centerMarkerCharOffsetX)
+            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX)
         )
         correctedC2C_y = self.getMD2BeamCenterY() + (
-            y_click - (self.centerMarker.y() + self.centerMarkerCharOffsetY)
+            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY)
         )
 
         current_viewangle = daq_utils.mag1ViewAngle

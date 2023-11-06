@@ -13,6 +13,7 @@ from enum import Enum
 import platform
 from PIL import Image
 from io import BytesIO
+import os
 
 try:
     import dectris.albula
@@ -58,7 +59,7 @@ class AlbulaController:
 
     def setup_monitor(self, ip, gov_message_pv_name):
         self.ip = ip
-        self.api_version = "1.8.0"
+        self.api_version = os.environ.get("DCU_API_VERSION", "1.8.0")
         self.gov_message_pv = PV(
             gov_message_pv_name,
         )

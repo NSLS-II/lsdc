@@ -3557,7 +3557,8 @@ def rasterDaq(rasterReqID):
     #    zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
     #    vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
     #    yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
-    line_range = img_width_per_cell * numsteps
+    stepsize /= 1000 # MD2 wants mm
+    line_range = stepsize * numsteps
     total_uturn_range = line_range * number_of_lines
     start_cx = md2.cx.val()
     start_cy = md2.cy.val()

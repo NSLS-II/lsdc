@@ -411,19 +411,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.osc_end_ledit.textChanged[str].connect(
             functools.partial(self.totalExpChanged, "oscEnd")
         )
-<<<<<<< HEAD
-        if daq_utils.beamline == "fmx": 
-            self.osc_end_ledit.textChanged.connect(self.calcLifetimeCB)
-        hBoxColParams1.addWidget(colStartLabel)
-        hBoxColParams1.addWidget(self.osc_start_ledit)
-        hBoxColParams1.addWidget(self.colEndLabel)
-        hBoxColParams1.addWidget(self.osc_end_ledit)
-=======
         #hBoxColParams1.addWidget(colStartLabel)
         #hBoxColParams1.addWidget(self.osc_start_ledit)
         #hBoxColParams1.addWidget(self.colEndLabel)
         #hBoxColParams1.addWidget(self.osc_end_ledit)
->>>>>>> new_md2
         hBoxColParams2 = QtWidgets.QHBoxLayout()
         colRangeLabel = QtWidgets.QLabel("Oscillation Width:")
         colRangeLabel.setFixedWidth(140)

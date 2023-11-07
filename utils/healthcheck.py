@@ -168,6 +168,14 @@ def check_curr_visit_dir() -> bool:
 
     return True
 
+@healthcheck(name="check environment variables", remediation="", fatal=True)
+def check_env_variables() -> bool:
+    env_vars = ["STAFF_GROUP", "NSLS2_API_URL"]
+    missing_vars = [var for var in env_vars if var not in os.environ]
+    if missing_vars:
+        check_env_variables.remidiation = f"Environment variable(s) not found: {','.join(missing_vars)}"
+        return False
+    return True
 
 @healthcheck(name="existence of environment file", remediation="", fatal=True)
 def check_env_file() -> bool:

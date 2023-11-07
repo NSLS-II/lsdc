@@ -35,6 +35,7 @@ from config_params import (
     VALID_DET_DIST,
     VALID_EXP_TIMES,
     VALID_TOTAL_EXP_TIMES,
+    VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
 )
@@ -56,11 +57,6 @@ from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread, ServerCheckThread
 
 logger = logging.getLogger()
-try:
-    import ispybLib
-except Exception as e:
-    logger.error("lsdcGui: ISPYB import error, %s" % e)
-
 
 def get_request_object_escan(
     reqObj,
@@ -200,8 +196,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
         self.rasterStepDefs = {"Coarse": 20.0, "Fine": 10.0, "VFine": 5.0}
-        self.createSampleTab()
 
+        # Timer that waits for a second before calling raddose 3d
+        # This is to prevent multiple calls when transmission textbox is changing
+        self.raddoseTimer = QTimer()
+        self.raddoseTimer.setSingleShot(True)
+        self.raddoseTimer.setInterval(1000)
+        self.raddoseTimer.timeout.connect(self.spawnRaddoseThread)
+
+        self.createSampleTab()
+        self.userScreenDialog = UserScreenDialog(self)
         self.initCallbacks()
         if self.scannerType != "PI":
             self.motPos = {
@@ -224,14 +228,13 @@ class ControlMain(QtWidgets.QMainWindow):
         if daq_utils.beamline == "nyx":  # requires staffScreenDialog to be present
             self.staffScreenDialog.fastDPCheckBox.setDisabled(True)
 
-        self.dewarTree.refreshTreeDewarView()
         if self.mountedPin_pv.get() == "":
             mountedPin = db_lib.beamlineInfo(daq_utils.beamline, "mountedSample")[
                 "sampleID"
             ]
             self.mountedPin_pv.put(mountedPin)
         self.rasterExploreDialog = RasterExploreDialog()
-        self.userScreenDialog = UserScreenDialog(self)
+        
         self.detDistMotorEntry.getEntry().setText(
             self.detDistRBVLabel.getEntry().text()
         )  # this is to fix the current val being overwritten by reso
@@ -241,6 +244,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.changeControlMasterCB(1)
                 self.controlMasterCheckBox.setChecked(True)
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
+        #self.dewarTree.refreshTreeDewarView()
 
     def setGuiValues(self, values):
         for item, value in values.items():
@@ -519,7 +523,13 @@ class ControlMain(QtWidgets.QMainWindow):
         transmisionSPLabel = QtWidgets.QLabel("SetPoint:")
 
         self.transmission_ledit = self.transmissionSetPoint.getEntry()
-        self.transmission_ledit.setValidator(QtGui.QDoubleValidator(0.001, 0.999, 3))
+        self.transmission_ledit.setValidator(
+            QtGui.QDoubleValidator(
+                VALID_TRANSMISSION[daq_utils.beamline]["min"],
+                VALID_TRANSMISSION[daq_utils.beamline]["max"],
+                VALID_TRANSMISSION[daq_utils.beamline]["digits"],
+            )
+        )
         self.setGuiValues({"transmission": getBlConfig("stdTrans")})
         self.transmission_ledit.returnPressed.connect(self.setTransCB)
         if daq_utils.beamline == "fmx":
@@ -1201,9 +1211,11 @@ class ControlMain(QtWidgets.QMainWindow):
         sampleBrighterButton = QtWidgets.QPushButton("+")
         sampleBrighterButton.setFixedWidth(30)
         sampleBrighterButton.clicked.connect(self.lightUpCB)
+        sampleBrighterButton.setEnabled(False)  # Disabling until PV is fixed
         sampleDimmerButton = QtWidgets.QPushButton("-")
         sampleDimmerButton.setFixedWidth(30)
         sampleDimmerButton.clicked.connect(self.lightDimCB)
+        sampleDimmerButton.setEnabled(False)  # Disabling until PV is fixed
         focusLabel = QtWidgets.QLabel("Focus")
         focusLabel.setAlignment(QtCore.Qt.AlignRight | Qt.AlignVCenter)
         focusPlusButton = QtWidgets.QPushButton("+")
@@ -2682,6 +2694,8 @@ class ControlMain(QtWidgets.QMainWindow):
             )
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
+            if daq_utils.beamline == "fmx":
+                self.calcLifetimeCB()
         elif protocol == "burn":
             self.setGuiValues(
                 {
@@ -2706,6 +2720,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.osc_start_ledit.setEnabled(True)
             self.osc_end_ledit.setEnabled(True)
             self.protoVectorRadio.setChecked(True)
+            if daq_utils.beamline == "fmx":
+                self.calcLifetimeCB()
         else:
             self.protoOtherRadio.setChecked(True)
         self.totalExpChanged("")
@@ -2847,10 +2863,14 @@ class ControlMain(QtWidgets.QMainWindow):
             self.sampleLifetimeReadback_ledit.setStyleSheet("color : black")
 
     def calcLifetimeCB(self):
+        self.raddoseTimer.start()
+        if hasattr(self, "sampleLifetimeReadback_ledit"):
+            self.sampleLifetimeReadback_ledit.setStyleSheet("color : gray")
+
+    def spawnRaddoseThread(self):
         if not os.path.exists("2vb1.pdb"):
             os.system("cp -a $CONFIGDIR/2vb1.pdb .")
             os.system("mkdir rd3d")
-
         energyReadback = self.energy_pv.get() / 1000.0
         sampleFlux = self.sampleFluxPV.get()
         if hasattr(self, "transmission_ledit") and hasattr(
@@ -2863,16 +2883,16 @@ class ControlMain(QtWidgets.QMainWindow):
             except Exception as e:
                 logger.info(f"Exception while calculating sample flux {e}")
         logger.info("sample flux = " + str(sampleFlux))
+        # Read vector length only if the vector protocol is chosen
+        vecLen = 0
+        if self.protoVectorRadio.isChecked():
+            try:
+                vecLen = float(self.vecLenLabelOutput.text())
+            except:
+                pass
+        
         try:
-            vecLen_s = self.vecLenLabelOutput.text()
-            if vecLen_s != "---":
-                vecLen = float(vecLen_s)
-            else:
-                vecLen = 0
-        except:
-            vecLen = 0
-        wedge = float(self.osc_end_ledit.text())
-        try:
+            wedge = float(self.osc_end_ledit.text())
             raddose_thread = RaddoseThread(
                 parent=self,
                 beamsizeV=3.0,
@@ -3239,10 +3259,7 @@ class ControlMain(QtWidgets.QMainWindow):
             reqID=rasterReq["uid"],
             rasterHeatJpeg=jpegImageFilename,
         )
-        try:
-            ispybLib.insertRasterResult(rasterReq, visitName)
-        except Exception as e:
-            logger.error(f"Exception while writing raster result: {e}")
+        self.send_to_server(f"ispybLib.insertRasterResult('{rasterReq['uid']}', '{visitName}')")
 
     def reFillPolyRaster(self):
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
@@ -3872,7 +3889,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 singleRequest == 1
             ):  # a touch kludgy, but I want to be able to edit parameters for multiple requests w/o screwing the data loc info
                 reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
-                reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+                reqObj["basePath"] = getBlConfig("visitDirectory")
                 reqObj["directory"] = str(self.dataPathGB.dataPath_ledit.text())
                 reqObj["file_number_start"] = int(
                     self.dataPathGB.file_numstart_ledit.text()
@@ -3933,8 +3950,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 elif itemDataType == "request":
                     selectedSampleRequest = db_lib.getRequestByID(item.data(32))
                     self.selectedSampleID = selectedSampleRequest["sample"]
-                
-                if self.selectedSampleID in samplesConsidered: # If a request is already added to the sample, move on
+
+                # If a request is already added to the sample, move on
+                if self.selectedSampleID in samplesConsidered:
                     continue
 
                 try:
@@ -4129,9 +4147,9 @@ class ControlMain(QtWidgets.QMainWindow):
                         reqObj["file_prefix"] = str(
                             self.dataPathGB.prefix_ledit.text() + "_C" + str(i + 1)
                         )
-                        reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+                        reqObj["basePath"] = getBlConfig("visitDirectory")
                         reqObj["directory"] = (
-                            str(self.dataPathGB.base_path_ledit.text())
+                            getBlConfig("visitDirectory")
                             + "/"
                             + str(daq_utils.getVisitName())
                             + "/"
@@ -4255,7 +4273,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     )
                 reqObj["resolution"] = float(self.resolution_ledit.text())
                 reqObj["directory"] = (
-                    str(self.dataPathGB.base_path_ledit.text())
+                    getBlConfig("visitDirectory")
                     + "/"
                     + str(daq_utils.getVisitName())
                     + "/"
@@ -4268,7 +4286,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     + str(samplePositionInContainer + 1)
                     + "/"
                 )
-                reqObj["basePath"] = str(self.dataPathGB.base_path_ledit.text())
+                reqObj["basePath"] = getBlConfig("visitDirectory")
                 reqObj["file_prefix"] = str(self.dataPathGB.prefix_ledit.text())
                 reqObj["file_number_start"] = int(
                     self.dataPathGB.file_numstart_ledit.text()
@@ -4825,6 +4843,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self, index
     ):  # I need "index" here? seems like I get it from selmod, but sometimes is passed
         selmod = self.dewarTree.selectionModel()
+        if not selmod:
+            return
         selection = selmod.selection()
         indexes = selection.indexes()
         if len(indexes) == 0:

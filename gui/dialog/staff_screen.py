@@ -66,14 +66,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
-        if getBlConfig("queueCollect") == 1:
-            self.queueCollectOnCheckBox.setChecked(True)
-            self.gripperUnmountColdCheckBox.setEnabled(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
-        else:
-            self.queueCollectOnCheckBox.setChecked(False)
-            self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)
@@ -208,6 +201,10 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
         if show:
             self.show()
+
+    def show(self):
+        self.checkQueueCollect()
+        super().show()
 
     def getSpotNodeList(self):
         nodeList = []
@@ -347,6 +344,14 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.parent.row_clicked(
             0
         )  # This is so that appropriate boxes are filled when toggling queue collect
+
+    def checkQueueCollect(self):
+        if getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
 
     def enableMountCheckCB(self, state):
         if state == QtCore.Qt.Checked:

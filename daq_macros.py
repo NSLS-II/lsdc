@@ -3612,7 +3612,11 @@ def rasterDaq(rasterReqID):
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, total_exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
+    def armed_callback(value, old_value, **kwargs):
+        return (old_value == 1 and value == 0)
+    arm_status = SubscriptionStatus(raster_flyer.detector.cam.armed, armed_callback, run=False)
     yield from bp.fly([raster_flyer])
+    arm_status.wait(timeout=5)
 
   
 

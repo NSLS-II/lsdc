@@ -139,7 +139,7 @@ class ControlMain(QtWidgets.QMainWindow):
     fastShutterSignal = QtCore.Signal(float)
     gripTempSignal = QtCore.Signal(float)
     ringCurrentSignal = QtCore.Signal(float)
-    beamAvailableSignal = QtCore.Signal(float)
+    threeClickSignal = QtCore.Signal(float)
     sampleExposedSignal = QtCore.Signal(float)
     sampMoveSignal = QtCore.Signal(int, str)
     roiChangeSignal = QtCore.Signal(int, str)
@@ -1424,6 +1424,15 @@ class ControlMain(QtWidgets.QMainWindow):
         ringCurrentMessageLabel = QtWidgets.QLabel("Ring(mA):")
         self.ringCurrentMessage = QtWidgets.QLabel(str(self.ringCurrent_pv.get()))
         beamAvailable = self.beamAvailable_pv.get()
+
+        '''
+        changing beam available label
+
+
+        
+        '''
+
+
         if beamAvailable:
             self.beamAvailLabel = QtWidgets.QLabel("Beam Available")
             self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
@@ -1450,6 +1459,13 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             self.cryostreamTempLabel = QtWidgets.QLabel("N/A")
 
+
+
+
+        '''
+        Adding bottom labels to gui
+        
+        '''
         fileHBoxLayout.addWidget(gripperLabel)
         fileHBoxLayout.addWidget(self.gripperTempLabel)
         fileHBoxLayout.addWidget(cryostreamLabel)
@@ -2195,6 +2211,12 @@ class ControlMain(QtWidgets.QMainWindow):
         self.eraseCB()
         self.treeChanged_pv.put(1)
 
+
+    '''
+    functions to bottom status variables
+    
+    '''
+
     def processFastShutter(self, shutterVal):
         if round(shutterVal) == round(self.fastShutterOpenPos_pv.get()):
             self.shutterStateLabel.setText("Shutter State:Open")
@@ -2220,13 +2242,18 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             self.ringCurrentMessage.setStyleSheet("background-color: #99FF66;")
 
-    def processBeamAvailable(self, beamAvailVal):
-        if int(beamAvailVal) == 1:
+    '''
+    change beam abailable set text depending on input
+
+    function is processThreClickCentering
+    '''
+    def processThreeClickCentering(self, beamAvailVal):
+        if int(beamAvailVal) == 0:
             self.beamAvailLabel.setText("Beam Available")
             self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
         else:
-            self.beamAvailLabel.setText("No Beam")
-            self.beamAvailLabel.setStyleSheet("background-color: red;")
+            self.beamAvailLabel.setText(beamAvailVal)
+            self.beamAvailLabel.setStyleSheet("background-color: yellow")
 
     def processSampleExposed(self, sampleExposedVal):
         if int(sampleExposedVal) == 1:
@@ -3058,6 +3085,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def center3LoopCB(self):
         logger.info("3-click center loop")
         self.threeClickCount = 1
+        self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
         self.click3Button.setStyleSheet("background-color: yellow")
         if(daq_utils.exporter_enabled):
             self.md2.exporter.cmd("startManualSampleCentring", "")
@@ -3737,7 +3765,11 @@ class ControlMain(QtWidgets.QMainWindow):
                             self.centeringMarksList[i]["graphicsItem"]
                         )
                         self.centeringMarksList[i] = None
+    '''
+    When picking pixels
 
+
+    '''
     def pixelSelect(self, event):
         super(QtWidgets.QGraphicsPixmapItem, self.pixmap_item).mousePressEvent(event)
         x_click = float(event.pos().x())
@@ -3805,9 +3837,13 @@ class ControlMain(QtWidgets.QMainWindow):
             current_viewangle = daq_utils.mag3ViewAngle
         elif self.zoom4Radio.isChecked():
             current_viewangle = daq_utils.mag4ViewAngle
-
+        '''
+        Three click centering will update self.threeClickSignal.emit(self.threeClickCount)
+        
+        '''
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
+            self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
             if daq_utils.exporter_enabled: 
                 correctedC2C_x = x_click + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
                 correctedC2C_y = y_click + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
@@ -3822,6 +3858,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
                 if self.threeClickCount == 4:
                     self.threeClickCount = 0
+                    self.threeClickSignal.emit(0)
                     self.click3Button.setStyleSheet("background-color: None")
                 return
             else:
@@ -3832,6 +3869,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.aux_send_to_server(comm_s)
         if self.threeClickCount == 4:
             self.threeClickCount = 0
+            self.threeClickSignal.emit(0)
             self.click3Button.setStyleSheet("background-color: None")
         return
 
@@ -5015,8 +5053,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.ringCurrentSignal.emit(ringCurrentVal)
 
     def beamAvailableChangedCB(self, value=None, char_value=None, **kw):
-        beamAvailableVal = value
-        self.beamAvailableSignal.emit(beamAvailableVal)
+        threeClickVal = value
+        self.threeClickSignal.emit(threeClickVal)
 
     def sampleExposedChangedCB(self, value=None, char_value=None, **kw):
         sampleExposedVal = value
@@ -5341,7 +5379,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.cryostreamTemp_pv.add_callback(self.cryostreamTempChangedCB)
         self.ringCurrentSignal.connect(self.processRingCurrent)
         self.ringCurrent_pv.add_callback(self.ringCurrentChangedCB)
-        self.beamAvailableSignal.connect(self.processBeamAvailable)
+        self.threeClickSignal.connect(self.processThreeClickCentering)
         self.beamAvailable_pv.add_callback(self.beamAvailableChangedCB)
         self.sampleExposedSignal.connect(self.processSampleExposed)
         self.sampleExposed_pv.add_callback(self.sampleExposedChangedCB)

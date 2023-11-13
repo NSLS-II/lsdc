@@ -28,12 +28,18 @@ class CalculatorWindow(QtWidgets.QDialog):
 			     'r':{'value':None}}
 		
 		#making lines to hold inputs 
-		self.r_value_enter = QComboBox()
-		self.r_value_enter.setToolTip("Detector Distance")
+		# self.r_value_enter = QComboBox()
+		# self.r_value_enter.setToolTip("Detector Distance")
+		# self.r_value_enter = QLineEdit()
+		# self.r_value_enter.setPlaceholderText('Set r value (in mm)')
+		# self.buttonDictionary['r']['value'] = self.r_value_enter
+		# self.r_value_enter.setCurrentIndex(1)
+
+
 		self.r_value_enter = QLineEdit()
-		self.r_value_enter.setPlaceholderText('Set r value (in mm)')
+		self.r_value_enter.setPlaceholderText('Set r value')
 		self.buttonDictionary['r']['value'] = self.r_value_enter
-		self.r_value_enter.setCurrentIndex(1)
+		self.r_value_enter.setValidator(QDoubleValidator())
 		#setting inputs to Double only
 
 		self.L_value_enter = QLineEdit()
@@ -106,11 +112,22 @@ class CalculatorWindow(QtWidgets.QDialog):
 			return
 		
 		#getting values from textboxes r_value text box
-		r_value = self.r_value_enter.currentIndex()
-		convertValues = [200,244.7]
-		# print("r value = {}".format(r_value))
-		#checking if value is a number string or empty string
-		r_value = convertValues[r_value]
+		# r_value = self.r_value_enter.currentIndex()
+		# convertValues = [200,244.7]
+		# # print("r value = {}".format(r_value))
+		# #checking if value is a number string or empty string
+		# r_value = convertValues[r_value]
+		# r_value = float(r_value)
+
+		r_value = self.r_value_enter.displayText()
+    	# checking if value is a number string or empty string
+		if r_value == "" or r_value[0].isalpha() == True:
+			self.bottom_text.setText("formula to calculate {} requires r value".format(checked_key))
+			return
+		elif float(r_value) < 140 or float(r_value) > 350:
+			self.bottom_text.setText("r value must be between 140 and 350")
+			return
+
 		r_value = float(r_value)
 
 

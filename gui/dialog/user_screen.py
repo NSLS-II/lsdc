@@ -6,6 +6,7 @@ from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
 
 import daq_utils
+from utils.comm import generate_server_message
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -197,24 +198,24 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
 
     def setSlit1XCB(self):
-        comm_s = "setSlit1X(" + str(self.slit1XMotor_ledit.text()) + ")"
+        comm_s = generate_server_message("setSlit1X", [self.slit1XMotor_ledit.text()])
         self.parent.send_to_server(comm_s)
 
     def setSlit1YCB(self):
-        comm_s = "setSlit1Y(" + str(self.slit1YMotor_ledit.text()) + ")"
+        comm_s = generate_server_message("setSlit1Y", [self.slit1YMotor_ledit.text()])
         self.parent.send_to_server(comm_s)
 
     def unmountColdCB(self):
-        self.parent.send_to_server("unmountCold()")
+        self.parent.send_to_server(generate_server_message("unmountCold"))
 
     def testRobotCB(self):
-        self.parent.send_to_server("testRobot()")
+        self.parent.send_to_server(generate_server_message("testRobot"))
 
     def recoverRobotCB(self):
-        self.parent.send_to_server("recoverRobot()")
+        self.parent.send_to_server(generate_server_message("recoverRobot"))
 
     def dryGripperCB(self):
-        self.parent.send_to_server("dryGripper()")
+        self.parent.send_to_server(generate_server_message("dryGripper"))
 
     def stopDetCB(self):
         logger.info("stopping detector")
@@ -235,16 +236,16 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'SE')")
+        self.parent.send_to_server(generate_server_message("setGovState", ["SE"]))
 
     def SAgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'SA')")
+        self.parent.send_to_server(generate_server_message("setGovState", ["SA"]))
 
     def DAgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'DA')")
+        self.parent.send_to_server(generate_server_message("setGovState", ["DA"]))
 
     def BLgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'BL')")
+        self.parent.send_to_server(generate_server_message("setGovState", ["BL"]))
 
     def userScreenOKCB(self):
         self.hide()

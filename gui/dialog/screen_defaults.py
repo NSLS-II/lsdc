@@ -14,6 +14,7 @@ from config_params import (
     VALID_EXP_TIMES,
 )
 from daq_utils import beamline, getBlConfig, setBlConfig
+from utils.comm import generate_server_message
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -202,7 +203,8 @@ class ScreenDefaultsDialog(QtWidgets.QDialog):
         try:
             reqID = self.parent.selectedSampleRequest["uid"]
             self.parent.drawPolyRaster(db_lib.getRequestByID(reqID))
-            self.parent.send_to_server('reprocessRaster("' + str(reqID) + '")')
+            comm_s = generate_server_message("reprocessRaster", [reqID])
+            self.parent.send_to_server(comm_s)
         except:
             pass
 

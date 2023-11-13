@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QCheckBox
 
 from config_params import BEAM_CHECK, TOP_VIEW_CHECK, UNMOUNT_COLD_CHECK
 from daq_utils import getBlConfig, setBlConfig
+from utils.comm import generate_server_message
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -222,13 +223,13 @@ class StaffScreenDialog(QtWidgets.QFrame):
         return nodeList
 
     def setFastDPNodesCB(self):
-        comm_s = "fastDPNodes("
-        for i in range(0, self.fastDPNodeCount):
-            comm_s = comm_s + str(self.fastDPNodeEntryList[i].text())
-            if i == self.fastDPNodeCount - 1:
-                comm_s = comm_s + ")"
-            else:
-                comm_s = comm_s + ","
+        comm_s = generate_server_message(
+            "fastDPNodes",
+            [
+                int(self.fastDPNodeEntryList[i].text())
+                for i in range(self.fastDPNodeCount)
+            ],
+        )
         logger.info(comm_s)
         self.parent.send_to_server(comm_s)
 
@@ -239,54 +240,52 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.parent.send_to_server("unlockControl")
 
     def setSpotNodesCB(self):
-        comm_s = "spotNodes("
-        for i in range(0, self.spotNodeCount):
-            comm_s = comm_s + str(self.spotNodeEntryList[i].text())
-            if i == self.spotNodeCount - 1:
-                comm_s = comm_s + ")"
-            else:
-                comm_s = comm_s + ","
+        comm_s = generate_server_message(
+            "spotNodes",
+            [int(self.spotNodeEntryList[i].text()) for i in range(self.spotNodeCount)],
+        )
         logger.info(comm_s)
         self.parent.send_to_server(comm_s)
 
     def unmountColdCB(self):
-        self.parent.send_to_server("unmountCold()")
+        comm_s = generate_server_message("unmountCold")
+        self.parent.send_to_server(comm_s)
 
     def openPort1CB(self):
-        self.parent.send_to_server("openPort(1)")
+        comm_s = generate_server_message("openPort", [1])
+        self.parent.send_to_server(comm_s)
 
     def setBeamcenterCB(self):
-        self.parent.send_to_server(
-            "set_beamcenter ("
-            + str(self.beamcenterX_ledit.text())
-            + ","
-            + str(self.beamcenterY_ledit.text())
-            + ")"
+        comm_s = generate_server_message(
+            "set_beamcenter",
+            [self.beamcenterX_ledit.text(), self.beamcenterY_ledit.text()],
         )
 
+        self.parent.send_to_server(comm_s)
+
     def closePortsCB(self):
-        self.parent.send_to_server("closePorts()")
+        self.parent.send_to_server(generate_server_message("closePorts"))
 
     def clearMountedSampleCB(self):
-        self.parent.send_to_server("clearMountedSample()")
+        self.parent.send_to_server(generate_server_message("clearMountedSample"))
 
     def recoverRobotCB(self):
-        self.parent.aux_send_to_server("recoverRobot()")
+        self.parent.aux_send_to_server(generate_server_message("recoverRobot"))
 
     def rebootEMBL_CB(self):
-        self.parent.aux_send_to_server("rebootEMBL()")
+        self.parent.aux_send_to_server(generate_server_message("rebootEMBL"))
 
     def restartEMBL_CB(self):
-        self.parent.send_to_server("restartEMBL()")
+        self.parent.send_to_server(generate_server_message("restartEMBL"))
 
     def openGripper_CB(self):
-        self.parent.send_to_server("openGripper()")
+        self.parent.send_to_server(generate_server_message("openGripper"))
 
     def closeGripper_CB(self):
-        self.parent.send_to_server("closeGripper()")
+        self.parent.send_to_server(generate_server_message("closeGripper"))
 
     def homePinsCB(self):
-        self.parent.send_to_server("homePins()")
+        self.parent.send_to_server(generate_server_message("homePins"))
 
     def robotOnCheckCB(self, state):
         if state == QtCore.Qt.Checked:

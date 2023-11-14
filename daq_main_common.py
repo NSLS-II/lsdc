@@ -86,9 +86,13 @@ def execute_command(command_s):
   try:
       command: "dict[str, Any]" = json.loads(command_s)
       func = whitelisted_functions[command["function"]]
+  except Exception as e:
+      logger.exception(f"Error in function parsing and lookup: {e}")
+  
+  try:
       func(*command["args"], **command["kwargs"])
   except Exception as e:
-      logger.error(f"Error executing {command_s}: {e}")
+      logger.exception(f"Error executing {command_s}: {e}")
 
 
 def pybass_init():

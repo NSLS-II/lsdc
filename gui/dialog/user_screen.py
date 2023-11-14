@@ -6,7 +6,6 @@ from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
 
 import daq_utils
-from utils.comm import generate_server_message
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain

@@ -1,10 +1,12 @@
 import _thread
 import functools
+import json
 import logging
 import math
 import os
 import sys
 import time
+from typing import Dict, List, Optional
 
 import cv2
 import numpy as np
@@ -52,8 +54,6 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
-import json
-from typing import Dict, List, Optional
 
 logger = logging.getLogger()
 
@@ -3590,7 +3590,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
-            comm_s = self.generate_server_message(
+            comm_s = (
                 "center_on_click",
                 [
                     correctedC2C_x,
@@ -3601,7 +3601,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 ],
             )
         else:
-            comm_s = self.generate_server_message(
+            comm_s = (
                 "center_on_click",
                 [
                     correctedC2C_x,
@@ -3612,7 +3612,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 ],
             )
         if not self.vidActionRasterExploreRadio.isChecked():
-            self.aux_send_to_server(comm_s)
+            self.aux_send_to_server(*comm_s)
         if self.threeClickCount == 4:
             self.threeClickCount = 0
             self.click3Button.setStyleSheet("background-color: None")

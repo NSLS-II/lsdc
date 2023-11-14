@@ -198,24 +198,22 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
 
     def setSlit1XCB(self):
-        comm_s = generate_server_message("setSlit1X", [self.slit1XMotor_ledit.text()])
-        self.parent.send_to_server(comm_s)
+        self.parent.send_to_server("setSlit1X", [self.slit1XMotor_ledit.text()])
 
     def setSlit1YCB(self):
-        comm_s = generate_server_message("setSlit1Y", [self.slit1YMotor_ledit.text()])
-        self.parent.send_to_server(comm_s)
+        self.parent.send_to_server("setSlit1Y", [self.slit1YMotor_ledit.text()])
 
     def unmountColdCB(self):
-        self.parent.send_to_server(generate_server_message("unmountCold"))
+        self.parent.send_to_server("unmountCold")
 
     def testRobotCB(self):
-        self.parent.send_to_server(generate_server_message("testRobot"))
+        self.parent.send_to_server("testRobot")
 
     def recoverRobotCB(self):
-        self.parent.send_to_server(generate_server_message("recoverRobot"))
+        self.parent.send_to_server("recoverRobot")
 
     def dryGripperCB(self):
-        self.parent.send_to_server(generate_server_message("dryGripper"))
+        self.parent.send_to_server("dryGripper")
 
     def stopDetCB(self):
         logger.info("stopping detector")
@@ -236,16 +234,16 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-        self.parent.send_to_server(generate_server_message("setGovState", ["SE"]))
+        self.parent.send_to_server("setGovState", ["SE"])
 
     def SAgovCB(self):
-        self.parent.send_to_server(generate_server_message("setGovState", ["SA"]))
+        self.parent.send_to_server("setGovState", ["SA"])
 
     def DAgovCB(self):
-        self.parent.send_to_server(generate_server_message("setGovState", ["DA"]))
+        self.parent.send_to_server("setGovState", ["DA"])
 
     def BLgovCB(self):
-        self.parent.send_to_server(generate_server_message("setGovState", ["BL"]))
+        self.parent.send_to_server("setGovState", ["BL"])
 
     def userScreenOKCB(self):
         self.hide()

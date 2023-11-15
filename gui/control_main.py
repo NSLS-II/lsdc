@@ -2763,7 +2763,7 @@ class ControlMain(QtWidgets.QMainWindow):
         except ValueError as e:
             self.popupServerMessage("Please enter a valid number")
             return
-        self.send_to_server("setTrans", ["energy", float(self.transmission_ledit.text())])
+        self.send_to_server("setTrans", [float(self.transmission_ledit.text())])
 
     def setDCStartCB(self):
         currentPos = float(self.sampleOmegaRBVLedit.getEntry().text()) % 360.0

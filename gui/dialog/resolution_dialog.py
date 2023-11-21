@@ -179,7 +179,7 @@ class CalculatorWindow(QtWidgets.QDialog):
 
 		elif checked_key == 'L':
 
-			D_value = float(self.D_value_enter.displayText())
+			d_value = float(self.d_value_enter.displayText())
 			theta_value = float(self.theta_value_enter.displayText())
 			wave_value = float(self.wave_value_enter.displayText())
 

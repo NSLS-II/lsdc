@@ -2252,7 +2252,7 @@ class ControlMain(QtWidgets.QMainWindow):
     function is processThreClickCentering
     '''
     def processThreeClickCentering(self, beamAvailVal):
-        if int(beamAvailVal) == 0:
+        if beamAvailVal == '0':
             self.beamAvailLabel.setText("Beam Available")
             self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
         else:
@@ -3874,7 +3874,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
                 if self.threeClickCount == 4:
                     self.threeClickCount = 0
-                    self.threeClickSignal.emit(0)
+                    self.threeClickSignal.emit('0')
                     self.click3Button.setStyleSheet("background-color: None")
                 return
             else:
@@ -3885,7 +3885,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.aux_send_to_server(comm_s)
         if self.threeClickCount == 4:
             self.threeClickCount = 0
-            self.threeClickSignal.emit(0)
+            self.threeClickSignal.emit('0')
             self.click3Button.setStyleSheet("background-color: None")
         return
 

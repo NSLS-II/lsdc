@@ -3122,7 +3122,7 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info("3-click center loop")
         self.threeClickCount = 1
         self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
-        time.sleep(0.02)
+        time.sleep(0.3)
         self.click3Button.setStyleSheet("background-color: yellow")
         if(daq_utils.exporter_enabled):
             self.md2.exporter.cmd("startManualSampleCentring", "")
@@ -3851,7 +3851,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
             self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
-            time.sleep(0.02)
+            time.sleep(0.3)
+            print('sleeping for 0.3 seconds')
             if daq_utils.exporter_enabled: 
                 correctedC2C_x = x_click + 5 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
                 correctedC2C_y = y_click - 35 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))

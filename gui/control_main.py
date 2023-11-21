@@ -50,6 +50,7 @@ from gui.dialog import (
     SnapCommentDialog,
     StaffScreenDialog,
     UserScreenDialog,
+    CalculatorWindow
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
@@ -270,6 +271,9 @@ class ControlMain(QtWidgets.QMainWindow):
             XRFInfoDict[tokens[0]] = int(float(tokens[5]) * 100)
         XRFFile.close()
         return XRFInfoDict
+    
+
+
 
     def closeEvent(self, evnt):
         evnt.accept()
@@ -2725,6 +2729,10 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         if fname != "":
             self.dataPathGB.setBasePath_ledit(fname)
+    '''
+    Creating function to for Actions under file drop down
+    
+    '''
 
     def popImportDialogCB(self):
         #self.timerSample.stop()
@@ -2747,6 +2755,14 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def setExpertModeCB(self):
         self.vidActionDefineCenterRadio.setEnabled(True)
+    
+
+    def openResolution(self):
+        self.sub = CalculatorWindow(self)
+        self.sub.show()  
+
+
+
 
     def upPriorityCB(
         self,
@@ -5089,6 +5105,26 @@ class ControlMain(QtWidgets.QMainWindow):
         splitter1.addWidget(self.tabs)
         self.setCentralWidget(splitter1)
         splitterSizes = [600, 100]
+
+        '''
+        creating drop down menu items under File
+
+        for now has
+        importAction - importing spreadsheet manually
+            @function - popImportDialogCB
+
+        userAction - User Mode
+            @function - setUserModeCB
+
+        expertAction - Expert Mode
+            @function - setExpertModeCB
+
+        staffAction - Staff Panel
+            @function - popStaffDialogCB
+
+        resolutionAction - Resolution Calculator
+            @function - openResolution
+        '''
         importAction = QtWidgets.QAction("Import Spreadsheet...", self)
         importAction.triggered.connect(self.popImportDialogCB)
         modeGroup = QtWidgets.QActionGroup(self)
@@ -5100,6 +5136,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.expertAction.triggered.connect(self.setExpertModeCB)
         self.staffAction = QtWidgets.QAction("Staff Panel...", self)
         self.staffAction.triggered.connect(self.popStaffDialogCB)
+        self.resolutionAction = QtWidgets.QAction("Resolution Calculator", self)
+        self.resolutionAction.triggered.connect(self.openResolution)
         modeGroup.addAction(self.userAction)
         modeGroup.addAction(self.expertAction)
         exitAction = QtWidgets.QAction(QtGui.QIcon("exit24.png"), "Exit", self)
@@ -5109,6 +5147,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.statusBar()
         self.queue_collect_status_widget = QtWidgets.QLabel("Queue Collect: ON")
         self.statusBar().addPermanentWidget(self.queue_collect_status_widget)
+
         menubar = self.menuBar()
         fileMenu = menubar.addMenu("&File")
         settingsMenu = menubar.addMenu("Settings")
@@ -5116,6 +5155,7 @@ class ControlMain(QtWidgets.QMainWindow):
         fileMenu.addAction(self.userAction)
         fileMenu.addAction(self.expertAction)
         fileMenu.addAction(self.staffAction)
+        fileMenu.addAction(self.resolutionAction)
         # Define all of the available actions for the overlay color group
         self.BlueOverlayAction = QtWidgets.QAction("Blue", self, checkable=True)
         self.RedOverlayAction = QtWidgets.QAction("Red", self, checkable=True)

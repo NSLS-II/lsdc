@@ -3861,8 +3861,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
             self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
-            time.sleep(0.3)
-            print('sleeping for 0.3 seconds')
+
+            
             if daq_utils.exporter_enabled: 
                 correctedC2C_x = x_click + 5 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
                 correctedC2C_y = y_click - 35 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
@@ -3875,6 +3875,10 @@ class ControlMain(QtWidgets.QMainWindow):
                 correctedC2C_x = correctedC2C_x * scale_x
                 correctedC2C_y = correctedC2C_y * scale_y
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
+                logger.info('waiting for motor rotation')
+                time.sleep(0.2)
+                self.omegaMoveCheck(0.02,'OmegaState')
+            
                 if self.threeClickCount == 4:
                     self.threeClickCount = 0
                     self.threeClickSignal.emit('0')
@@ -3890,7 +3894,26 @@ class ControlMain(QtWidgets.QMainWindow):
             self.threeClickCount = 0
             self.threeClickSignal.emit('0')
             self.click3Button.setStyleSheet("background-color: None")
+
         return
+
+    '''
+    Function to check if MD motors are rotating or not
+    '''
+    def omegaMoveCheck(self, sleeptime,call='OmegaState'):
+        state = self.md2.exporter.read(call)
+        while(state == 'Moving'):
+            time.sleep(sleeptime)
+            state = self.md2.exporter.read(call)
+            logger.info('\nIn Moving\n{}\n'.format(state))
+        if state == 'Ready':
+            logger.info('ready for next click')
+            return state
+        else:
+            logger.info('\ndone moving, current state is: {}'.format(state))
+            return state
+
+
 
     def editScreenParamsCB(self):
         self.screenDefaultsDialog = ScreenDefaultsDialog(self)

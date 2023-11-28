@@ -37,23 +37,23 @@ class CalculatorWindow(QtWidgets.QDialog):
 
 
 		self.r_value_enter = QLineEdit()
-		self.r_value_enter.setPlaceholderText('Set r value')
+		self.r_value_enter.setPlaceholderText('Set detector radius')
 		self.buttonDictionary['r']['value'] = self.r_value_enter
 		self.r_value_enter.setValidator(QDoubleValidator())
 		#setting inputs to Double only
 
 		self.L_value_enter = QLineEdit()
-		self.L_value_enter.setPlaceholderText('Set L value')
+		self.L_value_enter.setPlaceholderText('Set crystal to detector distance')
 		self.buttonDictionary['L']['value'] = self.L_value_enter
 		self.L_value_enter.setValidator(QDoubleValidator())
 
 		self.d_value_enter = QLineEdit()
-		self.d_value_enter.setPlaceholderText('Set d value')
+		self.d_value_enter.setPlaceholderText('Set resolution')
 		self.buttonDictionary['d']['value'] = self.d_value_enter
 		self.d_value_enter.setValidator(QDoubleValidator())
 
 		self.theta_value_enter = QLineEdit()
-		self.theta_value_enter.setPlaceholderText('Set theta value')
+		self.theta_value_enter.setPlaceholderText('Set detector theta value')
 		self.buttonDictionary['theta']['value'] = self.theta_value_enter
 		self.theta_value_enter.setValidator(QDoubleValidator())
 
@@ -124,9 +124,6 @@ class CalculatorWindow(QtWidgets.QDialog):
 		if r_value == "" or r_value[0].isalpha() == True:
 			self.bottom_text.setText("formula to calculate {} requires r value".format(checked_key))
 			return
-		elif float(r_value) < 140 or float(r_value) > 350:
-			self.bottom_text.setText("r value must be between 140 and 350")
-			return
 
 		r_value = float(r_value)
 
@@ -142,6 +139,10 @@ class CalculatorWindow(QtWidgets.QDialog):
 		if ((l_value == "" or l_value[0].isalpha() == True) and checked_key != 'L'):
 			self.bottom_text.setText("formula to calculate {} requires L value".format(checked_key))
 			return
+		elif float(l_value) < 140 or float(l_value) > 350:
+			self.bottom_text.setText("detector to crystal distance must be between 140 and 350mm")
+			return
+
 
 		theta_value = self.theta_value_enter.displayText()
 		if ((theta_value == "" or theta_value[0].isalpha() == True)and checked_key != 'theta'):

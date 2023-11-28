@@ -4454,8 +4454,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server("unmountSample")
         
 
-    def refreshCollectionParams(self, selectedSampleRequest, validate_hdf5=True):
-        reqObj = selectedSampleRequest["request_obj"]
+    def fillRequestParameters(self, reqObj):
+        """Fills UI elements based on reqObj dictionary passed to it"""
         self.protoComboBox.setCurrentIndex(
             self.protoComboBox.findText(str(reqObj["protocol"]))
         )
@@ -4498,9 +4498,12 @@ class ControlMain(QtWidgets.QMainWindow):
         energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))
         dist_s = str(reqObj["detDist"])
         self.detDistMotorEntry.getEntry().setText(str(dist_s))
-        self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))
-        self.dataPathGB.setBasePath_ledit(str(reqObj["basePath"]))
-        self.dataPathGB.setDataPath_ledit(str(reqObj["directory"]))
+        # self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))
+        # self.dataPathGB.setBasePath_ledit(str(reqObj["basePath"]))
+        # self.dataPathGB.setDataPath_ledit(str(reqObj["directory"]))
+
+    def refreshCollectionParams(self, selectedSampleRequest, validate_hdf5=True):
+        reqObj = selectedSampleRequest["request_obj"]
         if (
             str(reqObj["protocol"]) == "characterize"
             or str(reqObj["protocol"]) == "ednaCol"

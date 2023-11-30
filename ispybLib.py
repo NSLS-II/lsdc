@@ -56,22 +56,6 @@ def maxVisitNumfromProposal(propNum):
   return (queryOneFromDB(q))
 
 
-def createVisitName(propNum): # this is for the GUI to know what a datapath would be in row_clicked
-  return
-  logger.info("creating visit Name for propnum " + str(propNum))
-  propID = proposalIdFromProposal(propNum)
-  if (propID == 0): #proposal doesn't exist, just create and assign to boaty
-    createProposal(propNum)
-  maxVis = maxVisitNumfromProposal(propNum)
-  if (maxVis == None): #1st visit
-    newVisitNum = 1
-  else:
-    newVisitNum = 1 + maxVis
-    logger.info('new visit number: %s' % newVisitNum)
-  visitName = "mx"+str(propNum)+"-"+str(newVisitNum)
-  return visitName, newVisitNum
-
-
 def createVisit(propNum):
   return
   visitName, newVisitNum = createVisitName(propNum)

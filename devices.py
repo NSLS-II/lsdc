@@ -155,6 +155,18 @@ class MD2Device(GonioDevice):
     detector_gate_pulse_enabled = Cpt(EpicsSignal, 'DetectorGatePulseEnabled',name='det_gate_pulse_enabled')
     exporter = Cpt(ExporterComponent, address=os.environ['EXPORTER_HOST'], port=int(os.environ['EXPORTER_PORT']), name='exporter')
 
+    task_info = Cpt(EpicsSignalRO, 'LastTaskInfo',name='task_info')
+    task_output = Cpt(EpicsSignalRO, 'LastTaskOutput', name='task_output')
+
+    def task_complete(self):
+        return self.task_output == "true"
+
+    def task_status(self):
+        def check_task(*, old_value, value, **kwargs):
+            "Return True when last task completes"
+            return (value[6] == '1')
+        return SubscriptionStatus(self.task_info, check_task)
+
     def is_ready(self):
         return self.state.get() == 4
 

@@ -89,10 +89,17 @@ class MD2StandardFlyer():
 
     def complete(self):
         # monitor md2 status, wait for ready or timeout and then return
-        ready_status = self.md2.ready_status()
+        #ready_status = self.md2.ready_status()
+
+        #logger.debug(f"TASK INFO[6]: {self.md2.task_info[6]}")
+        #logger.debug(f"TASK OUTPUT: {self.md2.task_output}")
+        task_status = self.md2.task_status()
         timeout = self.collection_params["exposure_time"] + 10
-        ready_status.wait(timeout=timeout)
-        return ready_status
+        #ready_status.wait(timeout=timeout)
+        task_status.wait(timeout=timeout)
+        #logger.debug(f"TASK INFO: {self.md2.task_info}")
+        #logger.debug(f"TASK OUTPUT: {self.md2.task_output}")
+        return task_status
 
     def describe_collect(self):
         return {"stream_name": {}}

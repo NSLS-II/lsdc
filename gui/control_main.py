@@ -3793,6 +3793,16 @@ class ControlMain(QtWidgets.QMainWindow):
         y_click = float(event.pos().y())
         penGreen = QtGui.QPen(QtCore.Qt.green)
         penRed = QtGui.QPen(QtCore.Qt.red)
+        '''
+        For three click centering, this if statement checks the omega state of the motor.
+        This ideally gives feedback on wether the MD2 is in the rotation portion of the three click centering
+        
+        '''
+        state = self.md2.exporter.read('OmegaState')
+        if state != 'Ready':
+            logger.info('waiting for motor rotation')
+            logger.info('Click not registered')
+            return
         if self.vidActionDefineCenterRadio.isChecked():
             self.vidActionC2CRadio.setChecked(
                 True
@@ -3875,9 +3885,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 correctedC2C_x = correctedC2C_x * scale_x
                 correctedC2C_y = correctedC2C_y * scale_y
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
-                logger.info('waiting for motor rotation')
-                time.sleep(0.2)
-                self.omegaMoveCheck(0.02,'OmegaState')
+                #logger.info('waiting for motor rotation')
+                #time.sleep(0.2)
+                #self.omegaMoveCheck(0.02,'OmegaState')
             
                 if self.threeClickCount == 4:
                     self.threeClickCount = 0
@@ -3905,7 +3915,7 @@ class ControlMain(QtWidgets.QMainWindow):
         while(state == 'Moving'):
             time.sleep(sleeptime)
             state = self.md2.exporter.read(call)
-            logger.info('\nIn Moving\n{}\n'.format(state))
+            #logger.info('\nIn Moving\n{}\n'.format(state))
         if state == 'Ready':
             logger.info('ready for next click')
             return state

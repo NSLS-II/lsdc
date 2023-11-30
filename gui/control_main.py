@@ -1076,6 +1076,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterList = []
         self.rasterDefList = []
         self.polyPointItems = []
+        self.threeClickLines = []
         self.rasterPoly = None
         self.measureLine = None
         self.scene = QtWidgets.QGraphicsScene(0, 0, 640, 512, self)
@@ -3122,7 +3123,7 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info("3-click center loop")
         self.threeClickCount = 1
         self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
-        time.sleep(0.3)
+        #time.sleep(0.3)
         self.click3Button.setStyleSheet("background-color: yellow")
         if(daq_utils.exporter_enabled):
             self.md2.exporter.cmd("startManualSampleCentring", "")
@@ -3861,6 +3862,11 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
             self.threeClickSignal.emit('{} more clicks'.format(str(4-self.threeClickCount)))
+            #adding drawing for three click centering
+            logger.info('Drawing 3 click line {} at x_value: {} and y_value {}'.format(self.threeClickCount, x_click, y_click))
+            self.threeClickLines.append(
+                self.scene.addLine(x_click, 0, x_click, 512, penGreen)
+            )
 
             
             if daq_utils.exporter_enabled: 
@@ -3883,6 +3889,11 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.threeClickCount = 0
                     self.threeClickSignal.emit('0')
                     self.click3Button.setStyleSheet("background-color: None")
+                    #removing drawing for three click centering
+                    logger.info('Removing 3 click lines')
+                    for i in range(len(self.threeClickLines)):
+                        self.scene.removeItem(self.threeClickLines[i])
+                    self.threeClickLines = []
                 return
             else:
                 comm_s = (
@@ -3912,6 +3923,12 @@ class ControlMain(QtWidgets.QMainWindow):
             self.threeClickCount = 0
             self.threeClickSignal.emit('0')
             self.click3Button.setStyleSheet("background-color: None")
+            #removing drawing for three cick centering
+            logger.info('Removing 3 click lines')
+            for i in range(len(self.threeClickLines)):
+                self.scene.removeItem(self.threeClickLines[i])
+                logger.info('Removed line {}'.format(i))
+            self.threeClickLines = []
 
         return
 

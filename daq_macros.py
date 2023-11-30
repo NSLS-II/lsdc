@@ -1034,7 +1034,7 @@ def snakeRaster(rasterReqID,grain=""):
       yield from raster_plan_wrapped(rasterReqID)
     else:
       finalize_plan = finalize_wrapper(snakeRasterBluesky(rasterReqID,grain), bps.mv(raster_flyer.detector.cam.acquire, 0))
-    yield from finalize_plan
+      yield from finalize_plan
     #RE(snakeRasterBluesky(rasterReqID,grain))
 
 def snakeRasterNoTile(rasterReqID,grain=""):
@@ -3549,7 +3549,7 @@ def rasterDaq(rasterReqID):
       parentReqObj = parentRequest["request_obj"]
       detDist = parentReqObj["detDist"]
 
-    rasterFilePrefix = dataFilePrefix + "_Raster"
+    rasterFilePrefix = dataFilePrefix # + "_Raster"
 
     logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exposure_per_image}, {img_width_per_cell}, {wavelength}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {total_num_images}, {rows}")
     #logger.info(f"req_obj: {reqObj}")
@@ -3559,15 +3559,18 @@ def rasterDaq(rasterReqID):
     #    yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
     stepsize /= 1000 # MD2 wants mm
     line_range = stepsize * numsteps
-    total_uturn_range = line_range * number_of_lines
+    total_uturn_range = stepsize * number_of_lines
     start_cx = md2.cx.val()
     start_cy = md2.cy.val()
     frames_per_line = numsteps
     total_exposure_time = exposure_per_image * total_num_images
-    invert_direction = True
+    invert_direction = False
     use_centring_table = True
     use_fast_mesh_scans = True
     omega_range = 0
+    logger.info(f"TASK INFO: {md2.task_info.get()}")
+    logger.info(f"TASK INFO[6]: {md2.task_info.get()[6]=='1'}")
+    logger.info(f"TASK OUTPUT: {md2.task_output}")
     logger.info(f"omega_range = {omegaRad}")
     logger.info(f"line_range = {line_range}")
     logger.info(f"total_uturn_range = {total_uturn_range}")
@@ -3612,11 +3615,7 @@ def rasterDaq(rasterReqID):
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, total_exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
-    def armed_callback(value, old_value, **kwargs):
-        return (old_value == 1 and value == 0)
-    arm_status = SubscriptionStatus(raster_flyer.detector.cam.armed, armed_callback, run=False)
     yield from bp.fly([raster_flyer])
-    arm_status.wait(timeout=5)
 
   
 

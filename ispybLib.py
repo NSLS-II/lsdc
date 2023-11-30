@@ -38,23 +38,6 @@ def queryOneFromDB(q):
   except TypeError:
     return 0
 
-def personIdFromLogin(loginName):
-  q = ("select personId from Person where login = \""+ loginName + "\"")
-  return (queryOneFromDB(q))
-
-def personIdFromProposal(propNum):
-  q = ("select personId from Proposal where proposalNumber = " + str(propNum))
-  return (queryOneFromDB(q))  
-
-def proposalIdFromProposal(propNum):
-  q = ("select proposalId from Proposal where proposalNumber = " + str(propNum))
-  return (queryOneFromDB(q))
-
-def maxVisitNumfromProposal(propNum):
-  propID = proposalIdFromProposal(propNum)
-  q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
-  return (queryOneFromDB(q))
-  
 
 def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal):
   return

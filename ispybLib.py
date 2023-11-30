@@ -54,32 +54,7 @@ def maxVisitNumfromProposal(propNum):
   propID = proposalIdFromProposal(propNum)
   q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
   return (queryOneFromDB(q))
-  
 
-def createPerson(firstName,lastName,loginName):
-  return
-  params = core.get_person_params()  
-  params['given_name'] = firstName
-  params['family_name'] = lastName
-  params['login'] = loginName
-  pid = core.upsert_person(list(params.values()))
-  cnx.commit()
-  
-
-def createProposal(propNum,PI_login="boaty"):
-  return
-  pid = personIdFromLogin(PI_login)
-  if (pid == 0):
-    createPerson("Not","Sure",PI_login)
-    pid = personIdFromLogin(PI_login)
-  params = core.get_proposal_params()
-  params['proposal_code'] = 'mx'
-  params['proposal_number'] = int(propNum)
-  params['proposal_type'] = 'mx'
-  params['person_id'] = pid
-  params['title'] = 'SynchWeb Dev Proposal'
-  proposal_id = core.upsert_proposal(list(params.values()))
-  cnx.commit()  #not sure why I needed to do this. Maybe mistake in stored proc?
 
 def createVisitName(propNum): # this is for the GUI to know what a datapath would be in row_clicked
   return
@@ -164,24 +139,7 @@ def createVisit(propNum):
 #        phpid = core.upsert_proposal_has_person(list(params.values()))
 #        assert phpid is not None
 #        assert phpid > 0
-  return visitName  
-
-def addPersonToProposal(personLogin,propNum):
-  return
-  personID = personIdFromLogin(personLogin)
-  if (personID == 0):
-    createPerson("Not","Sure",personLogin)
-    personID  = personIdFromLogin(personLogin)
-  propID = proposalIdFromProposal(propNum)
-  if (propID == 0):
-    createProposal(propNum,personLogin)
-    propID = proposalIdFromProposal(propNum)    
-  params = core.get_proposal_has_person_params()
-  params['proposal_id'] = propID
-  params['role'] = 'Co-Investigator'
-  params['personid'] = personID
-  phpid = core.upsert_proposal_has_person(list(params.values()))
-  cnx.commit()                                          
+  return visitName
   
 
 def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal):

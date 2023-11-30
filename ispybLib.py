@@ -269,8 +269,9 @@ def insertRasterResult(request,visitName):
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("insertRasterResult - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
-   return
+   message = f"insertRasterResult - caught ISPyBNoResultException: '{e}'."
+   logger.error(message)
+   raise e
  request = db_lib.getRequestByID(request_id)
  sample = request['sample'] # this needs to be created and linked to a DC group
  #result_obj = result['result_obj'] this doesn't appear to be used -DK

@@ -3843,10 +3843,6 @@ def vertRasterOff():
   """vertRasterOff() : only raster vertically for single-column (line) rasters"""
   setBlConfig("vertRasterOn",0)
 
-def newVisit():
-  """newVisit() : Trick LSDC into creating a new visit on the next request creation"""
-  setBlConfig("proposal",987654) #a kludge to cause the next collection to generate a new visit
-
 
 def logMe():
   """logMe() : Edwin asked for this"""
@@ -3946,7 +3942,6 @@ def lsdcHelp():
   print(enableMount.__doc__)
   print(vertRasterOn.__doc__)
   print(vertRasterOff.__doc__)
-  print(newVisit.__doc__)
   print(emptyQueue.__doc__)
   print(logMe.__doc__)
   print(setAttenBCU.__doc__)

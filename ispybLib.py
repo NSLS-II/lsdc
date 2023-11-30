@@ -54,76 +54,6 @@ def maxVisitNumfromProposal(propNum):
   propID = proposalIdFromProposal(propNum)
   q = ("select max(visit_number) from BLSession where proposalId = " + str(propID))
   return (queryOneFromDB(q))
-
-
-def createVisit(propNum):
-  return
-  visitName, newVisitNum = createVisitName(propNum)
-  personID = personIdFromProposal(propNum)
-  params = core.get_session_for_proposal_code_number_params()
-  params['proposal_code'] = 'mx'
-  params['proposal_number'] = propNum
-  params['visit_number'] = newVisitNum
-  params['beamline_name'] = daq_utils.beamline.upper()
-  params['startdate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-  params['enddate'] = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
-  
-  params['comments'] = 'For software testing'
-  sid = core.upsert_session_for_proposal_code_number(list(params.values()))
-  cnx.commit() 
-  assert sid is not None
-  assert sid > 0
-        # Test upsert_person:
-#        params = core.get_person_params()
-#        params['given_name'] = 'Baldur'
-#        params['family_name'] = 'Odinsson'
-#        params['login'] = 'bo%s' % str(time.time()) # login must be unique
-#        pid = core.upsert_person(list(params.values()))
-#        assert pid is not None
-#        assert pid > 0
-
-#        params = core.get_person_params()
-#        params['id'] = pid
-#        params['email_address'] = 'baldur.odinsson@asgard.org'
-#        pid2 = core.upsert_person(list(params.values()))
-#        assert pid2 is not None
-#        assert pid2 == pid
-
-        # Test upsert_session_has_person:
-  params = core.get_session_has_person_params()
-  params['session_id'] = sid
-  params['person_id'] = personID
-  params['role'] = 'Co-Investigator'
-  params['remote'] = True
-  core.upsert_session_has_person(list(params.values()))
-  cnx.commit()
-  try:
-    personsOnProposalList = core.retrieve_persons_for_proposal("mx",propNum)
-    logger.debug(f'list of all persons: {personsOnProposalList}')
-  except:
-    logger.error(f'exception when retrieving persons for proposal {propNum}')
-    return visitName      
-  for i in range (0,len(personsOnProposalList)):
-    personLogin = personsOnProposalList[i]["login"]
-    personID = personIdFromLogin(personLogin)
-    params = core.get_session_has_person_params()
-    params['session_id'] = sid
-    params['person_id'] = personID
-    params['role'] = 'Co-Investigator'
-    params['remote'] = True
-    core.upsert_session_has_person(list(params.values()))
-    cnx.commit()
-    
-
-        # Test upsert_proposal_has_person:
-#        params = core.get_proposal_has_person_params()
-#        params['proposal_id'] = 141666
-#        params['person_id'] = pid
-#        params['role'] = 'Principal Investigator'
-#        phpid = core.upsert_proposal_has_person(list(params.values()))
-#        assert phpid is not None
-#        assert phpid > 0
-  return visitName
   
 
 def insertPlotResult(dc_id,imageNumber,spotTotal,goodBraggCandidates,method2Res,totalIntegratedSignal):
@@ -145,9 +75,9 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
  try:
    sessionid = core.retrieve_visit_id(visitName)
  except ISPyBNoResultException as e:
-   logger.error("insert result - caught ISPyBNoResultException: '%s'. make sure visit name is in the format mx999999-1234. NOT HAVING MX IN FRONT IS A SIGN OF PROBLEMS - try newVisit() in that case." % e)
-   propNum = visitName.split('-')[0]
-   sessionid = createVisit(propNum)
+   message = f"insert result - caught ISPyBNoResultException: '{e}'."
+   logger.exception(message)
+   raise e
  request_type = request['request_type']
  if request_type in('standard', 'vector') :
    sample = request['sample'] # this needs to be created and linked to a DC group

@@ -94,7 +94,7 @@ class MD2StandardFlyer():
         #logger.debug(f"TASK INFO[6]: {self.md2.task_info[6]}")
         #logger.debug(f"TASK OUTPUT: {self.md2.task_output}")
         task_status = self.md2.task_status()
-        timeout = self.collection_params["exposure_time"] + 10
+        timeout = self.collection_params["exposure_time"] + 60
         #ready_status.wait(timeout=timeout)
         task_status.wait(timeout=timeout)
         #logger.debug(f"TASK INFO: {self.md2.task_info}")

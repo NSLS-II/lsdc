@@ -3813,14 +3813,18 @@ def rasterDaq(rasterReqID):
 
     logger.info(f"prepping raster with: {rasterFilePrefix}, {data_directory_name}, {file_number_start}, {dataFilePrefix}, {exposure_per_image}, {img_width_per_cell}, {wavelength}, {detDist}, {rasterDef}, {stepsize}, {start_omega}, {start_x}, {start_y}, {start_z}, {omegaRad}, {number_of_lines}, {numsteps}, {total_num_images}, {rows}")
     #logger.info(f"req_obj: {reqObj}")
-
-    #    zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
+    i = 0
+    xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(rows[i], stepsize, (start_omega*0), start_x, start_y, start_z, i)
     #    vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
     #    yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
     stepsize /= 1000 # MD2 wants mm
+    logger.info(f"move calculations:  {xMotAbsoluteMove}, {xEnd}, {yMotAbsoluteMove}, {yEnd}, {zMotAbsoluteMove}, {zEnd}")
     line_range = stepsize * numsteps
     total_uturn_range = stepsize * number_of_lines
-    start_cx = md2.cx.val()
+    start_y = start_y - (xEnd / 1000)
+    start_z = start_z - (yMotAbsoluteMove / 1000)
+    #start_z = start_z - (xEnd / 1000)
+    start_cx = md2.cx.val()# + (xEnd/1000)
     start_cy = md2.cy.val()
     frames_per_line = numsteps
     total_exposure_time = exposure_per_image * total_num_images
@@ -3836,6 +3840,7 @@ def rasterDaq(rasterReqID):
     logger.info(f"total_uturn_range = {total_uturn_range}")
     logger.info(f"start_omega = {start_omega}")
     logger.info(f"start_y = {start_y}")
+    logger.info(f"current yzcxcy: {md2.y.get()}, {md2.z.get()}, {md2.cx.get()}, {md2.cy.get()}")
     logger.info(f"start_z = {start_z}")
     logger.info(f"start_cx = {start_cx}")
     logger.info(f"start_cy = {start_cy}")
@@ -3845,7 +3850,6 @@ def rasterDaq(rasterReqID):
     logger.info(f"invert_direction = {invert_direction}")
     logger.info(f"use_centring_table = {use_centring_table}")
     logger.info(f"use_fast_mesh_scans = {use_fast_mesh_scans}")
-
 
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '

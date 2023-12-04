@@ -4500,9 +4500,6 @@ class ControlMain(QtWidgets.QMainWindow):
         energy_s = str(daq_utils.wave2energy(reqObj["wavelength"], digits=6))
         dist_s = str(reqObj["detDist"])
         self.detDistMotorEntry.getEntry().setText(str(dist_s))
-        # self.dataPathGB.setFilePrefix_ledit(str(reqObj["file_prefix"]))
-        # self.dataPathGB.setBasePath_ledit(str(reqObj["basePath"]))
-        # self.dataPathGB.setDataPath_ledit(str(reqObj["directory"]))
 
     def refreshCollectionParams(self, selectedSampleRequest, validate_hdf5=True):
         reqObj = selectedSampleRequest["request_obj"]

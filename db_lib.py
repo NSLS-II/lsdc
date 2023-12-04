@@ -827,4 +827,3 @@ def deleteCompletedRequestsforSample(sid):
     if (requestList[i]["priority"] == -1): #good to clean up completed requests after unmount
       if (requestList[i]["protocol"] == "raster" or requestList[i]["protocol"] == "vector"):
         deleteRequest(requestList[i]['uid'])
-

@@ -9,7 +9,6 @@ import db_lib
 import det_lib
 import time
 import mysql.connector
-from PIL import Image
 import logging
 logger = logging.getLogger(__name__)
 
@@ -212,8 +211,6 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
    sample = request['sample'] # this needs to be created and linked to a DC group
    if (resultType == 'fastDP'):
      mx_data_reduction_dict = xml_file_to_dict(xmlFileName)
-     comm = mx_data_reduction_dict['AutoProcProgramContainer']['AutoProcProgram']['processingCommandLine']
-     mx_data_reduction_dict['AutoProcProgramContainer']['AutoProcProgram']['processingCommandLine'] = comm[len(comm)-255:]
      (app_id, ap_id, scaling_id, integration_id) = mx_data_reduction_to_ispyb(mx_data_reduction_dict, dc_id, mxprocessing)
      mxprocessing.upsert_program_ex(program_id=app_id,status=1)
          
@@ -230,13 +227,10 @@ def insertResult(result,resultType,request,visitName,dc_id=None,xmlFileName=None
      daq_utils.take_crystal_picture(filename=jpegImagePrefix)
      jpegImageFilename = jpegImagePrefix+".jpg"
      jpegImageThumbFilename = jpegImagePrefix+"t.jpg"
-     resizeRatio = 0.4
-     logger.info(f'resizing image: ratio: {resizeRatio} filename: {jpegImageThumbFilename}')
-     fullSnapshot = Image.open(jpegImageFilename)
-     resizeWidth = fullSnapshot.width * resizeRatio
-     resizeHeight = fullSnapshot.height * resizeRatio
-     thumbSnapshot = fullSnapshot.resize((int(resizeWidth), int(resizeHeight)))
-     thumbSnapshot.save(jpegImageThumbFilename)
+     node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")
+     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}resize.sh {jpegImageFilename} {jpegImageThumbFilename} 40% \"&"
+     logger.info('resizing image: %s' % comm_s)
+     os.system(comm_s)
      
      seqNum = int(det_lib.detector_get_seqnum())          
      node = db_lib.getBeamlineConfigParam(beamline,"adxvNode")

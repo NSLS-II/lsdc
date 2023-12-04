@@ -197,22 +197,24 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
 
     def setSlit1XCB(self):
-        self.parent.send_to_server("setSlit1X", [self.slit1XMotor_ledit.text()])
+        comm_s = "setSlit1X(" + str(self.slit1XMotor_ledit.text()) + ")"
+        self.parent.send_to_server(comm_s)
 
     def setSlit1YCB(self):
-        self.parent.send_to_server("setSlit1Y", [self.slit1YMotor_ledit.text()])
+        comm_s = "setSlit1Y(" + str(self.slit1YMotor_ledit.text()) + ")"
+        self.parent.send_to_server(comm_s)
 
     def unmountColdCB(self):
-        self.parent.send_to_server("unmountCold")
+        self.parent.send_to_server("unmountCold()")
 
     def testRobotCB(self):
-        self.parent.send_to_server("testRobot")
+        self.parent.send_to_server("testRobot()")
 
     def recoverRobotCB(self):
-        self.parent.send_to_server("recoverRobot")
+        self.parent.send_to_server("recoverRobot()")
 
     def dryGripperCB(self):
-        self.parent.send_to_server("dryGripper")
+        self.parent.send_to_server("dryGripper()")
 
     def stopDetCB(self):
         logger.info("stopping detector")
@@ -233,16 +235,16 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-        self.parent.send_to_server("setGovState", ["SE"])
+        self.parent.send_to_server("setGovRobot(gov_robot, 'SE')")
 
     def SAgovCB(self):
-        self.parent.send_to_server("setGovState", ["SA"])
+        self.parent.send_to_server("setGovRobot(gov_robot, 'SA')")
 
     def DAgovCB(self):
-        self.parent.send_to_server("setGovState", ["DA"])
+        self.parent.send_to_server("setGovRobot(gov_robot, 'DA')")
 
     def BLgovCB(self):
-        self.parent.send_to_server("setGovState", ["BL"])
+        self.parent.send_to_server("setGovRobot(gov_robot, 'BL')")
 
     def userScreenOKCB(self):
         self.hide()

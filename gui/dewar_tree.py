@@ -1,20 +1,12 @@
-import getpass
 import logging
-import os
 import typing
 
-import requests
 from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import Qt
 
 import daq_utils
 import db_lib
-from config_params import (
-    DEWAR_SECTORS,
-    IS_STAFF,
-    PUCKS_PER_DEWAR_SECTOR,
-    SAMPLE_TIMER_DELAY,
-)
+from config_params import DEWAR_SECTORS, PUCKS_PER_DEWAR_SECTOR, SAMPLE_TIMER_DELAY
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -104,17 +96,20 @@ class DewarTree(QtWidgets.QTreeView):
         puck = ""
         collectionRunning = False
         self.model.clear()
-        dewar_data, puck_data, sample_data, request_data = db_lib.get_dewar_tree_data(
+        dewarContents = db_lib.getContainerByName(
             daq_utils.primaryDewarName, daq_utils.beamline
-        )
-        parentItem = self.model.invisibleRootItem()
-        for i, puck_id in enumerate(
-            dewar_data["content"]
-        ):  # dewar contents is the list of puck IDs
-            puck = ""
-            puckName = ""
-            if puck_id:
-                puck = puck_data[puck_id]
+        )["content"]
+        for i in range(0, len(dewarContents)):  # dewar contents is the list of puck IDs
+            parentItem = self.model.invisibleRootItem()
+            if dewarContents[i] == "":
+                puck = ""
+                puckName = ""
+            else:
+                if dewarContents[i] not in containerDict:
+                    puck = db_lib.getContainerByID(dewarContents[i])
+                    containerDict[dewarContents[i]] = puck
+                else:
+                    puck = containerDict[dewarContents[i]]
                 puckName = puck["name"]
             index_s = "%d%s" % (
                 (i) / self.pucksPerDewarSector + 1,
@@ -129,10 +124,99 @@ class DewarTree(QtWidgets.QTreeView):
             parentItem.appendRow(item)
             parentItem = item
             if puck != "" and puckName != "private":
-                puckContents = puck.get("content", [])
-                self.add_samples_to_puck_tree(
-                    puckContents, item, index_s, sample_data, request_data
-                )
+                puckContents = puck["content"]
+                puckSize = len(puckContents)
+                for j in range(0, len(puckContents)):  # should be the list of samples
+                    if puckContents[j] != "":
+                        if puckContents[j] not in sampleNameDict:
+                            sampleName = db_lib.getSampleNamebyID(puckContents[j])
+                            sampleNameDict[puckContents[j]] = sampleName
+                        else:
+                            sampleName = sampleNameDict[puckContents[j]]
+                        position_s = str(j + 1) + "-" + sampleName
+                        item = QtGui.QStandardItem(
+                            QtGui.QIcon(
+                                ":/trolltech/styles/commonstyle/images/file-16.png"
+                            ),
+                            position_s,
+                        )
+                        item.setData(
+                            puckContents[j], 32
+                        )  # just stuck sampleID there, but negate it to diff from reqID
+                        item.setData("sample", 33)
+                        if puckContents[j] == self.parent.mountedPin_pv.get():
+                            item.setForeground(QtGui.QColor("red"))
+                            font = QtGui.QFont()
+                            font.setItalic(True)
+                            font.setOverline(True)
+                            font.setUnderline(True)
+                            item.setFont(font)
+                        parentItem.appendRow(item)
+                        if puckContents[j] == self.parent.mountedPin_pv.get():
+                            mountedIndex = self.model.indexFromItem(item)
+                        if (
+                            puckContents[j] == self.parent.selectedSampleID
+                        ):  # looking for the selected item
+                            logger.info("found " + str(self.parent.SelectedItemData))
+                            selectedSampleIndex = self.model.indexFromItem(item)
+                        sampleRequestList = db_lib.getRequestsBySampleID(
+                            puckContents[j]
+                        )
+                        for k in range(len(sampleRequestList)):
+                            if not ("protocol" in sampleRequestList[k]["request_obj"]):
+                                continue
+                            col_item = QtGui.QStandardItem(
+                                QtGui.QIcon(
+                                    ":/trolltech/styles/commonstyle/images/file-16.png"
+                                ),
+                                sampleRequestList[k]["request_obj"]["file_prefix"]
+                                + "_"
+                                + sampleRequestList[k]["request_obj"]["protocol"],
+                            )
+                            col_item.setData(sampleRequestList[k]["uid"], 32)
+                            col_item.setData("request", 33)
+                            col_item.setFlags(
+                                Qt.ItemIsUserCheckable
+                                | Qt.ItemIsEnabled
+                                | Qt.ItemIsEditable
+                                | Qt.ItemIsSelectable
+                            )
+                            if sampleRequestList[k]["priority"] == 99999:
+                                col_item.setCheckState(Qt.Checked)
+                                col_item.setBackground(QtGui.QColor("green"))
+                                selectedIndex = self.model.indexFromItem(
+                                    col_item
+                                )  ##attempt to leave it on the request after collection
+
+                                collectionRunning = True
+                                self.parent.refreshCollectionParams(
+                                    sampleRequestList[k], validate_hdf5=False
+                                )
+                            elif sampleRequestList[k]["priority"] > 0:
+                                col_item.setCheckState(Qt.Checked)
+                                col_item.setBackground(QtGui.QColor("white"))
+                            elif sampleRequestList[k]["priority"] < 0:
+                                col_item.setCheckable(False)
+                                col_item.setBackground(QtGui.QColor("cyan"))
+                            else:
+                                col_item.setCheckState(Qt.Unchecked)
+                                col_item.setBackground(QtGui.QColor("white"))
+                            item.appendRow(col_item)
+                            if (
+                                sampleRequestList[k]["uid"]
+                                == self.parent.SelectedItemData
+                            ):  # looking for the selected item, this is a request
+                                selectedIndex = self.model.indexFromItem(col_item)
+                    else:  # this is an empty spot, no sample
+                        position_s = str(j + 1)
+                        item = QtGui.QStandardItem(
+                            QtGui.QIcon(
+                                ":/trolltech/styles/commonstyle/images/file-16.png"
+                            ),
+                            position_s,
+                        )
+                        item.setData("", 32)
+                        parentItem.appendRow(item)
         self.setModel(self.model)
         if selectedSampleIndex != None and collectionRunning == False:
             self.setCurrentIndex(selectedSampleIndex)
@@ -171,139 +255,6 @@ class DewarTree(QtWidgets.QTreeView):
         else:
             self.collapseAll()
         self.scrollTo(self.currentIndex(), QtWidgets.QAbstractItemView.PositionAtCenter)
-
-    def add_samples_to_puck_tree(
-        self, puckContents, parentItem: QtGui.QStandardItem, index_label
-    ):
-        # Method will attempt to add samples to the puck. If you don't belong to the proposal,
-        # it will not add samples and clear the puck information
-        selectedIndex = None
-        mountedIndex = None
-        selectedSampleIndex = None
-        collectionRunning = False
-        for j, sample_id in enumerate(puckContents):
-            if not sample_id:
-                # this is an empty spot, no sample
-                position_s = str(j + 1)
-                item = QtGui.QStandardItem(QtGui.QIcon(ICON), position_s)
-                item.setData("", 32)
-                parentItem.appendRow(item)
-                continue
-
-            sample = sampleDict.get(
-                sample_id,
-                sampleDict.setdefault(sample_id, db_lib.getSampleByID(sample_id)),
-            )
-
-            if not IS_STAFF and not self.is_proposal_member(sample["proposalID"]):
-                # If the user is not part of the proposal and is not staff, don't fill tree
-                # Clear the puck information and don't make it selectable
-                parentItem.setText(index_label)
-                current_flags = parentItem.flags()
-                parentItem.setFlags(current_flags & ~Qt.ItemFlag.ItemIsSelectable)  # type: ignore
-                position_s = f'{j+1}-{sample.get("name", "")}'
-                item = QtGui.QStandardItem(
-                    QtGui.QIcon(ICON),
-                    position_s,
-                )
-                return
-
-            parentItem.setText(f"{index_label} pass-{sample['proposalID']}")
-
-            position_s = f'{j+1}-{sample.get("name", "")}'
-            item = QtGui.QStandardItem(
-                QtGui.QIcon(ICON),
-                position_s,
-            )
-            # just stuck sampleID there, but negate it to diff from reqID
-            item.setData(sample_id, 32)
-            item.setData("sample", 33)
-            if sample_id == self.parent.mountedPin_pv.get():
-                self.set_mounted_sample(item)
-            parentItem.appendRow(item)
-            if sample_id == self.parent.mountedPin_pv.get():
-                mountedIndex = self.model.indexFromItem(item)
-            # looking for the selected item
-            if sample_id == self.parent.selectedSampleID:
-                logger.info("found " + str(self.parent.SelectedItemData))
-                selectedSampleIndex = self.model.indexFromItem(item)
-            sampleRequestList = db_lib.getRequestsBySampleID(sample_id)
-            for request in sampleRequestList:
-                if not ("protocol" in request["request_obj"]):
-                    continue
-                col_item = self.create_request_item(request)
-                if request["priority"] == 99999:
-                    selectedIndex = self.model.indexFromItem(
-                        col_item
-                    )  ##attempt to leave it on the request after collection
-                    collectionRunning = True
-                item.appendRow(col_item)
-                if (
-                    request["uid"] == self.parent.SelectedItemData
-                ):  # looking for the selected item, this is a request
-                    selectedIndex = self.model.indexFromItem(col_item)
-
-        current_index = None
-        if not collectionRunning:
-            if selectedSampleIndex:
-                current_index = selectedSampleIndex
-            elif mountedIndex:
-                current_index = mountedIndex
-                item = self.model.itemFromIndex(mountedIndex)
-                self.set_mounted_sample(item)
-            elif selectedIndex:
-                current_index = selectedIndex
-        elif collectionRunning and mountedIndex:
-            current_index = mountedIndex
-
-        if current_index:
-            self.setCurrentIndex(current_index)
-            self.parent.row_clicked(current_index)
-
-    def is_proposal_member(self, proposal_id) -> bool:
-        # Check if the user running LSDC is part of the sample's proposal
-        if proposal_id not in self.proposal_membership:
-            r = requests.get(f"{os.environ['NSLS2_API_URL']}/proposal/{proposal_id}")
-            r.raise_for_status()
-            response = r.json()
-            if "users" in response and getpass.getuser() in [
-                user["username"] for user in response["users"] if "username" in user
-            ]:
-                self.proposal_membership[proposal_id] = True
-            else:
-                logger.info(f"Users not found in response: {response}")
-                self.proposal_membership[proposal_id] = False
-        return self.proposal_membership[proposal_id]
-
-    def create_request_item(self, request) -> QtGui.QStandardItem:
-        col_item = QtGui.QStandardItem(
-            QtGui.QIcon(ICON),
-            request["request_obj"]["file_prefix"]
-            + "_"
-            + request["request_obj"]["protocol"],
-        )
-        col_item.setData(request["uid"], 32)
-        col_item.setData("request", 33)
-        col_item.setFlags(
-            Qt.ItemFlag.ItemIsUserCheckable  # type:ignore
-            | Qt.ItemFlag.ItemIsEnabled
-            | Qt.ItemFlag.ItemIsEditable
-            | Qt.ItemFlag.ItemIsSelectable
-        )
-        if request["priority"] == 99999:
-            col_item.setCheckState(Qt.CheckState.Checked)
-            col_item.setBackground(QtGui.QColor("green"))
-            self.parent.refreshCollectionParams(request, validate_hdf5=False)
-        elif request["priority"] > 0:
-            col_item.setCheckState(Qt.CheckState.Checked)
-            col_item.setBackground(QtGui.QColor("white"))
-        elif request["priority"] < 0:
-            col_item.setCheckable(False)
-            col_item.setBackground(QtGui.QColor("cyan"))
-        else:
-            col_item.setCheckState(Qt.CheckState.Unchecked)
-            col_item.setBackground(QtGui.QColor("white"))
-        return col_item
 
     def refreshTreePriorityView(
         self,

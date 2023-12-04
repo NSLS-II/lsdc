@@ -395,6 +395,7 @@ class ControlMain(QtWidgets.QMainWindow):
         colStartLabel.setFixedWidth(140)
         colStartLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.osc_start_ledit = QtWidgets.QLineEdit()
+        self.setGuiValues({"osc_start": "0.0"})
         self.osc_start_ledit.setFixedWidth(60)
         self.osc_start_ledit.setValidator(QtGui.QDoubleValidator())
         self.colEndLabel = QtWidgets.QLabel("Oscillation Range:")
@@ -599,6 +600,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.detDistRBVLabel = QtEpicsPVLabel(
             daq_utils.motor_dict["detectorDist"] + ".RBV", self, 70
         )
+        self.detDistTextChanged(self.detDistRBVLabel.getEntry().text())
         detDistSPLabel = QtWidgets.QLabel("SetPoint:")
         self.detDistMotorEntry = QtEpicsPVEntry(
             daq_utils.motor_dict["detectorDist"] + ".VAL", self, 70, 2

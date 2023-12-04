@@ -5,5 +5,4 @@ from .user_screen import UserScreenDialog
 from .puck_dialog import PuckDialog
 from .dewar import DewarDialog
 from .screen_defaults import ScreenDefaultsDialog
-from .resolution_calculator import Calculator
-from .resolution_dialog import CalculatorWindow
+

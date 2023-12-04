@@ -87,6 +87,8 @@ class AlbulaController:
 
         if self.albulaSubFrame is None:
             self.albulaSubFrame = self.albulaFrame.openSubFrame()
+            self.set_current_monitor_image()
+            self.albulaSubFrame.setContrast(15, 0)
             self.albulaSubFrame.setColorMode("Heat")
 
     def disp_image(self, dimage):
@@ -141,14 +143,17 @@ class AlbulaController:
         logging.info("polling {} for monitor image".format(self.ip))
         while not self._stop.is_set():  # stop flag
             try:
-                data = self.get_eiger_monitor_image()
-                dimage = dectris.albula.DImage(data)
-                self.albulaSubFrame.loadImage(dimage)
+                self.set_current_monitor_image()
                 self.albulaSubFrame.setTitle("MONITOR")
             except Exception as e:
                 logging.error("updateImage exception: {}".format(e))
                 time.sleep(self.pause)
         self.albulaSubFrame.unsetTitle()
+
+    def set_current_monitor_image(self):
+        data = self.get_eiger_monitor_image()
+        dimage = dectris.albula.DImage(data)
+        self.albulaSubFrame.loadImage(dimage)
 
     def get_eiger_monitor_image(self):  # for EIGER1
         urlData = "http://{}/monitor/api/{}/images/monitor".format(
@@ -157,8 +162,10 @@ class AlbulaController:
         replyData = requests.get(urlData)
         img_bytes = BytesIO(replyData.content)
         img = Image.open(img_bytes)
+        array = numpy.array(img)
+        array[array == 65535] = 0
 
-        return numpy.array(img)
+        return array
 
 
 albulaController = AlbulaController()

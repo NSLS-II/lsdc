@@ -45,6 +45,7 @@ class DataLocInfo(QtWidgets.QGroupBox):
         self.hBoxDPathParams2.addWidget(self.prefix_ledit)
         self.dataNumstartLabel = QtWidgets.QLabel("File Number Start:")
         self.file_numstart_ledit = QtWidgets.QLineEdit()
+        self.file_numstart_ledit.setText("1")
         self.file_numstart_ledit.setValidator(QtGui.QIntValidator(1, 99999, self))
         self.file_numstart_ledit.setFixedWidth(50)
         self.hBoxDPathParams3 = QtWidgets.QHBoxLayout()

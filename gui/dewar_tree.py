@@ -42,6 +42,7 @@ class DewarTree(QtWidgets.QTreeView):
         # self.isExpanded = 1
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.openMenu)
+        self.setStyleSheet("QTreeView::item::hover{background-color: #999966;}")
         # Keeps track of whether the user is part of a proposal
         self.proposal_membership = {}
 
@@ -59,6 +60,8 @@ class DewarTree(QtWidgets.QTreeView):
                 level = list(selectedLevels)[0]
                 menu = QtWidgets.QMenu()
                 if level == 2:  # This is usually a request
+                    useParamsAction = QtWidgets.QAction('Use Request Parameters', self)
+                    useParamsAction.triggered.connect(self.useParamsCB)
                     deleteReqAction = QtWidgets.QAction(
                         "Delete selected request(s)", self
                     )
@@ -73,6 +76,7 @@ class DewarTree(QtWidgets.QTreeView):
                         "Dequeue selected request(s)", self
                     )
                     dequeueSelAction.triggered.connect(self.deQueueAllSelectedCB)
+                    menu.addAction(useParamsAction)
                     menu.addAction(cloneReqAction)
                     menu.addAction(queueSelAction)
                     menu.addAction(dequeueSelAction)
@@ -80,6 +84,38 @@ class DewarTree(QtWidgets.QTreeView):
                     menu.addAction(deleteReqAction)
                 menu.exec_(self.viewport().mapToGlobal(position))
 
+    def useParamsCB(self):
+        index = self.selectedIndexes()[0]
+        item = self.model.itemFromIndex(index)
+        requestData = db_lib.getRequestByID(item.data(32))
+        reqObj = requestData['request_obj']
+        self.parent.fillRequestParameters(reqObj)
+
+    def fillToolTip(self, data):
+        text = ""
+        table_data = {}
+        if 'request_obj' in data:
+            req_data = data['request_obj']
+            table_data['Exposure Time'] = req_data['exposure_time']
+            table_data['Transmission'] = req_data['attenuation']
+            table_data['Oscillation Width'] = req_data['img_width']
+            table_data['Oscillation Range'] = req_data['sweep_end'] - req_data['sweep_start']
+            table_data['Oscillation Start'] = req_data['sweep_start']
+            table_data['Detector Distance'] = req_data['detDist']
+            table_data['Resolution'] = req_data['resolution']
+            table_data['Energy (eV)'] = req_data['energy']
+            table_data['Wavelength'] = req_data['wavelength']
+            text = """<table border='1' style='border-collapse: collapse;'>
+            <tr>
+            <th style='border: 1px solid black;'>Parameter</th>
+            <th style='border: 1px solid black;'>Value</th>
+            </tr>"""
+            for key, value in table_data.items():
+                text += f"""<tr><td style='border: 1px solid black;'>{key}</td>
+                <td style='border: 1px solid black;'>{value}</td></tr>"""
+            text = text + "</table>" 
+        return text  
+    
     def cloneRequestCB(self):
         # Only the first selected request is cloned (If multiple are chosen)
         index = self.selectedIndexes()[0]
@@ -278,6 +314,7 @@ class DewarTree(QtWidgets.QTreeView):
         else:
             col_item.setCheckState(Qt.CheckState.Unchecked)
             col_item.setBackground(QtGui.QColor("white"))
+        col_item.setToolTip(self.fillToolTip(request))
         return col_item
 
     def refreshTreePriorityView(

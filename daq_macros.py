@@ -1003,7 +1003,8 @@ def runDozorThread(directory,
 
     time.sleep(1.0) #allow for file writing
      
-    node = getNodeName("spot", rowIndex, 8)
+    #node = getNodeName("spot", rowIndex, 8)
+    node = "titania-cpu001" 
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -3880,6 +3881,24 @@ def rasterDaq(rasterReqID):
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, total_exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
     yield from bp.fly([raster_flyer])
+    spotFindThreadList = []
+    row_index = 1
+    logger.info(f"raster prefix {rasterFilePrefix}")
+    rasterFilePrefix = rasterFilePrefix.split("/")[-1]
+    logger.info(f"raster prefix {rasterFilePrefix}")
+    for i in range(1, number_of_lines-1):
+        row_index = i
+        seqNum = raster_flyer.detector.cam.sequence_id.get()
+        spotFindThread = Thread(target=runDozorThread,args=(data_directory_name, #TODO this can't move outside of the thread checking block
+                                                              rasterFilePrefix,
+                                                              row_index,
+                                                              numsteps,
+                                                              seqNum,
+                                                              reqObj,
+                                                              rasterReqID))
+        spotFindThread.start()
+        spotFindThreadList.append(spotFindThread)
+
 
   
 
@@ -3893,6 +3912,7 @@ def clean_up_collection():
         gov_status.wait(timeout=30)
     yield from bps.mv(md2.phase, 0)
     md2.ready_status().wait(timeout= 20)
+    # trigger processing here
     logger.info(f"clean_up took {time.time()-start_time} seconds.")
 
 def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposurePeriodPerImage, filePrefix, data_directory_name, file_number_start, vector_params, data_path, scanEncoder=3, changeState=True):

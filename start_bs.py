@@ -9,6 +9,8 @@ import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
+from bluesky_env.devices.auto_center import WorkPositions, TwoClickLowMag, LoopDetector
+from bluesky_env.devices.top_align import TopAlignerFast, TopAlignerSlow, GoniometerStack
 
 #12/19 - author unknown. DAMA can help
 """
@@ -133,6 +135,14 @@ if (beamline=="amx"):
     back_light = EpicsSignal(read_pv="XF:17DB-ES:AMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
 
+    work_pos = WorkPositions("XF:17IDB-ES:AMX", name="work_pos")
+    two_click_low = TwoClickLowMag("XF:17IDB-ES:AMX{Cam:6}", name="two_click_low")
+    gonio = GoniometerStack("XF:17IDB-ES:AMX{Gon:1", name="gonio")
+    loop_detector = LoopDetector(name="loop_detector")
+    top_aligner_fast = TopAlignerFast(name="top_aligner_fast")
+    top_aligner_slow = TopAlignerSlow(name="top_aligner")
+    
+
 elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
@@ -155,6 +165,13 @@ elif beamline == "fmx":
 
     back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
+
+    work_pos = WorkPositions("XF:17DC-ES:FMX", name="work_pos")
+    two_click_low = TwoClickLowMag("XF:17DC-ES:FMX{Cam:6}", name="two_click_low")
+    gonio = GoniometerStack("XF:17DC-ES:FMX{Gon:1", name="gonio")
+    loop_detector = LoopDetector(name="loop_detector")
+    top_aligner_fast = TopAlignerFast(name="top_aligner_fast")
+    top_aligner_slow = TopAlignerSlow(name="top_aligner")
 
     import setenergy_lsdc
 

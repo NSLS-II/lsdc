@@ -207,7 +207,7 @@ class EMBLRobot:
             prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
             kwargs['prefix1'] = prefix1
             kwargs['prefix90'] = prefix90
-            top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
+            # top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
             message = "TopView check ERROR, will continue: " + e_s
@@ -242,7 +242,7 @@ class EMBLRobot:
         if (omegaCP > 89.5 and omegaCP < 90.5):
           beamline_lib.mvrDescriptor("omega", 85.0)
         logger.info("calling thread")
-        _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
+        # _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
         logger.info("called thread")
 
 
@@ -344,6 +344,9 @@ class EMBLRobot:
               logger.info('not changing anything as governor is active')
           if (sampYadjust == 0):
             logger.info("Cannot align pin - Mount next sample.")
+        if daq_utils.beamline == "amx":
+          daq_macros.run_top_view_optimized()
+        
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         if not gov_status.success:
           logger.error('Failure during governor change to SA')

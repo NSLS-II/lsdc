@@ -680,7 +680,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   logger.info("data directory = " + data_directory_name)
   reqObj = currentRequest["request_obj"]
   protocol = str(reqObj["protocol"])
-  sweep_start = sweep_start%360.0
+  sweep_start = sweep_start % 360.0 if sweep_start > 0 else sweep_start % -360
   if (protocol == "vector" or protocol == "stepVector"):
     beamline_lib.mvaDescriptor("omega",sweep_start)
   if (image_width == 0):

@@ -7,12 +7,14 @@ from ophyd import (Component as Cpt, Signal, EpicsSignal, EpicsSignalRO, Device,
                     EpicsMotor, ImagePlugin, ROIPlugin, TransformPlugin, 
                     StatsPlugin, ProcessPlugin, SingleTrigger, ProsilicaDetector,
                     DDC_EpicsSignal, DDC_EpicsSignalRO, ADComponent as ADCpt)
+from bluesky.utils import FailedStatus
 from ophyd.status import SubscriptionStatus
 from pathlib import Path
 import requests
 from .zebra import Zebra
 from enum import Enum
-from start_bs import gov_robot
+
+from collections import OrderedDict
 
 
 class TopPlanLimit(Enum):
@@ -136,8 +138,16 @@ class TopAlignCam(StandardProsilica):
             )
 
     def stage(self, *args, **kwargs):
-        self._update_stage_sigs(*args, **kwargs)
+        #self._update_stage_sigs(*args, **kwargs)
         super().stage(*args, **kwargs)
+
+    def trigger(self):
+        try:
+            status = super().trigger()
+            status.wait(6)
+        except AttributeError:
+            raise FailedStatus
+        return status
 
 
 class ZebraMXOr(Zebra):
@@ -145,6 +155,10 @@ class ZebraMXOr(Zebra):
     or3loc = Cpt(EpicsSignal, "OR3_INP4")
     armsel = Cpt(EpicsSignal, "PC_ARM_SEL")
 
+
+class GovernorError(Exception):
+    def __init__(self, message):
+        super().__init__(self, message)
 
 class TopAlignerBase(Device):
 
@@ -172,7 +186,7 @@ class TopAlignerBase(Device):
     def stage(self, *args, **kwargs):
         if type(self) == TopAlignerBase:
             raise NotImplementedError("TopAlignerBase has no stage method")
-        super().stage(*args, **kwargs)
+        return super().stage(*args, **kwargs)
 
     def trigger(self):
         raise NotImplementedError("Subclasses must implement custom trigger")
@@ -191,6 +205,7 @@ class TopAlignerFast(TopAlignerBase):
     )
 
     def __init__(self, *args, **kwargs):
+        self.gov_robot = kwargs.pop("gov_robot")
         super().__init__(*args, **kwargs)
         self.target_gov_state.subscribe(
             self._update_stage_sigs, event_type="value"
@@ -199,7 +214,7 @@ class TopAlignerFast(TopAlignerBase):
     def _configure_device(self, *args, **kwargs):
         self.read_attrs = ["topcam", "zebra"]
         self.stage_sigs.clear()
-        self.topcam.cam_mode.set("fine_face")
+        # self.topcam.cam_mode.set("fine_face")
 
         self.stage_sigs.update(
             [
@@ -252,8 +267,56 @@ class TopAlignerFast(TopAlignerBase):
             raise Exception("Target gov state not implemented!")
 
     def stage(self, *args, **kwargs):
-        self._update_stage_sigs()
-        super().stage(*args, **kwargs)
+        if self.gov_robot.state.get() == 'M':
+            raise GovernorError("Governor busy or in M during staging attempt")
+
+        # Resolve any stage_sigs keys given as strings: 'a.b' -> self.a.b
+        stage_sigs = OrderedDict()
+        for k, v in self.stage_sigs.items():
+            if isinstance(k, str):
+                # Device.__getattr__ handles nested attr lookup
+                stage_sigs[getattr(self, k)] = v
+            else:
+                stage_sigs[k] = v
+
+        # Read current values, to be restored by unstage()
+        original_vals = {sig: sig.get() for sig in stage_sigs}
+
+        # We will add signals and values from original_vals to
+        # self._original_vals one at a time so that
+        # we can undo our partial work in the event of an error.
+
+        # Apply settings.
+        devices_staged = []
+        try:
+            for sig, val in stage_sigs.items():
+                self.log.debug(
+                    "Setting %s to %r (original value: %r)",
+                    sig.name,
+                    val,
+                    original_vals[sig],
+                )
+                sig.set(val).wait(10)
+                # It worked -- now add it to this list of sigs to unstage.
+                self._original_vals[sig] = original_vals[sig]
+            devices_staged.append(self)
+
+            # Call stage() on child devices.
+            for attr in self._sub_devices:
+                device = getattr(self, attr)
+                if hasattr(device, "stage"):
+                    device.stage()
+                    devices_staged.append(device)
+        except Exception:
+            self.log.debug(
+                "An exception was raised while staging %s or "
+                "one of its children. Attempting to restore "
+                "original settings before re-raising the "
+                "exception.",
+                self.name,
+            )
+            self.unstage()
+            raise
 
         def callback_armed(value, old_value, **kwargs):
             if old_value == 0 and value == 1:
@@ -268,13 +331,16 @@ class TopAlignerFast(TopAlignerBase):
             settle_time=0.5,
         )
         self.zebra.pos_capt.arm.arm.set(1)
-        callback_armed_status.wait(timeout=3)
+        callback_armed_status.wait(timeout=6)
+        return devices_staged
 
     def unstage(self, **kwargs):
         super().unstage(**kwargs)
         # self.zebra.pos_capt.arm.disarm.set(1)
 
     def trigger(self):
+        print('top aligner triggered')
+
         def callback_unarmed(value, old_value, **kwargs):
             if old_value == 1 and value == 0:
                 return True
@@ -288,14 +354,13 @@ class TopAlignerFast(TopAlignerBase):
             timeout=6,
         )
 
-        if (self.target_gov_state.get() in gov_robot.reachable.get() or
-                self.target_gov_state.get() == gov_robot.setpoint.get()):
-            gov_robot.set(self.target_gov_state.get(), wait=True)
+        if self.target_gov_state.get() in self.gov_robot.reachable.get():
+            self.gov_robot.set(self.target_gov_state.get(), wait=True)
             # self.gonio_o.set(0)
             return callback_unarmed_status
 
         else:
-            raise Exception(
+            raise FailedStatus(
                 f'{self.target_gov_state.get()} is wrong governor state for transition'
             )
 
@@ -311,7 +376,7 @@ class TopAlignerSlow(TopAlignerBase):
             [
                 ("topcam.cam.trigger_mode", 5),
                 ("topcam.cam.image_mode", 1),
-                ("topcam.cam.acquire", 0),
+                ("topcam.cam.acquire", 1),
             ]
         )
         self.topcam.cam_mode.set("coarse_align")
@@ -319,7 +384,6 @@ class TopAlignerSlow(TopAlignerBase):
             "topcam.cv1.outputs.output8",
             "topcam.cv1.outputs.output9",
             "topcam.cv1.outputs.output10",
-            "gonio_o",
         ]
 
     def trigger(self):

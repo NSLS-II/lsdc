@@ -5,11 +5,9 @@ import numpy as np
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 
-from bluesky_env.devices.auto_center import two_click_low, loop_detector
-from bluesky_env.devices.top_align import gonio
 
-from start_bs import db
-
+from start_bs import db, two_click_low, loop_detector, gonio
+from bluesky_env.plans.utils import mvr_with_retry, mv_with_retry
 
 logger = getLogger()
 
@@ -34,10 +32,12 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
 
     if len(box_coords_face) != 4:
         logger.exception("Exception during loop detection plan. Face on loop not found")
-        sample_detection["large_box_width"] = 630 * 2 * two_click_low.pix_per_um.get()
-        sample_detection["large_box_height"] = 390 * 2 * two_click_low.pix_per_um.get()
-        mean_x = 630/2
-        mean_y = 390/2
+        # 640x512
+        sample_detection["large_box_width"] = 430 * 2 * two_click_low.pix_per_um.get()
+        sample_detection["large_box_height"] = 340 * 2 * two_click_low.pix_per_um.get()
+        mean_x = 320
+        mean_y = 256
+        box_coords_face = [105, 85, 535, 425]
     else:
         sample_detection["large_box_width"] = (box_coords_face[2] - box_coords_face[0]) * 2 * two_click_low.pix_per_um.get()
         sample_detection["large_box_height"] = (box_coords_face[3] - box_coords_face[1]) * 2 * two_click_low.pix_per_um.get()
@@ -61,12 +61,12 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     real_y = delta_cam_y * np.cos(omega * d)
     real_z = delta_cam_y * np.sin(omega * d)
 
-    yield from bps.mvr(gonio.gx, delta_x)
-    yield from bps.mvr(gonio.py, -real_y)
-    yield from bps.mvr(gonio.pz, -real_z)
+    yield from mvr_with_retry(gonio.gx, delta_x)
+    yield from mvr_with_retry(gonio.py, -real_y)
+    yield from mvr_with_retry(gonio.pz, -real_z)
 
     # The sample has moved to the center of the beam (hopefully), need to update co-ordinates
-    box_coords_face[0]
+    # box_coords_face[0]
 
     # orthogonal face, use loop model only if predicted width matches face on
     # otherwise, threshold
@@ -105,6 +105,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
         sample_detection["small_box_height"] = small_box_height_threshold
         if mean_y == -1:
             logger.error('threshold of -1 detected, something is wrong')
+            sample_detection["sample_detected"] = False
             yield from bps.mvr(gonio.o, -90)
             return 
 
@@ -115,7 +116,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     real_y = delta_cam_y * np.cos(omega * d)
     real_z = delta_cam_y * np.sin(omega * d)
 
-    yield from bps.mvr(gonio.py, -real_y)
-    yield from bps.mvr(gonio.pz, -real_z)
-
-    yield from bps.mv(gonio.o, sample_detection["face_on_omega"])
+    yield from mvr_with_retry(gonio.py, -real_y)
+    yield from mvr_with_retry(gonio.pz, -real_z)
+    yield from mv_with_retry(gonio.o, sample_detection["face_on_omega"])
+    sample_detection["sample_detected"] = True

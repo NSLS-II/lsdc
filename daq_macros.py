@@ -36,7 +36,7 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_vector_program)
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
-from bluesky.preprocessors import finalize_wrapper
+from bluesky.preprocessors import finalize_wrapper, finalize_decorator
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
 
 from bluesky_env.plans import detect_loop, topview_optimized
@@ -215,6 +215,7 @@ def changeImageCenterHighMag(x,y,czoom):
   setPvDesc("highMagCursorY",noZoomCenterY)
 
 sample_detection = {
+  "sample_detected": False,
   "large_box_width": 0,
   "large_box_height": 0,
   "small_box_height": 0,
@@ -229,36 +230,44 @@ def run_top_view_optimized():
 
 def loop_center_plan():
     global sample_detection
-    gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-    if gov_status.success:
-      yield from detect_loop(sample_detection)
+    if gov_robot.state.get() == 'M':
+      bps.sleep(15)
+    if gov_robot.state.get() == "SE":
+      gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+      if gov_status.success:
+        yield from detect_loop(sample_detection)
+      else:
+        print("could not trasition to SA")
     else:
-      print("could not trasition to SA")
+      yield from detect_loop(sample_detection)
 
 def autoRasterLoop(currentRequest):
     global sample_detection, autoRasterFlag, max_col
     RE(loop_center_plan())
-    setTrans(getBlConfig("rasterDefaultTrans"))
-    daq_lib.set_field("xrecRasterFlag","100")
-    logger.info("auto raster " + str(currentRequest["sample"]))
-    logger.info(f"sample detection : {sample_detection}")
-    time.sleep(1)
-    autoRasterFlag = 1
-    # Before collecting the 1st raster, reset max_col
-    max_col = None
-    runRasterScan(currentRequest, rasterType="Custom", 
-                  width=sample_detection["large_box_width"], 
-                  height=sample_detection["large_box_height"])
-    time.sleep(1)
-    bps.mv(gonio.gx, sample_detection["center_x"], 
-           gonio.gy, sample_detection["center_y"])
-    
-    runRasterScan(currentRequest, rasterType="Custom", 
-                  width=sample_detection["large_box_width"], 
-                  height=sample_detection["small_box_height"], 
-                  omega_rel=90)
-    autoRasterFlag = 0
-    return 1
+    if sample_detection["sample_detected"]:
+      setTrans(getBlConfig("rasterDefaultTrans"))
+      daq_lib.set_field("xrecRasterFlag","100")
+      logger.info("auto raster " + str(currentRequest["sample"]))
+      logger.info(f"sample detection : {sample_detection}")
+      # time.sleep(1)
+      autoRasterFlag = 1
+      # Before collecting the 1st raster, reset max_col
+      max_col = None
+      runRasterScan(currentRequest, rasterType="Custom", 
+                    width=sample_detection["large_box_width"], 
+                    height=sample_detection["large_box_height"])
+      # time.sleep(1)
+      bps.mv(gonio.gx, sample_detection["center_x"], 
+            gonio.gy, sample_detection["center_y"])
+      
+      runRasterScan(currentRequest, rasterType="Custom", 
+                    width=sample_detection["large_box_width"], 
+                    height=sample_detection["small_box_height"], 
+                    omega_rel=90)
+      autoRasterFlag = 0
+      return 1
+    else:
+      return 0
 
 def autoRasterLoopOld(currentRequest):
   global autoRasterFlag

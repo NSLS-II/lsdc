@@ -345,11 +345,14 @@ class EMBLRobot:
           if (sampYadjust == 0):
             logger.info("Cannot align pin - Mount next sample.")
         if daq_utils.beamline == "amx":
-          daq_macros.run_top_view_optimized()
-        
-        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-        if not gov_status.success:
-          logger.error('Failure during governor change to SA')
+          try:
+            daq_macros.run_top_view_optimized()
+          except:
+            logger.exception("Error running top_view_optimized")
+        if gov_robot.state.get() != "SA":
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+          if not gov_status.success:
+            logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL
 
  
@@ -358,12 +361,19 @@ class EMBLRobot:
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):
+        logger.info("Checking detector dist")
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE):
           gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
         if daq_utils.beamline == "fmx":
             beamline_lib.mvaDescriptor("omega", 0)
-        daq_lib.setRobotGovState("SE")
+        logger.info("Setting SE state")
+        if daq_utils.beamline == "amx":
+          wait = False
+        else:
+          wait = True
+        daq_lib.setRobotGovState("SE", wait=wait)
+        logger.info("Done setting SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))
         platePos = int(puckPos/3)

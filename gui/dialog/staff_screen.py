@@ -6,6 +6,7 @@ from qtpy.QtWidgets import QCheckBox
 
 from config_params import BEAM_CHECK, TOP_VIEW_CHECK, UNMOUNT_COLD_CHECK
 from daq_utils import getBlConfig, setBlConfig
+import db_lib
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -66,14 +67,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
-        if getBlConfig("queueCollect") == 1:
-            self.queueCollectOnCheckBox.setChecked(True)
-            self.gripperUnmountColdCheckBox.setEnabled(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
-        else:
-            self.queueCollectOnCheckBox.setChecked(False)
-            self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)
@@ -122,6 +116,8 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.homePinsButton.clicked.connect(self.homePinsCB)
         self.clearMountedSampleButton = QtWidgets.QPushButton("Clear Mounted Sample")
         self.clearMountedSampleButton.clicked.connect(self.clearMountedSampleCB)
+        self.refreshDewarListButton = QtWidgets.QPushButton("Refresh Dewar Tree")
+        self.refreshDewarListButton.clicked.connect(self.refresh_dewar_tree)
         hBoxColParams2.addWidget(self.openPort1Button)
         hBoxColParams2.addWidget(self.closePortsButton)
         hBoxColParams2.addWidget(self.unmountColdButton)
@@ -129,6 +125,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
         hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
+        hBoxColParams2.addWidget(self.refreshDewarListButton)
         hBoxColParams1.addWidget(self.homePinsButton)
         self.setFastDPNodesButton = QtWidgets.QPushButton("Set FastDP Nodes")
         self.setFastDPNodesButton.clicked.connect(self.setFastDPNodesCB)
@@ -208,6 +205,14 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
         if show:
             self.show()
+
+
+    def refresh_dewar_tree(self):
+        self.parent.dewarTree.refreshTreeDewarView(get_latest_pucks=True)
+
+    def show(self):
+        self.checkQueueCollect()
+        super().show()
 
     def getSpotNodeList(self):
         nodeList = []
@@ -337,6 +342,14 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.parent.row_clicked(
             0
         )  # This is so that appropriate boxes are filled when toggling queue collect
+
+    def checkQueueCollect(self):
+        if getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
 
     def enableMountCheckCB(self, state):
         if state == QtCore.Qt.Checked:

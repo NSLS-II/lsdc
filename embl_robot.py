@@ -18,7 +18,7 @@ import epics.ca
 import top_view
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
                           MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
-                          UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
+                          UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK, EMBL_SERVER_PV_BASE
 import gov_lib
 #from start_bs import gov_human, gov_robot
 logger = logging.getLogger(__name__)
@@ -260,7 +260,7 @@ class EMBLRobot:
             if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
               setPvDesc("boostSelect",1)
             else:
-              robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
+              robotStatus = beamline_support.get_any_epics_pv(f"{EMBL_SERVER_PV_BASE.get(daq_utils.beamline, 'SW')}:RobotState","VAL")
               if (robotStatus != "Ready"):
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
@@ -356,8 +356,8 @@ class EMBLRobot:
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
         if daq_utils.beamline == "fmx":
             beamline_lib.mvaDescriptor("omega", 0)
         daq_lib.setRobotGovState("SE")
@@ -390,10 +390,10 @@ class EMBLRobot:
           logger.error(message)
           return UNMOUNT_FAILURE
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE)
-        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
-          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
+        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE[daq_utils.beamline] - 1.0)):
+          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE[daq_utils.beamline]}")
           return UNMOUNT_FAILURE
       return UNMOUNT_STEP_SUCCESSFUL
 

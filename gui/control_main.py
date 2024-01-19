@@ -21,7 +21,7 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QApplication, QCheckBox, QFrame, QGraphicsPixmapItem
 
-import albulaUtils
+from gui.albula.interface import AlbulaInterface
 import daq_utils
 import db_lib
 import lsdcOlog
@@ -54,6 +54,8 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
+from threads import RaddoseThread, VideoThread, ServerCheckThread
+from utils import validation
 
 logger = logging.getLogger()
 
@@ -164,7 +166,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.redPen = QtGui.QPen(QtCore.Qt.red)
         self.bluePen = QtGui.QPen(QtCore.Qt.blue)
         self.yellowPen = QtGui.QPen(QtCore.Qt.yellow)
-        albulaUtils.startup_albula()
+        self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
+                                               gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
         self.initUI()
         self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])
         self.zoom1FrameRatePV = PV(daq_utils.pvLookupDict["zoom1FrameRate"])
@@ -1418,12 +1421,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
-
-    def albulaCheckCB(self, state):
-        if state != QtCore.Qt.Checked:
-            albulaUtils.albulaClose()
-        else:
-            albulaUtils.albulaOpen()  # TODO there is no albulaOpen method! remove?
 
     def annealButtonCB(self):
         try:
@@ -4527,8 +4524,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 ):
                     firstFilename = daq_utils.create_filename(prefix_long, fnumstart)
                     if validate_hdf5:
-                        if albulaUtils.validate_master_HDF5_file(firstFilename):
-                            albulaUtils.albulaDispFile(firstFilename)
+                        if validation.validate_master_HDF5_file(firstFilename):
+                            self.albulaInterface.open_file(firstFilename)
                         else:
                             QtWidgets.QMessageBox.information(
                                 self,

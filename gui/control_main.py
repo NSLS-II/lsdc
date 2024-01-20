@@ -21,7 +21,6 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QApplication, QCheckBox, QFrame, QGraphicsPixmapItem
 
-from gui.albula.interface import AlbulaInterface
 import daq_utils
 import db_lib
 import lsdcOlog
@@ -40,6 +39,7 @@ from config_params import (
 )
 from daq_utils import getBlConfig, setBlConfig
 from element_info import element_info
+from gui.albula.interface import AlbulaInterface
 from gui.data_loc_info import DataLocInfo
 from gui.dewar_tree import DewarTree
 from gui.dialog import (
@@ -54,7 +54,6 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
-from threads import RaddoseThread, VideoThread, ServerCheckThread
 from utils import validation
 
 logger = logging.getLogger()
@@ -354,6 +353,8 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         warmupButton = QtWidgets.QPushButton("Warmup Gripper")
         warmupButton.clicked.connect(self.warmupGripperCB)
+        endVisitButton = QtWidgets.QPushButton("End Visit")
+        endVisitButton.clicked.connect(self.endVisitCB)
         restartServerButton = QtWidgets.QPushButton("Restart Server")
         restartServerButton.clicked.connect(self.restartServerCB)
         self.openShutterButton = QtWidgets.QPushButton("Open Photon Shutter")
@@ -376,6 +377,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
+        vBoxTreeButtsLayoutRight.addWidget(endVisitButton)
         vBoxTreeButtsLayoutRight.addWidget(restartServerButton)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutLeft)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutRight)
@@ -4450,6 +4452,10 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def unmountSampleCB(self):
         logger.info("unmount sample")
+        self.send_to_server("unmountCold")
+
+    def endVisitCB(self):
+        logger.info('Ending visit')
         self.send_to_server("unmountSample")
         
 

@@ -723,6 +723,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterStepEdit = QtWidgets.QLineEdit(str(self.rasterStepDefs["Coarse"]))
         self.rasterStepEdit.textChanged[str].connect(self.rasterStepChanged)
         self.rasterStepEdit.setFixedWidth(60)
+        self.rasterStepEdit.setText("20")
         self.rasterGrainRadioGroup = QtWidgets.QButtonGroup()
         self.rasterGrainCoarseRadio = QtWidgets.QRadioButton("Coarse")
         self.rasterGrainCoarseRadio.setChecked(False)

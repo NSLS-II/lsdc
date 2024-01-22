@@ -53,8 +53,8 @@ class UserScreenDialog(QtWidgets.QFrame):
         robotGB = QtWidgets.QGroupBox()
         robotGB.setTitle("Robot")
 
-        self.unmountColdButton = QtWidgets.QPushButton("Unmount Cold")
-        self.unmountColdButton.clicked.connect(self.unmountColdCB)
+        self.unmountWarmButton = QtWidgets.QPushButton("Unmount Warm")
+        self.unmountWarmButton.clicked.connect(self.unmountWarmCB)
         self.testRobotButton = QtWidgets.QPushButton("Test Robot")
         self.testRobotButton.clicked.connect(self.testRobotCB)
         self.recoverRobotButton = QtWidgets.QPushButton("Recover Robot")
@@ -67,7 +67,7 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
 
-        hBoxColParams3.addWidget(self.unmountColdButton)
+        hBoxColParams3.addWidget(self.unmountWarmButton)
         hBoxColParams3.addWidget(self.testRobotButton)
         hBoxColParams3.addWidget(self.recoverRobotButton)
         hBoxColParams3.addWidget(self.dryGripperButton)
@@ -181,7 +181,7 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         if daq_utils.beamline == "nyx":
             self.openShutterButton.setDisabled(True)
-            self.unmountColdButton.setDisabled(True)
+            self.unmountWarmButton.setDisabled(True)
             self.testRobotButton.setDisabled(True)
             self.recoverRobotButton.setDisabled(True)
             self.dryGripperButton.setDisabled(True)
@@ -211,8 +211,8 @@ class UserScreenDialog(QtWidgets.QFrame):
     def setSlit1YCB(self):
         self.parent.send_to_server("setSlit1Y", [self.slit1YMotor_ledit.text()])
 
-    def unmountColdCB(self):
-        self.parent.send_to_server("unmountCold")
+    def unmountWarmCB(self):
+        self.parent.send_to_server("unmountSample")
 
     def testRobotCB(self):
         self.parent.send_to_server("testRobot")

@@ -15,6 +15,7 @@ Fixes and other changes
   * Refresh dewar tree button
   * Albula now running in a separate instance
   * No more automatic pre-fill of parameters upon request click - user option to do the pre-fill
+  * Moved unmount cold to the button panel. Added "End Visit" button, only unmounts warm currently
 
 * Server
 

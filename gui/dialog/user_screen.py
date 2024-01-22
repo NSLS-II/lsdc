@@ -54,7 +54,7 @@ class UserScreenDialog(QtWidgets.QFrame):
         robotGB.setTitle("Robot")
 
         self.unmountWarmButton = QtWidgets.QPushButton("Unmount Warm")
-        self.unmountWarmButton.clicked.connect(self.unmountSampleCB)
+        self.unmountWarmButton.clicked.connect(self.unmountWarmCB)
         self.testRobotButton = QtWidgets.QPushButton("Test Robot")
         self.testRobotButton.clicked.connect(self.testRobotCB)
         self.recoverRobotButton = QtWidgets.QPushButton("Recover Robot")
@@ -211,7 +211,7 @@ class UserScreenDialog(QtWidgets.QFrame):
     def setSlit1YCB(self):
         self.parent.send_to_server("setSlit1Y", [self.slit1YMotor_ledit.text()])
 
-    def unmountSampleCB(self):
+    def unmountWarmCB(self):
         self.parent.send_to_server("unmountSample")
 
     def testRobotCB(self):

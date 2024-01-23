@@ -36,7 +36,7 @@ class MD2StandardFlyer():
                                start_angle=self.collection_params["start_angle"],
                                scan_range=self.collection_params["scan_range"],
                                exposure_time=self.collection_params["exposure_time"])
-        logger.info(f"md2_msg: {md2_msg}")
+        logger.info(f"md2 KICKOFF msg: {md2_msg}")
         return NullStatus()
 
     def update_parameters(self, total_num_images, start_angle, scan_range, exposure_time):
@@ -90,15 +90,18 @@ class MD2StandardFlyer():
     def complete(self):
         # monitor md2 status, wait for ready or timeout and then return
         #ready_status = self.md2.ready_status()
-
-        #logger.debug(f"TASK INFO[6]: {self.md2.task_info[6]}")
-        #logger.debug(f"TASK OUTPUT: {self.md2.task_output}")
+        
+        #logger.info(f"TASK INFO[6]: {self.md2.task_info[6]}")
+        #logger.info(f"TASK OUTPUT: {self.md2.task_output}")
+        logger.info(f"FLYER COMPLETE FUNCTION")
         task_status = self.md2.task_status()
-        timeout = self.collection_params["exposure_time"] + 60
+        logger.info(f"assigning task status")
+        timeout = self.collection_params["exposure_time"] + 40
+        logger.info(f"TASK TIMEOUT: {timeout}")
         #ready_status.wait(timeout=timeout)
         task_status.wait(timeout=timeout)
-        #logger.debug(f"TASK INFO: {self.md2.task_info}")
-        #logger.debug(f"TASK OUTPUT: {self.md2.task_output}")
+        logger.info(f"TASK INFO: {self.md2.task_info}")
+        logger.info(f"TASK OUTPUT: {self.md2.task_output}")
         return task_status
 
     def describe_collect(self):
@@ -206,7 +209,7 @@ class MD2VectorFlyer(MD2StandardFlyer):
                              stop_cy=self.collection_params["stop_cy"],
                              stop_y=self.collection_params["stop_y"],
                              stop_z=self.collection_params["stop_z"],)
-        logger.info(f"md2_msg: {md2_msg}")
+        logger.info(f"md2 VEC KICKOFF msg: {md2_msg}")
         return NullStatus()
     
     def update_parameters(self, start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z, start_cx, start_cy, stop_cx, stop_cy):
@@ -254,7 +257,7 @@ class MD2RasterFlyer(MD2StandardFlyer):
                              invert_direction=self.collection_params["invert_direction"],
                              use_centring_table=self.collection_params["use_centring_table"],
                              use_fast_mesh_scans=self.collection_params["use_fast_mesh_scans"])
-        logger.info(f"md2_msg: {md2_msg}")
+        logger.info(f"md2 RASTER KICKOFF msg: {md2_msg}")
         return NullStatus()
     
     def update_parameters(self, omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans):

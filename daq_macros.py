@@ -7,6 +7,7 @@ import daq_lib
 import daq_utils
 import db_lib
 from daq_utils import getBlConfig, setBlConfig
+from utils.raster import get_raster_max_col, get_flattened_indices_of_max_col
 import det_lib
 import math
 import time
@@ -62,6 +63,8 @@ autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
 max_col = None
+face_on_max_coords = None
+ortho_max_coords = None
 
 C3D_SEARCH_BASE = f'{os.environ["PROJDIR"]}/software/c3d/c3d_search -p=$CONFIGDIR/'
 
@@ -221,6 +224,7 @@ sample_detection = {
   "small_box_height": 0,
   "center_x" : 0,
   "center_y" : 0,
+  "center_z" : 0,
   "face_on_omega" : 0
 }
 
@@ -242,7 +246,16 @@ def loop_center_plan():
       yield from detect_loop(sample_detection)
 
 def autoRasterLoop(currentRequest):
-    global sample_detection, autoRasterFlag, max_col
+    global sample_detection, autoRasterFlag, max_col, face_on_max_coords, ortho_max_coords
+    if daq_utils.beamline == "fmx":
+      retries = 3
+      while retries:
+        success = loop_center_xrec()
+        if not success:
+          retries -= 1
+        else:
+          retries = 0
+
     RE(loop_center_plan())
     if sample_detection["sample_detected"]:
       setTrans(getBlConfig("rasterDefaultTrans"))
@@ -251,19 +264,61 @@ def autoRasterLoop(currentRequest):
       logger.info(f"sample detection : {sample_detection}")
       # time.sleep(1)
       autoRasterFlag = 1
-      # Before collecting the 1st raster, reset max_col
+      # Before collecting the 1st raster, reset max_col and face_on_max_coords
       max_col = None
+      face_on_max_coords = None
+      ortho_max_coords = None
+      step_size = 10
+      if sample_detection["large_box_width"] * sample_detection["large_box_height"] > 150_000:
+        step_size = 20
+        
+
       runRasterScan(currentRequest, rasterType="Custom", 
                     width=sample_detection["large_box_width"], 
-                    height=sample_detection["large_box_height"])
-      # time.sleep(1)
-      bps.mv(gonio.gx, sample_detection["center_x"], 
-            gonio.gy, sample_detection["center_y"])
+                    height=sample_detection["large_box_height"], step_size=step_size)
+      logger.info(f"AUTORASTER LOOP: {sample_detection['face_on_omega']=} ")
+      RE(bps.mv(gonio.gx, sample_detection["center_x"], 
+            gonio.py, sample_detection["center_y"],
+            gonio.pz, sample_detection["center_z"]))
       
       runRasterScan(currentRequest, rasterType="Custom", 
                     width=sample_detection["large_box_width"], 
                     height=sample_detection["small_box_height"], 
+                    step_size=step_size,
                     omega_rel=90)
+      # Gonio should be at the hot cell for the ortho raster. 
+      # Now move to the hot cell of the face on raster, then start standard collection
+      if face_on_max_coords and ortho_max_coords:
+        logger.info(f"AUTORASTER LOOP: {face_on_max_coords=} {ortho_max_coords=}")
+        logger.info(f"AUTORASTER LOOP: {sample_detection=} {max_col=}")
+        _, y_f, z_f = face_on_max_coords
+        _, y_ort, z_ort = ortho_max_coords
+        y_center, z_center = sample_detection["center_y"], sample_detection["center_z"]
+
+        omega_face_on = sample_detection["face_on_omega"] 
+        omega_ortho = (sample_detection["face_on_omega"] + 90)
+
+        r_f = (y_f - y_center)*np.cos(np.deg2rad(omega_face_on)) + (z_f - z_center)*np.sin(np.deg2rad(omega_face_on))
+        r_o = (y_ort - y_center)*np.cos(np.deg2rad(omega_ortho)) + (z_ort - z_center)*np.sin(np.deg2rad(omega_ortho))
+
+        logger.info(f"AUTORASTER LOOP: {r_f=} {r_o=}")
+
+        r = np.array([[r_f],[r_o]])
+        A = np.matrix([[np.cos(np.deg2rad(omega_face_on)), np.sin(np.deg2rad(omega_face_on))],[np.cos(np.deg2rad(omega_ortho)), np.sin(np.deg2rad(omega_ortho))]])
+        logger.info(f"AUTORASTER LOOP: {A=}")
+
+        yz = np.linalg.inv(A)*r
+        delta_y, delta_z = yz[0,0], yz[1,0]
+        logger.info(f"AUTORASTER LOOP: {yz=}")
+
+        final_y = y_center + delta_y
+        final_z = z_center + delta_z
+
+        logger.info(f"AUTORASTER LOOP: {final_y=} {final_z=}")
+
+
+        RE(bps.mv(gonio.py, final_y, gonio.pz, final_z))
+
       autoRasterFlag = 0
       return 1
     else:
@@ -1882,7 +1937,6 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -2269,7 +2323,7 @@ def runRasterScan(currentRequest,rasterType="", width=0, height=0, step_size=10,
     RE(snakeRaster(rasterReqID))
 
 def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
-  global autoVectorCoarseCoords,autoVectorFlag, max_col
+  global autoVectorCoarseCoords,autoVectorFlag, max_col, face_on_max_coords, ortho_max_coords
   
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
@@ -2332,33 +2386,17 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
       # points for standard collection
       rasterDef = kwargs["rasterRequest"]["request_obj"]["rasterDef"]
 
-      num_rows = len(rasterDef["rowDefs"])
-      num_cols = rasterDef["rowDefs"]["numsteps"]
-      row = max_index // num_rows
-      if row % 2 == 0:
-          col = num_cols - 1 - (max_index % num_cols)
-      else:
-          col = max_index % num_cols
+      col = get_raster_max_col(rasterDef, max_index)
+
+      
       # Set the column index for the face on raster
       if max_col is None:
         max_col = col
+        face_on_max_coords = (x, y, z)
       else: 
         # max_col should be available for orthogonal rasters
         # Find maximum in col defined in max_col and then reset max_col
-        indices = []
-        for i in range(num_rows):
-            # Determine the column index in the flattened array
-            if i % 2 == 0:
-                # Even row
-                column_index = max_col
-            else:
-                # Odd row
-                column_index = num_cols - 1 - max_col
-
-            # Calculate the index in the flattened array
-            index = i * num_cols + column_index
-            indices.append(index)
-        
+        indices = get_flattened_indices_of_max_col(rasterDef, max_col)
         ceiling = 0
         # Loop through all the cells that belong to the column corresponding to max_col
         for index in indices:
@@ -2370,12 +2408,18 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
             max_index = index
             ceiling = scoreVal
             hotFile = cellResults[index]["cellMapKey"] 
-
+            hotCoords = rasterMap[hotFile]     
+            x = hotCoords["x"]
+            y = hotCoords["y"]
+            z = hotCoords["z"]
+        ortho_max_coords = (x, y, z)
         max_col = None
 
-      kwargs["rasterRequest"]["request_obj"]["max_raster"]["file"] = hotFile
-      kwargs["rasterRequest"]["request_obj"]["max_raster"]["coords"] = [x, y, z]
-      kwargs["rasterRequest"]["request_obj"]["max_raster"]["index"] = max_index
+      kwargs["rasterRequest"]["request_obj"]["max_raster"] = {
+        "file" : hotFile,
+        "coords": [x, y, z],
+        "index": max_index
+      }
       if "omega" in kwargs:
         kwargs["rasterRequest"]["request_obj"]["max_raster"]["omega"] = kwargs["omega"]
 

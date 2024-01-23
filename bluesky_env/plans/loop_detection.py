@@ -119,4 +119,10 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     yield from mvr_with_retry(gonio.py, -real_y)
     yield from mvr_with_retry(gonio.pz, -real_z)
     yield from mv_with_retry(gonio.o, sample_detection["face_on_omega"])
+
+    sample_detection["center_x"] = gonio.gx.user_readback.get()
+    sample_detection["center_y"] =  gonio.py.user_readback.get()
+    sample_detection["center_z"] = gonio.pz.user_readback.get()
+    logger.info("Saving gonio x,y,z spositions")
+
     sample_detection["sample_detected"] = True

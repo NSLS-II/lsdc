@@ -207,7 +207,8 @@ class EMBLRobot:
             prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
             kwargs['prefix1'] = prefix1
             kwargs['prefix90'] = prefix90
-            # top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
+            if daq_utils.beamline == "fmx":
+              top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
             message = "TopView check ERROR, will continue: " + e_s
@@ -242,7 +243,8 @@ class EMBLRobot:
         if (omegaCP > 89.5 and omegaCP < 90.5):
           beamline_lib.mvrDescriptor("omega", 85.0)
         logger.info("calling thread")
-        # _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
+        if daq_utils.beamline == "fmx":
+          _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
         logger.info("called thread")
 
 

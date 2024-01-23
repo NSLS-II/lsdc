@@ -167,10 +167,10 @@ elif beamline == "fmx":
     back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
 
-    work_pos = WorkPositions("XF:17DC-ES:FMX", name="work_pos")
+    work_pos = WorkPositions("XF:17IDC-ES:FMX", name="work_pos")
     mount_pos = MountPositions("XF:17IDC-ES:FMX", name="mount_pos")
-    two_click_low = TwoClickLowMag("XF:17DC-ES:FMX{Cam:6}", name="two_click_low")
-    gonio = GoniometerStack("XF:17DC-ES:FMX{Gon:1", name="gonio")
+    two_click_low = TwoClickLowMag("XF:17IDC-ES:FMX{Cam:7}", name="two_click_low")
+    gonio = GoniometerStack("XF:17IDC-ES:FMX{Gon:1", name="gonio")
     loop_detector = LoopDetector(name="loop_detector")
     top_aligner_fast = TopAlignerFast(name="top_aligner_fast", gov_robot=gov_robot)
     top_aligner_slow = TopAlignerSlow(name="top_aligner_slow")

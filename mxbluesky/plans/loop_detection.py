@@ -19,12 +19,6 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     
     yield from bp.count([two_click_low], 1)
     loop_detector.filename.set(two_click_low.jpeg.full_file_name.get())
-
-    """
-    yield from bps.abs_set(
-        loop_detector.filename, two_click_low.jpeg.full_file_name.get()
-    )
-    """
     
     scan_uid = yield from bp.count([loop_detector], 1)
     #box_coords_face: "list[int]" = db[scan_uid].table()['loop_detector_box'][1]

@@ -55,7 +55,7 @@ def inner_pseudo_fly_scan(*args, **kwargs):
     omega_min = np.linspace(omegas[0], omegas[-1], sample)[
         b_splines.argmin()
     ]
-    print(f"SPLINES / {omega_min}")
+    logger.debug(f"SPLINES / {omega_min}")
 
     """
     if (-2000 < delta_y[[0]] < 2000) or (-2000 < delta_z[[0]] < 2000):

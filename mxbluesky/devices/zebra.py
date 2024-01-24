@@ -694,5 +694,3 @@ class Zebra(ZebraBase):
             }
         }
 
-zebra1 = Zebra('XF:17IDB-ES:AMX{Zeb:1}:', name='zebra1')
-zebra2 = Zebra('XF:17IDB-ES:AMX{Zeb:2}:', name='zebra2')

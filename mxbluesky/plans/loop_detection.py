@@ -7,7 +7,7 @@ import bluesky.plans as bp
 
 
 from start_bs import db, two_click_low, loop_detector, gonio
-from bluesky_env.plans.utils import mvr_with_retry, mv_with_retry
+from mxbluesky.plans.utils import mvr_with_retry, mv_with_retry
 
 logger = getLogger()
 

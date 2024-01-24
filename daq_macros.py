@@ -40,7 +40,7 @@ import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper, finalize_decorator
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
 
-from bluesky_env.plans import detect_loop, topview_optimized
+from mxbluesky.plans import detect_loop, topview_optimized
 
 try:
   import ispybLib

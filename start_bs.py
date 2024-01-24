@@ -9,7 +9,7 @@ import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
-from bluesky_env.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
+from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
                                  TopAlignerFast, TopAlignerSlow, GoniometerStack)
 
 #12/19 - author unknown. DAMA can help

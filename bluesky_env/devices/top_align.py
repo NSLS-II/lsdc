@@ -395,13 +395,7 @@ class TopAlignerSlow(TopAlignerBase):
 
 
 
-class GoniometerStack(Device):
-    gx = Cpt(EpicsMotor, "-Ax:GX}Mtr")
-    gy = Cpt(EpicsMotor, "-Ax:GY}Mtr")
-    gz = Cpt(EpicsMotor, "-Ax:GZ}Mtr")
-    o = Cpt(EpicsMotor, "-Ax:O}Mtr")
-    py = Cpt(EpicsMotor, "-Ax:PY}Mtr")
-    pz = Cpt(EpicsMotor, "-Ax:PZ}Mtr")
+
 
 
 

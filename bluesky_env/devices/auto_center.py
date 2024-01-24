@@ -200,16 +200,4 @@ class TwoClickLowMag(StandardProsilica):
         super().stage(*args, **kwargs)
 
 
-class WorkPositions(Device):
-    gx = Cpt(EpicsSignal, '{Gov:Robot-Dev:gx}Pos:Work-Pos')
-    gpy = Cpt(EpicsSignal, '{Gov:Robot-Dev:gpy}Pos:Work-Pos')
-    gpz = Cpt(EpicsSignal, '{Gov:Robot-Dev:gpz}Pos:Work-Pos')
-    o = Cpt(EpicsSignal, '{Gov:Robot-Dev:go}Pos:Work-Pos')
-
-
-class MountPositions(Device):
-    gx = Cpt(EpicsSignal, '{Gov:Robot-Dev:gx}Pos:Mount-Pos')
-    py = Cpt(EpicsSignal, '{Gov:Robot-Dev:gpy}Pos:Mount-Pos')
-    pz = Cpt(EpicsSignal, '{Gov:Robot-Dev:gpz}Pos:Mount-Pos')
-    o = Cpt(EpicsSignal, '{Gov:Robot-Dev:go}Pos:Mount-Pos')
 

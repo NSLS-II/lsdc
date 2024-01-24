@@ -50,17 +50,14 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     omega: float = gonio.o.user_readback.get()
     sample_detection["face_on_omega"] = omega
 
-    d = np.pi/180
-
-    real_y = delta_cam_y * np.cos(omega * d)
-    real_z = delta_cam_y * np.sin(omega * d)
+    real_y = delta_cam_y * np.cos(np.deg2rad(omega))
+    real_z = delta_cam_y * np.sin(np.deg2rad(omega))
 
     yield from mvr_with_retry(gonio.gx, delta_x)
     yield from mvr_with_retry(gonio.py, -real_y)
     yield from mvr_with_retry(gonio.pz, -real_z)
 
     # The sample has moved to the center of the beam (hopefully), need to update co-ordinates
-    # box_coords_face[0]
 
     # orthogonal face, use loop model only if predicted width matches face on
     # otherwise, threshold

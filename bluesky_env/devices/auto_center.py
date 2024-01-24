@@ -75,6 +75,12 @@ class JPEGPluginWithFileStore(JPEGPlugin, FileStoreJPEG):
 
 
 class LoopDetector(Device):
+    """
+    The loop detector device sends the low mag cam image to a specified REST API URL.
+    The URL accepts an image file as a post request with the key "image" in the form
+    data. It returns a JSON response that provides the predicted box as well as the 
+    thresholded box based on x_start and x_end 
+    """
     url = Cpt(
         Signal, value=f'{os.environ["SAMPLE_DETECT_URL"]}/predict', kind='config'
     )

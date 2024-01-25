@@ -9,7 +9,7 @@ from ophyd.utils import WaitTimeoutError
 from scipy.interpolate import interp1d
 
 import gov_lib
-from mxbluesky.devices.top_align import GovernorError
+from mxbluesky.devices.top_align import GovernorError, CamMode
 from mxbluesky.plans.utils import mv_with_retry, mvr_with_retry
 from start_bs import (
     db,
@@ -92,7 +92,7 @@ def topview_optimized():
 
     # SE -> TA
     yield from bps.abs_set(top_aligner_fast.target_gov_state, "TA", wait=True)
-    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, 'coarse_align')
+    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.COARSE_ALIGN.value)
     yield from bps.sleep(0.1)
 
     try:
@@ -120,7 +120,7 @@ def topview_optimized():
 
     # TA -> SA
     yield from bps.abs_set(top_aligner_fast.target_gov_state, "SA", wait=True)
-    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, "fine_face")
+    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.FINE_FACE.value)
     yield from bps.sleep(0.1)
 
     try:

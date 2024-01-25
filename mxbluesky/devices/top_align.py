@@ -35,6 +35,13 @@ class TopPlanLimit(Enum):
     DELTAY = DELTAZ = 2500
     OMEGAMIN = 400
 
+class CamMode(Enum):
+    """
+    Enum to represent the cam modes for TopAlignCam
+    """
+    COARSE_ALIGN = "coarse_align"
+    FINE_FACE = "fine_face"
+
 class TIFFPluginWithFileStore(TIFFPlugin, FileStoreTIFF):
     pass
 
@@ -107,6 +114,11 @@ class TopAlignCam(StandardProsilica):
         self.cam_mode.subscribe(self._update_stage_sigs, event_type="value")
 
     def _update_stage_sigs(self, *args, **kwargs):
+        """
+        Update signals for coarse align and fine alignment
+        Coarse align takes place during SE -> TA transition
+        Fine face takes place during TA -> SA transition
+        """
         self.tiff.stage_sigs.update([("enable", 0)])
         self.stage_sigs.clear()
         self.stage_sigs.update(
@@ -122,14 +134,14 @@ class TopAlignCam(StandardProsilica):
                 ("tiff.nd_array_port", "CV1"),
             ]
         )
-        if self.cam_mode.get() == "coarse_align":
+        if self.cam_mode.get() == CamMode.COARSE_ALIGN.value:
             self.stage_sigs.update(
                 [
                     ("cv1.nd_array_port", "ROI2"),
                     ("roi2.nd_array_port", "TRANS1"),
                 ]
             )
-        elif self.cam_mode.get() == "fine_face":
+        elif self.cam_mode.get() == CamMode.FINE_FACE.value:
             self.stage_sigs.update(
                 [
                     ("cv1.nd_array_port", "ROI1"),
@@ -379,7 +391,7 @@ class TopAlignerSlow(TopAlignerBase):
                 ("topcam.cam.acquire", 1),
             ]
         )
-        self.topcam.cam_mode.set("coarse_align")
+        self.topcam.cam_mode.set(CamMode.COARSE_ALIGN.value)
         self.read_attrs = [
             "topcam.cv1.outputs.output8",
             "topcam.cv1.outputs.output9",

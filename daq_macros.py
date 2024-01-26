@@ -241,7 +241,7 @@ def loop_center_plan():
       if gov_status.success:
         yield from detect_loop(sample_detection)
       else:
-        print("could not trasition to SA")
+        print("could not transition to SA")
     else:
       yield from detect_loop(sample_detection)
 

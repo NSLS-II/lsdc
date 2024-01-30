@@ -694,3 +694,7 @@ class Zebra(ZebraBase):
             }
         }
 
+class ZebraMXOr(Zebra):
+    or3 = Cpt(EpicsSignal, "OR3_ENA:B3")
+    or3loc = Cpt(EpicsSignal, "OR3_INP4")
+    armsel = Cpt(EpicsSignal, "PC_ARM_SEL")

@@ -11,7 +11,7 @@ from bluesky.utils import FailedStatus
 from ophyd.status import SubscriptionStatus
 from pathlib import Path
 import requests
-from .zebra import Zebra
+from .zebra import ZebraMXOr
 from enum import Enum
 
 from collections import OrderedDict
@@ -160,12 +160,6 @@ class TopAlignCam(StandardProsilica):
         except AttributeError:
             raise FailedStatus
         return status
-
-
-class ZebraMXOr(Zebra):
-    or3 = Cpt(EpicsSignal, "OR3_ENA:B3")
-    or3loc = Cpt(EpicsSignal, "OR3_INP4")
-    armsel = Cpt(EpicsSignal, "PC_ARM_SEL")
 
 
 class GovernorError(Exception):

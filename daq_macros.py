@@ -2377,7 +2377,7 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
     z = hotCoords["z"]
     logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
 
-    if "rasterRequest" in kwargs:
+    if "rasterRequest" in kwargs and autoRasterFlag:
       # Update the raster request with the location of the max raster image and co-ordinates.
       # NOTE: In the optimized autoraster, two 2D rasters are collected, face on and orthogonal.
       # Both rasters have the same number of columns, we save the column number of the hot cell (max_col)

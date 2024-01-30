@@ -14,7 +14,7 @@ logger = getLogger()
 def detect_loop(sample_detection: "Dict[str, float|int]"):
     # face on attempt, most features, should work
     #yield from bps.abs_set(two_click_low.cam_mode, "two_click", wait=True)
-
+    logger.info("Starting loop centering")
     two_click_low.cam_mode.set("two_click")
     
     yield from bp.count([two_click_low], 1)
@@ -23,7 +23,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     scan_uid = yield from bp.count([loop_detector], 1)
     #box_coords_face: "list[int]" = db[scan_uid].table()['loop_detector_box'][1]
     box_coords_face: "list[int]" = loop_detector.box.get()
-
+    logger.info("Got loop predictions")
     if len(box_coords_face) != 4:
         logger.exception("Exception during loop detection plan. Face on loop not found")
         # 640x512
@@ -44,7 +44,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
 
     delta_x = mean_x * 2*two_click_low.pix_per_um.get()
     delta_cam_y = mean_y * 2*two_click_low.pix_per_um.get()
-    sample_detection["center_x"], sample_detection["center_y"] = delta_x, delta_cam_y
+    logger.info("Calculated delta")
     
 
     omega: float = gonio.o.user_readback.get()
@@ -56,7 +56,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     yield from mvr_with_retry(gonio.gx, delta_x)
     yield from mvr_with_retry(gonio.py, -real_y)
     yield from mvr_with_retry(gonio.pz, -real_z)
-
+    logger.info("Moving sample to center")
     # The sample has moved to the center of the beam (hopefully), need to update co-ordinates
 
     # orthogonal face, use loop model only if predicted width matches face on

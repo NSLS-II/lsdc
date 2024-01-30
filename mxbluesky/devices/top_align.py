@@ -226,52 +226,46 @@ class TopAlignerFast(TopAlignerBase):
     def _configure_device(self, *args, **kwargs):
         self.read_attrs = ["topcam", "zebra"]
         self.stage_sigs.clear()
-        # self.topcam.cam_mode.set("fine_face")
-
         self.stage_sigs.update(
             [
                 ("topcam.cam.trigger_mode", 1),
                 ("topcam.cam.image_mode", 2),
                 ("topcam.cam.acquire", 1),
                 ("gonio_o.velocity", 90),  # slow down to get picture taken
+                ("zebra.pos_capt.source", "Enc4"),
+                ("zebra.armsel", 0),
+                ("zebra.pos_capt.gate.start", 0.5),  # very important
+                ("zebra.pos_capt.gate.width", 4.5),
+                ("zebra.pos_capt.gate.step", 9),
+                ("zebra.pos_capt.gate.num_gates", 20),
+                ("zebra.pos_capt.pulse.start", 0),
+                ("zebra.pos_capt.pulse.width", 4),
+                ("zebra.pos_capt.pulse.step", 5),
+                ("zebra.pos_capt.pulse.delay", 0),
+                ("zebra.pos_capt.pulse.max_pulses", 1),
+                ("zebra.or3", 1),
+                ("zebra.or3loc", 30),
+
             ]
         )
-        self.zebra.stage_sigs.update(
-            [
-                ("pos_capt.source", "Enc4"),
-                ("pos_capt.direction", 1),
-                ("armsel", 0),
-                ("pos_capt.gate.start", 0.5),  # very important
-                ("pos_capt.gate.width", 4.5),
-                ("pos_capt.gate.step", 9),
-                ("pos_capt.gate.num_gates", 20),
-                ("pos_capt.pulse.start", 0),
-                ("pos_capt.pulse.width", 4),
-                ("pos_capt.pulse.step", 5),
-                ("pos_capt.pulse.delay", 0),
-                ("pos_capt.pulse.max_pulses", 1),
-                ("or3", 1),
-                ("or3loc", 30),
-            ]
-        )
+
         self.topcam.read_attrs = ["out9_buffer", "out10_buffer"]
         self.zebra.read_attrs = ["pos_capt.data.enc4"]
 
     def _update_stage_sigs(self, *args, **kwargs):
 
         if self.target_gov_state.get() == "TA":
-            self.zebra.stage_sigs.update(
+            self.stage_sigs.update(
                 [
-                    ("pos_capt.direction", 0),  # positive
-                    ("pos_capt.gate.start", 0.1),
+                    ("zebra.pos_capt.gate.start", 0.1),
                 ]
             )
 
         elif self.target_gov_state.get() == "SA":
-            self.zebra.stage_sigs.update(
+            self.stage_sigs.update(
                 [
-                    ("pos_capt.direction", 1),  # negative
-                    ("pos_capt.gate.start", 180),
+                    ("zebra.pos_capt.gate.start", 180),
+
                 ]
             )
 

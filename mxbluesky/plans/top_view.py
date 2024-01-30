@@ -25,6 +25,7 @@ logger = getLogger()
 
 def cleanup_topcam():
     yield from bps.abs_set(top_aligner_slow.topcam.cam.acquire, 1, wait=True)
+    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True)
 
 def inner_pseudo_fly_scan(*args, **kwargs):
     scan_uid = yield from bp.count(*args, **kwargs)
@@ -76,7 +77,7 @@ def inner_pseudo_fly_scan(*args, **kwargs):
 
 @finalize_decorator(cleanup_topcam)
 def topview_optimized():
-
+    logger.info("Starting topview")
     try:
         # horizontal bump calculation, don't move just yet to avoid disturbing gov
         scan_uid = yield from bp.count([top_aligner_slow], 1)
@@ -89,11 +90,14 @@ def topview_optimized():
 
     # update work positions
     yield from set_TA_work_pos(delta_x=delta_x)
+    logger.info("Updated TA work pos, starting transition to TA")
 
     # SE -> TA
     yield from bps.abs_set(top_aligner_fast.target_gov_state, "TA", wait=True)
+    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True)
     yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.COARSE_ALIGN.value)
     yield from bps.sleep(0.1)
+    logger.info("Starting 1st inner fly scan")
 
     try:
         delta_y, delta_z, omega_min = yield from inner_pseudo_fly_scan(
@@ -111,18 +115,19 @@ def topview_optimized():
         delta_y, delta_z, omega_min = yield from inner_pseudo_fly_scan(
             [top_aligner_fast]
         )
-
+    logger.info("Ended 1st inner fly scan, starting gonio move")
     yield from mvr_with_retry(top_aligner_fast.gonio_py, delta_y)
     yield from mvr_with_retry(top_aligner_fast.gonio_pz, -delta_z)
-
+    logger.info("Finished move, setting SA work pos")
     # update work positions
     yield from set_SA_work_pos(delta_y, delta_z)
-
+    logger.info("Starting transition to SA")
     # TA -> SA
     yield from bps.abs_set(top_aligner_fast.target_gov_state, "SA", wait=True)
+    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 1, wait=True)
     yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.FINE_FACE.value)
     yield from bps.sleep(0.1)
-
+    logger.info("Starting 2nd inner fly scan")
     try:
         delta_y, delta_z, omega_min = yield from inner_pseudo_fly_scan(
             [top_aligner_fast]
@@ -143,12 +148,13 @@ def topview_optimized():
         delta_y, delta_z, omega_min = yield from inner_pseudo_fly_scan(
             [top_aligner_fast]
         )
-
+    logger.info("Finished 2nd inner fly scan, moving gonio")
     yield from mv_with_retry(top_aligner_fast.gonio_o, omega_min)
     yield from mvr_with_retry(top_aligner_fast.gonio_py, delta_y)
     yield from mvr_with_retry(top_aligner_fast.gonio_pz, -delta_z)
-
+    logger.info("Finished gonio move setting SA work pos")
     set_SA_work_pos(delta_y, delta_z, gonio.py.user_readback.get(), gonio.pz.user_readback.get(), omega=gonio.o.user_readback.get())
+    logger.info("Completed topview optimized")
 
 def set_TA_work_pos(delta_x=None):
     if delta_x:

@@ -11,7 +11,7 @@ from logging import handlers
 from epics import PV
 from enum import Enum
 import platform
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 import os
 
@@ -165,7 +165,7 @@ class AlbulaController:
             img = Image.open(img_bytes)
             array = numpy.array(img)
             array[array == 65535] = 0
-        except:
+        except UnidentifiedImageError:
             logger.error("Could not get image from EIGER")
             array = numpy.zeros((3110, 3269))
 

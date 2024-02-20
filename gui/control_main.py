@@ -2688,8 +2688,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def moveOmegaCB(self):
         self.send_to_server(
-            "mvaDescriptor",
-            ["omega", float(self.sampleOmegaMoveLedit.getEntry().text())],
+            "move_omega",
+            [float(self.sampleOmegaMoveLedit.getEntry().text())],
+            {"relative": False}
         )
 
     def moveEnergyCB(self):
@@ -2780,16 +2781,15 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def omegaTweakNegCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
-        tweakVal = 0.0 - tv
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tweakVal)
+            self.send_to_server("move_omega", [-tv])
         else:
             self.popupServerMessage("You don't have control")
 
     def omegaTweakPosCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tv)
+            self.send_to_server("move_omega", [tv])
         else:
             self.popupServerMessage("You don't have control")
 
@@ -2824,9 +2824,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def omegaTweakCB(self, tv):
-        tvf = float(tv)
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tvf)
+            self.send_to_server("move_omega", [float(tv)])
             time.sleep(0.05)
         else:
             self.popupServerMessage("You don't have control")

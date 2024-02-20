@@ -258,7 +258,7 @@ class TopAlignerFast(TopAlignerBase):
         elif self.target_gov_state.get() == "SA":
             self.stage_sigs.update(
                 [
-                    ("zebra.pos_capt.gate.start", 180),
+                    ("zebra.pos_capt.gate.start", 179.9),
 
                 ]
             )

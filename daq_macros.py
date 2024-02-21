@@ -86,6 +86,14 @@ def abortBS():
     except super_state_machine.errors.TransitionError:
       logger.error("caught BS")
 
+def move_omega(omega, relative=True):
+  """Moves omega by a certain amount"""
+  if gov_robot.state.get() == "SA":
+    if relative:
+      RE(bps.mvr(samplexyz.omega, omega))
+    else:
+      RE(bps.mv(samplexyz.omega, omega))
+
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)
   zoomMinXRBV = getPvDesc("lowMagZoomMinXRBV")

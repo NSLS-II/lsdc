@@ -75,7 +75,8 @@ functions = [anneal,
   setSlit1X,
   setSlit1Y,
   testRobot,
-  setGovState]
+  setGovState,
+  move_omega]
 
 whitelisted_functions: "Dict[str, Callable]" = {
     func.__name__: func for func in functions

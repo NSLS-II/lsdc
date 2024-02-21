@@ -11,7 +11,7 @@ from logging import handlers
 from epics import PV
 from enum import Enum
 import platform
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from io import BytesIO
 import os
 
@@ -156,14 +156,18 @@ class AlbulaController:
         self.albulaSubFrame.loadImage(dimage)
 
     def get_eiger_monitor_image(self):  # for EIGER1
-        urlData = "http://{}/monitor/api/{}/images/monitor".format(
-            self.ip, self.api_version
-        )
-        replyData = requests.get(urlData)
-        img_bytes = BytesIO(replyData.content)
-        img = Image.open(img_bytes)
-        array = numpy.array(img)
-        array[array == 65535] = 0
+        try:
+            urlData = "http://{}/monitor/api/{}/images/monitor".format(
+                self.ip, self.api_version
+            )
+            replyData = requests.get(urlData)
+            img_bytes = BytesIO(replyData.content)
+            img = Image.open(img_bytes)
+            array = numpy.array(img)
+            array[array == 65535] = 0
+        except UnidentifiedImageError:
+            logger.error("Could not get image from EIGER")
+            array = numpy.zeros((3110, 3269))
 
         return array
 

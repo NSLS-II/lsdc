@@ -820,10 +820,10 @@ def runDozorThread(directory,
     """
     global rasterRowResultsList,processedRasterRowCount
 
-    time.sleep(1.0) #allow for file writing
+    time.sleep(10.0) #allow for file writing
      
     #node = getNodeName("spot", rowIndex, 8)
-    node = "titania-cpu001" 
+    node = "titania-cpu002" 
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -3403,6 +3403,17 @@ def vector_plan_wrapped(currentRequest):
 
 def raster_plan_wrapped(rasterReqID):
     yield from finalize_wrapper(rasterDaq(rasterReqID), clean_up_collection())
+    #time.sleep(15)
+    #rasterRequest = db_lib.getRequestByID(rasterReqID)
+    #rasterResult = generateGridMap(rasterRequest)
+    #rasterRequest["request_obj"]["rasterDef"]["status"] = (
+    #    RasterStatus.READY_FOR_SNAPSHOT.value
+    #)
+    #db_lib.updateRequest(rasterRequest)
+    #db_lib.updatePriority(rasterReqID,-1)
+    #daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+
+
 
 def standardDaq(currentRequest):
     # collect all parameters
@@ -3626,8 +3637,9 @@ def rasterDaq(rasterReqID):
     logger.info(f"raster prefix {rasterFilePrefix}")
     rasterFilePrefix = rasterFilePrefix.split("/")[-1]
     logger.info(f"raster prefix {rasterFilePrefix}")
-    for i in range(1, number_of_lines-1):
+    for i in range(0, number_of_lines):
         row_index = i
+        logger.info(f'spot finding for row {i}')
         seqNum = raster_flyer.detector.cam.sequence_id.get()
         spotFindThread = Thread(target=runDozorThread,args=(data_directory_name, #TODO this can't move outside of the thread checking block
                                                               rasterFilePrefix,
@@ -3638,6 +3650,23 @@ def rasterDaq(rasterReqID):
                                                               rasterReqID))
         spotFindThread.start()
         spotFindThreadList.append(spotFindThread)
+    [thread.join(timeout=120) for thread in spotFindThreadList]
+    logger.info(str(processedRasterRowCount) + "/" + str(number_of_lines))
+    rasterResult = generateGridMap(rasterRequest)
+    rasterRequestID = rasterRequest["uid"]
+    rasterRequest["request_obj"]["rasterDef"]["status"] = (
+        RasterStatus.READY_FOR_SNAPSHOT.value
+    )
+    db_lib.updateRequest(rasterRequest)
+    db_lib.updatePriority(rasterRequestID,-1)
+    if (rasterRequest["request_obj"]["rasterDef"]["numCells"]
+          > getBlConfig(RASTER_NUM_CELLS_DELAY_THRESHOLD)):
+        #larger rasters can delay GUI scene update
+        time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
+    else:
+        time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
+    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
+
 
 
   

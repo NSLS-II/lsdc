@@ -3798,10 +3798,10 @@ class ControlMain(QtWidgets.QMainWindow):
             return
         fov = self.getCurrentFOV()
         correctedC2C_x = self.getMD2BeamCenterX() + (
-            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX)
+            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX) - 20
         )
         correctedC2C_y = self.getMD2BeamCenterY() + (
-            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY)
+            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY) - 40
         )
 
         current_viewangle = daq_utils.mag1ViewAngle
@@ -3815,8 +3815,8 @@ class ControlMain(QtWidgets.QMainWindow):
         if self.threeClickCount > 0:  # 3-click centering
             self.threeClickCount = self.threeClickCount + 1
             if daq_utils.exporter_enabled: 
-                correctedC2C_x = x_click + 25 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
-                correctedC2C_y = y_click + 5 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
+                correctedC2C_x = x_click + 5 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
+                correctedC2C_y = y_click - 35 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
                 lsdc_x = daq_utils.screenPixX
                 lsdc_y = daq_utils.screenPixY
                 md2_x = self.md2.center_pixel_x.get() * 2

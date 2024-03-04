@@ -117,6 +117,7 @@ class LightDevice(Device):
 
 class BeamstopDevice(Device):
     distance = Cpt(MD2Positioner, "BeamstopDistance", name="distance")
+    distance_preset = Cpt(EpicsSignal, "BeamstopDistance", name="distance_preset")
     x = Cpt(MD2Positioner, "BeamstopX", name="x")
     y = Cpt(MD2Positioner, "BeamstopY", name="y")
     z = Cpt(MD2Positioner, "BeamstopZ", name="z")

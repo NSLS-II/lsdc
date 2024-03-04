@@ -4646,9 +4646,13 @@ class ControlMain(QtWidgets.QMainWindow):
         
 
     def mountSampleCB(self):
+
+
+
         if getBlConfig("mountEnabled") == 0:
             self.popupServerMessage("Mounting disabled!! Call staff!")
             return
+        
         logger.info("mount selected sample")
         self.eraseCB()
         if (

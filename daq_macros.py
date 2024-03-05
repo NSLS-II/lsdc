@@ -3443,6 +3443,15 @@ def standardDaq(currentRequest):
     angle_start = sweep_start_angle
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
+    start_y = md2.y.val()
+    start_z = md2.z.val()
+    start_cx = md2.cx.val()
+    start_cy = md2.cy.val()
+    stop_cx = md2.cx.val()
+    stop_cy = md2.cy.val()
+    stop_y = md2.y.val()
+    stop_z = md2.z.val()
+    
     yield from bps.mv(beamstop.distance_preset, 20.0)
 
     if flyer.detector.cam.armed.get() == 1:
@@ -3474,7 +3483,7 @@ def standardDaq(currentRequest):
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
     md2.ready_status().wait(timeout=10)
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
-    flyer.update_parameters(total_num_images, angle_start, scan_range, total_exposure_time)
+    flyer.update_parameters(angle_start, scan_range, total_exposure_time, start_y, start_z, stop_y, stop_z, start_cx, start_cy, stop_cx, stop_cy)
     logger.info(f"flyer handoff")
     yield from bp.fly([flyer])
     logger.info(f"fly complete")

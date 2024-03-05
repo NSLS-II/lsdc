@@ -71,7 +71,6 @@ class AlbulaController:
 
     def handle_monitor(self, char_value, **kwargs):
         if char_value == GovState.DA.value:
-            self.startup()
             self._stop.clear()
             self.imageDaemon = threading.Thread(target=self.update_image, args=())
             if not self.imageDaemon.is_alive():
@@ -122,7 +121,6 @@ class AlbulaController:
         """
         Run an endless loop, stopped by keyboard interrupt or exception
         """
-        self.startup()
 
         while not self._stop.is_set():
             try:

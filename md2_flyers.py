@@ -32,20 +32,36 @@ class MD2StandardFlyer():
         self._collection_dictionary = None
 
     def kickoff(self):
+        # params used are start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z
         md2_msg = self.md2.vector_scan(start_angle=self.collection_params["start_angle"],
-                               scan_range=self.collection_params["scan_range"],
-                               exposure_time=self.collection_params["exposure_time"])
-        logger.info(f"md2 KICKOFF msg: {md2_msg}")
+                             scan_range=self.collection_params["scan_range"],
+                             exposure_time=self.collection_params["exposure_time"],
+                             start_cx=self.collection_params["start_cx"],
+                             start_cy=self.collection_params["start_cy"],
+                             start_y=self.collection_params["start_y"],
+                             start_z=self.collection_params["start_z"],
+                             stop_cx=self.collection_params["stop_cx"],
+                             stop_cy=self.collection_params["stop_cy"],
+                             stop_y=self.collection_params["stop_y"],
+                             stop_z=self.collection_params["stop_z"],)
+        logger.info(f"md2 VEC KICKOFF msg: {md2_msg}")
         return NullStatus()
 
-    def update_parameters(self, total_num_images, start_angle, scan_range, exposure_time):
+    def update_parameters(self, start_angle, scan_range, exposure_time, start_y, start_z, stop_y, stop_z, start_cx, start_cy, stop_cx, stop_cy):
         self.collection_params = {
-            "total_num_images": total_num_images,
             "start_angle": start_angle,
             "scan_range": scan_range,
             "exposure_time": exposure_time,
+            "start_cx": start_cx,
+            "start_cy": start_cy,
+            "start_y": start_y,
+            "start_z": start_z,
+            "stop_cx": stop_cx,
+            "stop_cy": stop_cy,
+            "stop_y": stop_y,
+            "stop_z": stop_z,
         }
-        
+
     def configure_detector(self, file_prefix, data_directory_name):
         self.detector.file.external_name.put(file_prefix)
         self.detector.file.write_path_template = data_directory_name

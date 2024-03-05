@@ -4780,7 +4780,7 @@ class ControlMain(QtWidgets.QMainWindow):
         '''
         The fix
 
-        
+        '''
         
         
         if (
@@ -4790,7 +4790,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("sample already mounted")
             return
 
-        '''
             
         
         self.send_to_server('mountSample("' + str(self.selectedSampleID) + '")')

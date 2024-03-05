@@ -4778,7 +4778,7 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info('mountedPin_pv: {}'.format(self.mountedPin_pv.get()))
         
         '''
-        The fix
+        checking if sample is already mounted
 
         '''
         

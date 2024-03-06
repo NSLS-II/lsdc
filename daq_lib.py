@@ -284,6 +284,10 @@ def mountSample(sampID):
           if (detDist != saveDetDist):
             if (getBlConfig("HePath") == 0):
               beamline_lib.mvaDescriptor("detectorDist",saveDetDist)
+            if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
+              # Only run mount options when the robot is online and queue collect is off
+              daq_macros.run_on_mount_option(sampID)
+              gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         elif(mountStat == 2):
           return 2
         else:

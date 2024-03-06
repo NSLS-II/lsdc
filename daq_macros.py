@@ -39,7 +39,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper, finalize_decorator
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
-
+from config_params import ON_MOUNT_OPTION, OnMountAvailOptions
 from mxbluesky.plans import detect_loop, topview_optimized
 
 try:
@@ -232,6 +232,42 @@ sample_detection = {
 def run_top_view_optimized():
     RE(topview_optimized())
 
+def run_on_mount_option(sample_id):
+    option = OnMountAvailOptions(daq_utils.getBlConfig(ON_MOUNT_OPTION))
+    request = {}
+
+    if option == OnMountAvailOptions.DO_NOTHING:
+      return
+    
+    if (option == OnMountAvailOptions.CENTER_SAMPLE 
+        or option == OnMountAvailOptions.AUTO_RASTER):
+      if daq_utils.beamline == "fmx":
+        # Run xrec for FMX, they don't have a top cam
+        retries = 3
+        while retries:
+          success = loop_center_xrec()
+          if not success:
+            retries -= 1
+          else:
+            retries = 0
+      # Center using ML model
+      run_loop_center_plan()
+    
+    if option == OnMountAvailOptions.AUTO_RASTER:
+      # Set up a fake standard collection for autoRasterLoop
+      request = {"sample": sample_id, 
+                  "uid": -1,
+                  "request_obj": {
+                    "xbeam": getPvDesc('beamCenterX'),
+                    "ybeam": getPvDesc('beamCenterY'),
+                    "wavelength": daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+                  }
+                }
+      autoRasterLoop(request)
+
+def run_loop_center_plan():
+    RE(loop_center_plan())
+
 def loop_center_plan():
     global sample_detection
     if gov_robot.state.get() == 'M':
@@ -247,16 +283,7 @@ def loop_center_plan():
 
 def autoRasterLoop(currentRequest):
     global sample_detection, autoRasterFlag, max_col, face_on_max_coords, ortho_max_coords
-    if daq_utils.beamline == "fmx":
-      retries = 3
-      while retries:
-        success = loop_center_xrec()
-        if not success:
-          retries -= 1
-        else:
-          retries = 0
-
-    RE(loop_center_plan())
+    
     if sample_detection["sample_detected"]:
       setTrans(getBlConfig("rasterDefaultTrans"))
       daq_lib.set_field("xrecRasterFlag","100")

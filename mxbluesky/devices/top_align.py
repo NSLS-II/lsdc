@@ -15,7 +15,7 @@ from .zebra import ZebraMXOr
 from enum import Enum
 
 from collections import OrderedDict
-
+import daq_utils
 
 class TopPlanLimit(Enum):
     """Prevent large goniometer movements during topview plan. Rotating gonio
@@ -86,7 +86,7 @@ class TopAlignCam(StandardProsilica):
     tiff = Cpt(
         TIFFPluginWithFileStore,
         "TIFF1:",
-        write_path_template="/nsls2/data/amx/legacy/topcam",
+        write_path_template=f"/nsls2/data/{daq_utils.beamline}/legacy/topcam",
     )
     cam_mode = Cpt(Signal, value=None, kind="config")
     pix_per_um = Cpt(Signal, value=0.164, doc="pixels per um")

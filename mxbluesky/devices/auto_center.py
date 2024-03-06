@@ -6,7 +6,8 @@ from ophyd import (DeviceStatus, Component as Cpt, Signal, EpicsSignal, Device,
                       ROIPlugin, TransformPlugin, StatsPlugin, ProcessPlugin, SingleTrigger, ProsilicaDetector)
 from pathlib import Path
 import requests
-
+from bluesky.utils import FailedStatus
+import daq_utils
 import os
 
 
@@ -130,13 +131,13 @@ class TwoClickLowMag(StandardProsilica):
     jpeg = Cpt(
         JPEGPluginWithFileStore,
         "JPEG1:",
-        write_path_template="/nsls2/data/amx/legacy/topcam",
+        write_path_template=f"/nsls2/data/{daq_utils.beamline}/legacy/topcam",
     )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.read_attrs = ["cv1", "jpeg"]
-        self.jpeg.read_attrs = ['full_file_name']
+        self.jpeg.read_attrs = ['full_file_name', 'file_write_mode', 'file_template']
         self.cv1.read_attrs = ["outputs"]
         self.cv1.outputs.read_attrs = ["output1", "output2", "output3"]
         self.cam_mode.subscribe(self._update_stage_sigs, event_type="value")
@@ -205,5 +206,11 @@ class TwoClickLowMag(StandardProsilica):
         self._update_stage_sigs(*args, **kwargs)
         super().stage(*args, **kwargs)
 
-
+    def trigger(self):
+        try:
+            status = super().trigger()
+            status.wait(6)
+        except AttributeError:
+            raise FailedStatus
+        return status
 

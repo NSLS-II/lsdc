@@ -84,10 +84,11 @@ def topview_optimized():
     except FailedStatus:
         scan_uid = yield from bp.count([top_aligner_slow], 1)
 
+    logger.info(f"Finished top aligner slow scan {scan_uid}")
     x = db[scan_uid].table()[top_aligner_slow.topcam.cv1.outputs.output8.name][1]
     delta_x = ((top_aligner_slow.topcam.roi2.size.x.get() / 2) -
                x) / top_aligner_slow.topcam.pix_per_um.get()
-
+    logger.info(f"Horizontal bump calc finished: {delta_x}")
     # update work positions
     yield from set_TA_work_pos(delta_x=delta_x)
     logger.info("Updated TA work pos, starting transition to TA")

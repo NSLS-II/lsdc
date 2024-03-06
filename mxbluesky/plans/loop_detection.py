@@ -4,38 +4,41 @@ from logging import getLogger
 import numpy as np
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
-
-
+from bluesky.utils import FailedStatus
+from bluesky.preprocessors import finalize_decorator
+import daq_utils
 from start_bs import db, two_click_low, loop_detector, gonio
 from mxbluesky.plans.utils import mvr_with_retry, mv_with_retry
-from daq_utils import lowMagPixX, lowMagPixY
 
 logger = getLogger()
 
+def cleanup_two_click_low():
+    if daq_utils.beamline == "fmx":
+        logger.info("Cleaning up two_click_low")
+        yield from bps.abs_set(two_click_low.jpeg.file_write_mode, 2, wait=True)
+        yield from bps.abs_set(two_click_low.jpeg.file_template, "%s%s_%d.jpg", wait=True)
+
+@finalize_decorator(cleanup_two_click_low)
 def detect_loop(sample_detection: "Dict[str, float|int]"):
     # face on attempt, most features, should work
-    #yield from bps.abs_set(two_click_low.cam_mode, "two_click", wait=True)
+    yield from bps.abs_set(two_click_low.cam_mode, "two_click", wait=True)
     logger.info("Starting loop centering")
-    two_click_low.cam_mode.set("two_click")
-    
-    yield from bp.count([two_click_low], 1)
+    #two_click_low.cam_mode.set("two_click")
+    try:
+        yield from bp.count([two_click_low], 1)
+    except FailedStatus:
+        yield from bp.count([two_click_low], 1)
+        
     loop_detector.filename.set(two_click_low.jpeg.full_file_name.get())
     
     scan_uid = yield from bp.count([loop_detector], 1)
     #box_coords_face: "list[int]" = db[scan_uid].table()['loop_detector_box'][1]
     box_coords_face: "list[int]" = loop_detector.box.get()
     logger.info("Got loop predictions")
-    center_low_mag_x = int(lowMagPixX/2)
-    center_low_mag_y = int(lowMagPixY/2)
     if len(box_coords_face) != 4:
         logger.exception("Exception during loop detection plan. Face on loop not found")
-        # If the loop is not found, raster as much of the low mag cam view as possible
-        # In the hopes of some diffraction
-        sample_detection["large_box_width"] = (lowMagPixX-10) * 2 * two_click_low.pix_per_um.get()
-        sample_detection["large_box_height"] = (lowMagPixY-10) * 2 * two_click_low.pix_per_um.get()
-        mean_x = center_low_mag_x
-        mean_y = center_low_mag_y
-        box_coords_face = [105, 85, 535, 425]
+        sample_detection["sample_detected"] = False
+        return
     else:
         sample_detection["large_box_width"] = (box_coords_face[2] - box_coords_face[0]) * 2 * two_click_low.pix_per_um.get()
         sample_detection["large_box_height"] = (box_coords_face[3] - box_coords_face[1]) * 2 * two_click_low.pix_per_um.get()
@@ -43,12 +46,9 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
         mean_x = (box_coords_face[0] + box_coords_face[2]) / 2
         mean_y = (box_coords_face[1] + box_coords_face[3]) / 2
 
-    # Calculate the distance in pixels the sample has to move
-    # such that the center of the sample aligns with the beam
-    mean_x = mean_x - center_low_mag_x
-    mean_y = mean_y - center_low_mag_y
+    mean_x = mean_x - 320
+    mean_y = mean_y - 256
 
-    # Calculate the delta in microns to move based on above calculation
     delta_x = mean_x * 2*two_click_low.pix_per_um.get()
     delta_cam_y = mean_y * 2*two_click_low.pix_per_um.get()
     logger.info("Calculated delta")
@@ -70,7 +70,10 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     # otherwise, threshold
     yield from bps.mv(gonio.o, sample_detection["face_on_omega"]+90)
 
-    scan_uid = yield from bp.count([two_click_low], 1)
+    try:
+        yield from bp.count([two_click_low], 1)
+    except FailedStatus:
+        yield from bp.count([two_click_low], 1)
     
     loop_detector.get_threshold.set(True)
     loop_detector.x_start.set(int(box_coords_face[0]-mean_x))

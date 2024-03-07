@@ -2076,7 +2076,7 @@ class ControlMain(QtWidgets.QMainWindow):
         gripValKelvin = gripVal + 273.15
         gripValMaxKelvin = 103.15 # -170 in degC
         self.gripperTempLabel.setText("%.1f" % gripValKelvin)
-        if int(gripVal) > gripValMaxKelvin:
+        if gripValKelvin > gripValMaxKelvin:
             self.gripperTempLabel.setStyleSheet("background-color: red;")
         else:
             self.gripperTempLabel.setStyleSheet("background-color: #99FF66;")

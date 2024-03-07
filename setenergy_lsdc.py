@@ -739,6 +739,9 @@ def setELsdc(energy,
     # Activate sector 17 photon local feedback
     photon_local_feedback_c17.x_enable.put(1)
     photon_local_feedback_c17.y_enable.put(1)
+
+    # Hold pitch
+    yield from activate_pitch_hold()
     
     # Align LSDC microscope center to beam center
     if beamCenterAlign:
@@ -755,7 +758,7 @@ def setELsdc(energy,
         yield from bps.mv(slits1.x_gap, slits1XGapOrg)  # Move Slit 1 X to original position
         yield from bps.mv(slits1.y_gap, slits1YGapOrg)  # Move Slit 1 Y to original position
 
-    yield from activate_pitch_hold()
+    
 
     yield from fmx_reference(transSet=transSet)
     

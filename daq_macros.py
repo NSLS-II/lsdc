@@ -234,6 +234,7 @@ def run_top_view_optimized():
 
 def run_on_mount_option(sample_id):
     option = OnMountAvailOptions(daq_utils.getBlConfig(ON_MOUNT_OPTION))
+    logger.info(f"Running on mount option : {option}")
     request = {}
 
     if option == OnMountAvailOptions.DO_NOTHING:
@@ -241,15 +242,6 @@ def run_on_mount_option(sample_id):
     
     if (option == OnMountAvailOptions.CENTER_SAMPLE 
         or option == OnMountAvailOptions.AUTO_RASTER):
-      if daq_utils.beamline == "fmx":
-        # Run xrec for FMX, they don't have a top cam
-        retries = 3
-        while retries:
-          success = loop_center_xrec()
-          if not success:
-            retries -= 1
-          else:
-            retries = 0
       # Center using ML model
       run_loop_center_plan()
     
@@ -266,6 +258,15 @@ def run_on_mount_option(sample_id):
       autoRasterLoop(request)
 
 def run_loop_center_plan():
+    if daq_utils.beamline == "fmx":
+      # Run xrec for FMX, they don't have a top cam
+      retries = 3
+      while retries:
+        success = loop_center_xrec()
+        if not success:
+          retries -= 1
+        else:
+          retries = 0
     RE(loop_center_plan())
 
 def loop_center_plan():

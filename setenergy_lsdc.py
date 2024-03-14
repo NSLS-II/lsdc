@@ -430,19 +430,29 @@ def setE_motors_FMX(energy):
     LGP = {m: epics.caget(LGP_fmt.format(m.name))
            for m in (kbm.hp, kbm.hx, kbm.vp, kbm.vy)}
 
+    prev_hfm_config  = hfm.config.get()
+    prev_kb_config = kbm.config.get()
+
     label = "highE"
     # Remove CRLs if going to energy < 9 keV (FMX specific)
     if energy < 10000:
         # set_beamsize('V0','H0')
         label = "lowE"
-    bps.abs_set(hfm.config, f"HFM_{label}")
-    bps.abs_set(kbm.config, f"KB_{label}")
-    bps.abs_set(pitch_hold.set_kb_config, 1, wait=True)
-    bps.abs_set(pitch_hold.set_hfm_config, 1, wait=True)
+    
+    if prev_hfm_config != f"HFM_{label}":
+        yield from bps.abs_set(hfm.config, f"HFM_{label}")
+        yield from bps.abs_set(pitch_hold.set_hfm_config, 1, wait=True)
+    
+    if prev_kb_config != f"KB_{label}":
+        yield from bps.abs_set(kbm.config, f"KB_{label}")
+        yield from bps.abs_set(pitch_hold.set_kb_config, 1, wait=True)
+    
+    logger.info("Waiting for 60 seconds for ramping")
+    time.sleep(60)
 
-    while int(kbm.status_monitor.get()) & 2 ** 30 != 1 and int(hfm.status_monitor.get()) & 2 ** 30 != 1:
-        logger.info("Waiting for ramping to complete... ")
-        time.sleep(1)
+    #while int(kbm.status_monitor.get()) & 2 ** 30 != 1 and int(hfm.status_monitor.get()) & 2 ** 30 != 1:
+    #    logger.info("Waiting for ramping to complete... ")
+    #    time.sleep(1)
         
 
     
@@ -736,9 +746,9 @@ def setELsdc(energy,
         print('ivu_gap_scan() successful')
         time.sleep(1)
     
-    # Activate sector 17 photon local feedback
-    photon_local_feedback_c17.x_enable.put(1)
-    photon_local_feedback_c17.y_enable.put(1)
+    # Activate sector 17 photon local feedback (Legacy)
+    # photon_local_feedback_c17.x_enable.put(1)
+    # photon_local_feedback_c17.y_enable.put(1)
 
     # Hold pitch
     yield from activate_pitch_hold()
@@ -1207,17 +1217,17 @@ def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 
 def deactivate_pitch_hold():
     yield from bps.abs_set(pitch_hold.bragg_control, 0, wait=True)
     yield from bps.abs_set(pitch_hold.bpm1_mon, 0, wait=True)
+    yield from bps.abs_set(pitch_hold.pitch_control, 0, wait=True)
 
 def activate_pitch_hold():
-    yield from bps.abs_set(step_volts, 0.01, wait=True)
+    yield from bps.abs_set(step_volts, "0.01", wait=True)
     yield from bps.abs_set(pitch_hold.mono_scan_freq, 1, wait=True)
     yield from bps.abs_set(pitch_hold.mono_max_tries, 100, wait=True)
     yield from bps.abs_set(pitch_hold.mono_deadband, 0.0003, wait=True)
-    yield from bps.abs_set(pitch_hold.mono_target, hdcm.p.get(), wait=True)
+    yield from bps.abs_set(pitch_hold.mono_target, hdcm.p.user_readback.get(), wait=True)
 
-    # Reactivate bragg control and bpm1mon
-    yield from bps.abs_set(pitch_hold.bragg_control, 1, wait=True)
-    yield from bps.abs_set(pitch_hold.bpm1_mon, 1, wait=True)
+    # Reactivate pitch control
+    yield from bps.abs_set(pitch_hold.pitch_control, 1, wait=True)
 
 def fmx_reference(slit1GapDefault = 1000, transSet='All'):
     """

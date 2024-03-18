@@ -3453,7 +3453,7 @@ def standardDaq(currentRequest):
     stop_z = md2.z.val()
     
     yield from bps.mv(beamstop.distance_preset, 20.0)
-
+    md2.save_center()
     if flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
@@ -3526,6 +3526,7 @@ def vectorDaq(currentRequest):
     stop_y=vector_params["vecEnd"]["y"]
     stop_z=vector_params["vecEnd"]["z"]
 
+    md2.save_center()
     yield from bps.mv(beamstop.distance_preset, 20.0)
 
     if vector_flyer.detector.cam.armed.get() == 1:
@@ -3616,6 +3617,7 @@ def rasterDaq(rasterReqID):
     logger.info(f"use_centring_table = {use_centring_table}")
     logger.info(f"use_fast_mesh_scans = {use_fast_mesh_scans}")
 
+    md2.save_center()
     yield from bps.mv(beamstop.distance_preset, 20.0)
 
     if raster_flyer.detector.cam.armed.get() == 1:

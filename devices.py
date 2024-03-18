@@ -149,6 +149,7 @@ class MD2Device(GonioDevice):
     center_pixel_x = Cpt(EpicsSignalRO, 'BeamPositionHorizontal',name='center_pixel_x')
     center_pixel_y = Cpt(EpicsSignalRO, 'BeamPositionVertical',name='center_pixel_y')
     centring_click = Cpt(EpicsSignal, 'setCentringClick',name='centring_click')
+    centring_save = Cpt(EpicsSignal, 'saveCentringPositions', name='centring_save')
     state = Cpt(EpicsSignalRO, 'State',name='state')
     phase = Cpt(EpicsSignal, 'CurrentPhase',name='phase')
     phase_index = Cpt(EpicsSignalRO, 'CurrentPhaseIndex',name='phase_index')
@@ -158,6 +159,10 @@ class MD2Device(GonioDevice):
 
     task_info = Cpt(EpicsSignalRO, 'LastTaskInfo',name='task_info')
     task_output = Cpt(EpicsSignalRO, 'LastTaskOutput', name='task_output')
+
+
+    def save_center(self):
+        self.centring_save.put("__EMPTY__")
 
     def task_complete(self):
         return self.task_output == "true"

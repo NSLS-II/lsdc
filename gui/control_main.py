@@ -4753,9 +4753,13 @@ class ControlMain(QtWidgets.QMainWindow):
             self.aux_send_to_server("stopDCQueue(2)")
 
     def mountSampleCB(self):
+
+
+
         if getBlConfig("mountEnabled") == 0:
             self.popupServerMessage("Mounting disabled!! Call staff!")
             return
+        
         logger.info("mount selected sample")
         self.eraseCB()
         if (
@@ -4765,6 +4769,29 @@ class ControlMain(QtWidgets.QMainWindow):
         else:  # No sample ID found, do nothing
             logger.info("No sample selected, cannot mount")
             return
+        
+        '''
+        The check before to fix
+        '''
+
+        logger.info('selectedSampleID: {}'.format(self.selectedSampleID))
+        logger.info('mountedPin_pv: {}'.format(self.mountedPin_pv.get()))
+        
+        '''
+        checking if sample is already mounted
+
+        '''
+        
+        
+        if (
+            self.mountedPin_pv.get() == self.selectedSampleID
+        ):
+            logger.info("sample already mounted")
+            self.popupServerMessage("sample already mounted")
+            return
+
+            
+        
         self.send_to_server('mountSample("' + str(self.selectedSampleID) + '")')
         self.zoom2Radio.setChecked(True)
         self.zoomLevelToggledCB("Zoom2")

@@ -32,7 +32,8 @@ class MD2StandardFlyer():
         self._collection_dictionary = None
 
     def kickoff(self):
-        md2_msg = self.md2.vector_scan(start_angle=self.collection_params["start_angle"],
+        md2_msg = self.md2.standard_scan(num_images=self.collection_params["total_num_images"],
+                               start_angle=self.collection_params["start_angle"],
                                scan_range=self.collection_params["scan_range"],
                                exposure_time=self.collection_params["exposure_time"])
         logger.info(f"md2 KICKOFF msg: {md2_msg}")
@@ -45,7 +46,7 @@ class MD2StandardFlyer():
             "scan_range": scan_range,
             "exposure_time": exposure_time,
         }
-        
+
     def configure_detector(self, file_prefix, data_directory_name):
         self.detector.file.external_name.put(file_prefix)
         self.detector.file.write_path_template = data_directory_name

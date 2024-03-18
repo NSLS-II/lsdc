@@ -3443,6 +3443,15 @@ def standardDaq(currentRequest):
     angle_start = sweep_start_angle
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
+    start_y = md2.y.val()
+    start_z = md2.z.val()
+    start_cx = md2.cx.val()
+    start_cy = md2.cy.val()
+    stop_cx = md2.cx.val()
+    stop_cy = md2.cy.val()
+    stop_y = md2.y.val()
+    stop_z = md2.z.val()
+    
     yield from bps.mv(beamstop.distance_preset, 20.0)
     md2.save_center()
     if flyer.detector.cam.armed.get() == 1:

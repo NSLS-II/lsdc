@@ -374,7 +374,7 @@ class EMBLRobot:
           wait = False
         else:
           wait = True
-        daq_lib.setRobotGovState("SE", wait=wait)
+        gov_lib.setGovRobot(gov_robot, "SE")
         logger.info("Done setting SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))

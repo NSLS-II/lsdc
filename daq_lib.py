@@ -233,12 +233,6 @@ def getRobotConfig():
   return getPvDesc("robotGovConfig",as_string=True)
 
 
-def setRobotGovState(stateString, wait=True):
-  if (getRobotConfig() == "Robot"):
-    setPvDesc("robotGovGo",stateString, wait=wait)
-  else:
-    setPvDesc("humanGovGo",stateString, wait=wait)
-
 def mountSample(sampID):
   global mountCounter
 

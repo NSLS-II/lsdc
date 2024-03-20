@@ -1521,7 +1521,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",0)
   setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-  daq_lib.setRobotGovState("DA")    
+  gov_lib.setGovRobot(gov_robot, "DA")
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
   parentReqID = reqObj["parentReqID"]
@@ -3646,7 +3646,7 @@ def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImag
 
   logger.info("in Zebra Daq #1 " + str(time.time()))      
   yield from bps.mv(eiger.fw_num_images_per_file, IMAGES_PER_FILE)
-  daq_lib.setRobotGovState("DA")  
+  gov_lib.setGovRobot(gov_robot, "DA")
   yield from bps.mv(vector_program.expose, 1)
 
   if (imgWidth == 0):

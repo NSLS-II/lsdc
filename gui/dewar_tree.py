@@ -44,7 +44,7 @@ class DewarTree(QtWidgets.QTreeView):
         self.customContextMenuRequested.connect(self.openMenu)
         self.setStyleSheet("QTreeView::item::hover{background-color: #999966;}")
         # Keeps track of whether the user is part of a proposal
-        self.proposal_membership = {}
+        self.proposal_membership = set()
 
     def openMenu(self, position):
         indexes = self.selectedIndexes()
@@ -272,19 +272,19 @@ class DewarTree(QtWidgets.QTreeView):
             self.parent.row_clicked(current_index)
 
     def is_proposal_member(self, proposal_id) -> bool:
-        # Check if the user running LSDC is part of the sample's proposal
-        if proposal_id not in self.proposal_membership:
-            r = requests.get(f"{os.environ['NSLS2_API_URL']}/proposal/{proposal_id}")
+        # Check if the user running LSDC is part of the sample's proposal 
+        # If the proposal_membership set is empty get data from API (Use prod API)
+        # This way API is only polled once when GUI starts
+        if not self.proposal_membership:
+            r = requests.get(f"{os.environ['NSLS2_API_URL']}/v1/data-session/{getpass.getuser()}")
             r.raise_for_status()
             response = r.json()
-            if "users" in response and getpass.getuser() in [
-                user["username"] for user in response["users"] if "username" in user
-            ]:
-                self.proposal_membership[proposal_id] = True
-            else:
-                logger.info(f"Users not found in response: {response}")
-                self.proposal_membership[proposal_id] = False
-        return self.proposal_membership[proposal_id]
+            for session in response.get("data_sessions", []):
+                # Assuming data_sessions has values of the form "pass-123456"
+                proposal = session.split("-")[1]
+                self.proposal_membership.add(proposal)
+            print(f"Updated proposal_membership for {getpass.getuser()}: {self.proposal_membership}")
+        return str(proposal_id) in self.proposal_membership
 
     def create_request_item(self, request) -> QtGui.QStandardItem:
         col_item = QtGui.QStandardItem(

@@ -9,6 +9,8 @@ import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
+from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
+                                 TopAlignerFast, TopAlignerSlow, GoniometerStack)
 
 #12/19 - author unknown. DAMA can help
 """
@@ -133,6 +135,15 @@ if (beamline=="amx"):
     back_light = EpicsSignal(read_pv="XF:17DB-ES:AMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
 
+    work_pos = WorkPositions("XF:17IDB-ES:AMX", name="work_pos")
+    mount_pos = MountPositions("XF:17IDB-ES:AMX", name="mount_pos")
+    two_click_low = TwoClickLowMag("XF:17IDB-ES:AMX{Cam:6}", name="two_click_low")
+    gonio = GoniometerStack("XF:17IDB-ES:AMX{Gon:1", name="gonio")
+    loop_detector = LoopDetector(name="loop_detector")
+    top_aligner_fast = TopAlignerFast(name="top_aligner_fast", gov_robot=gov_robot)
+    top_aligner_slow = TopAlignerSlow(name="top_aligner_slow")
+    
+
 elif beamline == "fmx":  
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
@@ -155,6 +166,14 @@ elif beamline == "fmx":
 
     back_light = EpicsSignal(read_pv="XF:17DC-ES:FMX{BL:1}Ch1Value",name="back_light")
     back_light_range = (0, 100)
+
+    work_pos = WorkPositions("XF:17IDC-ES:FMX", name="work_pos")
+    mount_pos = MountPositions("XF:17IDC-ES:FMX", name="mount_pos")
+    two_click_low = TwoClickLowMag("XF:17IDC-ES:FMX{Cam:7}", name="two_click_low")
+    gonio = GoniometerStack("XF:17IDC-ES:FMX{Gon:1", name="gonio")
+    loop_detector = LoopDetector(name="loop_detector")
+    top_aligner_fast = TopAlignerFast(name="top_aligner_fast", gov_robot=gov_robot)
+    top_aligner_slow = TopAlignerSlow(name="top_aligner_slow")
 
     import setenergy_lsdc
 

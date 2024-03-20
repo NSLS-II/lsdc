@@ -1,5 +1,6 @@
+import grp
+import os
 from enum import Enum
-import os, grp
 
 # BlConfig parameter variable names
 
@@ -36,7 +37,7 @@ CRYOSTREAM_ONLINE = (
 # GUI default configuration
 BEAM_CHECK = "beamCheck"
 UNMOUNT_COLD_CHECK = "unmountColdCheck"
-
+ON_MOUNT_OPTION = "onMountOption"
 
 # raster request status updates
 class RasterStatus(Enum):
@@ -52,6 +53,13 @@ class RasterStatus(Enum):
     READY_FOR_SNAPSHOT = 3
     READY_FOR_REPROCESS = 4
 
+class OnMountAvailOptions(Enum):
+    """
+    This enumerates the options available to the user on mounting a sample
+    """
+    DO_NOTHING = 0 # Only mounts sample
+    CENTER_SAMPLE = 1 # Mounts and centers sample
+    AUTO_RASTER = 2 # Mounts, centers and takes 2 orthogonal rasters
 
 HUTCH_TIMER_DELAY = 500
 SAMPLE_TIMER_DELAY = 0

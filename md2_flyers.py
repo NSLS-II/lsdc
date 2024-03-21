@@ -96,7 +96,7 @@ class MD2StandardFlyer():
         logger.info(f"FLYER COMPLETE FUNCTION")
         task_status = self.md2.task_status()
         logger.info(f"assigning task status")
-        timeout = self.collection_params["exposure_time"] + 40
+        timeout = (self.collection_params["exposure_time"] * 3) + 80
         logger.info(f"TASK TIMEOUT: {timeout}")
         #ready_status.wait(timeout=timeout)
         task_status.wait(timeout=timeout)

@@ -87,13 +87,25 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
     def hoverMoveEvent(self, e):
         super(RasterGroup, self).hoverEnterEvent(e)
         for cell in self.childItems():
-            if isInCell(e.scenePos(), cell):
+            if cell.contains(e.pos()):
                 if cell.data(0) != None:
                     spotcount = cell.data(0)
                     d_min = cell.data(2)
                     intensity = cell.data(3)
-                    if not (self.parent.rasterExploreDialog.isVisible()):
-                        self.parent.rasterExploreDialog.show()
-                    self.parent.rasterExploreDialog.setSpotCount(spotcount)
-                    self.parent.rasterExploreDialog.setTotalIntensity(intensity)
-                    self.parent.rasterExploreDialog.setResolution(d_min)
+                    viewPos = self.scene().views()[0].mapFromScene(self.scenePos())
+                    globalPos = self.scene().views()[0].mapToGlobal(viewPos)
+                    text = ""
+                    table_data = {}
+                    
+                    table_data['Spot Count'] = spotcount
+                    table_data['Total Intensity'] = intensity
+                    table_data['Resolution'] = d_min
+                    
+                    text = """<table border='1' style='border-collapse: collapse;'>
+                    """
+                    for key, value in table_data.items():
+                        text += f"""<tr><td style='border: 1px solid black;'>{key}</td>
+                        <td style='border: 1px solid black;'>{value}</td></tr>"""
+                    text = text + "</table>" 
+
+                    QtWidgets.QToolTip.showText(globalPos, text)

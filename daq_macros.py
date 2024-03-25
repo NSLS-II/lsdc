@@ -3445,6 +3445,11 @@ def standardDaq(currentRequest):
 
     yield from bps.mv(beamstop.distance_preset, 20.0)
     md2.save_center()
+    if det_move_done.get() != 1:
+        def det_move_done_callback(value, old_value, **kwargs):
+            return (old_value!=1 and value ==1)
+        det_move_status = SubscriptionStatus(det_move_done, det_move_done_callback, run=False)
+        det_move_status.wait()
     if flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'

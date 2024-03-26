@@ -3437,7 +3437,7 @@ def standardDaq(currentRequest):
     file_number_start = reqObj["file_number_start"]
     img_width = reqObj["img_width"]
     exposure_per_image = reqObj["exposure_time"]
-    total_num_images = int((sweep_end_angle - sweep_start_angle) / img_width)
+    total_num_images = int(round(((sweep_end_angle - sweep_start_angle) / img_width), 4))
     total_exposure_time = exposure_per_image * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle
@@ -3506,7 +3506,7 @@ def vectorDaq(currentRequest):
     file_number_start = reqObj["file_number_start"]
     img_width = reqObj["img_width"]
     exposure_per_image = reqObj["exposure_time"]
-    total_num_images = int((sweep_end_angle - sweep_start_angle) / img_width)
+    total_num_images = int(round(((sweep_end_angle - sweep_start_angle) / img_width), 4))
     total_exposure_time = reqObj["exposure_time"] * total_num_images
     scan_range = float(total_num_images)*img_width
     angle_start = sweep_start_angle

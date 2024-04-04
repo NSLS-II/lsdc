@@ -1442,7 +1442,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.beamAvailLabel = QtWidgets.QLabel("Beam Available")
             self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
         else:
-            self.beamAvailLabel = QtWidgets.QLabel("No Beam")
+            self.beamAvailLabel = QtWidgets.QLabel("Waiting for Three Click")
             self.beamAvailLabel.setStyleSheet("background-color: red;")
         sampleExposed = self.sampleExposed_pv.get()
         if sampleExposed:

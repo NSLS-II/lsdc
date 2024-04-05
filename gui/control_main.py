@@ -2917,7 +2917,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server("mvaDescriptor", ["omega", 0])
 
     def fillPolyRaster(
-        self, rasterReq, waitTime=1
+        self, rasterReq
     ):  # at this point I should have a drawn polyRaster
         logger.info("filling poly for " + str(rasterReq["uid"]))
         rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])
@@ -2952,7 +2952,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.currentRasterCellList = currentRasterGroup.childItems()
         cellResults = rasterResult["result_obj"]["rasterCellResults"]["resultObj"]
         numLines = len(cellResults)
-        # cellResults_array = [{} for i in range(numLines)]
         my_array = np.zeros(numLines)
         spotLineCounter = 0
         cellIndex = 0

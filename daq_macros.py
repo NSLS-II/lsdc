@@ -2350,16 +2350,38 @@ def runRasterScan(currentRequest,rasterType="", width=0, height=0, step_size=10,
     time.sleep(1) #I think I really need this, not sure why
     RE(snakeRaster(rasterReqID))
 
-def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
+def get_score_vals(cellResults, scoreOption):
+  score_vals = np.zeros(len(cellResults))
+  for i, res in enumerate(cellResults):
+    try:
+      score_vals[i] = float(res[scoreOption])
+    except TypeError:
+      logger.debug(f"Option {scoreOption} not found for {res=}")
+  return score_vals
+
+def get_score_index(score_vals, scoreOption, indices=None):
+  if indices:
+    score_vals = score_vals[indices]
+  if scoreOption == "d_min":
+    # If value is -1 replace with inf so that it is not considered for np.min
+    score_vals = np.where(score_vals == -1, np.inf, score_vals) 
+    scoreVal = np.min(score_vals)
+    max_index = np.argmin(score_vals)
+  else:
+    scoreVal = np.max(score_vals)
+    max_index = np.argmax(score_vals)
+  
+  return scoreVal, max_index
+
+
+def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag, max_col, face_on_max_coords, ortho_max_coords
   
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
     raise ValueError("raster result object is None")
-    return
-  ceiling = 0.0
-  floor = 100000000.0 #for resolution where small number means high score
+  
   hotFile = ""
   scoreOption = ""
   logger.info("in gotomax")
@@ -2373,32 +2395,24 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
   else:
     scoreOption = "total_intensity"
   max_index = None
-  for i in range (0,len(cellResults)):
-    try:
-      scoreVal = float(cellResults[i][scoreOption])
-    except TypeError:
-      scoreVal = 0.0
-    if (multiColThreshold>-1):
-      logger.info("doing multicol")
-      if (scoreVal >= multiColThreshold):
-        hitFile = cellResults[i]["cellMapKey"]
-        hitCoords = rasterMap[hitFile]
-        parentReqID = rasterResult['result_obj']["parentReqID"]
-        if (parentReqID == -1):
-          addMultiRequestLocation(requestID,hitCoords,i)
-        else:
-          addMultiRequestLocation(parentReqID,hitCoords,i)        
-    if (scoreOption == "d_min"):
-      if (scoreVal < floor and scoreVal != -1):
-        floor = scoreVal
-        hotFile = cellResults[i]["cellMapKey"]        
-    else:
-      if (scoreVal > ceiling):
-        max_index = i
-        ceiling = scoreVal
-        hotFile = cellResults[i]["cellMapKey"]        
-  if (hotFile != ""):
-    logger.info('raster score ceiling: %s floor: %s hotfile: %s' % (ceiling, floor, hotFile))
+  score_vals = get_score_vals(cellResults, scoreOption)
+  score_val, max_index = get_score_index(score_vals, scoreOption)
+
+  if multiColThreshold is not None:
+    logger.info("doing multicol")
+    for index in np.where(score_vals > multiColThreshold)[0]:
+      hitFile = cellResults[index]["cellMapKey"]
+      hitCoords = rasterMap[hitFile]
+      parent_req_id = rasterResult['result_obj']["parentReqID"]
+      if parent_req_id == -1:
+        addMultiRequestLocation(requestID, hitCoords, index)
+      else:
+        addMultiRequestLocation(parent_req_id, hitCoords, index)
+
+  
+  if max_index:
+    hotFile = cellResults[max_index]
+    logger.info(f'raster score: {score_val=} at {hotFile=}')
     hotCoords = rasterMap[hotFile]     
     x = hotCoords["x"]
     y = hotCoords["y"]
@@ -2425,21 +2439,12 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
         # max_col should be available for orthogonal rasters
         # Find maximum in col defined in max_col and then reset max_col
         indices = get_flattened_indices_of_max_col(rasterDef, max_col)
-        ceiling = 0
-        # Loop through all the cells that belong to the column corresponding to max_col
-        for index in indices:
-          try:
-            scoreVal = float(cellResults[index][scoreOption])
-          except TypeError:
-            scoreVal = 0.0
-          if (scoreVal > ceiling):
-            max_index = index
-            ceiling = scoreVal
-            hotFile = cellResults[index]["cellMapKey"] 
-            hotCoords = rasterMap[hotFile]     
-            x = hotCoords["x"]
-            y = hotCoords["y"]
-            z = hotCoords["z"]
+        score_val, index = get_score_index(score_vals, scoreOption, indices)
+        hotFile = cellResults[index]["cellMapKey"] 
+        hotCoords = rasterMap[hotFile]     
+        x = hotCoords["x"]
+        y = hotCoords["y"]
+        z = hotCoords["z"]
         ortho_max_coords = (x, y, z)
         max_col = None
 
@@ -2465,74 +2470,77 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
     else: beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
 
     if (autoVectorFlag): #if we found a hotspot, then look again at cellResults for coarse vector start and end
-      xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
-      xmaxColumn = []
-      vectorThreshold = 0.7*ceiling
-      xmax = -1000000
-      xmin = 1000000
-      ymin = 0
-      ymax = 0
-      zmin = 0
-      zmax = 0
-      for i in range (0,len(cellResults)): #first find the xmin and xmax of threshold (left and right ends of vector)
-        try:
-          scoreVal = float(cellResults[i][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          hotFile = cellResults[i]["cellMapKey"]
-          hotCoords = rasterMap[hotFile]             
-          x = hotCoords["x"]
-          if (x<xmin):
-            xmin = x
-          if (x>xmax):
-            xmax = x
-      for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
-        fileKey = cellResults[i]["cellMapKey"]
-        coords = rasterMap[fileKey]
-        x = coords["x"]
-        if (x == xmin): #cell is in left column
-          xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
-          xminColumn.append(xEdgeCellResult)
-        if (x == xmax):
-          xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
-          xmaxColumn.append(xEdgeCellResult)
-      maxIndex = -10000
-      minIndex = 10000
-      for i in range (0,len(xminColumn)): #find the midpoint of the left column that is in the threshold range
-        try:
-          scoreVal = float(xminColumn[i]["processingResults"][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          if (minIndex<0): #you only need the first one that beats the threshold
-            minIndex = i
-          if (i>maxIndex):
-            maxIndex = i
-      middleIndex = int((minIndex+maxIndex)/2)
-      xmin = xminColumn[middleIndex]["coords"]["x"]
-      ymin = xminColumn[middleIndex]["coords"]["y"]
-      zmin = xminColumn[middleIndex]["coords"]["z"]                            
-      for i in range (0,len(xmaxColumn)): #do same as above for right column
-        try:
-          scoreVal = float(xmaxColumn[i]["processingResults"][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          if (minIndex<0):
-            minIndex = i
-          if (i>maxIndex):
-            maxIndex = i
-      middleIndex = int((minIndex+maxIndex)/2)
-      xmax = xmaxColumn[middleIndex]["coords"]["x"]
-      ymax = xmaxColumn[middleIndex]["coords"]["y"]
-      zmax = xmaxColumn[middleIndex]["coords"]["z"]                            
-          
-      autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
+      run_auto_vector(score_val, cellResults, scoreOption, rasterMap)
 
   else:
     raise ValueError("No max position found for gonio move")
-    
+
+def run_auto_vector(ceiling, cellResults, scoreOption, rasterMap):
+  xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
+  xmaxColumn = []
+  vectorThreshold = 0.7*ceiling
+  xmax = -1000000
+  xmin = 1000000
+  ymin = 0
+  ymax = 0
+  zmin = 0
+  zmax = 0
+  for i in range (0,len(cellResults)): #first find the xmin and xmax of threshold (left and right ends of vector)
+    try:
+      scoreVal = float(cellResults[i][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      hotFile = cellResults[i]["cellMapKey"]
+      hotCoords = rasterMap[hotFile]             
+      x = hotCoords["x"]
+      if (x<xmin):
+        xmin = x
+      if (x>xmax):
+        xmax = x
+  for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
+    fileKey = cellResults[i]["cellMapKey"]
+    coords = rasterMap[fileKey]
+    x = coords["x"]
+    if (x == xmin): #cell is in left column
+      xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
+      xminColumn.append(xEdgeCellResult)
+    if (x == xmax):
+      xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
+      xmaxColumn.append(xEdgeCellResult)
+  maxIndex = -10000
+  minIndex = 10000
+  for i in range (0,len(xminColumn)): #find the midpoint of the left column that is in the threshold range
+    try:
+      scoreVal = float(xminColumn[i]["processingResults"][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      if (minIndex<0): #you only need the first one that beats the threshold
+        minIndex = i
+      if (i>maxIndex):
+        maxIndex = i
+  middleIndex = int((minIndex+maxIndex)/2)
+  xmin = xminColumn[middleIndex]["coords"]["x"]
+  ymin = xminColumn[middleIndex]["coords"]["y"]
+  zmin = xminColumn[middleIndex]["coords"]["z"]                            
+  for i in range (0,len(xmaxColumn)): #do same as above for right column
+    try:
+      scoreVal = float(xmaxColumn[i]["processingResults"][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      if (minIndex<0):
+        minIndex = i
+      if (i>maxIndex):
+        maxIndex = i
+  middleIndex = int((minIndex+maxIndex)/2)
+  xmax = xmaxColumn[middleIndex]["coords"]["x"]
+  ymax = xmaxColumn[middleIndex]["coords"]["y"]
+  zmax = xmaxColumn[middleIndex]["coords"]["z"]                            
+      
+  autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
+
 def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of what to pass here for details like how to organize data
   parentRequest = db_lib.getRequestByID(parentReqID)
   sampleID = parentRequest["sample"]

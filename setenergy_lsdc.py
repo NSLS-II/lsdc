@@ -16,6 +16,7 @@ import pandas as pd
 import socket
 import time
 import gov_lib
+import daq_lib
 from start_bs import db, gov_robot, govs
 import logging
 
@@ -131,6 +132,18 @@ class PitchHold(Device):
     bpm1_mon = Cpt(EpicsSignal, "}bpm1mon")
     set_kb_config = Cpt(EpicsSignal, "}kb_bimorph")
     set_hfm_config = Cpt(EpicsSignal, "}hfm_bimorph")
+
+    def save_settings(self):
+        self.settings = {}
+        self.settings['pitch_control'] = self.pitch_control.get()
+        self.settings['bragg_control'] = self.bragg_control.get()
+        self.settings['bpm1_mon'] = self.bpm1_mon.get()
+    
+    def restore_settings(self):
+        self.pitch_control.put(self.settings['pitch_control'])
+        self.bragg_control.put(self.settings['bragg_control'])
+        self.bpm1_mon.put(self.settings['bpm1_mon'])
+
 
 step_volts = EpicsSignal("XF:17IDA-BI:FMX{Best:1}:TwkCh1.INPA")
 pitch_hold = PitchHold("XF:17ID:FMX{Karen", name="pitch_hold")
@@ -757,7 +770,8 @@ def setELsdc(energy,
     if beamCenterAlign:
         # Check for pre-conditions for beam_center_align()
         if shutter_hutch_c.status.get():
-            print('Experiment hutch shutter closed. Has to be open for this to work. Exiting')
+            print('Experiment hutch shutter closed. Has to be open for this to work. Stopping')
+            daq_lib.gui_message(f"Experiment hutch shutter closed. Has to be open for this to work. Stopping")
             return -1
         
         print('Aligning beam center')
@@ -771,6 +785,7 @@ def setELsdc(energy,
     
 
     yield from fmx_reference(transSet=transSet)
+    daq_lib.gui_message(f"Set energy to {energy} complete")
     
 
 # Alignment ===========================================================================================
@@ -1215,6 +1230,7 @@ def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 
 
 
 def deactivate_pitch_hold():
+    pitch_hold.save_settings()
     yield from bps.abs_set(pitch_hold.bragg_control, 0, wait=True)
     yield from bps.abs_set(pitch_hold.bpm1_mon, 0, wait=True)
     yield from bps.abs_set(pitch_hold.pitch_control, 0, wait=True)
@@ -1227,7 +1243,7 @@ def activate_pitch_hold():
     yield from bps.abs_set(pitch_hold.mono_target, hdcm.p.user_readback.get(), wait=True)
 
     # Reactivate pitch control
-    yield from bps.abs_set(pitch_hold.pitch_control, 1, wait=True)
+    pitch_hold.restore_settings()
 
 def fmx_reference(slit1GapDefault = 1000, transSet='All'):
     """

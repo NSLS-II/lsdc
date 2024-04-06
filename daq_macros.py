@@ -304,7 +304,12 @@ def autoRasterLoop(currentRequest):
       runRasterScan(currentRequest, rasterType="Custom", 
                     width=sample_detection["large_box_width"], 
                     height=sample_detection["large_box_height"], step_size=step_size)
-      logger.info(f"AUTORASTER LOOP: {sample_detection['face_on_omega']=} ")
+      logger.info(f"AUTORASTER LOOP: {max_col} {face_on_max_coords}")
+
+      if not face_on_max_coords:
+        autoRasterFlag = 0
+        return 0
+
       RE(bps.mv(gonio.gx, sample_detection["center_x"], 
             gonio.py, sample_detection["center_y"],
             gonio.pz, sample_detection["center_z"]))
@@ -316,36 +321,39 @@ def autoRasterLoop(currentRequest):
                     omega_rel=90)
       # Gonio should be at the hot cell for the ortho raster. 
       # Now move to the hot cell of the face on raster, then start standard collection
-      if face_on_max_coords and ortho_max_coords:
-        logger.info(f"AUTORASTER LOOP: {face_on_max_coords=} {ortho_max_coords=}")
-        logger.info(f"AUTORASTER LOOP: {sample_detection=} {max_col=}")
-        _, y_f, z_f = face_on_max_coords
-        _, y_ort, z_ort = ortho_max_coords
-        y_center, z_center = sample_detection["center_y"], sample_detection["center_z"]
+      if not ortho_max_coords:
+        autoRasterFlag = 0
+        return 0
 
-        omega_face_on = sample_detection["face_on_omega"] 
-        omega_ortho = (sample_detection["face_on_omega"] + 90)
+      logger.info(f"AUTORASTER LOOP: {face_on_max_coords=} {ortho_max_coords=}")
+      logger.info(f"AUTORASTER LOOP: {sample_detection=} {max_col=}")
+      _, y_f, z_f = face_on_max_coords
+      _, y_ort, z_ort = ortho_max_coords
+      y_center, z_center = sample_detection["center_y"], sample_detection["center_z"]
 
-        r_f = (y_f - y_center)*np.cos(np.deg2rad(omega_face_on)) + (z_f - z_center)*np.sin(np.deg2rad(omega_face_on))
-        r_o = (y_ort - y_center)*np.cos(np.deg2rad(omega_ortho)) + (z_ort - z_center)*np.sin(np.deg2rad(omega_ortho))
+      omega_face_on = sample_detection["face_on_omega"] 
+      omega_ortho = (sample_detection["face_on_omega"] + 90)
 
-        logger.info(f"AUTORASTER LOOP: {r_f=} {r_o=}")
+      r_f = (y_f - y_center)*np.cos(np.deg2rad(omega_face_on)) + (z_f - z_center)*np.sin(np.deg2rad(omega_face_on))
+      r_o = (y_ort - y_center)*np.cos(np.deg2rad(omega_ortho)) + (z_ort - z_center)*np.sin(np.deg2rad(omega_ortho))
 
-        r = np.array([[r_f],[r_o]])
-        A = np.matrix([[np.cos(np.deg2rad(omega_face_on)), np.sin(np.deg2rad(omega_face_on))],[np.cos(np.deg2rad(omega_ortho)), np.sin(np.deg2rad(omega_ortho))]])
-        logger.info(f"AUTORASTER LOOP: {A=}")
+      logger.info(f"AUTORASTER LOOP: {r_f=} {r_o=}")
 
-        yz = np.linalg.inv(A)*r
-        delta_y, delta_z = yz[0,0], yz[1,0]
-        logger.info(f"AUTORASTER LOOP: {yz=}")
+      r = np.array([[r_f],[r_o]])
+      A = np.matrix([[np.cos(np.deg2rad(omega_face_on)), np.sin(np.deg2rad(omega_face_on))],[np.cos(np.deg2rad(omega_ortho)), np.sin(np.deg2rad(omega_ortho))]])
+      logger.info(f"AUTORASTER LOOP: {A=}")
 
-        final_y = y_center + delta_y
-        final_z = z_center + delta_z
+      yz = np.linalg.inv(A)*r
+      delta_y, delta_z = yz[0,0], yz[1,0]
+      logger.info(f"AUTORASTER LOOP: {yz=}")
 
-        logger.info(f"AUTORASTER LOOP: {final_y=} {final_z=}")
+      final_y = y_center + delta_y
+      final_z = z_center + delta_z
+
+      logger.info(f"AUTORASTER LOOP: {final_y=} {final_z=}")
 
 
-        RE(bps.mv(gonio.py, final_y, gonio.pz, final_z))
+      RE(bps.mv(gonio.py, final_y, gonio.pz, final_z))
 
       autoRasterFlag = 0
       return 1

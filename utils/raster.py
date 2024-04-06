@@ -49,13 +49,13 @@ def create_snake_array(flattened, raster_type, M, N):
     flattened result array, direction, and shape of the raster
     """
     # Reshape the list to a 2D array
-    array_2d = np.array(flattened).reshape(M, N)
-
     if raster_type == "horizontal":
         # Reverse every even row for horizontal snaking
+        array_2d = np.array(flattened).reshape(M, N)
         array_2d[1::2] = np.fliplr(array_2d[1::2])
     elif raster_type == "vertical":
         # Reverse every even column for vertical snaking
+        array_2d = np.array(flattened).reshape(N, M)
         array_2d = array_2d.T
         array_2d[:, 1::2] = np.flipud(array_2d[:, 1::2])
 

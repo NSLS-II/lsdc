@@ -36,7 +36,7 @@ class SetEnergyDialog(QtWidgets.QDialog):
         layout = QtWidgets.QGridLayout()
         self.current_energy_label = QtWidgets.QLabel("Current Energy: ")
         self.current_energy_value_label = QtWidgets.QLabel(
-            f"{self.hdcm.e.user_readback.get()} eV"
+            f"{self.hdcm.e.user_readback.get():.2f} eV"
         )
         layout.addWidget(self.current_energy_label, 0, 0)
         layout.addWidget(self.current_energy_value_label, 0, 1)
@@ -111,7 +111,7 @@ class SetEnergyDialog(QtWidgets.QDialog):
             response = self.unmount_cold_dialog().exec_()
 
             if response == QtWidgets.QMessageBox.Ok:
-                self._parent.send_to_server("unmountCold()")
+                self._parent.send_to_server("unmountCold")
             else:
                 return
 
@@ -125,10 +125,9 @@ class SetEnergyDialog(QtWidgets.QDialog):
             self.message.setText("Governor not in a valid state, call staff!")
             return
         else:
-            self._parent.send_to_server("setGovRobot(gov_robot, 'SA')")
+            self._parent.send_to_server("setGovState", ['SA'])
 
-        print("Run set energy")
-        self._parent.send_to_server(f"set_energy({self.setpoint_edit.text()})")
+        self._parent.send_to_server(f"set_energy", [float(self.setpoint_edit.text())])
 
     def set_monochromator_energy(self):
         if abs(float(self.setpoint_edit.text()) - self.hdcm.e.user_readback.get()) > 10:
@@ -136,6 +135,4 @@ class SetEnergyDialog(QtWidgets.QDialog):
                 "Energy change is greater than 10 eV.\nMonochromator cannot be used for alignment"
             )
         else:
-            comm_s = 'mvaDescriptor("energy",' + str(self.setpoint_edit.text()) + ")"
-            print(f"executing {comm_s}")
-            self._parent.send_to_server(comm_s)
+            self._parent.send_to_server("mvaDescriptor", ["energy", float(self.setpoint_edit.text())])

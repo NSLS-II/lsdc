@@ -11,7 +11,7 @@ from config_params import (
     UNMOUNT_COLD_CHECK,
 )
 from daq_utils import getBlConfig, setBlConfig
-import db_lib
+import daq_utils
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -71,13 +71,14 @@ class StaffScreenDialog(QtWidgets.QFrame):
             self.gripperUnmountColdCheckBox.setChecked(False)
 
         # Set energy checkbox
-        self.set_energy_checkbox = QCheckBox("Set Energy")
-        hBoxColParams1.addWidget(self.set_energy_checkbox)
-        if getBlConfig(SET_ENERGY_CHECK) == 1:
-            self.set_energy_checkbox.setChecked(True)
-        else:
-            self.set_energy_checkbox.setChecked(False)
-        self.set_energy_checkbox.stateChanged.connect(self.set_energy_check_cb)
+        if daq_utils.beamline == "fmx":
+            self.set_energy_checkbox = QCheckBox("Set Energy")
+            hBoxColParams1.addWidget(self.set_energy_checkbox)
+            if getBlConfig(SET_ENERGY_CHECK) == 1:
+                self.set_energy_checkbox.setChecked(True)
+            else:
+                self.set_energy_checkbox.setChecked(False)
+            self.set_energy_checkbox.stateChanged.connect(self.set_energy_check_cb)
 
 
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
@@ -319,6 +320,10 @@ class StaffScreenDialog(QtWidgets.QFrame):
         else:
             setBlConfig(SET_ENERGY_CHECK, 0)
             logger.debug(f"{SET_ENERGY_CHECK} off")
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setText("Set Energy state changed, please restart the GUI to access feature")
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)  # type: ignore
+        msg_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
 
     def unmountColdCheckCB(self, state):
         if state == QtCore.Qt.Checked:

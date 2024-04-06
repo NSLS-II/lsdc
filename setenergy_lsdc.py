@@ -782,8 +782,6 @@ def setELsdc(energy,
         yield from bps.mv(slits1.x_gap, slits1XGapOrg)  # Move Slit 1 X to original position
         yield from bps.mv(slits1.y_gap, slits1YGapOrg)  # Move Slit 1 Y to original position
 
-    
-
     yield from fmx_reference(transSet=transSet)
     daq_lib.gui_message(f"Set energy to {energy} complete")
     

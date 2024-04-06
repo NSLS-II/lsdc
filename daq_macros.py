@@ -95,6 +95,14 @@ def set_energy(energy):
     logger.error(f"Exception while running set_energy: {e}")
     daq_lib.set_field("program_state","Program Ready")
 
+def move_omega(omega, relative=True):
+  """Moves omega by a certain amount"""
+  if gov_robot.state.get() == "SA":
+    if relative:
+      RE(bps.mvr(samplexyz.omega, omega))
+    else:
+      RE(bps.mv(samplexyz.omega, omega))
+
 def changeImageCenterLowMag(x,y,czoom):
   zoom = int(czoom)
   zoomMinXRBV = getPvDesc("lowMagZoomMinXRBV")
@@ -3852,10 +3860,6 @@ def vertRasterOff():
   """vertRasterOff() : only raster vertically for single-column (line) rasters"""
   setBlConfig("vertRasterOn",0)
 
-def newVisit():
-  """newVisit() : Trick LSDC into creating a new visit on the next request creation"""
-  setBlConfig("proposal",987654) #a kludge to cause the next collection to generate a new visit
-
 
 def logMe():
   """logMe() : Edwin asked for this"""
@@ -3880,18 +3884,6 @@ def emptyQueue():
   reqList = list(db_lib.getQueue(daq_utils.beamline))
   for i in range (0,len(reqList)):
     db_lib.deleteRequest(reqList[i]["uid"])
-
-def addPersonToProposal(personLogin,propNum):
-  """addPersonToProposal(personLogin,propNum) : add person to ISPyB proposal - personLogin must be quoted, proposal number is a number (not quoted)"""    
-  ispybLib.addPersonToProposal(personLogin,propNum)
-
-def createPerson(firstName,lastName,loginName):
-  """createPerson(firstName,lastName,loginName) : create person for ISPyB - be sure to quote all arguments"""  
-  ispybLib.createPerson(firstName,lastName,loginName)
-
-def createProposal(propNum,PI_login="boaty"):
-  """createProposal(propNum,PI_login) : create proposal for ISPyB - be sure to quote the login name, Proposal number is a number (not quoted)"""    
-  ispybLib.createProposal(propNum,PI_login)
   
 
 def topViewCheckOn():
@@ -3967,12 +3959,8 @@ def lsdcHelp():
   print(enableMount.__doc__)
   print(vertRasterOn.__doc__)
   print(vertRasterOff.__doc__)
-  print(newVisit.__doc__)
   print(emptyQueue.__doc__)
   print(logMe.__doc__)
-  print(addPersonToProposal.__doc__)
-  print(createPerson.__doc__)
-  print(createProposal.__doc__)
   print(setAttenBCU.__doc__)
   print(setAttenRI.__doc__)
   print(unlockGUI.__doc__)

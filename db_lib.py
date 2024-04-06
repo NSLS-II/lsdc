@@ -1,16 +1,15 @@
+import logging
 import os
-
 import time
-
-import six
-
 import uuid
+from collections import defaultdict
 
 import amostra.client.commands as acc
 import conftrak.client.commands as ccc
-from analysisstore.client.commands import AnalysisClient
 import conftrak.exceptions
-import logging
+import six
+from analysisstore.client.commands import AnalysisClient
+
 logger = logging.getLogger(__name__)
 
 #12/19 - Skinner inherited this from Hugo, who inherited it from Matt. Arman wrote the underlying DB and left BNL in 2018. 
@@ -485,6 +484,53 @@ def getContainerByName(container_name,owner):
 def getContainerByID(container_id):
     c = getContainers(filters={'uid': container_id})[0]
     return c
+
+def get_dewar_tree_data(dewar_name, beamline, get_latest_pucks=False):
+    """
+    returns all data required to show dewar tree data with minimum number of database accesses
+    """
+    dewar_data = getContainers(filters={"name": dewar_name, "owner": beamline})[0]
+
+    puck_ids = [
+        pid for pid in dewar_data.get("content", []) if pid
+    ]  # removes blank ids
+    pucks = getContainers(filters={"uid": {"$in": puck_ids}})
+
+    if get_latest_pucks:
+        # If get_latest_pucks is true, get the puck most recently updated in the database
+        # This is for cases when the excel sheet has been uploaded after puck_to_dewar
+        # Or when staff manually refreshes the dewar tree
+        new_pucks = []
+        for puck in pucks:
+            all_pucks = getContainers(filters={"name":puck["name"]})
+            latest_puck = max(all_pucks, key=lambda x: x.get("modified_time", 0.0))
+            new_pucks.append(latest_puck)
+        pucks = new_pucks  
+    # Create a mega list of sample ids from puck information
+    sample_ids = [
+        sample_id
+        for puck in pucks
+        for sample_id in puck.get("content", [])
+        if sample_id
+    ]
+
+    # Get all sample info in one call
+    params = {"uid": {"$in": sample_ids}}
+    samples = sample_ref.find(as_document=False, **params)
+
+    # Get all request info in one call
+    params = {"sample": {"$in": sample_ids}, "state": "active"}
+    reqs = list(request_ref.find(**params))
+
+    # Assemble data into dictionaries
+    puck_data = {puck["uid"]: puck for puck in pucks}
+    sample_data = {sample["uid"]: sample for sample in samples}
+    request_data = defaultdict(list)
+    for req in reqs:
+        request_data[req["sample"]].append(req)
+    
+    return dewar_data, puck_data, sample_data, request_data
+
 
 
 def getQueue(beamlineName):

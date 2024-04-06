@@ -295,6 +295,10 @@ def mountSample(sampID):
     mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
     if (mountStat == 1):
       set_field("mounted_pin",sampID)
+      if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
+        # Only run mount options when the robot is online and queue collect is off
+        daq_macros.run_on_mount_option(sampID)
+        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
     elif(mountStat == 2):
       return 2
     else:

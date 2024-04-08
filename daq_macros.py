@@ -823,7 +823,7 @@ def runDozorThread(directory,
     time.sleep(10.0) #allow for file writing
      
     #node = getNodeName("spot", rowIndex, 8)
-    node = "titania-cpu002" 
+    node = "titania-cpu00"+((rowIndex+1)%9)
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,

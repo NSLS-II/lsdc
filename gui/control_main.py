@@ -3179,7 +3179,11 @@ class ControlMain(QtWidgets.QMainWindow):
                 ):  # this is trying to figure out row direction
                     cellIndex = spotLineCounter
                 else:
-                    if i % 2 == 0:  # this is trying to figure out row direction
+                    if daq_utils.beamline == "nyx":
+                        is_raster_inverted = 1
+                    else:
+                        is_raster_inverted = 0
+                    if i % 2 == is_raster_inverted:  # this is trying to figure out row direction
                         cellIndex = spotLineCounter
                     else:
                         cellIndex = rowStartIndex + ((numsteps - 1) - j)
@@ -4803,6 +4807,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server("unmountSample()")
 
     def refreshCollectionParams(self, selectedSampleRequest, validate_hdf5=True):
+        logger.info("refreshing collection parameters, redrawing raster?")
         reqObj = selectedSampleRequest["request_obj"]
         self.protoComboBox.setCurrentIndex(
             self.protoComboBox.findText(str(reqObj["protocol"]))
@@ -4892,12 +4897,15 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             self.rasterGrainCustomRadio.setChecked(True)
         rasterStep = int(reqObj["gridStep"])
+        logger.info("reaching redraw now")
         if not self.hideRastersCheckBox.isChecked() and (
             reqObj["protocol"] in ("raster", "stepRaster", "multiCol")
         ):
-            if not self.rasterIsDrawn(selectedSampleRequest):
-                self.drawPolyRaster(selectedSampleRequest)
-                self.fillPolyRaster(selectedSampleRequest)
+            #if not self.rasterIsDrawn(selectedSampleRequest):
+            # always erase and then draw
+            self.eraseRastersCB()
+            self.drawPolyRaster(selectedSampleRequest)
+            self.fillPolyRaster(selectedSampleRequest)
 
             if (
                 str(self.govStateMessagePV.get(as_string=True)) == "state SA"
@@ -4905,6 +4913,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 and self.selectedSampleRequest["sample"]  # with control enabled
                 == self.mountedPin_pv.get()
             ):  # And the sample of the selected request is mounted
+                logger.info("attempting to move to raster start")
                 self.processSampMove(self.gon.x.val(), "x")
                 self.processSampMove(self.gon.y.val(), "y")
                 self.processSampMove(self.gon.z.val(), "z")

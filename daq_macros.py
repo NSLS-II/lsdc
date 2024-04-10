@@ -28,6 +28,7 @@ from collections import OrderedDict
 from threading import Thread
 from config_params import *
 from ophyd.status import SubscriptionStatus
+from ophyd.utils import WaitTimeoutError
 from kafka_producer import send_kafka_message
 
 import gov_lib
@@ -824,6 +825,7 @@ def runDozorThread(directory,
      
     #node = getNodeName("spot", rowIndex, 8)
     node = "titania-cpu00"+str((rowIndex+1)%9)
+    logger.info(f"distributing row {rowIndex} to {node}")
 
     if (seqNum>-1): #eiger
         dozorRowDir = makeDozorInputFile(directory,
@@ -837,6 +839,7 @@ def runDozorThread(directory,
         raise Exception("seqNum seems to be non-standard (<0)")
 
     comm_s = f"ssh -q {node} \"{os.environ['MXPROCESSINGSCRIPTSDIR']}dozor.sh {rasterReqID} {rowIndex}\""
+    logger.info(f"using the following command:   {comm_s}")
     os.system(comm_s)
     logger.info('checking for results on remote node: %s' % comm_s)
     logger.info("leaving thread")
@@ -3468,8 +3471,12 @@ def standardDaq(currentRequest):
     arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
     flyer.detector.cam.acquire.put(1)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    arm_status.wait(timeout=20)
-    govStatus.wait(timeout=20)
+    try:
+        arm_status.wait(timeout=20)
+        govStatus.wait(timeout=20)
+    except WaitTimeoutError:
+        logger.error("Timeout during arming or governor move, aborting collection")
+        return
     logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
@@ -3477,7 +3484,11 @@ def standardDaq(currentRequest):
     flyer.detector.stage()
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=10)
+    try:
+        md2.ready_status().wait(timeout=10)
+    except WaitTimeoutError:
+        logger.error("timeout: md2 failed to enter ready state, aborting collection")
+        return
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     flyer.update_parameters(total_num_images, angle_start, scan_range, total_exposure_time)
     logger.info(f"flyer handoff")
@@ -3546,8 +3557,12 @@ def vectorDaq(currentRequest):
     arm_status = SubscriptionStatus(vector_flyer.detector.cam.armed, armed_callback, run=False)
     vector_flyer.detector.cam.acquire.put(1)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    arm_status.wait(timeout=10)
-    govStatus.wait(timeout=20)
+    try:
+        arm_status.wait(timeout=10)
+        govStatus.wait(timeout=20)
+    except WaitTimeoutError:
+        logger.error("Timeout reached during arming or governor move, aborting")
+        return
     logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
@@ -3555,7 +3570,11 @@ def vectorDaq(currentRequest):
     flyer.detector.stage()
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=10)
+    try:
+        md2.ready_status().wait(timeout=10)
+    except WaitTimeoutError:
+        logger.error("timeout: md2 failed to reach ready state, aborting")
+        return
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     vector_flyer.update_parameters(angle_start, scan_range, total_exposure_time, start_y, start_z, stop_y, stop_z, start_cx, start_cy, stop_cx, stop_cy)
     yield from bp.fly([vector_flyer])
@@ -3594,7 +3613,7 @@ def rasterDaq(rasterReqID):
     start_cx = md2.cx.val()# + (xEnd/1000)
     start_cy = md2.cy.val()
     frames_per_line = numsteps
-    total_exposure_time = exposure_per_image * total_num_images
+    total_exposure_time = exposure_per_image * frames_per_line
     invert_direction = False
     use_centring_table = True
     use_fast_mesh_scans = True
@@ -3642,8 +3661,12 @@ def rasterDaq(rasterReqID):
     arm_status = SubscriptionStatus(raster_flyer.detector.cam.armed, armed_callback, run=False)
     raster_flyer.detector.cam.acquire.put(1)
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    arm_status.wait(timeout=10)
-    govStatus.wait(timeout=20)
+    try:
+        arm_status.wait(timeout=10)
+        govStatus.wait(timeout=20)
+    except WaitTimeoutError:
+        logger.error("arming or governor status failure")
+        return
     logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
         logger.error(f"Problem during start-of-collection governor move, aborting! exception: {govStatus.exception()}")
@@ -3651,7 +3674,11 @@ def rasterDaq(rasterReqID):
     flyer.detector.stage()
     start_time = time.time()
     yield from bps.mv(md2.phase, 2) # TODO: Enum for MD2 phases and states
-    md2.ready_status().wait(timeout=10)
+    try:
+        md2.ready_status().wait(timeout=10)
+    except:
+        logger.error("md2 failed to reach ready state, aborting collection")
+        return
     logger.info(f"MD2 phase transition to 2-DataCollection took {time.time()-start_time} seconds.")
     raster_flyer.update_parameters(omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, total_exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans)
     yield from bp.fly([raster_flyer])

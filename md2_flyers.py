@@ -5,6 +5,7 @@ import getpass
 import grp
 from ophyd.sim import NullStatus
 from ophyd.status import SubscriptionStatus
+from ophyd.utils import WaitTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -93,15 +94,19 @@ class MD2StandardFlyer():
         
         #logger.info(f"TASK INFO[6]: {self.md2.task_info[6]}")
         #logger.info(f"TASK OUTPUT: {self.md2.task_output}")
-        logger.info(f"FLYER COMPLETE FUNCTION")
+        logger.debug(f"FLYER COMPLETE FUNCTION")
         task_status = self.md2.task_status()
-        logger.info(f"assigning task status")
+        logger.debug(f"assigning task status")
         timeout = (self.collection_params["exposure_time"] * 3) + 80
         logger.info(f"TASK TIMEOUT: {timeout}")
         #ready_status.wait(timeout=timeout)
-        task_status.wait(timeout=timeout)
-        logger.info(f"TASK INFO: {self.md2.task_info}")
-        logger.info(f"TASK OUTPUT: {self.md2.task_output}")
+        try:
+            task_status.wait(timeout=timeout)
+        except WaitTimeoutError:
+            logger.info("reached task timeout")
+            logger.info(f"TASK INFO: {self.md2.task_info}")
+            logger.info(f"TASK OUTPUT: {self.md2.task_output}")
+            return
         return task_status
 
     def describe_collect(self):

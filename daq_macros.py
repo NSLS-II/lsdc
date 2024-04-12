@@ -2359,6 +2359,9 @@ def runRasterScan(currentRequest,rasterType="", width=0, height=0, step_size=10,
     RE(snakeRaster(rasterReqID))
 
 def get_score_vals(cellResults, scoreOption):
+  """
+  Returns a numpy 1d-array that stores the selected scores as a flattened array
+  """
   score_vals = np.zeros(len(cellResults))
   for i, res in enumerate(cellResults):
     try:
@@ -2367,7 +2370,12 @@ def get_score_vals(cellResults, scoreOption):
       logger.debug(f"Option {scoreOption} not found for {res=}")
   return score_vals
 
-def get_score_index(score_vals, scoreOption, indices=None):
+def get_score_index(score_vals: "np.ndarray", scoreOption, indices=None):
+  """
+  Returns the maximum or minimum score value in the 1d array of scores and the corresponding index
+  If specific indices are provided the max/min score will be selected from those indices
+
+  """
   if indices:
     score_vals = score_vals[indices]
   if scoreOption == "d_min":
@@ -2381,6 +2389,18 @@ def get_score_index(score_vals, scoreOption, indices=None):
   
   return scoreVal, max_index
 
+def get_gonio_pos_from_raster_result(cell_results, raster_map, index):
+  """
+  Returns the motor positions and the cell which corresponds to the index 
+  given in the cell_results list
+  """
+  hot_file = cell_results[index]
+  hot_coords = raster_map[hot_file]     
+  x = hot_coords["x"]
+  y = hot_coords["y"]
+  z = hot_coords["z"]
+  logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
+  return hot_file, (x, y, z)
 
 def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
   global autoVectorCoarseCoords,autoVectorFlag, max_col, face_on_max_coords, ortho_max_coords
@@ -2389,10 +2409,8 @@ def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
     raise ValueError("raster result object is None")
-  
-  hotFile = ""
-  scoreOption = ""
   logger.info("in gotomax")
+  
   cellResults = rasterResult["result_obj"]["rasterCellResults"]['resultObj']
   rasterMap = rasterResult["result_obj"]["rasterCellMap"]  
   rasterScoreFlag = int(db_lib.beamlineInfo(daq_utils.beamline,'rasterScoreFlag')["index"])
@@ -2419,57 +2437,7 @@ def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
 
   
   if max_index:
-    hotFile = cellResults[max_index]
-    logger.info(f'raster score: {score_val=} at {hotFile=}')
-    hotCoords = rasterMap[hotFile]     
-    x = hotCoords["x"]
-    y = hotCoords["y"]
-    z = hotCoords["z"]
-    logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
-
-    if "rasterRequest" in kwargs and autoRasterFlag:
-      # Update the raster request with the location of the max raster image and co-ordinates.
-      # NOTE: In the optimized autoraster, two 2D rasters are collected, face on and orthogonal.
-      # Both rasters have the same number of columns, we save the column number of the hot cell (max_col)
-      # in the face on raster then look for the hot cell in the orthogonal raster in the same 
-      # column. This is to emulate the original autoraster but leaves room for other ways of selecting
-      # points for standard collection
-      rasterDef = kwargs["rasterRequest"]["request_obj"]["rasterDef"]
-
-      col = get_raster_max_col(rasterDef, max_index)
-
-      
-      # Set the column index for the face on raster
-      if max_col is None:
-        max_col = col
-        face_on_max_coords = (x, y, z)
-      else: 
-        # max_col should be available for orthogonal rasters
-        # Find maximum in col defined in max_col and then reset max_col
-        indices = get_flattened_indices_of_max_col(rasterDef, max_col)
-        score_val, index = get_score_index(score_vals, scoreOption, indices)
-        hotFile = cellResults[index]["cellMapKey"] 
-        hotCoords = rasterMap[hotFile]     
-        x = hotCoords["x"]
-        y = hotCoords["y"]
-        z = hotCoords["z"]
-        ortho_max_coords = (x, y, z)
-        max_col = None
-
-      kwargs["rasterRequest"]["request_obj"]["max_raster"] = {
-        "file" : hotFile,
-        "coords": [x, y, z],
-        "index": max_index
-      }
-      if "omega" in kwargs:
-        kwargs["rasterRequest"]["request_obj"]["max_raster"]["omega"] = kwargs["omega"]
-
-      db_lib.updateRequest(kwargs["rasterRequest"])
-
-      #Following lines for testing, remove for production!
-      req = db_lib.getRequestByID(kwargs["rasterRequest"]["uid"])
-      logger.info(f'MAX RASTER INFO: {req["request_obj"]["max_raster"]["file"]} {req["request_obj"]["max_raster"]["coords"]}')
-
+    x, y, z = run_auto_raster(max_index, score_vals, scoreOption, cellResults, rasterMap, **kwargs)
     if 'omega' in kwargs:
       beamline_lib.mvaDescriptor("sampleX",x,
                                  "sampleY",y,
@@ -2482,6 +2450,49 @@ def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
 
   else:
     raise ValueError("No max position found for gonio move")
+
+def run_auto_raster(max_index, score_vals, scoreOption, cellResults, rasterMap, **kwargs):
+  global max_col, face_on_max_coords, ortho_max_coords
+  hotFile, (x, y, z) = get_gonio_pos_from_raster_result(cellResults, rasterMap, max_index)
+  if "rasterRequest" in kwargs and autoRasterFlag:
+    # Update the raster request with the location of the max raster image and co-ordinates.
+    # NOTE: In the optimized autoraster, two 2D rasters are collected, face on and orthogonal.
+    # Both rasters have the same number of columns, we save the column number of the hot cell (max_col)
+    # in the face on raster then look for the hot cell in the orthogonal raster in the same 
+    # column. This is to emulate the original autoraster but leaves room for other ways of selecting
+    # points for standard collection
+    rasterDef = kwargs["rasterRequest"]["request_obj"]["rasterDef"]
+
+    col = get_raster_max_col(rasterDef, max_index)
+
+    
+    # Set the column index for the face on raster
+    if max_col is None:
+      max_col = col
+      face_on_max_coords = (x, y, z)
+    else: 
+      # max_col should be available for orthogonal rasters
+      # Find maximum in col defined in max_col and then reset max_col
+      indices = get_flattened_indices_of_max_col(rasterDef, max_col)
+      score_val, max_index = get_score_index(score_vals, scoreOption, indices)
+      hotFile, (x, y, z) = get_gonio_pos_from_raster_result(cellResults, rasterMap, max_index)
+      ortho_max_coords = (x, y, z)
+      max_col = None
+
+    kwargs["rasterRequest"]["request_obj"]["max_raster"] = {
+      "file" : hotFile,
+      "coords": [x, y, z],
+      "index": int(max_index)
+    }
+    if "omega" in kwargs:
+      kwargs["rasterRequest"]["request_obj"]["max_raster"]["omega"] = kwargs["omega"]
+
+    db_lib.updateRequest(kwargs["rasterRequest"])
+
+    req = db_lib.getRequestByID(kwargs["rasterRequest"]["uid"])
+    logger.info(f'MAX RASTER INFO: {req["request_obj"]["max_raster"]["file"]} {req["request_obj"]["max_raster"]["coords"]}')
+  return x, y, z
+
 
 def run_auto_vector(ceiling, cellResults, scoreOption, rasterMap):
   xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results

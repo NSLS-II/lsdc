@@ -1181,7 +1181,8 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxSampleAlignLayout.addWidget(clearGraphicsButton)
         hBoxSampleAlignLayout.addWidget(saveCenteringButton)
         hBoxSampleAlignLayout.addWidget(selectAllCenteringButton)
-        hBoxSampleAlignLayout.addWidget(self.click3Button)
+        if daq_utils.beamline not in ["amx", "fmx"]:
+            hBoxSampleAlignLayout.addWidget(self.click3Button)
         hBoxSampleAlignLayout.addWidget(snapshotButton)
         hBoxSampleAlignLayout.addWidget(self.hideRastersCheckBox)
         hBoxRadioLayout100 = QtWidgets.QHBoxLayout()

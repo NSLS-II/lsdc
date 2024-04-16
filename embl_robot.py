@@ -394,7 +394,7 @@ class EMBLRobot:
         """
 
         if error_string.find("Pin lost during mount transaction") != -1:
-            logger.info(f"Pin probably has ice, waiting for {max_wait_time} seconds")
+            logger.info(f"Pin probably has ice, waiting for {max_wait_time+1} seconds")
             wait_time = 0
             while wait_time < max_wait_time:
                 wait_time += 1

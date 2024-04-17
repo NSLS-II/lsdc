@@ -36,6 +36,7 @@ from config_params import (
     VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
+    MINIMUM_RASTER_SIZE
 )
 from daq_utils import getBlConfig, setBlConfig
 from element_info import element_info
@@ -2884,8 +2885,8 @@ class ControlMain(QtWidgets.QMainWindow):
         numsteps_h = raster_h/stepsizeYPix
         stepsize = float(self.rasterStepEdit.text())
 
-        while (numsteps_w < 6 and numsteps_h < 6):
-            print(numsteps_h, numsteps_w, stepsize, stepsizeXPix, stepsizeYPix)
+        while (numsteps_w < MINIMUM_RASTER_SIZE[daq_utils.beamline] and numsteps_h < MINIMUM_RASTER_SIZE[daq_utils.beamline]):
+            logger.info(f"{numsteps_h=}, {numsteps_w=}, {stepsize=}, {stepsizeXPix=}, {stepsizeYPix=}")
             if stepsize == 1:
                 logger.error("Cannot add raster request, stepsize must be 1 micron with a minimum width or height of 5 cells")
                 return

@@ -48,8 +48,8 @@ from gui.dialog import (
     StaffScreenDialog,
     UserScreenDialog,
 )
-from gui.raster import RasterCell, RasterGroup
 from gui.epics_signal import EpicsQObject
+from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, VideoThread
 
@@ -156,20 +156,25 @@ class ControlMain(QtWidgets.QMainWindow):
         self.highMagCursorX_pv = PV(daq_utils.pvLookupDict["highMagCursorX"])
         self.highMagCursorY_pv = PV(daq_utils.pvLookupDict["highMagCursorY"])
         self.fastShutterOpenPos_pv = PV(daq_utils.pvLookupDict["fastShutterOpenPos"])
-        self.gripTemp_pv = EpicsQObject(daq_utils.pvLookupDict["gripTemp"], self.processGripTemp)
+        self.gripTemp_pv = EpicsQObject(
+            daq_utils.pvLookupDict["gripTemp"], self.processGripTemp
+        )
         if getBlConfig(CRYOSTREAM_ONLINE):
-            self.cryostreamTemp_pv = EpicsQObject(cryostreamTempPV[daq_utils.beamline], self.processCryostreamTemp)
+            self.cryostreamTemp_pv = EpicsQObject(
+                cryostreamTempPV[daq_utils.beamline], self.processCryostreamTemp
+            )
         if daq_utils.beamline == "fmx":
             self.slit1XGapSP_pv = PV(f"{daq_utils.motor_dict['slit1XGap']}.VAL")
             self.slit1YGapSP_pv = PV(f"{daq_utils.motor_dict['slit1YGap']}.VAL")
         ringCurrentPvName = "SR:C03-BI{DCCT:1}I:Real-I"
-        self.ringCurrent_pv = EpicsQObject(ringCurrentPvName,
-                                           self.processRingCurrent)
+        self.ringCurrent_pv = EpicsQObject(ringCurrentPvName, self.processRingCurrent)
 
-        self.beamAvailable_pv = EpicsQObject(daq_utils.pvLookupDict["beamAvailable"],
-                                             self.processBeamAvailable)
-        self.sampleExposed_pv = EpicsQObject(daq_utils.pvLookupDict["exposing"],
-                                             self.processSampleExposed)
+        self.beamAvailable_pv = EpicsQObject(
+            daq_utils.pvLookupDict["beamAvailable"], self.processBeamAvailable
+        )
+        self.sampleExposed_pv = EpicsQObject(
+            daq_utils.pvLookupDict["exposing"], self.processSampleExposed
+        )
 
         self.beamSize_pv = EpicsQObject(
             daq_utils.beamlineComm + "size_mode", self.processBeamSize
@@ -4742,8 +4747,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.tabs = QtWidgets.QTabWidget()
         self.comm_pv = PV(daq_utils.beamlineComm + "command_s")
         self.immediate_comm_pv = PV(daq_utils.beamlineComm + "immediate_command_s")
-        self.stillModeStatePV = EpicsQObject(daq_utils.pvLookupDict["stillModeStatus"],
-                                             self.processStillModeState)
+        self.stillModeStatePV = EpicsQObject(
+            daq_utils.pvLookupDict["stillModeStatus"], self.processStillModeState
+        )
         self.progressDialog = QtWidgets.QProgressDialog()
         self.progressDialog.setCancelButtonText("Cancel")
         self.progressDialog.setModal(False)
@@ -4783,20 +4789,34 @@ class ControlMain(QtWidgets.QMainWindow):
         fileMenu.addAction(self.staffAction)
         # Define all of the available actions for the overlay color group
         color_names = ["Blue", "Red", "Green", "White", "Black"]
-        self.overlay_actions = {color.upper(): QtWidgets.QAction(color, self, checkable=True) for color in color_names}
-        qt_colors = [QtCore.Qt.blue, QtCore.Qt.red, QtCore.Qt.green, QtCore.Qt.white, QtCore.Qt.black]
-        colors = {color_name.upper(): qt_color for color_name, qt_color in zip(color_names, qt_colors)}
-        
+        qt_colors = [
+            QtCore.Qt.GlobalColor.blue,
+            QtCore.Qt.GlobalColor.red,
+            QtCore.Qt.GlobalColor.green,
+            QtCore.Qt.GlobalColor.white,
+            QtCore.Qt.GlobalColor.black,
+        ]
+        self.overlay_actions = {
+            color.upper(): QtWidgets.QAction(color, self, checkable=True)
+            for color in color_names
+        }
+        colors = {
+            color_name.upper(): qt_color
+            for color_name, qt_color in zip(color_names, qt_colors)
+        }
+
         # Create the action group and populate it
         self.overlayColorActionGroup = QtWidgets.QActionGroup(self)
         self.overlayColorActionGroup.setExclusive(True)
-        
+
         # Connect all of the trigger callbacks to their respective actions
         for color_name, action in self.overlay_actions.items():
             color = colors[color_name]
-            action.triggered.connect(lambda: self.colorOverlayTriggeredCB(color))
+            action.triggered.connect(
+                lambda _, color=color: self.colorOverlayTriggeredCB(color)
+            )
             self.overlayColorActionGroup.addAction(action)
-        
+
         # Create the menu item with the submenu, add the group
         self.overlayMenu = settingsMenu.addMenu("Overlay Settings")
         self.overlayMenu.addActions(self.overlayColorActionGroup.actions())
@@ -4816,7 +4836,7 @@ class ControlMain(QtWidgets.QMainWindow):
         overlayBrush = QtGui.QBrush(color)
         self.centerMarker.setBrush(overlayBrush)
         self.imageScale.setPen(QtGui.QPen(overlayBrush, 2.0))
-        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0)) 
+        self.imageScaleText.setPen(QtGui.QPen(overlayBrush, 1.0))
 
     def popStaffDialogCB(self):
         if self.controlEnabled():
@@ -4884,11 +4904,11 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.zebraReturnedTriggerPV = EpicsQObject(
             daq_utils.pvLookupDict["zebraTriggerReturnStatus"],
-            self.processZebraReturnedTriggerState 
+            self.processZebraReturnedTriggerState,
         )
 
         self.controlMaster_pv = EpicsQObject(
-             f"{daq_utils.beamlineComm}zinger_flag", self.processControlMaster
+            f"{daq_utils.beamlineComm}zinger_flag", self.processControlMaster
         )
         self.beamCenterX_pv = PV(daq_utils.pvLookupDict["beamCenterX"])
         self.beamCenterY_pv = PV(daq_utils.pvLookupDict["beamCenterY"])
@@ -4921,7 +4941,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.sampx_pv = PV(f"{daq_utils.motor_dict['sampleX']}.RBV")
         self.sampMoveSignal.connect(self.processSampMove)
         self.sampx_pv.add_callback(self.processSampMoveCB, motID="x")
-        self.sampy_pv = PV( f"{daq_utils.motor_dict['sampleY']}.RBV")
+        self.sampy_pv = PV(f"{daq_utils.motor_dict['sampleY']}.RBV")
         self.sampy_pv.add_callback(self.processSampMoveCB, motID="y")
         self.sampz_pv = PV(f"{daq_utils.motor_dict['sampleZ']}.RBV")
         self.sampz_pv.add_callback(self.processSampMoveCB, motID="z")
@@ -4947,7 +4967,9 @@ class ControlMain(QtWidgets.QMainWindow):
         )  # I think monitoring this allows for the textfield to monitor val and this to deal with the graphics. Else next line has two callbacks on same thing.
         self.photonShutterOpen_pv = PV(daq_utils.pvLookupDict["photonShutterOpen"])
         self.photonShutterClose_pv = PV(daq_utils.pvLookupDict["photonShutterClose"])
-        self.fastShutterRBV_pv = EpicsQObject(f"{daq_utils.motor_dict['fastShutter']}.RBV", self.processFastShutter)
+        self.fastShutterRBV_pv = EpicsQObject(
+            f"{daq_utils.motor_dict['fastShutter']}.RBV", self.processFastShutter
+        )
         self.highMagCursorChangeSignal.connect(self.processHighMagCursorChange)
         self.highMagCursorX_pv.add_callback(self.processHighMagCursorChangeCB, ID="x")
         self.highMagCursorY_pv.add_callback(self.processHighMagCursorChangeCB, ID="y")

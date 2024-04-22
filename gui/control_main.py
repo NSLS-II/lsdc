@@ -142,7 +142,7 @@ class ControlMain(QtWidgets.QMainWindow):
     roiChangeSignal = QtCore.Signal(int, str)
     highMagCursorChangeSignal = QtCore.Signal(int, str)
     lowMagCursorChangeSignal = QtCore.Signal(int, str)
-    cryostreamTempSignal = QtCore.Signal(str)
+    cryostreamTempSignal = QtCore.Signal(object)
     sampleZoomChangeSignal = QtCore.Signal(object)
 
     def __init__(self):
@@ -1334,7 +1334,7 @@ class ControlMain(QtWidgets.QMainWindow):
             140,
             highlight_on_change=False,
         )
-        ringCurrentMessageLabel = QtWidgets.QLabel("Ring(mA):")
+        ringCurrentMessageLabel = QtWidgets.QLabel("Ring (mA):")
         self.ringCurrentMessage = QtWidgets.QLabel(str(self.ringCurrent_pv.get()))
         beamAvailable = self.beamAvailable_pv.get()
         if beamAvailable:
@@ -1350,12 +1350,12 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             self.sampleExposedLabel = QtWidgets.QLabel("Sample Not Exposed")
             self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")
-        gripperLabel = QtWidgets.QLabel("Gripper Temp:")
+        gripperLabel = QtWidgets.QLabel("Gripper Temp (K):")
         if daq_utils.beamline == "nyx":
             self.gripperTempLabel = QtWidgets.QLabel("N/A")
         else:
             self.gripperTempLabel = QtWidgets.QLabel("%.1f" % self.gripTemp_pv.get())
-        cryostreamLabel = QtWidgets.QLabel("Cryostream Temp:")
+        cryostreamLabel = QtWidgets.QLabel("Cryostream Temp (K):")
         if getBlConfig(CRYOSTREAM_ONLINE):
             self.cryostreamTempLabel = QtWidgets.QLabel(
                 str(self.cryostreamTemp_pv.get())
@@ -2074,14 +2074,21 @@ class ControlMain(QtWidgets.QMainWindow):
             self.shutterStateLabel.setStyleSheet("background-color: #99FF66;")
 
     def processGripTemp(self, gripVal):
-        self.gripperTempLabel.setText("%.1f" % gripVal)
-        if int(gripVal) > -170:
+        gripValKelvin = gripVal + 273.15
+        gripValMaxKelvin = 103.15 # -170 in degC
+        self.gripperTempLabel.setText("%.1f" % gripValKelvin)
+        if gripValKelvin > gripValMaxKelvin:
             self.gripperTempLabel.setStyleSheet("background-color: red;")
         else:
             self.gripperTempLabel.setStyleSheet("background-color: #99FF66;")
 
     def processCryostreamTemp(self, cryostreamVal):
-        self.cryostreamTempLabel.setText(str(cryostreamVal))
+        self.cryostreamTempLabel.setText(f"{cryostreamVal:.2f}")
+        if cryostreamVal is not None:
+            if 99 < cryostreamVal < 102:
+                self.cryostreamTempLabel.setStyleSheet("background-color: #99FF66;")
+            else:
+                self.cryostreamTempLabel.setStyleSheet("background-color: red;")
 
     def processRingCurrent(self, ringCurrentVal):
         self.ringCurrentMessage.setText(str(int(ringCurrentVal)))

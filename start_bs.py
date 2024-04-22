@@ -105,9 +105,9 @@ def filter_camera_data(camera):
     camera.stats5.read_attrs = ['total', 'centroid']
 
 class SampleXYZ(Device):
-    x = Cpt(EpicsMotor, ':GX}Mtr')
-    y = Cpt(EpicsMotor, ':PY}Mtr')
-    z = Cpt(EpicsMotor, ':PZ}Mtr')
+    x = Cpt(EpicsMotor, ':X}Mtr')
+    y = Cpt(EpicsMotor, ':Y}Mtr')
+    z = Cpt(EpicsMotor, ':Z}Mtr')
     omega = Cpt(EpicsMotor, ':O}Mtr')
 
 if (beamline=="amx"):
@@ -170,8 +170,8 @@ elif beamline=="nyx":
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     from nyxtools.flyer_eiger2 import NYXEiger2Flyer
     flyer = NYXEiger2Flyer(vector, zebra, detector)
-    from mxtools.raster_flyer import MXRasterFlyer
-    raster_flyer = MXRasterFlyer(vector, zebra, detector)
+    from nyxtools.nyx_raster_flyer import NYXRasterFlyer
+    raster_flyer = NYXRasterFlyer(vector, zebra, detector)
 
     from nyxtools.isara_robot import IsaraRobotDevice
     from denso_robot import OphydRobot
@@ -184,6 +184,7 @@ elif beamline=="nyx":
     back_light_low_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:LowLimit-RB",name="back_light_low_limit") 
     back_light_high_limit = EpicsSignalRO("XF:19IDD-CT{DIODE-Box_D1:4}CfgCh00:HighLimit-RB",name="back_light_high_limit")
     back_light_range = (back_light_low_limit.get(), back_light_high_limit.get())
+    samplexyz = SampleXYZ("XF:19IDC-ES{Gon:1-Ax", name="samplexyz")
 else:
     raise Exception(f"Invalid beamline name provided: {beamline}")
 

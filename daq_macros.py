@@ -27,9 +27,12 @@ from string import Template
 from collections import OrderedDict
 from threading import Thread
 from config_params import *
+from ophyd.status import SubscriptionStatus
 from kafka_producer import send_kafka_message
 
 import gov_lib
+import urllib.request
+import io
 
 from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_zebra_vector_scan_for_raster,
@@ -37,6 +40,8 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper
+from bluesky.log import config_bluesky_logging
+config_bluesky_logging(level='INFO')
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
 
 try:
@@ -224,7 +229,7 @@ def changeImageCenterHighMag(x,y,czoom):
 def autoRasterLoop(currentRequest):
   global autoRasterFlag
 
-  
+  logger.info('entering autoRasterLoop')
   gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
   if not gov_status.success:
     return 0
@@ -823,7 +828,7 @@ def runDozorThread(directory,
     """
     global rasterRowResultsList,processedRasterRowCount
 
-    time.sleep(0.5) #allow for file writing
+    time.sleep(1.0) #allow for file writing
      
     node = getNodeName("spot", rowIndex, 8)
 
@@ -1834,9 +1839,12 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-
+    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    if govStatus.exception():
+      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
+      return
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
-    rasterRowResultsList = [{} for i in range(0,rowCount)]    
+    rasterRowResultsList = [{} for i in range(0,rowCount)]
     processedRasterRowCount = 0
     rasterEncoderMap = {}
 
@@ -1853,41 +1861,39 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       parentRequest = db_lib.getRequestByID(parentReqID)
       parentReqObj = parentRequest["request_obj"]
       parentReqProtocol = parentReqObj["protocol"]
-      detDist = parentReqObj["detDist"]    
+      detDist = parentReqObj["detDist"]
 
     rasterFilePrefix = dataFilePrefix + "_Raster"
     total_exposure_time = exptimePerCell*totalImages
     detDist /= 1000  # TODO find a way to standardize detector distance settings
 
+    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
                             'should check the most recent collection to determine if it was successful. Cancelling'
                             'this collection, retry when ready.')
+        raster_flyer.detector.cam.acquire.put(0)
         logger.warning("Detector was in the armed state prior to this attempted collection.")
         return 0
-    start_time = time.time()
-    arm_status = raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
+    raster_flyer.detector_arm(angle_start=omega, img_width=img_width_per_cell, total_num_images=totalImages, exposure_period_per_image=exptimePerCell, file_prefix=rasterFilePrefix,
                        data_directory_name=data_directory_name, file_number_start=file_number_start, x_beam=xbeam, y_beam=ybeam, wavelength=wave, det_distance_m=detDist,
-                       num_images_per_file=numsteps)
-    govStatus = gov_lib.setGovRobot(gov_robot, "DA")
-    arm_status.wait()
-    logger.info(f"Governor move to DA and synchronous arming took {time.time() - start_time} seconds.")
-    if govStatus.exception():
-      logger.error(f"Problem during start-of-raster governor move, aborting! exception: {govStatus.exception()}")
-      return
-    raster_flyer.configure_detector(file_prefix=rasterFilePrefix, data_directory_name=data_directory_name)
-    raster_flyer.detector.stage()
+                       num_images_per_file=numsteps) # rasterDef['numCells']) TODO: try to get all images in one file
+    #raster_flyer.detector.stage()
     procFlag = int(getBlConfig("rasterProcessFlag"))
     spotFindThreadList = []
+    yield from bps.mv(samplexyz.omega, (omega-1)) # attempting to over-compensate omega movement
     for row_index, row in enumerate(rows):  # since we have vectors in rastering, don't move between each row
-        xMotAbsoluteMove, xEnd, yMotAbsoluteMove, yEnd, zMotAbsoluteMove, zEnd = raster_positions(row, stepsize, omegaRad, rasterStartX, rasterStartY, rasterStartZ, row_index)
-        vector = {'x': (xMotAbsoluteMove, xEnd), 'y': (yMotAbsoluteMove, yEnd), 'z': (zMotAbsoluteMove, zEnd)}
+        logger.info(f'starting new row: {row_index}')
+        zMotAbsoluteMove, zEnd, yMotAbsoluteMove, yEnd, xMotAbsoluteMove, xEnd = raster_positions(row, stepsize, omegaRad+90, rasterStartZ*1000, rasterStartY*1000, rasterStartX*1000, row_index)
+        vector = {'x': (xMotAbsoluteMove/1000, xEnd/1000), 'y': (yMotAbsoluteMove/1000, yEnd/1000), 'z': (zMotAbsoluteMove/1000, zEnd/1000)}
+        yield from bps.mv(samplexyz.x, xMotAbsoluteMove/1000, samplexyz.y, yMotAbsoluteMove/1000, samplexyz.z, zMotAbsoluteMove/1000, samplexyz.omega, omega-0.05)
         yield from zebraDaqRasterBluesky(raster_flyer, omega, numsteps, img_width_per_cell * numsteps, img_width_per_cell, exptimePerCell, rasterFilePrefix,
             data_directory_name, file_number_start, row_index, vector)
-        raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
-        time.sleep(0.2)  # necessary for reliable row processing - see comment in commit 6793f4
+        #raster_flyer.zebra.reset.put(1)  # reset after every row to make sure it is clear for the next row
+        yield from bps.sleep(0.3)  # necessary for reliable row processing - see comment in commit 6793f4
+
         # processing
-        if (procFlag):    
+        if (procFlag):
           if (daq_utils.detector_id == "EIGER-16"):
             seqNum = int(raster_flyer.detector.file.sequence_id.get())
           else:
@@ -1909,6 +1915,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     initiate transitions here allows for GUI sample/heat map image to update
     after moving to known position"""
     logger.debug(f'lastOnSample(): {lastOnSample()} autoRasterFlag: {autoRasterFlag}')
+    yield from bps.sleep(3) #waiting for detector to not lose row
     if (lastOnSample() and not autoRasterFlag):
       govStatus = gov_lib.setGovRobot(gov_robot, 'SA', wait=False)
       if govStatus.exception():
@@ -1932,7 +1939,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     #data acquisition is finished, now processing and sample positioning
     if not procFlag:  # no, no processing. just move to raster start
       #must go to known position to account for windup dist. 
-      logger.info("moving to raster start")
+      logger.info(f" no processing! moving to raster start: {rasterStartX} {rasterStartY} {rasterStartZ} {omega}")
       yield from bps.mv(samplexyz.x, rasterStartX)
       yield from bps.mv(samplexyz.y, rasterStartY)
       yield from bps.mv(samplexyz.z, rasterStartZ)
@@ -1941,25 +1948,37 @@ def snakeRasterBluesky(rasterReqID, grain=""):
 
     else:  # yes, do row processing
       if daq_lib.abort_flag != 1:
+        print("processing rows")
         [thread.join(timeout=120) for thread in spotFindThreadList]
       else:
         logger.info("raster aborted, do not wait for spotfind threads")
-      logger.info(str(processedRasterRowCount) + "/" + str(rowCount))      
+      logger.info(str(processedRasterRowCount) + "/" + str(rowCount))
       rasterResult = generateGridMap(rasterRequest)
-  
+
       logger.info(f'protocol = {reqObj["protocol"]}')
       if (reqObj["protocol"] == "multiCol" or parentReqProtocol == "multiColQ"):
-        if (parentReqProtocol == "multiColQ"):    
+        if (parentReqProtocol == "multiColQ"):
           multiColThreshold  = parentReqObj["diffCutoff"]
         else:
-          multiColThreshold  = reqObj["diffCutoff"]         
-        gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
+          multiColThreshold  = reqObj["diffCutoff"]
+        # gotoMaxRaster(rasterResult,multiColThreshold=multiColThreshold) 
+        logger.info(f"moving to raster start: {rasterStartX} {rasterStartY} {rasterStartZ} {omega}")
+        yield from bps.mv(samplexyz.x, rasterStartX)
+        yield from bps.mv(samplexyz.y, rasterStartY)
+        yield from bps.mv(samplexyz.z, rasterStartZ)
+        yield from bps.mv(samplexyz.omega, omega)
       else:
         try:
           # go to start omega for faster heat map display
-          gotoMaxRaster(rasterResult,omega=omega)
+          # gotoMaxRaster(rasterResult,omega=omega)
+          logger.info(f"moving to raster start: {rasterStartX} {rasterStartY} {rasterStartZ} {omega}")
+          yield from bps.mv(samplexyz.x, rasterStartX)
+          yield from bps.mv(samplexyz.y, rasterStartY)
+          yield from bps.mv(samplexyz.z, rasterStartZ)
+          yield from bps.mv(samplexyz.omega, omega)
         except ValueError:
           #must go to known position to account for windup dist.
+          logger.info(f"moving to raster start: {rasterStartX} {rasterStartY} {rasterStartZ} {omega}")
           logger.info("moving to raster start")
           yield from bps.mv(samplexyz.x, rasterStartX)
           yield from bps.mv(samplexyz.y, rasterStartY)
@@ -1984,7 +2003,7 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     rasterRequest["request_obj"]["rasterDef"]["status"] = (
         RasterStatus.READY_FOR_SNAPSHOT.value
     )
-    db_lib.updateRequest(rasterRequest)  
+    db_lib.updateRequest(rasterRequest)
     db_lib.updatePriority(rasterRequestID,-1)
 
     #ensure gov transitions have completed successfully
@@ -2269,11 +2288,11 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
     logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
 
     if 'omega' in kwargs:
-      beamline_lib.mvaDescriptor("sampleX",x,
-                                 "sampleY",y,
-                                 "sampleZ",z,
+      beamline_lib.mvaDescriptor("sampleX",x/1000,
+                                 "sampleY",y/1000,
+                                 "sampleZ",z/1000,
                                  "omega",kwargs['omega'])
-    else: beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
+    else: beamline_lib.mvaDescriptor("sampleX",x/1000,"sampleY",y/1000,"sampleZ",z/1000)
 
     if (autoVectorFlag): #if we found a hotspot, then look again at cellResults for coarse vector start and end
       xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
@@ -3210,12 +3229,20 @@ def clean_up_files(pic_prefix, output_file):
 
 def loop_center_xrec():
   global face_on
+  print('entering daq_macros.loop_center_xrec')
 
   daq_lib.abort_flag = 0    
   pic_prefix = "findloop"
   output_file = 'xrec_result.txt'
+  print('clean up files')
   clean_up_files(pic_prefix, output_file)
-  zebraCamDaq(0,360,40,.4,pic_prefix,getBlConfig("visitDirectory"),0)
+  #TODO: if daq_utils.beamline=='nyx':
+  print('post clean')
+  xrec_no_zebra(0)
+  print('post no zebra')
+  #else: 
+  #  zebraCamDaq(0,360,40,.4,pic_prefix,os.getcwd(),0)
+  #zebraCamDaq(0,360,40,.4,pic_prefix,getBlConfig("visitDirectory"),0)
   comm_s = f'xrec {os.environ["CONFIGDIR"]}/xrec_360_40Fast.txt {output_file}'
   logger.info(comm_s)
   try:
@@ -3268,7 +3295,37 @@ def loop_center_xrec():
   #now try to get the loopshape starting from here
   return 1
 
-  
+def xrec_no_zebra(angle_start):
+  print(f'xrec_no_zebra{angle_start}')
+  beamline_lib.mvaDescriptor("omega", angle_start)
+  #yield from bps.mv(samplexyz.omega, angle_start)
+  for omega_target in range (angle_start, angle_start+360, 40):
+    #yield from bps.mv(samplexyz.omega, omega_target)
+    beamline_lib.mvaDescriptor("omega", omega_target)
+    logger.info(f'taking image at {omega_target}')
+    timeout = 5
+    # change image mode to single(0)
+    setPvDesc("lowMagImMode",0)
+    # start camera
+    setPvDesc("lowMagAcquire",1)
+    try:
+      with urllib.request.urlopen(daq_utils.lowMagCamURL, timeout=timeout) as response:
+        logger.info("xnz: read")
+        image_data = response.read()
+        logger.info("xnz: read")
+      with open(getBlConfig("visitDirectory")+"findloop_"+str(omega_target//40)+".jpg", "wb") as filename:
+        logger.info("xnz: write file")
+        filename.write(image_data)
+        logger.info("xnz: write file")
+    except urllib.error.URLError as e:
+      print("Error:", e)
+    logger.info("xnz: sleep")
+    time.sleep(1)
+    # change image mode to continuous(2)
+    setPvDesc("lowMagImMode",2)
+    # start camera
+    setPvDesc("lowMagAcquire",1)
+ 
 
 def zebraCamDaq(angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3): #scan encoder 0=x, 1=y,2=z,3=omega
 #careful - there's total exposure time, exposure period, exposure time
@@ -3385,8 +3442,20 @@ def zebraDaqBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, exposur
                            'change_state':changeState, 'transmission':vector_params["transmission"],
                            'data_path':data_path}
     start_time = time.time()
-    arm_status = flyer.detector_arm(**required_parameters)
+    flyer.detector_arm(**required_parameters)
+
+    def armed_callback(value, old_value, **kwargs):
+        if old_value == 0 and value == 1:
+            return True
+        return False
+
+    arm_status = SubscriptionStatus(flyer.detector.cam.armed, armed_callback, run=False)
+
+    flyer.detector.cam.acquire.put(1)
+
     govStatus = gov_lib.setGovRobot(gov_robot, "DA")
+    time.sleep(0.5)
+    govStatus.wait()
     arm_status.wait()
     logger.info(f"Governor move to DA and synchronous arming took {time.time()-start_time} seconds.")
     if govStatus.exception():
@@ -3441,7 +3510,7 @@ def zebraDaqRasterBluesky(flyer, angle_start, num_images, scanWidth, imgWidth, e
                    row_index=row_index, transmission=1, protocol="raster")
     yield from bp.fly([raster_flyer])
 
-    logger.info("vector Done")
+    logger.info(f"vector Done, zebra arm status: {raster_flyer.zebra.pc.arm.output}")
     logger.info("zebraDaqRasterBluesky Done")
 
 def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImage,filePrefix,data_directory_name,file_number_start,scanEncoder=3,changeState=True): #scan encoder 0=x, 1=y,2=z,3=omega

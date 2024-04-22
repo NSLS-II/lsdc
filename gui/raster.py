@@ -3,7 +3,7 @@ import typing
 
 from qtpy import QtCore, QtWidgets
 
-import albulaUtils
+from gui.albula.interface import AlbulaInterface
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -29,6 +29,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
         self.parent = parent
         self.setAcceptHoverEvents(True)
         self.currentSelectedCell = None
+        self.albulaInterface = AlbulaInterface()
 
     def mousePressEvent(self, e):
         for i in range(len(self.parent.rasterList)):
@@ -53,7 +54,7 @@ class RasterGroup(QtWidgets.QGraphicsItemGroup):
                                 logger.debug(
                                     f"filename to display: {filename} spotcount: {spotcount} dmin: {d_min} intensity: {intensity}"
                                 )
-                                albulaUtils.albulaDispFile(filename)
+                                self.albulaInterface.open_file(filename)
                         if not (self.parent.rasterExploreDialog.isVisible()):
                             self.parent.rasterExploreDialog.show()
                         self.parent.rasterExploreDialog.setSpotCount(spotcount)

@@ -53,8 +53,8 @@ class UserScreenDialog(QtWidgets.QFrame):
         robotGB = QtWidgets.QGroupBox()
         robotGB.setTitle("Robot")
 
-        self.unmountColdButton = QtWidgets.QPushButton("Unmount Cold")
-        self.unmountColdButton.clicked.connect(self.unmountColdCB)
+        self.unmountWarmButton = QtWidgets.QPushButton("Unmount Warm")
+        self.unmountWarmButton.clicked.connect(self.unmountWarmCB)
         self.testRobotButton = QtWidgets.QPushButton("Test Robot")
         self.testRobotButton.clicked.connect(self.testRobotCB)
         self.recoverRobotButton = QtWidgets.QPushButton("Recover Robot")
@@ -62,7 +62,12 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.dryGripperButton = QtWidgets.QPushButton("Dry Gripper")
         self.dryGripperButton.clicked.connect(self.dryGripperCB)
 
-        hBoxColParams3.addWidget(self.unmountColdButton)
+        self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
+        hBoxColParams3.addWidget(self.queueCollectOnCheckBox)
+        self.checkQueueCollect()
+        self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
+
+        hBoxColParams3.addWidget(self.unmountWarmButton)
         hBoxColParams3.addWidget(self.testRobotButton)
         hBoxColParams3.addWidget(self.recoverRobotButton)
         hBoxColParams3.addWidget(self.dryGripperButton)
@@ -176,7 +181,7 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         if daq_utils.beamline == "nyx":
             self.openShutterButton.setDisabled(True)
-            self.unmountColdButton.setDisabled(True)
+            self.unmountWarmButton.setDisabled(True)
             self.testRobotButton.setDisabled(True)
             self.recoverRobotButton.setDisabled(True)
             self.dryGripperButton.setDisabled(True)
@@ -196,25 +201,27 @@ class UserScreenDialog(QtWidgets.QFrame):
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
 
+    def show(self):
+        self.checkQueueCollect()
+        super().show()
+
     def setSlit1XCB(self):
-        comm_s = "setSlit1X(" + str(self.slit1XMotor_ledit.text()) + ")"
-        self.parent.send_to_server(comm_s)
+        self.parent.send_to_server("setSlit1X", [self.slit1XMotor_ledit.text()])
 
     def setSlit1YCB(self):
-        comm_s = "setSlit1Y(" + str(self.slit1YMotor_ledit.text()) + ")"
-        self.parent.send_to_server(comm_s)
+        self.parent.send_to_server("setSlit1Y", [self.slit1YMotor_ledit.text()])
 
-    def unmountColdCB(self):
-        self.parent.send_to_server("unmountCold()")
+    def unmountWarmCB(self):
+        self.parent.send_to_server("unmountSample")
 
     def testRobotCB(self):
-        self.parent.send_to_server("testRobot()")
+        self.parent.send_to_server("testRobot")
 
     def recoverRobotCB(self):
-        self.parent.send_to_server("recoverRobot()")
+        self.parent.send_to_server("recoverRobot")
 
     def dryGripperCB(self):
-        self.parent.send_to_server("dryGripper()")
+        self.parent.send_to_server("dryGripper")
 
     def stopDetCB(self):
         logger.info("stopping detector")
@@ -235,16 +242,16 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.parent.rebootZebraIOC_pv.put(1)
 
     def SEgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'SE')")
+        self.parent.send_to_server("setGovState", ["SE"])
 
     def SAgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'SA')")
+        self.parent.send_to_server("setGovState", ["SA"])
 
     def DAgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'DA')")
+        self.parent.send_to_server("setGovState", ["DA"])
 
     def BLgovCB(self):
-        self.parent.send_to_server("setGovRobot(gov_robot, 'BL')")
+        self.parent.send_to_server("setGovState", ["BL"])
 
     def userScreenOKCB(self):
         self.hide()
@@ -254,3 +261,20 @@ class UserScreenDialog(QtWidgets.QFrame):
 
     def screenDefaultsOKCB(self):
         self.done(QtWidgets.QDialog.Accepted)
+
+    def queueCollectOnCheckCB(self, state):
+        if state == QtCore.Qt.Checked:
+            daq_utils.setBlConfig("queueCollect", 1)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
+        else:
+            daq_utils.setBlConfig("queueCollect", 0)
+            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.parent.row_clicked(
+            0
+        )  # This is so that appropriate boxes are filled when toggling queue collect
+
+    def checkQueueCollect(self):
+        if daq_utils.getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)

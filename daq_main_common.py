@@ -1,26 +1,28 @@
+import _thread
+import atexit
+import json
+import logging
+import os
 import string
 import sys
-import os
 import time
-import _thread
+import traceback
+
+import beamline_lib
+import beamline_support
+import config_params
 import daq_lib
 import daq_utils
 import det_lib
-import beamline_support
-import beamline_lib
-from start_bs import plt
-import config_params
-import atexit
-import traceback
+from beamline_lib import *
+from daq_lib import *
 
 #imports to get useful things into namespace for server
 from daq_macros import *
-from daq_lib import *
-from robot_lib import *
-from beamline_lib import *
 from gov_lib import setGovRobot
+from robot_lib import *
+from start_bs import gov_robot, plt
 
-import logging
 logger = logging.getLogger(__name__)
 
 sitefilename = ""
@@ -29,10 +31,79 @@ command_list = []
 immediate_command_list = []
 z = 25
 
+def setGovState(state):
+  setGovRobot(gov_robot, state)
+
+
+functions = [anneal,
+  set_beamsize,
+  importSpreadsheet,
+  mvaDescriptor,
+  setTrans,
+  loop_center_xrec,
+  autoRasterLoop,
+  snakeRaster,
+  ispybLib.insertRasterResult,
+  backlightBrighter,
+  backlightDimmer,
+  changeImageCenterHighMag,
+  changeImageCenterLowMag,
+  center_on_click,
+  runDCQueue,
+  warmupGripper,
+  dryGripper,
+  enableDewarTscreen,
+  parkGripper,
+  stopDCQueue,
+  continue_data_collection,
+  mountSample,
+  unmountSample,
+  reprocessRaster,
+  fastDPNodes,
+  spotNodes,
+  unmountCold,
+  openPort,
+  set_beamcenter,
+  closePorts,
+  clearMountedSample,
+  recoverRobot,
+  rebootEMBL,
+  restartEMBL,
+  openGripper,
+  closeGripper,
+  homePins,
+  setSlit1X,
+  setSlit1Y,
+  testRobot,
+  setGovState,
+  move_omega,
+  lockGUI,
+  unlockGUI,
+  DewarAutoFillOff,
+  DewarAutoFillOn,
+  logMe,
+  unlatchGov,
+  backoffDetector,
+  enableMount,
+  robotOn
+  ]
+
+whitelisted_functions: "Dict[str, Callable]" = {
+    func.__name__: func for func in functions
+}
   
 def execute_command(command_s):
-  logger.info('executing command: %s' % command_s)
-  exec(command_s)
+  logger.info("executing command: %s" % command_s)
+  try:
+      command: "dict[str, Any]" = json.loads(command_s)
+      func = whitelisted_functions[command["function"]]
+  except Exception as e:
+      logger.exception(f"Error in function parsing and lookup: {e}")
+  
+  try:
+      func(*command["args"], **command["kwargs"])
+  except Exception as e:
+      logger.exception(f"Error executing {command_s}: {e}")
 
 
 def pybass_init():

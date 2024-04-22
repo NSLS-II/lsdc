@@ -36,6 +36,7 @@ from config_params import (
     VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
+    MINIMUM_RASTER_SIZE
 )
 from daq_utils import getBlConfig, setBlConfig
 from element_info import element_info
@@ -2888,9 +2889,25 @@ class ControlMain(QtWidgets.QMainWindow):
         center_y = int(self.polyBoundingRect.center().y())
         stepsizeXPix = self.screenXmicrons2pixels(float(self.rasterStepEdit.text()))
         stepsizeYPix = self.screenYmicrons2pixels(float(self.rasterStepEdit.text()))
+        numsteps_w = raster_w/stepsizeXPix
+        numsteps_h = raster_h/stepsizeYPix
+        stepsize = float(self.rasterStepEdit.text())
+
+        while (numsteps_w < MINIMUM_RASTER_SIZE[daq_utils.beamline] and numsteps_h < MINIMUM_RASTER_SIZE[daq_utils.beamline]):
+            logger.info(f"{numsteps_h=}, {numsteps_w=}, {stepsize=}, {stepsizeXPix=}, {stepsizeYPix=}")
+            if stepsize == 1:
+                logger.error("Cannot add raster request, stepsize must be 1 micron with a minimum width or height of 5 cells")
+                return
+            stepsize -= 1
+            stepsizeXPix = self.screenXmicrons2pixels(stepsize)
+            stepsizeYPix = self.screenYmicrons2pixels(stepsize)
+
+            numsteps_w = raster_w/stepsizeXPix
+            numsteps_h = raster_h/stepsizeYPix
+
         self.click_positions = []
         self.definePolyRaster(
-            raster_w, raster_h, stepsizeXPix, stepsizeYPix, center_x, center_y
+            raster_w, raster_h, stepsizeXPix, stepsizeYPix, center_x, center_y, stepsize
         )
 
     def measurePolyCB(self):
@@ -3280,11 +3297,10 @@ class ControlMain(QtWidgets.QMainWindow):
         return int(round(microns * (daq_utils.screenPixY / fovY)))
 
     def definePolyRaster(
-        self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y
+        self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y, stepsize
     ):  # all come in as pixels, raster_w and raster_h are bounding box of drawn graphic
         # raster status - 0=nothing done, 1=run, 2=displayed
         stepTime = float(self.exp_time_ledit.text())
-        stepsize = float(self.rasterStepEdit.text())
         if (stepsize / 1000.0) / stepTime > 2.0:
             self.popupServerMessage(
                 "Stage speed exceeded. Increase exposure time, or decrease step size. Limit is 2mm/s."

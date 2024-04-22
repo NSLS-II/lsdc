@@ -1,5 +1,6 @@
+import grp
+import os
 from enum import Enum
-import os, grp
 
 # BlConfig parameter variable names
 
@@ -107,6 +108,8 @@ VALID_TRANSMISSION = {
     "fmx": {"min": 0.001, "max": 1.0, "digits": 3},
     "nyx": {"min": 0.001, "max": 0.999, "digits": 3},
 }
+
+MINIMUM_RASTER_SIZE = {"amx": 6, "fmx": 6, "nyx": 2}
 
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
 IS_STAFF = (

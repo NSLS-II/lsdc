@@ -563,7 +563,7 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         self.energy_ledit = self.energyMoveLedit.getEntry()
         self.energy_ledit.setValidator(QtGui.QDoubleValidator())
-        self.energy_ledit.returnPressed.connect(self.moveEnergy10eVCB)
+        self.energy_ledit.returnPressed.connect(self.moveEnergyMaxDeltaCB)
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)
         hBoxColParams3.addWidget(colEnergyLabel)
@@ -2702,11 +2702,11 @@ class ControlMain(QtWidgets.QMainWindow):
             {"relative": False}
         )
 
-    def moveEnergy10eVCB(self):
+    def moveEnergyMaxDeltaCB(self, max_delta=10.0):
         energyRequest = float(str(self.energy_ledit.text()))
         if self.controlEnabled():
-            if abs(energyRequest - self.energy_pv.get()) > 10.0:
-                self.popupServerMessage("Energy change must be less than 10 ev")
+            if abs(energyRequest - self.energy_pv.get()) > max_delta:
+                self.popupServerMessage(f"Energy change must be less than or equal to {max_delta:.2f} ev")
                 return
             else:
                 self.send_to_server("mvaDescriptor", ["energy", float(self.energy_ledit.text())])

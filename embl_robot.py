@@ -298,11 +298,10 @@ class EMBLRobot:
           if (e_s.find("Fatal") != -1):
             if self.isSampleDetected(e_s):
               return MOUNT_STEP_SUCCESSFUL
-            else:
-              daq_macros.robotOff()
-              daq_macros.disableMount()
-              daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
-              return MOUNT_FAILURE
+            daq_macros.robotOff()
+            daq_macros.disableMount()
+            daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
+            return MOUNT_FAILURE
           if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1 or e_s.find("Fail to calculate Pin Position") != -1):
             if (getBlConfig("queueCollect") == 0):
               daq_lib.gui_message(e_s + ". Try mounting again")

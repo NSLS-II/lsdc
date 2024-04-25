@@ -770,8 +770,9 @@ def setELsdc(energy,
     if beamCenterAlign:
         # Check for pre-conditions for beam_center_align()
         if shutter_hutch_c.status.get():
-            print('Experiment hutch shutter closed. Has to be open for this to work. Stopping')
-            daq_lib.gui_message(f"Experiment hutch shutter closed. Has to be open for this to work. Stopping")
+            message = 'Experiment hutch shutter closed. Has to be open for this to work. Stopping'
+            logging.error(message)
+            daq_lib.gui_message(message)
             return -1
         
         print('Aligning beam center')

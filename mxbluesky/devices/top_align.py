@@ -17,6 +17,11 @@ from enum import Enum
 from collections import OrderedDict
 import daq_utils
 
+if daq_utils.beamline == 'amx':
+    device_prefix = "XF:17IDB-ES:AMX"
+else:
+    device_prefix = "XF:17IDC-ES:FMX"
+
 class TopPlanLimit(Enum):
     """Prevent large goniometer movements during topview plan. Rotating gonio
     with piezo stages extended can hit things like the collimator or beamstop.
@@ -168,16 +173,16 @@ class GovernorError(Exception):
 
 class TopAlignerBase(Device):
 
-    topcam = Cpt(TopAlignCam, "XF:17IDB-ES:AMX{Cam:9}")
-    gonio_o = Cpt(EpicsMotor, "XF:17IDB-ES:AMX{Gon:1-Ax:O}Mtr", timeout=6)
+    topcam = Cpt(TopAlignCam, f"{device_prefix}{{Cam:9}}")
+    gonio_o = Cpt(EpicsMotor, f"{device_prefix}{{Gon:1-Ax:O}}Mtr", timeout=6)
     gonio_py = Cpt(
-        EpicsMotorSPMG, "XF:17IDB-ES:AMX{Gon:1-Ax:PY}Mtr", timeout=6
+        EpicsMotorSPMG, f"{device_prefix}{{Gon:1-Ax:PY}}Mtr", timeout=6
     )
     gonio_pz = Cpt(
-        EpicsMotorSPMG, "XF:17IDB-ES:AMX{Gon:1-Ax:PZ}Mtr", timeout=6
+        EpicsMotorSPMG, f"{device_prefix}{{Gon:1-Ax:PZ}}Mtr", timeout=6
     )
-    kill_py = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Gon:1-Ax:PY}Cmd:Kill-Cmd")
-    kill_pz = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Gon:1-Ax:PY}Cmd:Kill-Cmd")
+    kill_py = Cpt(EpicsSignal, f"{device_prefix}{{Gon:1-Ax:PY}}Cmd:Kill-Cmd")
+    kill_pz = Cpt(EpicsSignal, f"{device_prefix}{{Gon:1-Ax:PY}}Cmd:Kill-Cmd")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -205,7 +210,7 @@ class TopAlignerBase(Device):
 
 class TopAlignerFast(TopAlignerBase):
 
-    zebra = Cpt(ZebraMXOr, "XF:17IDB-ES:AMX{Zeb:2}:")
+    zebra = Cpt(ZebraMXOr, f"{device_prefix}{{Zeb:2}}:")
     target_gov_state = Cpt(
         Signal, value=None, doc="target governor state used to trigger device"
     )

@@ -759,9 +759,6 @@ def setELsdc(energy,
         print('ivu_gap_scan() successful')
         time.sleep(1)
     
-    # Activate sector 17 photon local feedback (Legacy)
-    # photon_local_feedback_c17.x_enable.put(1)
-    # photon_local_feedback_c17.y_enable.put(1)
 
     # Hold pitch
     yield from activate_pitch_hold()

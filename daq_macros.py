@@ -2387,6 +2387,8 @@ def get_score_index(score_vals: "np.ndarray", scoreOption, indices=None):
     scoreVal = np.max(score_vals)
     max_index = np.argmax(score_vals)
   
+  max_index = max_index if not indices else indices[max_index] 
+
   return scoreVal, max_index
 
 def get_gonio_pos_from_raster_result(cell_results, raster_map, index):
@@ -2394,7 +2396,7 @@ def get_gonio_pos_from_raster_result(cell_results, raster_map, index):
   Returns the motor positions and the cell which corresponds to the index 
   given in the cell_results list
   """
-  hot_file = cell_results[index]
+  hot_file = cell_results[index]["cellMapKey"]
   hot_coords = raster_map[hot_file]     
   x = hot_coords["x"]
   y = hot_coords["y"]
@@ -2477,6 +2479,7 @@ def run_auto_raster(max_index, score_vals, scoreOption, cellResults, rasterMap, 
       score_val, max_index = get_score_index(score_vals, scoreOption, indices)
       hotFile, (x, y, z) = get_gonio_pos_from_raster_result(cellResults, rasterMap, max_index)
       ortho_max_coords = (x, y, z)
+      logger.info(f"ORTHO DEBUG: {max_col=}\n {indices=}\n {max_index=}\n {ortho_max_coords=}")
       max_col = None
 
     kwargs["rasterRequest"]["request_obj"]["max_raster"] = {

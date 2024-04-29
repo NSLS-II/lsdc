@@ -22,7 +22,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
-from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
+from mxbluesky.devices.md2 import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
 
 import daq_utils
 import db_lib

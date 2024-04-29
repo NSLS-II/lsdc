@@ -38,6 +38,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
+from setenergy_lsdc import setELsdc
 
 try:
   import ispybLib
@@ -85,6 +86,14 @@ def abortBS():
       RE.abort()
     except super_state_machine.errors.TransitionError:
       logger.error("caught BS")
+  
+def set_energy(energy):
+  try:
+    daq_lib.set_field("program_state","Setting Energy")
+    RE(setELsdc(energy))
+  except Exception as e:
+    logger.error(f"Exception while running set_energy: {e}")
+    daq_lib.set_field("program_state","Program Ready")
 
 def move_omega(omega, relative=True):
   """Moves omega by a certain amount"""

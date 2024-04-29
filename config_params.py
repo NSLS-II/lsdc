@@ -37,6 +37,7 @@ CRYOSTREAM_ONLINE = (
 # GUI default configuration
 BEAM_CHECK = "beamCheck"
 UNMOUNT_COLD_CHECK = "unmountColdCheck"
+SET_ENERGY_CHECK = "setEnergyCheck"
 
 
 # raster request status updates

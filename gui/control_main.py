@@ -1969,6 +1969,9 @@ class ControlMain(QtWidgets.QMainWindow):
                         raster["graphicsItem"].setVisible(False)
                     else:
                         raster["graphicsItem"].setVisible(True)
+                        if raster["graphicsItem"].scene() is None:
+                            # Sometimes the item is removed from scene somewhere else
+                            self.scene.addItem(raster["graphicsItem"])
                     newY = self.calculateNewYCoordPos(startYX, startYY)
                     raster["graphicsItem"].setPos(raster["graphicsItem"].x(), newY)
 

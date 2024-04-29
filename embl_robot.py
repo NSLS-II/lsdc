@@ -18,7 +18,7 @@ import epics.ca
 import top_view
 from config_params import TOP_VIEW_CHECK, DETECTOR_SAFE_DISTANCE, MOUNT_SUCCESSFUL, MOUNT_FAILURE,\
                           MOUNT_UNRECOVERABLE_ERROR, MOUNT_STEP_SUCCESSFUL, UNMOUNT_SUCCESSFUL,\
-                          UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK
+                          UNMOUNT_FAILURE, UNMOUNT_STEP_SUCCESSFUL, PINS_PER_PUCK, EMBL_SERVER_PV_BASE
 import gov_lib
 #from start_bs import gov_human, gov_robot
 logger = logging.getLogger(__name__)
@@ -220,7 +220,7 @@ class EMBLRobot:
         rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
         logger.info("dewar target,CP")
         logger.info("%s %s" % (rotMotTarget,rotCP))
-        if (abs(rotMotTarget-rotCP)>1):
+        if (abs(rotMotTarget-rotCP)>0.01):
           logger.info("rot dewar")
           try:
             if (init == 0):
@@ -262,7 +262,7 @@ class EMBLRobot:
             if (getPvDesc("sampleDetected") == 0): #reverse logic, 0 = true
               setPvDesc("boostSelect",1)
             else:
-              robotStatus = beamline_support.get_any_epics_pv("SW:RobotState","VAL")
+              robotStatus = beamline_support.get_any_epics_pv(f"{EMBL_SERVER_PV_BASE.get(daq_utils.beamline, 'SW')}:RobotState","VAL")
               if (robotStatus != "Ready"):
                 gov_status = gov_lib.setGovRobot(gov_robot, 'SE')
                 if not gov_status.success:
@@ -298,17 +298,24 @@ class EMBLRobot:
           logger.error(e)
           e_s = str(e)
           if (e_s.find("Fatal") != -1):
+            if self.isSampleDetected(e_s):
+              return MOUNT_STEP_SUCCESSFUL
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
             return MOUNT_FAILURE
-          if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1):
+          if (e_s.find("tilted") != -1 or e_s.find("Load Sample Failed") != -1 or e_s.find("Fail to calculate Pin Position") != -1):
             if (getBlConfig("queueCollect") == 0):
               daq_lib.gui_message(e_s + ". Try mounting again")
               return MOUNT_FAILURE
             else:
               if (retryMountCount == 0):
                 retryMountCount+=1
+                if e_s.find("Fail to calculate Pin Position") != -1:
+                  # This error happens when the dewar has not rotated to the correct position
+                  # If it happens, try running the premount again
+                  logger.info('Trying premount')
+                  self.preMount(gov_robot, puckPos, pinPos, sampID, init=1)
                 mountStat = self.mount(gov_robot, puckPos,pinPos,sampID, **kwargs)
                 if (mountStat == MOUNT_STEP_SUCCESSFUL):
                   retryMountCount = 0
@@ -321,6 +328,25 @@ class EMBLRobot:
           return MOUNT_FAILURE
       return MOUNT_STEP_SUCCESSFUL
 
+    def isSampleDetected(self, error_string, max_wait_time=60):
+      """Sometimes after mount, the pin is not detected on the gonio because
+      there is a buildup of ice between the pin and gonio
+      This function checks for that error, and if it is detected will check for
+      the pin every second for max_wait_time seconds.
+      If after that time it still does not detect the sample it will throw an error
+      """
+      
+      if (error_string.find("Pin lost during mount transaction") != -1):
+        logger.info(f"Pin probably has ice, waiting for {max_wait_time + 1} seconds")
+        wait_time = 0
+        while wait_time < max_wait_time:
+          wait_time += 1
+          time.sleep(1)
+          if getPvDesc("sampleDetected") == 0:
+            # Sample is detected
+            return True
+      return False
+  
     def postMount(self, gov_robot, puck, pinPos, sampID):
       sampYadjust = float(getBlConfig('sampYAdjust'))
       if getBlConfig('robot_online'):
@@ -365,8 +391,8 @@ class EMBLRobot:
       if (robotOnline):
         logger.info("Checking detector dist")
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE)
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
         if daq_utils.beamline == "fmx":
             beamline_lib.mvaDescriptor("omega", 0)
         logger.info("Setting SE state")
@@ -405,10 +431,10 @@ class EMBLRobot:
           logger.error(message)
           return UNMOUNT_FAILURE
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
-        if (detDist<DETECTOR_SAFE_DISTANCE):
-          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE)
-        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE - 1.0)):
-          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE}")
+        if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
+          beamline_lib.mvaDescriptor("detectorDist",DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
+        if (beamline_lib.motorPosFromDescriptor("detectorDist") < (DETECTOR_SAFE_DISTANCE[daq_utils.beamline] - 1.0)):
+          logger.error(f"ERROR - Detector < {DETECTOR_SAFE_DISTANCE[daq_utils.beamline]}")
           return UNMOUNT_FAILURE
       return UNMOUNT_STEP_SUCCESSFUL
 

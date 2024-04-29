@@ -38,6 +38,8 @@ CRYOSTREAM_ONLINE = (
 BEAM_CHECK = "beamCheck"
 UNMOUNT_COLD_CHECK = "unmountColdCheck"
 ON_MOUNT_OPTION = "onMountOption"
+SET_ENERGY_CHECK = "setEnergyCheck"
+
 
 # raster request status updates
 class RasterStatus(Enum):
@@ -85,14 +87,13 @@ DETECTOR_OBJECT_TYPE_LSDC = "lsdc"  # using det_lib
 DETECTOR_OBJECT_TYPE_OPHYD = "ophyd"  # instantiated in start_bs, using Bluesky scans
 DETECTOR_OBJECT_TYPE = "detectorObjectType"
 
-DETECTOR_SAFE_DISTANCE = 200.0
-
+DETECTOR_SAFE_DISTANCE = {"fmx": 200.0, "amx": 180.0, "nyx": 200.0}
 GOVERNOR_TIMEOUT = 120  # seconds for a governor move
 
 DEWAR_SECTORS = {"amx": 8, "fmx": 8, "nyx": 5}
 PUCKS_PER_DEWAR_SECTOR = {"amx": 3, "fmx": 3, "nyx": 3}
 
-cryostreamTempPV = {"amx": "AMX:cs700:gasT-I", "fmx": "FMX:cs700:gasT-I"}
+cryostreamTempPV = {"amx": "XF:17IDB-ES:AMX{CS:1}SAMPLE_TEMP_RBV", "fmx": "FMX:cs700:gasT-I"}
 
 VALID_EXP_TIMES = {
     "amx": {"min": 0.005, "max": 1, "digits": 3},
@@ -117,9 +118,16 @@ VALID_TRANSMISSION = {
     "nyx": {"min": 0.001, "max": 0.999, "digits": 3},
 }
 
+MINIMUM_RASTER_SIZE = {"amx": 6, "fmx": 6, "nyx": 2}
+
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
 IS_STAFF = (
     True
-    if os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
+    if os.environ.get("STAFF_GROUP") is not None and os.environ["STAFF_GROUP"] in [grp.getgrgid(g).gr_name for g in os.getgroups()]
     else False
 )
+
+EMBL_SERVER_PV_BASE = {
+    "amx": "XF:17IDB-ES:AMX{EMBL}",
+    "fmx": "XF:17IDC-ES:FMX{EMBL}"
+}

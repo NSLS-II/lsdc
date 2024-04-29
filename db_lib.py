@@ -485,7 +485,7 @@ def getContainerByID(container_id):
     c = getContainers(filters={'uid': container_id})[0]
     return c
 
-def get_dewar_tree_data(dewar_name, beamline):
+def get_dewar_tree_data(dewar_name, beamline, get_latest_pucks=False):
     """
     returns all data required to show dewar tree data with minimum number of database accesses
     """
@@ -496,6 +496,16 @@ def get_dewar_tree_data(dewar_name, beamline):
     ]  # removes blank ids
     pucks = getContainers(filters={"uid": {"$in": puck_ids}})
 
+    if get_latest_pucks:
+        # If get_latest_pucks is true, get the puck most recently updated in the database
+        # This is for cases when the excel sheet has been uploaded after puck_to_dewar
+        # Or when staff manually refreshes the dewar tree
+        new_pucks = []
+        for puck in pucks:
+            all_pucks = getContainers(filters={"name":puck["name"]})
+            latest_puck = max(all_pucks, key=lambda x: x.get("modified_time", 0.0))
+            new_pucks.append(latest_puck)
+        pucks = new_pucks  
     # Create a mega list of sample ids from puck information
     sample_ids = [
         sample_id

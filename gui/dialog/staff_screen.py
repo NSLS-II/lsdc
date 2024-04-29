@@ -4,8 +4,14 @@ import typing
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
 
-from config_params import BEAM_CHECK, TOP_VIEW_CHECK, UNMOUNT_COLD_CHECK
+from config_params import (
+    BEAM_CHECK,
+    SET_ENERGY_CHECK,
+    TOP_VIEW_CHECK,
+    UNMOUNT_COLD_CHECK,
+)
 from daq_utils import getBlConfig, setBlConfig
+import daq_utils
 
 if typing.TYPE_CHECKING:
     from lsdcGui import ControlMain
@@ -64,16 +70,20 @@ class StaffScreenDialog(QtWidgets.QFrame):
             self.gripperUnmountColdCheckBox.setEnabled(False)
             self.gripperUnmountColdCheckBox.setChecked(False)
 
+        # Set energy checkbox
+        if daq_utils.beamline == "fmx":
+            self.set_energy_checkbox = QCheckBox("Set Energy")
+            hBoxColParams1.addWidget(self.set_energy_checkbox)
+            if getBlConfig(SET_ENERGY_CHECK) == 1:
+                self.set_energy_checkbox.setChecked(True)
+            else:
+                self.set_energy_checkbox.setChecked(False)
+            self.set_energy_checkbox.stateChanged.connect(self.set_energy_check_cb)
+
+
         self.queueCollectOnCheckBox = QCheckBox("Queue Collect")
         hBoxColParams1.addWidget(self.queueCollectOnCheckBox)
-        if getBlConfig("queueCollect") == 1:
-            self.queueCollectOnCheckBox.setChecked(True)
-            self.gripperUnmountColdCheckBox.setEnabled(True)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: ON")
-        else:
-            self.queueCollectOnCheckBox.setChecked(False)
-            self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
+        self.checkQueueCollect()
         self.queueCollectOnCheckBox.stateChanged.connect(self.queueCollectOnCheckCB)
         self.vertRasterOnCheckBox = QCheckBox("Vert. Raster")
         hBoxColParams1.addWidget(self.vertRasterOnCheckBox)
@@ -122,6 +132,8 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.homePinsButton.clicked.connect(self.homePinsCB)
         self.clearMountedSampleButton = QtWidgets.QPushButton("Clear Mounted Sample")
         self.clearMountedSampleButton.clicked.connect(self.clearMountedSampleCB)
+        self.refreshDewarListButton = QtWidgets.QPushButton("Refresh Dewar Tree")
+        self.refreshDewarListButton.clicked.connect(self.refresh_dewar_tree)
         hBoxColParams2.addWidget(self.openPort1Button)
         hBoxColParams2.addWidget(self.closePortsButton)
         hBoxColParams2.addWidget(self.unmountColdButton)
@@ -129,6 +141,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
         hBoxColParams2.addWidget(self.enableTScreenButton)
         hBoxColParams2.addWidget(self.parkButton)
         hBoxColParams2.addWidget(self.clearMountedSampleButton)
+        hBoxColParams2.addWidget(self.refreshDewarListButton)
         hBoxColParams1.addWidget(self.homePinsButton)
         self.setFastDPNodesButton = QtWidgets.QPushButton("Set FastDP Nodes")
         self.setFastDPNodesButton.clicked.connect(self.setFastDPNodesCB)
@@ -208,6 +221,14 @@ class StaffScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
         if show:
             self.show()
+
+
+    def refresh_dewar_tree(self):
+        self.parent.dewarTree.refreshTreeDewarView(get_latest_pucks=True)
+
+    def show(self):
+        self.checkQueueCollect()
+        super().show()
 
     def getSpotNodeList(self):
         nodeList = []
@@ -292,6 +313,18 @@ class StaffScreenDialog(QtWidgets.QFrame):
             setBlConfig(BEAM_CHECK, 0)
             logger.debug(f"{BEAM_CHECK} off")
 
+    def set_energy_check_cb(self, state):
+        if state == QtCore.Qt.Checked:
+            setBlConfig(SET_ENERGY_CHECK, 1)
+            logger.debug(f"{SET_ENERGY_CHECK} on")
+        else:
+            setBlConfig(SET_ENERGY_CHECK, 0)
+            logger.debug(f"{SET_ENERGY_CHECK} off")
+        msg_box = QtWidgets.QMessageBox()
+        msg_box.setText("Set Energy state changed, please restart the GUI to access feature")
+        msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)  # type: ignore
+        msg_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Ok)
+
     def unmountColdCheckCB(self, state):
         if state == QtCore.Qt.Checked:
             logger.info("unmountColdCheckCB On")
@@ -332,11 +365,18 @@ class StaffScreenDialog(QtWidgets.QFrame):
         else:
             setBlConfig("queueCollect", 0)
             self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.gripperUnmountColdCheckBox.setChecked(False)
             self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
         self.parent.row_clicked(
             0
         )  # This is so that appropriate boxes are filled when toggling queue collect
+
+    def checkQueueCollect(self):
+        if getBlConfig("queueCollect") == 1:
+            self.queueCollectOnCheckBox.setChecked(True)
+            self.gripperUnmountColdCheckBox.setEnabled(True)
+        else:
+            self.queueCollectOnCheckBox.setChecked(False)
+            self.gripperUnmountColdCheckBox.setEnabled(False)
 
     def enableMountCheckCB(self, state):
         if state == QtCore.Qt.Checked:

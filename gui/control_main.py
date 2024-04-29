@@ -21,7 +21,6 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QApplication, QCheckBox, QFrame, QGraphicsPixmapItem
 
-import albulaUtils
 import daq_utils
 import db_lib
 import lsdcOlog
@@ -31,15 +30,18 @@ from config_params import (
     RASTER_GUI_XREC_FILL_DELAY,
     SAMPLE_TIMER_DELAY,
     SERVER_CHECK_DELAY,
+    SET_ENERGY_CHECK,
     VALID_DET_DIST,
     VALID_EXP_TIMES,
     VALID_TOTAL_EXP_TIMES,
     VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
+    MINIMUM_RASTER_SIZE
 )
 from daq_utils import getBlConfig, setBlConfig
 from element_info import element_info
+from gui.albula.interface import AlbulaInterface
 from gui.data_loc_info import DataLocInfo
 from gui.dewar_tree import DewarTree
 from gui.dialog import (
@@ -47,6 +49,7 @@ from gui.dialog import (
     PuckDialog,
     RasterExploreDialog,
     ScreenDefaultsDialog,
+    SetEnergyDialog,
     SnapCommentDialog,
     StaffScreenDialog,
     UserScreenDialog,
@@ -54,6 +57,7 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
+from utils import validation
 
 logger = logging.getLogger()
 
@@ -141,7 +145,7 @@ class ControlMain(QtWidgets.QMainWindow):
     roiChangeSignal = QtCore.Signal(int, str)
     highMagCursorChangeSignal = QtCore.Signal(int, str)
     lowMagCursorChangeSignal = QtCore.Signal(int, str)
-    cryostreamTempSignal = QtCore.Signal(str)
+    cryostreamTempSignal = QtCore.Signal(object)
     sampleZoomChangeSignal = QtCore.Signal(object)
 
     def __init__(self):
@@ -164,7 +168,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.redPen = QtGui.QPen(QtCore.Qt.red)
         self.bluePen = QtGui.QPen(QtCore.Qt.blue)
         self.yellowPen = QtGui.QPen(QtCore.Qt.yellow)
-        albulaUtils.startup_albula()
+        self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
+                                               gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
         self.initUI()
         self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])
         self.zoom1FrameRatePV = PV(daq_utils.pvLookupDict["zoom1FrameRate"])
@@ -351,6 +356,8 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         warmupButton = QtWidgets.QPushButton("Warmup Gripper")
         warmupButton.clicked.connect(self.warmupGripperCB)
+        endVisitButton = QtWidgets.QPushButton("End Visit")
+        endVisitButton.clicked.connect(self.endVisitCB)
         restartServerButton = QtWidgets.QPushButton("Restart Server")
         restartServerButton.clicked.connect(self.restartServerCB)
         self.openShutterButton = QtWidgets.QPushButton("Open Photon Shutter")
@@ -373,6 +380,7 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
+        vBoxTreeButtsLayoutRight.addWidget(endVisitButton)
         vBoxTreeButtsLayoutRight.addWidget(restartServerButton)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutLeft)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutRight)
@@ -556,13 +564,20 @@ class ControlMain(QtWidgets.QMainWindow):
         )
         self.energy_ledit = self.energyMoveLedit.getEntry()
         self.energy_ledit.setValidator(QtGui.QDoubleValidator())
-        self.energy_ledit.returnPressed.connect(self.moveEnergyCB)
+        self.energy_ledit.returnPressed.connect(self.moveEnergyMaxDeltaCB)
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)
         hBoxColParams3.addWidget(colEnergyLabel)
         hBoxColParams3.addWidget(self.energyReadback)
         hBoxColParams3.addWidget(energySPLabel)
-        hBoxColParams3.addWidget(self.energy_ledit)
+        if daq_utils.beamline == "fmx":
+            if getBlConfig(SET_ENERGY_CHECK):
+                hBoxColParams3.addWidget(moveEnergyButton)
+            else:
+                hBoxColParams3.addWidget(self.energy_ledit)
+        else:
+            hBoxColParams3.addWidget(self.energy_ledit)
+
         hBoxColParams22.addWidget(colTransmissionLabel)
         hBoxColParams22.addWidget(self.transmissionReadback_ledit)
         hBoxColParams22.addWidget(transmisionSPLabel)
@@ -720,6 +735,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.rasterStepEdit = QtWidgets.QLineEdit(str(self.rasterStepDefs["Coarse"]))
         self.rasterStepEdit.textChanged[str].connect(self.rasterStepChanged)
         self.rasterStepEdit.setFixedWidth(60)
+        self.rasterStepEdit.setText("20")
         self.rasterGrainRadioGroup = QtWidgets.QButtonGroup()
         self.rasterGrainCoarseRadio = QtWidgets.QRadioButton("Coarse")
         self.rasterGrainCoarseRadio.setChecked(False)
@@ -1175,7 +1191,8 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxSampleAlignLayout.addWidget(clearGraphicsButton)
         hBoxSampleAlignLayout.addWidget(saveCenteringButton)
         hBoxSampleAlignLayout.addWidget(selectAllCenteringButton)
-        hBoxSampleAlignLayout.addWidget(self.click3Button)
+        if daq_utils.beamline not in ["amx", "fmx"]:
+            hBoxSampleAlignLayout.addWidget(self.click3Button)
         hBoxSampleAlignLayout.addWidget(snapshotButton)
         hBoxSampleAlignLayout.addWidget(self.hideRastersCheckBox)
         hBoxRadioLayout100 = QtWidgets.QHBoxLayout()
@@ -1327,7 +1344,7 @@ class ControlMain(QtWidgets.QMainWindow):
             140,
             highlight_on_change=False,
         )
-        ringCurrentMessageLabel = QtWidgets.QLabel("Ring(mA):")
+        ringCurrentMessageLabel = QtWidgets.QLabel("Ring (mA):")
         self.ringCurrentMessage = QtWidgets.QLabel(str(self.ringCurrent_pv.get()))
         beamAvailable = self.beamAvailable_pv.get()
         if beamAvailable:
@@ -1343,12 +1360,12 @@ class ControlMain(QtWidgets.QMainWindow):
         else:
             self.sampleExposedLabel = QtWidgets.QLabel("Sample Not Exposed")
             self.sampleExposedLabel.setStyleSheet("background-color: #99FF66;")
-        gripperLabel = QtWidgets.QLabel("Gripper Temp:")
+        gripperLabel = QtWidgets.QLabel("Gripper Temp (K):")
         if daq_utils.beamline == "nyx":
             self.gripperTempLabel = QtWidgets.QLabel("N/A")
         else:
             self.gripperTempLabel = QtWidgets.QLabel("%.1f" % self.gripTemp_pv.get())
-        cryostreamLabel = QtWidgets.QLabel("Cryostream Temp:")
+        cryostreamLabel = QtWidgets.QLabel("Cryostream Temp (K):")
         if getBlConfig(CRYOSTREAM_ONLINE):
             self.cryostreamTempLabel = QtWidgets.QLabel(
                 str(self.cryostreamTemp_pv.get())
@@ -1418,12 +1435,6 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
-
-    def albulaCheckCB(self, state):
-        if state != QtCore.Qt.Checked:
-            albulaUtils.albulaClose()
-        else:
-            albulaUtils.albulaOpen()  # TODO there is no albulaOpen method! remove?
 
     def annealButtonCB(self):
         try:
@@ -2076,14 +2087,21 @@ class ControlMain(QtWidgets.QMainWindow):
             self.shutterStateLabel.setStyleSheet("background-color: #99FF66;")
 
     def processGripTemp(self, gripVal):
-        self.gripperTempLabel.setText("%.1f" % gripVal)
-        if int(gripVal) > -170:
+        gripValKelvin = gripVal + 273.15
+        gripValMaxKelvin = 103.15 # -170 in degC
+        self.gripperTempLabel.setText("%.1f" % gripValKelvin)
+        if gripValKelvin > gripValMaxKelvin:
             self.gripperTempLabel.setStyleSheet("background-color: red;")
         else:
             self.gripperTempLabel.setStyleSheet("background-color: #99FF66;")
 
     def processCryostreamTemp(self, cryostreamVal):
-        self.cryostreamTempLabel.setText(str(cryostreamVal))
+        self.cryostreamTempLabel.setText(f"{cryostreamVal:.2f}")
+        if cryostreamVal is not None:
+            if 99 < cryostreamVal < 102:
+                self.cryostreamTempLabel.setStyleSheet("background-color: #99FF66;")
+            else:
+                self.cryostreamTempLabel.setStyleSheet("background-color: red;")
 
     def processRingCurrent(self, ringCurrentVal):
         self.ringCurrentMessage.setText(str(int(ringCurrentVal)))
@@ -2691,17 +2709,29 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def moveOmegaCB(self):
         self.send_to_server(
-            "mvaDescriptor",
-            ["omega", float(self.sampleOmegaMoveLedit.getEntry().text())],
+            "move_omega",
+            [float(self.sampleOmegaMoveLedit.getEntry().text())],
+            {"relative": False}
         )
 
-    def moveEnergyCB(self):
+    def moveEnergyMaxDeltaCB(self, max_delta=10.0):
         energyRequest = float(str(self.energy_ledit.text()))
-        if abs(energyRequest - self.energy_pv.get()) > 10.0:
-            self.popupServerMessage("Energy change must be less than 10 ev")
-            return
+        if self.controlEnabled():
+            if abs(energyRequest - self.energy_pv.get()) > max_delta:
+                self.popupServerMessage(f"Energy change must be less than or equal to {max_delta:.2f} ev")
+                return
+            else:
+                self.send_to_server("mvaDescriptor", ["energy", float(self.energy_ledit.text())])
+                comm_s = 'mvaDescriptor("energy",' + str(self.energy_ledit.text()) + ")"
+                logger.info(comm_s)
         else:
-            self.send_to_server("mvaDescriptor", ["energy", float(self.energy_ledit.text())])
+            self.popupServerMessage("You don't have control")
+
+    def moveEnergyCB(self):
+        if self.controlEnabled():
+            set_energy = SetEnergyDialog(parent=self)
+        else:
+            self.popupServerMessage("You don't have control")
 
     def setLifetimeCB(self, lifetime):
         if hasattr(self, "sampleLifetimeReadback_ledit"):
@@ -2783,16 +2813,15 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def omegaTweakNegCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
-        tweakVal = 0.0 - tv
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tweakVal)
+            self.send_to_server("move_omega", [-tv])
         else:
             self.popupServerMessage("You don't have control")
 
     def omegaTweakPosCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tv)
+            self.send_to_server("move_omega", [tv])
         else:
             self.popupServerMessage("You don't have control")
 
@@ -2827,9 +2856,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def omegaTweakCB(self, tv):
-        tvf = float(tv)
         if self.controlEnabled():
-            self.omegaTweak_pv.put(tvf)
+            self.send_to_server("move_omega", [float(tv)])
             time.sleep(0.05)
         else:
             self.popupServerMessage("You don't have control")
@@ -2884,9 +2912,25 @@ class ControlMain(QtWidgets.QMainWindow):
         center_y = int(self.polyBoundingRect.center().y())
         stepsizeXPix = self.screenXmicrons2pixels(float(self.rasterStepEdit.text()))
         stepsizeYPix = self.screenYmicrons2pixels(float(self.rasterStepEdit.text()))
+        numsteps_w = raster_w/stepsizeXPix
+        numsteps_h = raster_h/stepsizeYPix
+        stepsize = float(self.rasterStepEdit.text())
+
+        while (numsteps_w < MINIMUM_RASTER_SIZE[daq_utils.beamline] and numsteps_h < MINIMUM_RASTER_SIZE[daq_utils.beamline]):
+            logger.info(f"{numsteps_h=}, {numsteps_w=}, {stepsize=}, {stepsizeXPix=}, {stepsizeYPix=}")
+            if stepsize == 1:
+                logger.error("Cannot add raster request, stepsize must be 1 micron with a minimum width or height of 5 cells")
+                return
+            stepsize -= 1
+            stepsizeXPix = self.screenXmicrons2pixels(stepsize)
+            stepsizeYPix = self.screenYmicrons2pixels(stepsize)
+
+            numsteps_w = raster_w/stepsizeXPix
+            numsteps_h = raster_h/stepsizeYPix
+
         self.click_positions = []
         self.definePolyRaster(
-            raster_w, raster_h, stepsizeXPix, stepsizeYPix, center_x, center_y
+            raster_w, raster_h, stepsizeXPix, stepsizeYPix, center_x, center_y, stepsize
         )
 
     def measurePolyCB(self):
@@ -2921,13 +2965,15 @@ class ControlMain(QtWidgets.QMainWindow):
         self.send_to_server("mvaDescriptor", ["omega", 0])
 
     def fillPolyRaster(
-        self, rasterReq, waitTime=1
+        self, rasterReq
     ):  # at this point I should have a drawn polyRaster
-        time.sleep(waitTime)
         logger.info("filling poly for " + str(rasterReq["uid"]))
-        resultCount = len(db_lib.getResultsforRequest(rasterReq["uid"]))
         rasterResults = db_lib.getResultsforRequest(rasterReq["uid"])
+        
+        if not rasterResults:
+            return
         rasterResult = {}
+        
         for i in range(0, len(rasterResults)):
             if rasterResults[i]["result_type"] == "rasterResult":
                 rasterResult = rasterResults[i]
@@ -2937,6 +2983,7 @@ class ControlMain(QtWidgets.QMainWindow):
         except KeyError:
             db_lib.deleteRequest(rasterReq["uid"])
             return
+        
         rasterListIndex = 0
         for i in range(len(self.rasterList)):
             if self.rasterList[i] != None:
@@ -2953,12 +3000,17 @@ class ControlMain(QtWidgets.QMainWindow):
         self.currentRasterCellList = currentRasterGroup.childItems()
         cellResults = rasterResult["result_obj"]["rasterCellResults"]["resultObj"]
         numLines = len(cellResults)
-        cellResults_array = [{} for i in range(numLines)]
         my_array = np.zeros(numLines)
         spotLineCounter = 0
         cellIndex = 0
         rowStartIndex = 0
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
+        if rasterEvalOption == "Spot Count":
+            cell_result_key = "spot_count_no_ice"
+        elif rasterEvalOption == "Intensity":
+            cell_result_key = "total_intensity"
+        else:
+            cell_result_key = "d_min"
         lenX = abs(
             rasterDef["rowDefs"][0]["end"]["x"] - rasterDef["rowDefs"][0]["start"]["x"]
         )  # ugly for tile flip/noflip
@@ -2977,12 +3029,7 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                try:
-                    spotcount = cellResult["spot_count_no_ice"]
-                    filename = cellResult["image"]
-                except TypeError:
-                    spotcount = 0
-                    filename = "empty"
+                
 
                 if (
                     lenX > 180 and self.scannerType == "PI"
@@ -2993,16 +3040,12 @@ class ControlMain(QtWidgets.QMainWindow):
                         cellIndex = spotLineCounter
                     else:
                         cellIndex = rowStartIndex + ((numsteps - 1) - j)
+                
                 try:
-                    if rasterEvalOption == "Spot Count":
-                        my_array[cellIndex] = spotcount
-                    elif rasterEvalOption == "Intensity":
-                        my_array[cellIndex] = cellResult["total_intensity"]
-                    else:
-                        if float(cellResult["d_min"]) == -1:
-                            my_array[cellIndex] = 50.0
-                        else:
-                            my_array[cellIndex] = float(cellResult["d_min"])
+                    my_array[cellIndex] = cellResult[cell_result_key]
+                    if cell_result_key == 'd_min' and my_array[cellIndex] == -1:
+                        my_array[cellIndex] = 50.0
+
                 except IndexError:
                     logger.error("caught index error #2")
                     logger.error("numlines = " + str(numLines))
@@ -3010,59 +3053,51 @@ class ControlMain(QtWidgets.QMainWindow):
                         "expected: " + str(len(rasterDef["rowDefs"]) * numsteps)
                     )
                     return  # means a raster failure, and not enough data to cover raster, caused a gui crash
-                cellResults_array[
-                    cellIndex
-                ] = cellResult  # instead of just grabbing filename, get everything. Not sure why I'm building my own list of results. How is this different from cellResults?
-                # I don't think cellResults_array is different from cellResults, could maybe test that below by subtituting one for the other. It may be a remnant of trying to store less than the whole result set.
                 spotLineCounter += 1
         floor = np.amin(my_array)
         ceiling = np.amax(my_array)
+        
         cellCounter = 0
-        for i in range(len(rasterDef["rowDefs"])):
-            rowCellCount = 0
-            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
-                cellResult = cellResults_array[cellCounter]
-                try:
-                    spotcount = int(cellResult["spot_count_no_ice"])
-                    cellFilename = cellResult["image"]
-                    d_min = float(cellResult["d_min"])
-                    if d_min == -1:
-                        d_min = 50.0  # trying to handle frames with no spots
-                    total_intensity = int(cellResult["total_intensity"])
-                except TypeError:
-                    spotcount = 0
-                    cellFilename = "empty"
-                    d_min = 50.0
-                    total_intensity = 0
+        color_id = None
+        if ceiling == 0:
+            color_id = 255
+        elif ceiling == floor:
+            if rasterEvalOption == "Resolution":
+                color_id = 0
+            else:
+                color_id = 255
+        if color_id is None:
+            color_ids = ((my_array - floor) / (ceiling - floor)) * 255.0
+        else:
+            color_ids = np.full(my_array.shape, color_id)
 
-                if rasterEvalOption == "Spot Count":
-                    param = spotcount
-                elif rasterEvalOption == "Intensity":
-                    param = total_intensity
+        index = 0
+        for i in range(len(rasterDef["rowDefs"])):
+            numsteps = rasterDef["rowDefs"][i]["numsteps"]
+            rowStartIndex = cellCounter
+            for j in range(numsteps):
+                if i % 2 == 0:  # this is trying to figure out row direction
+                    index = cellCounter
                 else:
-                    param = d_min
-                if ceiling == 0:
-                    color_id = 255
-                elif ceiling == floor:
+                    index = rowStartIndex + ((numsteps - 1) - j)
+                if color_id is None:
+                    #param = my_array[cellCounter]
                     if rasterEvalOption == "Resolution":
-                        color_id = 0
+                        color = int(255 - color_ids[index])
                     else:
-                        color_id = 255
-                elif rasterEvalOption == "Resolution":
-                    color_id = int(
-                        255.0 * (float(param - floor) / float(ceiling - floor))
+                        color = int(color_ids[index])
+                    self.currentRasterCellList[index].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, color, 0, 127))
                     )
                 else:
-                    color_id = int(
-                        255 - (255.0 * (float(param - floor) / float(ceiling - floor)))
+                    self.currentRasterCellList[index].setBrush(
+                        QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
                     )
-                self.currentRasterCellList[cellCounter].setBrush(
-                    QtGui.QBrush(QtGui.QColor(0, 255 - color_id, 0, 127))
-                )
-                self.currentRasterCellList[cellCounter].setData(0, spotcount)
-                self.currentRasterCellList[cellCounter].setData(1, cellFilename)
-                self.currentRasterCellList[cellCounter].setData(2, d_min)
-                self.currentRasterCellList[cellCounter].setData(3, total_intensity)
+                cellResult = cellResults[cellCounter]
+                self.currentRasterCellList[index].setData(0, cellResult.get("spot_count_no_ice", 0))
+                self.currentRasterCellList[index].setData(1, cellResult.get("image", "empty"))
+                self.currentRasterCellList[index].setData(2, cellResult.get("d_min", 50.0))
+                self.currentRasterCellList[index].setData(3, cellResult.get("total_intensity", 0))
                 cellCounter += 1
 
     def takeRasterSnapshot(self, rasterReq):
@@ -3095,7 +3130,7 @@ class ControlMain(QtWidgets.QMainWindow):
             reqID=rasterReq["uid"],
             rasterHeatJpeg=jpegImageFilename,
         )
-        self.send_to_server("ispybLib.insertRasterResult", [str(rasterReq["uid"]), str(visitName)])
+        self.send_to_server("insertRasterResult", [str(rasterReq["uid"]), str(visitName)])
 
     def reFillPolyRaster(self):
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
@@ -3285,11 +3320,10 @@ class ControlMain(QtWidgets.QMainWindow):
         return int(round(microns * (daq_utils.screenPixY / fovY)))
 
     def definePolyRaster(
-        self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y
+        self, raster_w, raster_h, stepsizeXPix, stepsizeYPix, point_x, point_y, stepsize
     ):  # all come in as pixels, raster_w and raster_h are bounding box of drawn graphic
         # raster status - 0=nothing done, 1=run, 2=displayed
         stepTime = float(self.exp_time_ledit.text())
-        stepsize = float(self.rasterStepEdit.text())
         if (stepsize / 1000.0) / stepTime > 2.0:
             self.popupServerMessage(
                 "Stage speed exceeded. Increase exposure time, or decrease step size. Limit is 2mm/s."
@@ -4456,6 +4490,10 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def unmountSampleCB(self):
         logger.info("unmount sample")
+        self.send_to_server("unmountCold")
+
+    def endVisitCB(self):
+        logger.info('Ending visit')
         self.send_to_server("unmountSample")
         
 
@@ -4530,8 +4568,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 ):
                     firstFilename = daq_utils.create_filename(prefix_long, fnumstart)
                     if validate_hdf5:
-                        if albulaUtils.validate_master_HDF5_file(firstFilename):
-                            albulaUtils.albulaDispFile(firstFilename)
+                        if validation.validate_master_HDF5_file(firstFilename):
+                            self.albulaInterface.open_file(firstFilename)
                         else:
                             QtWidgets.QMessageBox.information(
                                 self,
@@ -5152,6 +5190,11 @@ class ControlMain(QtWidgets.QMainWindow):
         print(message_s)
 
     def colorProgramState(self, programState_s):
+        if programState_s == "Setting Energy":
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+
         if programState_s.find("Ready") == -1:
             self.statusLabel.setColor("yellow")
         else:

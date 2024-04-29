@@ -21,7 +21,7 @@ import gov_lib
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
 import logging
-import albulaUtils
+from utils import validation
 logger = logging.getLogger(__name__)
 
 try:
@@ -631,7 +631,7 @@ def collectData(currentRequest):
       filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
       logger.info(f"Checking integrity of {filename}")
       timeout_index = 0
-      while not albulaUtils.validate_master_HDF5_file(filename):
+      while not validation.validate_master_HDF5_file(filename):
         timeout_index += 1
         time.sleep(3)
         if timeout_index > 15:

@@ -75,7 +75,19 @@ functions = [anneal,
   setSlit1X,
   setSlit1Y,
   testRobot,
-  setGovState]
+  setGovState,
+  move_omega,
+  lockGUI,
+  unlockGUI,
+  DewarAutoFillOff,
+  DewarAutoFillOn,
+  logMe,
+  unlatchGov,
+  backoffDetector,
+  enableMount,
+  robotOn,
+  set_energy
+  ]
 
 whitelisted_functions: "Dict[str, Callable]" = {
     func.__name__: func for func in functions

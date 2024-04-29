@@ -4,7 +4,7 @@ import sys
 import ophyd
 from ophyd import EpicsMotor
 from ophyd import EpicsScaler
-from devices import MD2Positioner
+from mxbluesky.devices.md2 import MD2Positioner
 import time
 import epics
 import os

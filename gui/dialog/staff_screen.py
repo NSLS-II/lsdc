@@ -337,7 +337,6 @@ class StaffScreenDialog(QtWidgets.QFrame):
         else:
             setBlConfig("queueCollect", 0)
             self.gripperUnmountColdCheckBox.setEnabled(False)
-            self.gripperUnmountColdCheckBox.setChecked(False)
             self.parent.queue_collect_status_widget.setText("Queue Collect: OFF")
         self.parent.row_clicked(
             0

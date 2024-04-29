@@ -296,6 +296,8 @@ class EMBLRobot:
           logger.error(e)
           e_s = str(e)
           if (e_s.find("Fatal") != -1):
+            if self.isSampleDetected(e_s):
+              return MOUNT_STEP_SUCCESSFUL
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
@@ -324,6 +326,25 @@ class EMBLRobot:
           return MOUNT_FAILURE
       return MOUNT_STEP_SUCCESSFUL
 
+    def isSampleDetected(self, error_string, max_wait_time=60):
+      """Sometimes after mount, the pin is not detected on the gonio because
+      there is a buildup of ice between the pin and gonio
+      This function checks for that error, and if it is detected will check for
+      the pin every second for max_wait_time seconds.
+      If after that time it still does not detect the sample it will throw an error
+      """
+      
+      if (error_string.find("Pin lost during mount transaction") != -1):
+        logger.info(f"Pin probably has ice, waiting for {max_wait_time + 1} seconds")
+        wait_time = 0
+        while wait_time < max_wait_time:
+          wait_time += 1
+          time.sleep(1)
+          if getPvDesc("sampleDetected") == 0:
+            # Sample is detected
+            return True
+      return False
+  
     def postMount(self, gov_robot, puck, pinPos, sampID):
       sampYadjust = float(getBlConfig('sampYAdjust'))
       if getBlConfig('robot_online'):

@@ -8,7 +8,6 @@ from mxtools.eiger import EigerSingleTriggerV26, set_eiger_defaults
 import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
-from mxbluesky.devices.md2 import LightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
 from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
                                  TopAlignerFast, TopAlignerSlow, GoniometerStack)
@@ -180,6 +179,7 @@ elif beamline == "fmx":
     import setenergy_lsdc
 
 elif beamline=="nyx":
+    from mxbluesky.devices.md2 import LightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']

@@ -4,7 +4,6 @@ import sys
 import ophyd
 from ophyd import EpicsMotor
 from ophyd import EpicsScaler
-from mxbluesky.devices.md2 import MD2Positioner
 import time
 import epics
 import os
@@ -324,6 +323,7 @@ def init_motors():
 
   for key in list(motor_dict.keys()):
     if beamline_designation == "XF:19ID" and key in md2_motors:
+      from mxbluesky.devices.md2 import MD2Positioner
       motor_channel_dict[motor_dict[key]] = MD2Positioner(motor_dict[key],name = key)
     else:
       motor_channel_dict[motor_dict[key]] = EpicsMotor(motor_dict[key],name = key)

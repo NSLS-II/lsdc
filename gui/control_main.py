@@ -22,9 +22,12 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
-from mxbluesky.devices.md2 import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
 
 import daq_utils
+if daq_utils.beamline == 'nyx':
+    from mxbluesky.devices.md2 import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
+else:
+    from mxbluesky.devices.generic import GoniometerStack as GonioDevice
 import db_lib
 import lsdcOlog
 from config_params import (
@@ -5092,8 +5095,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.front_light = LightDevice("XF:19IDC-ES{MD2}:Front", name="front_light")
             self.back_light = LightDevice("XF:19IDC-ES{MD2}:Back", name="back_light")
             self.aperture = MD2ApertureDevice("XF:19IDC-ES{MD2}:", name="aperture")
-        else:
-            pass
+        elif daq_utils.beamline == "amx":
+            self.gon = GonioDevice("XF:17IDB-ES:AMX{Gon:1", name="gonio")
+        elif daq_utils.beamline == "fmx":
+            self.gon = GonioDevice("XF:17IDC-ES:FMX{Gon:1", name="gonio")
 
     def initUI(self):
         self.tabs = QtWidgets.QTabWidget()

@@ -23,3 +23,14 @@ class GoniometerStack(Device):
     o = Cpt(EpicsMotor, "-Ax:O}Mtr")
     py = Cpt(EpicsMotor, "-Ax:PY}Mtr")
     pz = Cpt(EpicsMotor, "-Ax:PZ}Mtr")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Renaming to match MD2 GonioDevice
+        self.x = self.gx
+        self.cx = self.gx
+        self.y = self.py
+        self.cy = self.py
+        self.z = self.pz
+        self.cz = self.pz
+        self.omega = self.o

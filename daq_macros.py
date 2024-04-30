@@ -42,7 +42,8 @@ from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # f
 from config_params import ON_MOUNT_OPTION, OnMountAvailOptions
 from mxbluesky.plans import detect_loop, topview_optimized
 
-from setenergy_lsdc import setELsdc
+if daq_utils.beamline == 'fmx':
+  from setenergy_lsdc import setELsdc
 
 
 try:

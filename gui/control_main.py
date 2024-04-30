@@ -2917,7 +2917,6 @@ class ControlMain(QtWidgets.QMainWindow):
         stepsize = float(self.rasterStepEdit.text())
 
         while (numsteps_w < MINIMUM_RASTER_SIZE[daq_utils.beamline] and numsteps_h < MINIMUM_RASTER_SIZE[daq_utils.beamline]):
-            logger.info(f"{numsteps_h=}, {numsteps_w=}, {stepsize=}, {stepsizeXPix=}, {stepsizeYPix=}")
             if stepsize == 1:
                 logger.error("Cannot add raster request, stepsize must be 1 micron with a minimum width or height of 5 cells")
                 return

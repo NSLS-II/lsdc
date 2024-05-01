@@ -132,3 +132,5 @@ EMBL_SERVER_PV_BASE = {
     "amx": "XF:17IDB-ES:AMX{EMBL}",
     "fmx": "XF:17IDC-ES:FMX{EMBL}"
 }
+
+OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": False}

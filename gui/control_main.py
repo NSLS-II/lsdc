@@ -584,25 +584,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.energy_ledit.returnPressed.connect(self.moveEnergyMaxDeltaCB)
         moveEnergyButton = QtWidgets.QPushButton("Move Energy")
         moveEnergyButton.clicked.connect(self.moveEnergyCB)
-        if daq_utils.beamline != 'nyx':
-          hBoxColParams3.addWidget(colEnergyLabel)
-          hBoxColParams3.addWidget(self.energyReadback)
-          hBoxColParams3.addWidget(energySPLabel)
-          if daq_utils.beamline == "fmx":
-              if getBlConfig(SET_ENERGY_CHECK):
-                  hBoxColParams3.addWidget(moveEnergyButton)
-              else:
-                  hBoxColParams3.addWidget(self.energy_ledit)
-          else:
-              hBoxColParams3.addWidget(self.energy_ledit)
-
-          hBoxColParams22.addWidget(colTransmissionLabel)
-          hBoxColParams22.addWidget(self.transmissionReadback_ledit)
-          hBoxColParams22.addWidget(transmisionSPLabel)
-          hBoxColParams22.addWidget(self.transmission_ledit)
-          hBoxColParams22.insertSpacing(5, 100)
-          hBoxColParams22.addWidget(beamsizeLabel)
-          hBoxColParams22.addWidget(self.beamsizeComboBox)
         hBoxColParams4 = QtWidgets.QHBoxLayout()
         colBeamWLabel = QtWidgets.QLabel("Beam Width:")
         colBeamWLabel.setFixedWidth(140)
@@ -615,7 +596,9 @@ class ControlMain(QtWidgets.QMainWindow):
         colBeamHLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.beamHeight_ledit = QtWidgets.QLineEdit()
         self.beamHeight_ledit.setFixedWidth(60)
-        self.beamHeight_ledit.setText(getBlConfig("screen_default_beamHeight"))
+        if daq_utils.beamline == 'nyx':
+            self.beamWidth_ledit.setText(getBlConfig("screen_default_beamWidth"))
+            self.beamHeight_ledit.setText(getBlConfig("screen_default_beamHeight"))
         hBoxColParams4.addWidget(colBeamWLabel)
         hBoxColParams4.addWidget(self.beamWidth_ledit)
         hBoxColParams4.addWidget(colBeamHLabel)

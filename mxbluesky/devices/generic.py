@@ -1,6 +1,6 @@
 from ophyd import Component as Cpt
 from ophyd import Device, EpicsMotor, EpicsSignal
-
+from mxbluesky.devices import standardize_readback
 
 class WorkPositions(Device):
     gx = Cpt(EpicsSignal, "{Gov:Robot-Dev:gx}Pos:Work-Pos")
@@ -15,7 +15,7 @@ class MountPositions(Device):
     pz = Cpt(EpicsSignal, "{Gov:Robot-Dev:gpz}Pos:Mount-Pos")
     o = Cpt(EpicsSignal, "{Gov:Robot-Dev:go}Pos:Mount-Pos")
 
-
+@standardize_readback
 class GoniometerStack(Device):
     gx = Cpt(EpicsMotor, "-Ax:GX}Mtr")
     gy = Cpt(EpicsMotor, "-Ax:GY}Mtr")

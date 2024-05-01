@@ -3834,11 +3834,12 @@ class ControlMain(QtWidgets.QMainWindow):
         This ideally gives feedback on wether the MD2 is in the rotation portion of the three click centering
         
         '''
-        state = self.md2.exporter.read('OmegaState')
-        if state != 'Ready':
-            logger.info('waiting for motor rotation')
-            logger.info('Click not registered')
-            return
+        if daq_utils.beamline == 'nyx':
+            state = self.md2.exporter.read('OmegaState')
+            if state != 'Ready':
+                logger.info('waiting for motor rotation')
+                logger.info('Click not registered')
+                return
         if self.vidActionDefineCenterRadio.isChecked():
             self.vidActionC2CRadio.setChecked(
                 True

@@ -601,7 +601,6 @@ class ControlMain(QtWidgets.QMainWindow):
         colBeamWLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.beamWidth_ledit = QtWidgets.QLineEdit()
         self.beamWidth_ledit.setFixedWidth(60)
-        self.beamWidth_ledit.setText(getBlConfig("screen_default_beamWidth"))
         colBeamHLabel = QtWidgets.QLabel("Beam Height:")
         colBeamHLabel.setFixedWidth(140)
         colBeamHLabel.setAlignment(QtCore.Qt.AlignCenter)

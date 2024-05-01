@@ -3469,29 +3469,48 @@ class ControlMain(QtWidgets.QMainWindow):
         return fov
 
     def screenXPixels2microns(self, pixels):
-        img_scale_factor = self.getMD2ImageXRatio()
-        pixels_per_mm = 1 / self.camera.scale_x.get()
-        pixels_per_micron = pixels_per_mm / 1000.0
-        return float(pixels * img_scale_factor) / pixels_per_micron
-        print(f"pixels per micron = {pixels_per_micron}")
+        if daq_utils.beamline == 'nyx':
+            img_scale_factor = self.getMD2ImageXRatio()
+            pixels_per_mm = 1 / self.camera.scale_x.get()
+            pixels_per_micron = pixels_per_mm / 1000.0
+            return float(pixels * img_scale_factor) / pixels_per_micron
+        else:
+            fov = self.getCurrentFOV()
+            fovX = fov["x"]
+            return float(pixels) * (fovX / daq_utils.screenPixX)
 
     def screenYPixels2microns(self, pixels):
-        pixels_per_mm = 1 / self.camera.scale_y.get()
-        pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = self.getMD2ImageYRatio()
-        return float(pixels * img_scale_factor) / pixels_per_micron
+        if daq_utils.beamline == 'nyx':
+            pixels_per_mm = 1 / self.camera.scale_y.get()
+            pixels_per_micron = pixels_per_mm / 1000.0
+            img_scale_factor = self.getMD2ImageYRatio()
+            return float(pixels * img_scale_factor) / pixels_per_micron
+        else:
+            fov = self.getCurrentFOV()
+            fovY = fov["y"]
+            return float(pixels) * (fovY / daq_utils.screenPixY)
 
     def screenXmicrons2pixels(self, microns):
-        pixels_per_mm = 1 / self.camera.scale_x.get()
-        pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = self.getMD2ImageXRatio()
-        return float(microns * pixels_per_micron) / img_scale_factor
+        if daq_utils.beamline == 'nyx':
+            pixels_per_mm = 1 / self.camera.scale_x.get()
+            pixels_per_micron = pixels_per_mm / 1000.0
+            img_scale_factor = self.getMD2ImageXRatio()
+            return float(microns * pixels_per_micron) / img_scale_factor
+        else:
+            fov = self.getCurrentFOV()
+            fovX = fov["x"]
+            return int(round(microns * (daq_utils.screenPixX / fovX)))
 
     def screenYmicrons2pixels(self, microns):
-        pixels_per_mm = 1 / self.camera.scale_y.get()
-        pixels_per_micron = pixels_per_mm / 1000.0
-        img_scale_factor = self.getMD2ImageYRatio()
-        return float(microns * pixels_per_micron) / img_scale_factor
+        if daq_utils.beamline == 'nyx':
+            pixels_per_mm = 1 / self.camera.scale_y.get()
+            pixels_per_micron = pixels_per_mm / 1000.0
+            img_scale_factor = self.getMD2ImageYRatio()
+            return float(microns * pixels_per_micron) / img_scale_factor
+        else:
+            fov = self.getCurrentFOV()
+            fovY = fov["y"]
+            return int(round(microns * (daq_utils.screenPixY / fovY)))
 
     def getMD2ImageXRatio(self):
         md2_img_width = daq_utils.highMagPixX

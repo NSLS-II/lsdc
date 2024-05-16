@@ -15,6 +15,8 @@ import time
 import daq_utils
 
 
+logger = logging.getLogger()
+
 class AutoCollect():
     def __init__(self, md2):
         self.md2 = md2

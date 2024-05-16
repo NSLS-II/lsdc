@@ -5,12 +5,14 @@ sys.path.append('/nsls2/data/nyx/legacy/Rudra/wxImageViewer/lucid3/lucid3')
 
 #from lucid_core import find_loop
 import logging
+from devices import MD2Device
 import urllib.request
 from io import BytesIO
 from PIL import Image
 import numpy
 import subprocess
 import time
+import daq_utils
 
 
 class AutoCollect():
@@ -25,7 +27,7 @@ class AutoCollect():
         #self.redis_client = redis.Redis(host='10.67.146.131', port=6379, db=0)
         self.lucid_subprocess_call = ['/nsls2/data/nyx/legacy/Rudra/wxImageViewer/lucid_environment/bin/lucid3', 'CurrentSample.jpg']
         self.raster_box_subprocess_call =['curl', '-X', 'POST', '-F', 'file=@./CurrentSample.jpg', 'http://127.0.0.1:8000/predict']
-        self.immediate_comm_pv = PV(daq_utils.beamlineComm + "immediate_command_s")
+        #self.immediate_comm_pv = PV(daq_utils.beamlineComm + "immediate_command_s")
 
 
 
@@ -70,9 +72,10 @@ class AutoCollect():
         return coord_guess
 
 
-
+    #THIS FUNCTION DOES NOT WORK RIGHT NOW
     def center_on_point(self, x_click, y_click):
         #this is only for lowest magnification (ie zoom level 1) should probably set to zoom level 1 when running auto center anyway
+        #click to center currently does not work THIS FUNCTION DOES NOT WORK RIGHT NOW
         
         fov = {"x":0, "y":0}
         fov["x"] = daq_utils.lowMagFOVx
@@ -86,7 +89,7 @@ class AutoCollect():
         correctedC2C_y = self.getMD2BeamCenterY() + (y_click - self.getMD2BeamCenterY() - 40)
         #still using old python string expressions should convert to ''.format()
         comm_s = f'center_on_click({correctedC2C_x},{correctedC2C_y},{fov["x"]},{fov["y"]},source="screen",maglevel=0,viewangle={current_viewangle})'
-        self.immediate_comm_pv.put(comm_s)
+        #self.immediate_comm_pv.put(comm_s)
 
 
 

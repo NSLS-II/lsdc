@@ -21,6 +21,8 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
+from autocenter_lucid import AutoCollect
+
 
 import albulaUtils
 import daq_utils
@@ -242,6 +244,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.changeControlMasterCB(1)
                 self.controlMasterCheckBox.setChecked(True)
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
+
+        self.AutoCenterObject = AutoCollect(self.md2)
 
     def setGuiValues(self, values):
         for item, value in values.items():
@@ -1503,7 +1507,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.dimpleCheckBox.setVisible(False)
             self.centeringComboBox.setVisible(False)
             annealButton.setVisible(False)
-            centerLoopButton.setVisible(False)
+            #unhiding center loop button
+            #centerLoopButton.setVisible(False)
             clearGraphicsButton.setVisible(False)
             saveCenteringButton.setVisible(False)
             selectAllCenteringButton.setVisible(False)
@@ -3023,7 +3028,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
-        self.send_to_server("loop_center_xrec()")
+        self.AutoCenterObject.center_until_centered()
+        #self.send_to_server("loop_center_xrec()")
 
     def autoRasterLoopCB(self):
         self.selectedSampleID = self.selectedSampleRequest["sample"]

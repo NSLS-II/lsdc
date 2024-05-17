@@ -73,6 +73,8 @@ def init_environment():
   screenPixY = float(getBlConfig("screenPixY"))
   if beamline == 'nyx':
     exporter_enabled = bool(getBlConfig("exporterEnabled"))
+  else:
+    exporter_enabled = False
 
   try: 
     unitScaling = float(getBlConfig("unitScaling"))

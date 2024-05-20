@@ -3028,7 +3028,18 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
-        self.AutoCenterObject.center_until_centered()
+        is_centered = False
+        is_centered = self.AutoCenterObject.check_if_centered()
+        sanity_check = 0
+        while(is_centered != True):
+            self.AutoCenterObject.auto3click_center()
+            is_centered = self.AutoCenterObject.check_if_centered()
+            sanity_check = sanity_check + 1
+            if sanity_check > 7:
+                is_centered = True
+                logger.warning('\n\n\n Could not Center (Function is centered is not returning true)\n\n')
+        logger.info('took {} times to auto center'.format(sanity_check))
+        #self.AutoCenterObject.center_until_centered()
         #self.send_to_server("loop_center_xrec()")
 
     def autoRasterLoopCB(self):

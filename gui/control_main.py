@@ -21,7 +21,9 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
+#for the autocenter process
 from autocenter_lucid import AutoCollect
+import subprocess
 
 
 import albulaUtils
@@ -3028,6 +3030,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
+        '''
         is_centered = False
         is_centered = self.AutoCenterObject.check_if_centered()
         sanity_check = 0
@@ -3041,6 +3044,11 @@ class ControlMain(QtWidgets.QMainWindow):
         logger.info('took {} times to auto center'.format(sanity_check))
         #self.AutoCenterObject.center_until_centered()
         #self.send_to_server("loop_center_xrec()")
+        '''
+        autocenter_call = ['./nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center']
+        result = subprocess.run(autocenter_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        logger.info("auto center done")
+        logger.info(result)
 
     def autoRasterLoopCB(self):
         self.selectedSampleID = self.selectedSampleRequest["sample"]

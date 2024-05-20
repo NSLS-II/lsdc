@@ -2051,9 +2051,7 @@ class ControlMain(QtWidgets.QMainWindow):
             if rasterDef["status"] == RasterStatus.DRAWN.value:
                 self.drawPolyRaster(rasterReq)
             elif rasterDef["status"] == RasterStatus.READY_FOR_FILL.value:
-                self.fillPolyRaster(
-                    rasterReq, waitTime=getBlConfig(RASTER_GUI_XREC_FILL_DELAY)
-                )
+                self.fillPolyRaster(rasterReq)
                 logger.info("polyraster filled by displayXrecRaster")
             elif rasterDef["status"] == RasterStatus.READY_FOR_SNAPSHOT.value:
                 if self.controlEnabled():

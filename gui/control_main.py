@@ -3045,7 +3045,7 @@ class ControlMain(QtWidgets.QMainWindow):
         #self.AutoCenterObject.center_until_centered()
         #self.send_to_server("loop_center_xrec()")
         '''
-        autocenter_call = ['./nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center']
+        autocenter_call = ['/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center']
         result = subprocess.run(autocenter_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logger.info("auto center done")
         logger.info(result)

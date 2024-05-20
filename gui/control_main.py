@@ -3049,8 +3049,11 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage(
                 "Starting Auto Center. Please wait until completed"
             )
-        result = subprocess.run(autocenter_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        auto_center_result = subprocess.run(autocenter_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         logger.info("auto center done")
+        self.popupServerMessage(
+                "Auto center done, RESULTS:\n {}".format(auto_center_result)
+            )
         logger.info(result)
 
     def autoRasterLoopCB(self):

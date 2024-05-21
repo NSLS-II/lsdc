@@ -18,7 +18,6 @@ class ProcessPopup(QtWidgets.QMessageBox):
         self.setWindowTitle(window_title)
         self.setIcon(QtWidgets.QMessageBox.NoIcon)
         self.setText(main_text)
-        self.setStandardButtons(None)
         self.setDetailedText(detailed_text)
 
     

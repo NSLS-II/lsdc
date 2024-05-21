@@ -3037,7 +3037,8 @@ class ControlMain(QtWidgets.QMainWindow):
         popup_info.setIcon(QMessageBox.Information)
         x = popup_info.open()
         self.autocenter_process = QProcess(parent=self)
-        self.autocenter_process.readyReadStandardOutput.connect(lambda: (popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8"))))
+        self.autocenter_process.readyReadStandardOutput.connect(lambda: popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
+        self.autocenter_process.finished.connect(lambda: popup_info.setText("AUTO CENTERING FINISHED\nopen details for more information"))
         self.autocenter_process.start(autocenter_call)
 
 

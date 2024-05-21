@@ -200,7 +200,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
-        self.rasterStepDefs = {"Coarse": 20.0, "Fine": 10.0, "VFine": 5.0}
+        self.rasterStepDefs = {"Coarse": 30.0, "Fine": 20.0, "VFine": 10.0}
         self.createSampleTab()
 
         self.initCallbacks()

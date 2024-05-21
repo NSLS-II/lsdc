@@ -200,6 +200,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
+        self.heartbeat_pv = PV("heartbeat_pv")
+        self.last_heartbeat = time.time()
+        self.heartbeat_pv.add_callback(self.heartbeatCB)
         self.rasterStepDefs = {"Coarse": 30.0, "Fine": 20.0, "VFine": 10.0}
         self.createSampleTab()
 
@@ -1553,6 +1556,9 @@ class ControlMain(QtWidgets.QMainWindow):
         serverCheckThread.visit_dir_changed.connect(QApplication.instance().quit)
         serverCheckThread.start()
 
+        self.heartbeat_thread = _thread.start_new_thread(self.monitorHeartbeat, ())
+        self.heartbeat_thread.start()
+
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
 
@@ -1575,6 +1581,15 @@ class ControlMain(QtWidgets.QMainWindow):
                 )
         except:
             pass
+
+    def heartbeatCB(self):
+        self.last_heartbeat = time.time()
+
+    def monitorHeartbeat(self):
+        while True:
+            time.sleep(1)
+            if time.time() - self.last_heartbeat > 10:
+                self.popupServerMessage("Server not responding")
 
     def hideRastersCB(self, state):
         if state == QtCore.Qt.Checked:

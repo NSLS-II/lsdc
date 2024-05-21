@@ -17,7 +17,7 @@ from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, QProcess
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication, QMessageBox
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
@@ -3030,47 +3030,25 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
-        '''
-        is_centered = False
-        is_centered = self.AutoCenterObject.check_if_centered()
-        sanity_check = 0
-        while(is_centered != True):
-            self.AutoCenterObject.auto3click_center()
-            is_centered = self.AutoCenterObject.check_if_centered()
-            sanity_check = sanity_check + 1
-            if sanity_check > 7:
-                is_centered = True
-                logger.warning('\n\n\n Could not Center (Function is centered is not returning true)\n\n')
-        logger.info('took {} times to auto center'.format(sanity_check))
-        #self.AutoCenterObject.center_until_centered()
-        #self.send_to_server("loop_center_xrec()")
-        '''
-        autocenter_call = ['/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center']
+        autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'
         popup_info = QMessageBox(self)
         popup_info.setWindowTitle('AutoCenter Info')
         popup_info.setText("Waiting for auto center, view detailed text for more info")
         popup_info.setIcon(QMessageBox.Information)
         x = popup_info.open()
-        with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
-            for line in p.stdout:
+        self.autocenter_process = QProcess()
+        self.autocenter_process.readyReadStandardOutput.connect(popup_info.setText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
+        self.autocenter_process.start(autocenter_call)
+
+
+        # with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
+        #     for line in p.stdout:
                 
-                popup_info.setText(line + "")
+        #         popup_info.setText(line + "")
 
-        if p.returncode != 0:
-            raise subprocess.CalledProcessError(p.returncode, p.args)
+        # if p.returncode != 0:
+        #     raise subprocess.CalledProcessError(p.returncode, p.args)
 
-
-
-        # self.popupServerMessage(
-        #         "Starting Auto Center. Please wait until completed"
-        #     )
-        # auto_center_result = subprocess.run(autocenter_call, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # logger.info("auto center done")
-        # self.popupServerMessage(
-        #         "Auto center done, RESULTS:\n {}".format(auto_center_result)
-        #     )
-        # logger.info(auto_center_result)
-        
 
     def autoRasterLoopCB(self):
         self.selectedSampleID = self.selectedSampleRequest["sample"]

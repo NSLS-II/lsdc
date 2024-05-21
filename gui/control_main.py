@@ -3053,7 +3053,8 @@ class ControlMain(QtWidgets.QMainWindow):
         x = popup_info.open()
         with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
             for line in p.stdout:
-                popup_info.setText(line, end="")
+                
+                popup_info.setText(line + "")
 
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, p.args)

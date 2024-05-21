@@ -3054,7 +3054,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupServerMessage(
                 "Auto center done, RESULTS:\n {}".format(auto_center_result)
             )
-        logger.info(result)
+        logger.info(auto_center_result)
 
     def autoRasterLoopCB(self):
         self.selectedSampleID = self.selectedSampleRequest["sample"]

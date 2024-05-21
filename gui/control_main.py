@@ -3051,6 +3051,7 @@ class ControlMain(QtWidgets.QMainWindow):
         popup_info.setText("Waiting for auto center, view detailed text for more info")
         popup_info.setIcon(QMessageBox.Information)
         x = popup_info.open()
+        time.sleep(0.5)
         with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
             for line in p.stdout:
                 

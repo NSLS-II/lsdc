@@ -151,8 +151,8 @@ class MD2Device(GonioDevice):
         PhaseIndex PV will return this value +1
         '''
         CENTRING = 0
-        BEAMLOCATION = 1
-        DATACOLLECTION = 2
+        BEAM_LOCATION = 1
+        DATA_COLLECTION = 2
         TRANSFER = 3
         UNKNOWN = 4
 

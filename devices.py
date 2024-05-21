@@ -2,6 +2,7 @@ from ophyd import Device, Component as Cpt, EpicsSignal, EpicsSignalRO, PVPositi
 import socket
 from ophyd.status import SubscriptionStatus
 import os
+from enum import Enum
 
 class MD2Positioner(PVPositioner):
     setpoint = Cpt(EpicsSignal, 'Position', name='setpoint')
@@ -143,7 +144,19 @@ class GonioDevice(Device):
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
 
 class MD2Device(GonioDevice):
-    # TODO: Enum for MD2 phases and states
+    class Phase(Enum):
+        '''
+        Enum for the MD2 phases
+        These values are for setting CurrentPhase PV
+        PhaseIndex PV will return this value +1
+        '''
+        CENTRING = 0
+        BEAMLOCATION = 1
+        DATACOLLECTION = 2
+        TRANSFER = 3
+        UNKNOWN = 4
+
+    phase = Cpt(EpicsSignal, 'CurrentPhase', name='phase', enum=Phase)
     cx = Cpt(MD2Positioner, 'CentringX',name='cx')
     cy = Cpt(MD2Positioner, 'CentringY',name='cy')
     center_pixel_x = Cpt(EpicsSignalRO, 'BeamPositionHorizontal',name='center_pixel_x')

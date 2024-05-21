@@ -54,7 +54,8 @@ from gui.dialog import (
     SnapCommentDialog,
     StaffScreenDialog,
     UserScreenDialog,
-    CalculatorWindow
+    CalculatorWindow,
+    ProcessPopup
 )
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
@@ -3031,13 +3032,12 @@ class ControlMain(QtWidgets.QMainWindow):
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
         autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'
-        popup_info = QMessageBox(parent = self)
-        popup_info.setWindowTitle('AutoCenter Info')
-        popup_info.setText("Waiting for auto center, view detailed text for more info")
+        popup_info = ProcessPopup(window_title='AutoCenter Info', main_text="Waiting for auto center, view detailed text for more info")
+        
         popup_info.setIcon(QMessageBox.Information)
         x = popup_info.open()
         self.autocenter_process = QProcess(parent=self)
-        #self.autocenter_process.readyReadStandardOutput.connect(popup_info.setText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
+        self.autocenter_process.readyReadStandardOutput.connect(lambda: (popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8"))))
         self.autocenter_process.start(autocenter_call)
 
 

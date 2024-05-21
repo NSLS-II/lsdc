@@ -3032,7 +3032,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def autoCenterLoopCB(self):
         logger.info("auto center loop")
         autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'
-        popup_info = ProcessPopup(window_title='AutoCenter Info', main_text="Waiting for auto center, view detailed text for more info")
+        popup_info = ProcessPopup(parent = self, window_title='AutoCenter Info', main_text="Waiting for auto center, view detailed text for more info")
         
         popup_info.setIcon(QMessageBox.Information)
         x = popup_info.open()

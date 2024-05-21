@@ -3046,7 +3046,7 @@ class ControlMain(QtWidgets.QMainWindow):
         #self.send_to_server("loop_center_xrec()")
         '''
         autocenter_call = ['/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center']
-        popup_info = QMessageBox(Parent= self)
+        popup_info = QMessageBox(parent=self)
         popup_info.setWindowTitle('AutoCenter Info')
         popup_info.setText("Waiting for auto center, view detailed text for more info")
         popup_info.setIcon(QMessageBox.Information)

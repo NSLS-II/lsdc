@@ -4,7 +4,7 @@ import typing
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
-from devices import md2
+from devices import MD2Device
 
 import daq_utils
 
@@ -198,16 +198,16 @@ class UserScreenDialog(QtWidgets.QFrame):
         self.setLayout(vBoxColParams1)
 
     def centringPhaseTransitionCB(self):
-        self.parent.md2.phase_transition(md2.Phase.CENTRING)
+        self.parent.md2.phase_transition(MD2Device.Phase.CENTRING)
 
     def beamLocationPhaseTransitionCB(self):
-        self.parent.md2.phase_transition(md2.Phase.BEAM_LOCATION)
+        self.parent.md2.phase_transition(MD2Device.Phase.BEAM_LOCATION)
 
     def dataCollectionPhaseTransitionCB(self):
-        self.parent.md2.phase_transition(md2.Phase.DATA_COLLECTION)
+        self.parent.md2.phase_transition(MD2Device.Phase.DATA_COLLECTION)
 
     def transferPhaseTransitionCB(self):
-        self.parent.md2.phase_transition(md2.Phase.TRANSFER)
+        self.parent.md2.phase_transition(MD2Device.Phase.TRANSFER)
 
     def setSlit1XCB(self):
         comm_s = "setSlit1X(" + str(self.slit1XMotor_ledit.text()) + ")"

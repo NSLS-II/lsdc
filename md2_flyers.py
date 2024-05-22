@@ -54,7 +54,7 @@ class MD2StandardFlyer():
 
     def detector_arm(self, angle_start, img_width, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-                     wavelength, det_distance_m):
+                     wavelength, det_distance_m, num_triggers=1):
         self.detector.cam.save_files.put(1)
         self.detector.cam.sequence_id.put(file_number_start)
         self.detector.cam.det_distance.put(det_distance_m)
@@ -65,7 +65,7 @@ class MD2StandardFlyer():
         file_prefix_minus_directory = file_prefix_minus_directory.split("/")[-1]
         self.detector.cam.acquire_time.put(exposure_per_image)
         self.detector.cam.acquire_period.put(exposure_per_image)
-        self.detector.cam.num_triggers.put(1)
+        self.detector.cam.num_triggers.put(num_triggers)
         self.detector.cam.num_images.put(total_num_images)
         self.detector.cam.trigger_mode.put(
             EXTERNAL_SERIES
@@ -263,34 +263,7 @@ class MD2RasterFlyer(MD2StandardFlyer):
                              use_fast_mesh_scans=self.collection_params["use_fast_mesh_scans"])
         logger.info(f"md2 RASTER KICKOFF msg: {md2_msg}")
         return NullStatus()
-    
-    def detector_arm(self, angle_start, img_width, number_of_lines, total_num_images, exposure_per_image, 
-                     file_prefix, data_directory_name, file_number_start, x_beam, y_beam, 
-                     wavelength, det_distance_m):
-        self.detector.cam.save_files.put(1)
-        self.detector.cam.sequence_id.put(file_number_start)
-        self.detector.cam.det_distance.put(det_distance_m)
-        self.detector.cam.file_owner.put(getpass.getuser())
-        self.detector.cam.file_owner_grp.put(grp.getgrgid(os.getgid())[0])
-        self.detector.cam.file_perms.put(420)
-        file_prefix_minus_directory = str(file_prefix)
-        file_prefix_minus_directory = file_prefix_minus_directory.split("/")[-1]
-        self.detector.cam.acquire_time.put(exposure_per_image)
-        self.detector.cam.acquire_period.put(exposure_per_image)
-        self.detector.cam.num_triggers.put(number_of_lines)
-        self.detector.cam.num_images.put(total_num_images)
-        self.detector.cam.trigger_mode.put(
-            EXTERNAL_SERIES
-        )  # must be external_enable to get the correct number of triggers and stop acquire
-        self.detector.cam.file_path.put(data_directory_name)
-        self.detector.cam.fw_name_pattern.put(f"{file_prefix_minus_directory}_$id")
-        self.detector.cam.beam_center_x.put(x_beam)
-        self.detector.cam.beam_center_y.put(y_beam)
-        self.detector.cam.omega_incr.put(img_width)
-        self.detector.cam.omega_start.put(angle_start)
-        self.detector.cam.wavelength.put(wavelength)
-        self.detector.file.file_write_images_per_file.put(500)
-    
+
     def update_parameters(self, omega_range, line_range, total_uturn_range, start_omega, start_y, start_z, start_cx, start_cy, number_of_lines, frames_per_line, exposure_time, invert_direction, use_centring_table, use_fast_mesh_scans):
         self.collection_params = {
             "omega_range": omega_range,

@@ -3653,7 +3653,7 @@ def rasterDaq(rasterReqID):
         return 0
     start_time = time.time()
     raster_flyer.configure_detector(rasterFilePrefix, data_directory_name)
-    raster_flyer.detector_arm(start_omega, img_width_per_cell, total_num_images, exposure_per_image, 
+    raster_flyer.detector_arm(start_omega, img_width_per_cell, number_of_lines, total_num_images, exposure_per_image, 
                      file_prefix, data_directory_name, file_number_start, xbeam, ybeam, 
                      wavelength, detDist)
     def armed_callback(value, old_value, **kwargs):

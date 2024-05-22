@@ -200,7 +200,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
-        self.heartbeat_pv = PV("heartbeat_pv")
+        self.heartbeat_pv = PV("XF:19ID2-ES:NYX{Comm}server_heartbeat")
         self.last_heartbeat = time.time()
         self.heartbeat_pv.add_callback(self.heartbeatCB)
         self.rasterStepDefs = {"Coarse": 30.0, "Fine": 20.0, "VFine": 10.0}

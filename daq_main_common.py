@@ -94,17 +94,17 @@ def process_command_file(command_file_name):
 
 
 def process_immediate_commands(frequency):
-  memory_beat = beamline_support.pvGet("heartbeat_pv")
+  memory_beat = beamline_support.pvGet('XF:19ID2-ES:NYX{Comm}server_heartbeat')
   while (1):
     if (len(immediate_command_list) > 0):
       command = immediate_command_list.pop(0)
       logger.info('immediate command: %s' % command)
       process_input(command)
-      if memory_beat == beamline_support.pvGet("heartbeat_pv"):
+      if memory_beat == beamline_support.pvGet('XF:19ID2-ES:NYX{Comm}server_heartbeat'):
         memory_beat = random.randint(0, 1000)
-        beamline_support.pvPut("heartbeat_pv", str(memory_beat))
+        beamline_support.pvPut('XF:19ID2-ES:NYX{Comm}server_heartbeat', str(memory_beat))
       else:
-        print("Heartbeat mismatch, possibility of multipler servers running.")
+        print('Heartbeat mismatch, possibility of multipler servers running.')
     time.sleep(frequency)      
 
 def process_commands(frequency):

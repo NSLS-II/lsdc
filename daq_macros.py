@@ -3446,7 +3446,7 @@ def standardDaq(currentRequest):
     angle_start = sweep_start_angle
     wavelength = daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
 
-    yield from bps.mv(beamstop.distance_preset, 20.0)
+    yield from bps.mv(beamstop.distance_preset, 10.0)
     md2.save_center()
     if det_move_done.get() != 1:
         def det_move_done_callback(value, old_value, **kwargs):
@@ -3539,7 +3539,7 @@ def vectorDaq(currentRequest):
         det_move_status.wait()
 
     md2.save_center()
-    yield from bps.mv(beamstop.distance_preset, 20.0)
+    yield from bps.mv(beamstop.distance_preset, 10.0)
 
     if vector_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '
@@ -3643,7 +3643,7 @@ def rasterDaq(rasterReqID):
         det_move_status.wait()
 
     md2.save_center()
-    yield from bps.mv(beamstop.distance_preset, 20.0)
+    yield from bps.mv(beamstop.distance_preset, 10.0)
 
     if raster_flyer.detector.cam.armed.get() == 1:
         daq_lib.gui_message('Detector is in armed state from previous collection! Stopping detector, but the user '

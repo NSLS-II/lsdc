@@ -105,7 +105,7 @@ def process_immediate_commands(frequency):
       memory_beat = random.randint(0, 1000)
       beamline_support.pvPut(daq_lib.heartbeat, str(memory_beat))
     else:
-      print('Heartbeat mismatch, possibility of multipler servers running.')
+      print('Heartbeat mismatch, possibility of multiple servers running.')
     time.sleep(frequency)      
 
 def process_commands(frequency):

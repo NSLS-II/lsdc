@@ -3858,12 +3858,17 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.drawInteractiveRasterCB()
             return
         fov = self.getCurrentFOV()
-        correctedC2C_x = self.getMD2BeamCenterX() + (
-            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX) - 20
-        )
-        correctedC2C_y = self.getMD2BeamCenterY() + (
-            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY) - 40
-        )
+        correctedC2C_x = x_click + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
+        correctedC2C_y = y_click + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
+        if (daq_utils.beamline == "nyx"):
+            lsdc_x = daq_utils.screenPixX
+            lsdc_y = daq_utils.screenPixY
+            md2_x = self.md2.center_pixel_x.get() * 2
+            md2_y = self.md2.center_pixel_y.get() * 2
+            scale_x = md2_x / lsdc_x
+            scale_y = md2_y / lsdc_y
+            correctedC2C_x = correctedC2C_x * scale_x
+            correctedC2C_y = correctedC2C_y * scale_y
 
         current_viewangle = daq_utils.mag1ViewAngle
         if self.zoom2Radio.isChecked():
@@ -3887,8 +3892,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
             
             if daq_utils.exporter_enabled: 
-                correctedC2C_x = x_click + 5 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
-                correctedC2C_y = y_click - 35 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
+                correctedC2C_x = x_click + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
+                correctedC2C_y = y_click + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
                 lsdc_x = daq_utils.screenPixX
                 lsdc_y = daq_utils.screenPixY
                 md2_x = self.md2.center_pixel_x.get() * 2
@@ -3898,9 +3903,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 correctedC2C_x = correctedC2C_x * scale_x
                 correctedC2C_y = correctedC2C_y * scale_y
                 self.md2.centring_click.put(f"{correctedC2C_x} {correctedC2C_y}")
-                #logger.info('waiting for motor rotation')
-                #time.sleep(0.2)
-                #self.omegaMoveCheck(0.02,'OmegaState')
             
                 if self.threeClickCount == 4:
                     self.threeClickCount = 0

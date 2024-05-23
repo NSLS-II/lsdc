@@ -776,16 +776,6 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
 
   if daq_utils.beamline == "nyx":
     logger.info("center_on_click: %s" % str((x,y)))
-    lsdc_x = daq_utils.screenPixX
-    lsdc_y = daq_utils.screenPixY
-    md2_x = getPvDesc("md2CenterPixelX") * 2
-    md2_y = getPvDesc("md2CenterPixelY") * 2
-    scale_x = md2_x / lsdc_x
-    scale_y = md2_y / lsdc_y
-    x = x * scale_x
-    y = y * scale_y
-    str_coords = f'{x} {y}'
-    logger.info(f'center_on_click: {str_coords}')
     setPvDesc("MD2C2C", str_coords)
     return
 

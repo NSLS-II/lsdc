@@ -21,9 +21,8 @@ from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, QProcess
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication, QMessageBox
 from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
-#for the autocenter process
-from autocenter_lucid import AutoCollect
-import subprocess
+
+
 
 
 import albulaUtils

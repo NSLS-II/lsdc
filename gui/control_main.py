@@ -1085,6 +1085,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.zoomLevelComboBox = QtWidgets.QComboBox(self)
             self.zoomLevelComboBox.addItems(["1","2","3","4","5","6","7"])
             self.zoomLevelComboBox.activated[str].connect(self.zoomLevelComboActivatedCB)
+            self.zoomLevelComboBox.setCurrentIndex(int(self.camera.zoom.get()) -1)
             self.zoom1Radio.hide()
             self.zoom2Radio.hide()
             self.zoom3Radio.hide()
@@ -1709,6 +1710,8 @@ class ControlMain(QtWidgets.QMainWindow):
         #self.capture = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
 
     def zoomLevelToggledCB(self, identifier):
+        if daq_utils.beamline == "nyx": # stops forced camera zoom changes
+            return
         fov = {}
         zoomedCursorX = self.getMD2BeamCenterX() - self.centerMarkerCharOffsetX
         zoomedCursorY = self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY

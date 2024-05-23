@@ -1,4 +1,4 @@
-from random import random
+import random
 import string
 import sys
 import os
@@ -101,11 +101,11 @@ def process_immediate_commands(frequency):
       command = immediate_command_list.pop(0)
       logger.info('immediate command: %s' % command)
       process_input(command)
-      if memory_beat == beamline_support.pvGet(daq_lib.heartbeat):
-        memory_beat = random.randint(0, 1000)
-        beamline_support.pvPut(daq_lib.heartbeat, str(memory_beat))
-      else:
-        print('Heartbeat mismatch, possibility of multipler servers running.')
+    if memory_beat == beamline_support.pvGet(daq_lib.heartbeat):
+      memory_beat = random.randint(0, 1000)
+      beamline_support.pvPut(daq_lib.heartbeat, str(memory_beat))
+    else:
+      print('Heartbeat mismatch, possibility of multipler servers running.')
     time.sleep(frequency)      
 
 def process_commands(frequency):

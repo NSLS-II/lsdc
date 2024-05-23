@@ -202,7 +202,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
         self.heartbeat_pv = PV("XF:19ID2-ES:NYX{Comm}server_heartbeat")
         self.last_heartbeat = time.time()
-        self.heartbeat_pv.add_callback(self.heartbeatCB)
         self.rasterStepDefs = {"Coarse": 30.0, "Fine": 20.0, "VFine": 10.0}
         self.createSampleTab()
 
@@ -1557,7 +1556,6 @@ class ControlMain(QtWidgets.QMainWindow):
         serverCheckThread.start()
 
         self.heartbeat_thread = _thread.start_new_thread(self.monitorHeartbeat, ())
-        self.heartbeat_thread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
         pixmapItem.setPixmap(frame)
@@ -1582,14 +1580,21 @@ class ControlMain(QtWidgets.QMainWindow):
         except:
             pass
 
-    def heartbeatCB(self):
+    def heartbeatCB(self, **kwargs):
         self.last_heartbeat = time.time()
 
     def monitorHeartbeat(self):
+        '''
+        This monitors the frequency of changes to the heartbeat PV.
+        After 10 seconds of no changes, it reports the issue to the
+        user, and waits 30 more seconds to keep from spamming.
+        '''
         while True:
             time.sleep(1)
             if time.time() - self.last_heartbeat > 10:
-                self.popupServerMessage("Server not responding")
+                self.popup_message_string_pv.put("Server not responding")
+                time.sleep(30)
+                #self.popupServerMessage("Server not responding")
 
     def hideRastersCB(self, state):
         if state == QtCore.Qt.Checked:
@@ -5382,6 +5387,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamSizeSignal.connect(self.processBeamSize)
         self.beamSize_pv.add_callback(self.beamSizeChangedCB)
 
+        self.heartbeat_pv.add_callback(self.heartbeatCB)
         self.treeChanged_pv = PV(daq_utils.beamlineComm + "live_q_change_flag")
         self.refreshTreeSignal.connect(self.dewarTree.refreshTree)
         self.treeChanged_pv.add_callback(self.treeChangedCB)

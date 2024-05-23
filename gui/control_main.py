@@ -2051,9 +2051,7 @@ class ControlMain(QtWidgets.QMainWindow):
             if rasterDef["status"] == RasterStatus.DRAWN.value:
                 self.drawPolyRaster(rasterReq)
             elif rasterDef["status"] == RasterStatus.READY_FOR_FILL.value:
-                self.fillPolyRaster(
-                    rasterReq, waitTime=getBlConfig(RASTER_GUI_XREC_FILL_DELAY)
-                )
+                self.fillPolyRaster(rasterReq)
                 logger.info("polyraster filled by displayXrecRaster")
             elif rasterDef["status"] == RasterStatus.READY_FOR_SNAPSHOT.value:
                 if self.controlEnabled():
@@ -2917,7 +2915,6 @@ class ControlMain(QtWidgets.QMainWindow):
         stepsize = float(self.rasterStepEdit.text())
 
         while (numsteps_w < MINIMUM_RASTER_SIZE[daq_utils.beamline] and numsteps_h < MINIMUM_RASTER_SIZE[daq_utils.beamline]):
-            logger.info(f"{numsteps_h=}, {numsteps_w=}, {stepsize=}, {stepsizeXPix=}, {stepsizeYPix=}")
             if stepsize == 1:
                 logger.error("Cannot add raster request, stepsize must be 1 micron with a minimum width or height of 5 cells")
                 return

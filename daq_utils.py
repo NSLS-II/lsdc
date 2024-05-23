@@ -56,6 +56,7 @@ def init_environment():
   setBlConfig("highMagPixX", "1224")
   setBlConfig("highMagPixY", "1024")
   setBlConfig("highMagCamURL", "http://10.67.147.26:3908/video_feed2")
+  setBlConfig("cryostream_online", True)
   owner = getpass.getuser()
   primaryDewarName = getBlConfig("primaryDewarName")
   db_lib.setPrimaryDewarName(primaryDewarName)

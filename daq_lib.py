@@ -776,7 +776,7 @@ def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq
 
   if daq_utils.beamline == "nyx":
     logger.info("center_on_click: %s" % str((x,y)))
-    str_coords = f"{x} {y}"
+    str_coords = f'{x} {y}'
     setPvDesc("MD2C2C", str_coords)
     return
 

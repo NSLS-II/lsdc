@@ -247,7 +247,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.controlMasterCheckBox.setChecked(True)
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
 
-        self.AutoCenterObject = AutoCollect(self.md2)
 
     def setGuiValues(self, values):
         for item, value in values.items():

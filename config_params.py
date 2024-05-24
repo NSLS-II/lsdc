@@ -10,6 +10,9 @@ RASTER_TUNE_RESO_FLAG = 'rasterTuneResoFlag'
 RASTER_TUNE_ICE_RING_WIDTH = 'rasterTuneIceRingWidth'
 RASTER_DOZOR_SPOT_LEVEL = 'rasterDozorSpotLevel'
 RASTER_NUM_CELLS_DELAY_THRESHOLD = 'rasterNumCellsThresholdDelay'
+RASTER_DOZOR_PREFIX = 'titania-cpu'
+RASTER_DOZOR_NODE_COUNT = 2
+RASTER_DOZOR_FILE_DELAY = 0.1
 
 # timing delays
 ISPYB_RESULT_ENTRY_DELAY = 'ispybResultEntryDelay'

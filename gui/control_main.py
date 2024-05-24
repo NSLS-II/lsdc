@@ -1455,6 +1455,8 @@ class ControlMain(QtWidgets.QMainWindow):
         gripperLabel = QtWidgets.QLabel("Gripper Temp:")
         if daq_utils.beamline == "nyx":
             self.gripperTempLabel = QtWidgets.QLabel("N/A")
+            gripperLabel.hide()
+            self.gripperTempLabel.hide()
         else:
             self.gripperTempLabel = QtWidgets.QLabel("%.1f" % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel("Cryostream Temp:")
@@ -5156,7 +5158,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def cryostreamTempChangedCB(self, value=None, char_value=None, **kw):
         cryostreamTemp = value
-        self.cryostreamTempSignal.emit(cryostreamTemp)
+        self.cryostreamTempSignal.emit(str(int(cryostreamTemp)))
 
     def ringCurrentChangedCB(self, value=None, char_value=None, **kw):
         ringCurrentVal = value

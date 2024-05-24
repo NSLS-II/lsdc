@@ -169,6 +169,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.centerMarkerCharSize = 20
         self.centerMarkerCharOffsetX = 12
         self.centerMarkerCharOffsetY = 18
+        self.raster_output = None
         self.currentRasterCellList = []
         self.redPen = QtGui.QPen(QtCore.Qt.red)
         self.bluePen = QtGui.QPen(QtCore.Qt.blue)
@@ -1528,6 +1529,7 @@ class ControlMain(QtWidgets.QMainWindow):
         #self.captureLowMag.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         self.captureLowMag = daq_utils.lowMagCamURL
         self.capture = self.captureLowMag
+
         
         #self.sampleCameraThread = VideoThread(
         #    parent=self, delay=SAMPLE_TIMER_DELAY, camera_object=self.capture
@@ -3028,6 +3030,12 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def autoCenterLoopCB(self):
+        logger.info("getting raster coordinates")
+        raster_coords = self.get_raster_coords(self)
+        logger.info(raster_coords)
+        logger.info("Done getting raster coordinates\n\n")
+
+
         logger.info("auto center loop")
         autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'
         popup_info = ProcessPopup(parent = self, window_title='AutoCenter Info', main_text="Waiting for auto center, view detailed text for more info")
@@ -3038,7 +3046,15 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.readyReadStandardOutput.connect(lambda: popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
         self.autocenter_process.finished.connect(lambda: popup_info.setText("AUTO CENTERING FINISHED\n\nopen details for more information"))
         self.autocenter_process.finished.connect(lambda: popup_info.setWindowTitle("Done"))
+        self.autocenter_process.finished.connect(self.autocenter_process.close())
         self.autocenter_process.start(autocenter_call)
+
+
+        logger.info("getting raster coordinates")
+        raster_coords = self.get_raster_coords(self)
+        logger.info(raster_coords)
+        logger.info("Done getting raster coordinates\n\n")
+
 
 
         # with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
@@ -3048,6 +3064,34 @@ class ControlMain(QtWidgets.QMainWindow):
 
         # if p.returncode != 0:
         #     raise subprocess.CalledProcessError(p.returncode, p.args)
+
+
+
+    def handle_raster_output(self, data):
+        self.raster_output = data
+
+
+
+
+
+    def get_raster_coords(self):
+        logger.info("getting raster coordinates")
+        raster_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/get_raster_box'
+        self.raster_output = None
+        self.raster_process = QProcess(parent=self)
+        #self.raster_process.started.connect(lambda: self.raster_process.waitForFinished())
+        self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().data().decode('utf-8')))
+        #self.raster_process.finished.connect(lambda: self.raster_process.close())
+        self.raster_process.start(raster_call)
+        return self.raster_output
+    
+
+        
+    
+
+
+
+
 
 
     def autoRasterLoopCB(self):

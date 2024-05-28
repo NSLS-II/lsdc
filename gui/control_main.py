@@ -3079,10 +3079,11 @@ class ControlMain(QtWidgets.QMainWindow):
         raster_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/get_raster_box'
         self.raster_output = None
         self.raster_process = QProcess(parent=self)
-        self.raster_process.waitForFinished()
+        
         self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().decode('utf-8')))
         #self.raster_process.finished.connect(lambda: self.raster_process.close())
         self.raster_process.start(raster_call)
+        self.raster_process.waitForFinished()
         return self.raster_output
     
 

@@ -3048,6 +3048,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.finished.connect(lambda: popup_info.setWindowTitle("Done"))
     
         self.autocenter_process.start(autocenter_call)
+        self.autocenter_process.waitForFinished()
 
 
         logger.info("getting raster coordinates")
@@ -3080,7 +3081,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.raster_output = None
         self.raster_process = QProcess(parent=self)
         
-        self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().decode('utf-8')))
+        self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().data().decode('utf-8')))
         #self.raster_process.finished.connect(lambda: self.raster_process.close())
         self.raster_process.start(raster_call)
         self.raster_process.waitForFinished()

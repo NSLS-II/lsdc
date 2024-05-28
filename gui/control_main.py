@@ -3030,7 +3030,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def autoCenterLoopCB(self):
-
+        logger.info("getting raster coordinates")
+        raster_coords = self.get_raster_coords(self)
+        logger.info(raster_coords)
+        logger.info("Done getting raster coordinates\n\n")
 
 
         logger.info("auto center loop")
@@ -3047,10 +3050,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.start(autocenter_call)
 
 
-        # logger.info("getting raster coordinates")
-        # raster_coords = self.get_raster_coords(self)
-        # logger.info(raster_coords)
-        # logger.info("Done getting raster coordinates\n\n")
+        logger.info("getting raster coordinates")
+        raster_coords = self.get_raster_coords(self)
+        logger.info(raster_coords)
+        logger.info("Done getting raster coordinates\n\n")
 
 
 

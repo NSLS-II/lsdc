@@ -3031,7 +3031,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def autoCenterLoopCB(self):
         logger.info("getting raster coordinates")
-        raster_coords = self.get_raster_coords(self)
+        raster_coords = self.get_raster_coords()
         logger.info(raster_coords)
         logger.info("Done getting raster coordinates\n\n")
 
@@ -3051,7 +3051,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
         logger.info("getting raster coordinates")
-        raster_coords = self.get_raster_coords(self)
+        raster_coords = self.get_raster_coords()
         logger.info(raster_coords)
         logger.info("Done getting raster coordinates\n\n")
 

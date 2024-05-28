@@ -3046,7 +3046,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.readyReadStandardOutput.connect(lambda: popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
         self.autocenter_process.finished.connect(lambda: popup_info.setText("AUTO CENTERING FINISHED\n\nopen details for more information"))
         self.autocenter_process.finished.connect(lambda: popup_info.setWindowTitle("Done"))
-        self.autocenter_process.finished.connect(self.autocenter_process.close())
+    
         self.autocenter_process.start(autocenter_call)
 
 
@@ -3079,7 +3079,7 @@ class ControlMain(QtWidgets.QMainWindow):
         raster_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/get_raster_box'
         self.raster_output = None
         self.raster_process = QProcess(parent=self)
-        #self.raster_process.started.connect(lambda: self.raster_process.waitForFinished())
+        self.raster_process.started.connect(lambda: self.raster_process.waitForFinished())
         self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().data().decode('utf-8')))
         #self.raster_process.finished.connect(lambda: self.raster_process.close())
         self.raster_process.start(raster_call)

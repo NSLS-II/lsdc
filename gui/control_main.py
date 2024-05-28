@@ -3052,7 +3052,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         logger.info("getting raster coordinates")
         raster_coords = self.get_raster_coords()
-        logger.info(raster_coords)
+        logger.info(self.raster_output)
         logger.info("Done getting raster coordinates\n\n")
 
 
@@ -3080,7 +3080,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.raster_process = QProcess(parent=self)
         self.raster_process.started.connect(lambda: self.raster_process.waitForFinished())
         self.raster_process.finished.connect(lambda: self.handle_raster_output(self.raster_process.readAllStandardOutput().data().decode('utf-8')))
-        self.raster_process.finished.connect(lambda: logger.info(self.raster_process.readAllStandardOutput().data().decode('utf-8')))
         #self.raster_process.finished.connect(lambda: self.raster_process.close())
         self.raster_process.start(raster_call)
         return self.raster_output

@@ -37,7 +37,7 @@ class CalculatorWindow(QtWidgets.QDialog):
 		# self.r_value_enter.setCurrentIndex(1)
 		self.r_value_enter = QComboBox()
 		self.r_value_enter.addItems(['122.5mm (AMX & NYX)', '164mm (FMX)'])
-		self.r_value_enter.setPlaceholderText('Set detector radius')
+		self.r_value_enter.setCurrentIndex(0)
 		self.buttonDictionary['r']['value'] = self.r_value_enter
 		#self.r_value_enter.setValidator(QDoubleValidator())
 

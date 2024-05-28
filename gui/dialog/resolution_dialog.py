@@ -30,12 +30,13 @@ class CalculatorWindow(QtWidgets.QDialog):
 		
 		#making lines to hold inputs 
 		# self.r_value_enter = QComboBox()
-		# self.r_value_enter.setToolTip("Choose your detector")
+		
 		# detectorList = ['NYX-Beamline (200.0mm)?', 'Dectris EIGER2 X 9M (244.7mm)']
 		# self.r_value_enter.addItems(detectorList)
 		# self.buttonDictionary['r']['value'] = self.r_value_enter
 		# self.r_value_enter.setCurrentIndex(1)
 		self.r_value_enter = QComboBox()
+		self.r_value_enter.setToolTip("Choose your detector")
 		self.r_value_enter.addItems(['122.5mm (AMX & NYX)', '164mm (FMX)'])
 		self.r_value_enter.setCurrentIndex(0)
 		self.buttonDictionary['r']['value'] = self.r_value_enter

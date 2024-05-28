@@ -3030,11 +3030,6 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def autoCenterLoopCB(self):
-        logger.info("getting raster coordinates")
-        raster_coords = self.get_raster_coords()
-        logger.info(raster_coords)
-        logger.info("Done getting raster coordinates\n\n")
-
 
         logger.info("auto center loop")
         autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'

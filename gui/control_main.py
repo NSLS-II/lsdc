@@ -3051,12 +3051,6 @@ class ControlMain(QtWidgets.QMainWindow):
         
 
 
-        logger.info("getting raster coordinates")
-        raster_coords = self.get_raster_coords()
-        logger.info(self.raster_output)
-        logger.info("Done getting raster coordinates\n\n")
-
-
 
         # with subprocess.Popen(autocenter_call, stdout=subprocess.PIPE, bufsize=1, universal_newlines=True) as p:
         #     for line in p.stdout:

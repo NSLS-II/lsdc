@@ -3048,7 +3048,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.finished.connect(lambda: popup_info.setWindowTitle("Done"))
     
         self.autocenter_process.start(autocenter_call)
-        self.autocenter_process.waitForFinished()
+        
 
 
         logger.info("getting raster coordinates")

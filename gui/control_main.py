@@ -3359,9 +3359,9 @@ class ControlMain(QtWidgets.QMainWindow):
             )
             for j in range(raster_def["rowDefs"][i]["numsteps"]):
                 if raster_dir == "horizontal":
-                    newCellX += j * stepsizeX
+                    newCellX += stepsizeX
                 else:
-                    newCellY += j * stepsizeY
+                    newCellY += stepsizeY
 
                 newCell = RasterCell(
                     int(newCellX), int(newCellY), stepsizeX, stepsizeY, self

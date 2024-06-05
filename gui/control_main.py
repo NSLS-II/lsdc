@@ -1259,6 +1259,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxSampleAlignLayout = QtWidgets.QHBoxLayout()
         centerLoopButton = QtWidgets.QPushButton("Center\nLoop")
         centerLoopButton.clicked.connect(self.autoCenterLoopCB)
+        self.auto_center_ongoing = False
         measureButton = QtWidgets.QPushButton("Measure")
         measureButton.clicked.connect(self.measurePolyCB)
         loopShapeButton = QtWidgets.QPushButton("Add Raster\nto Queue")
@@ -3030,7 +3031,9 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def autoCenterLoopCB(self):
-
+        if self.auto_center_ongoing == True:
+            self.popupServerMessage("Auto center is already running")
+            return
         logger.info("auto center loop")
         autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/run_auto_center'
         popup_info = ProcessPopup(parent = self, window_title='AutoCenter Info', main_text="Waiting for auto center, view detailed text for more info")
@@ -3041,8 +3044,10 @@ class ControlMain(QtWidgets.QMainWindow):
         self.autocenter_process.readyReadStandardOutput.connect(lambda: popup_info.setDetailedText(bytes(self.autocenter_process.readAllStandardOutput()).decode("utf8")))
         self.autocenter_process.finished.connect(lambda: popup_info.setText("AUTO CENTERING FINISHED\n\nopen details for more information"))
         self.autocenter_process.finished.connect(lambda: popup_info.setWindowTitle("Done"))
+        self.autocenter_process.finished.connect(self.close_autocenter)
     
         self.autocenter_process.start(autocenter_call)
+        self.auto_center_ongoing = True
         
 
 
@@ -3055,6 +3060,10 @@ class ControlMain(QtWidgets.QMainWindow):
         # if p.returncode != 0:
         #     raise subprocess.CalledProcessError(p.returncode, p.args)
 
+
+    def close_autocenter(self):
+        self.auto_center_ongoing = False
+        self.autocenter_process.close()
 
 
     def handle_raster_output(self, data):

@@ -4077,7 +4077,7 @@ def set_beamsize(sizeV, sizeH):
     setPvDesc("CRL_H1B_IN",1)
   else:
     logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
-  for index, key in list(BEAMSIZE_OPTIONS.keys()):
+  for index, key in enumerate(BEAMSIZE_OPTIONS.keys()):
     if BEAMSIZE_OPTIONS[key] == [sizeV, sizeH]:
       daq_lib.set_field("size_mode", index)
   

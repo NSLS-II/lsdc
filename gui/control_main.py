@@ -544,7 +544,7 @@ class ControlMain(QtWidgets.QMainWindow):
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")
-        beamSizeOptionList = ["V0H0", "V0H1", "V1H0", "V1H1"]
+        beamSizeOptionList = ["S", "L"]
         self.beamsizeComboBox = QtWidgets.QComboBox(self)
         self.beamsizeComboBox.addItems(beamSizeOptionList)
         self.beamsizeComboBox.setCurrentIndex(int(self.beamSize_pv.get()))
@@ -2518,7 +2518,12 @@ class ControlMain(QtWidgets.QMainWindow):
             pass
 
     def beamsizeComboActivatedCB(self, text):
-        self.send_to_server("set_beamsize", [text[0:2], text[2:4]])
+        beam_mapping = {
+            "S": ["V0", "H0"],
+            "L": ["V1", "H1"]
+        }
+        self.send_to_server("set_beamsize", beam_mapping[text])
+
 
     def protoComboActivatedCB(self, text):
         self.showProtParams()

@@ -4079,12 +4079,8 @@ def set_beamsize(sizeV, sizeH):
     logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
   if (sizeV == 'V0' and sizeH == 'H0'):
     daq_lib.set_field("size_mode",0)
-  elif (sizeV == 'V0' and sizeH == 'H1'):
-    daq_lib.set_field("size_mode",1)
-  elif (sizeV == 'V1' and sizeH == 'H0'):
-    daq_lib.set_field("size_mode",2)
   elif (sizeV == 'V1' and sizeH == 'H1'):
-    daq_lib.set_field("size_mode",3)
+    daq_lib.set_field("size_mode",1)
   else:
     pass
   

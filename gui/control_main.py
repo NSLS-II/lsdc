@@ -837,8 +837,6 @@ class ControlMain(QtWidgets.QMainWindow):
         setVectorEndButton.setStyleSheet("background-color: red")
         setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vector_end"))
 
-        setVectorButton = QtWidgets.QPushButton("Set\nVector")
-        setVectorButton.clicked.connect(lambda: self.setVectorPointCB("full_vector"))
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
@@ -849,14 +847,27 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vecSpeedLabelOutput = QtWidgets.QLabel("---")
         hBoxVectorLayout1.addWidget(setVectorStartButton)
         hBoxVectorLayout1.addWidget(setVectorEndButton)
-        hBoxVectorLayout1.addWidget(setVectorButton)
         hBoxVectorLayout1.addWidget(vectorFPPLabel)
         hBoxVectorLayout1.addWidget(self.vectorFPP_ledit)
         hBoxVectorLayout1.addWidget(vecLenLabel)
         hBoxVectorLayout1.addWidget(self.vecLenLabelOutput)
         hBoxVectorLayout1.addWidget(vecSpeedLabel)
         hBoxVectorLayout1.addWidget(self.vecSpeedLabelOutput)
-        self.vectorParamsFrame.setLayout(hBoxVectorLayout1)
+        vector_widgets_layout = QtWidgets.QVBoxLayout()
+        vector_widgets_layout.addLayout(hBoxVectorLayout1)
+        hBoxVectorLayout2 = QtWidgets.QHBoxLayout()
+        setVectorButton = QtWidgets.QPushButton("Set Quick\nVector")
+        setVectorButton.clicked.connect(lambda: self.setVectorPointCB("full_vector"))
+        vector_length_label = QtWidgets.QLabel("Quick vector length (microns)")
+        self.vector_length_ledit = QtWidgets.QLineEdit("40")
+        self.vector_length_ledit.setValidator(QIntValidator(self))
+        
+        hBoxVectorLayout2.addWidget(setVectorButton)
+        hBoxVectorLayout2.addWidget(vector_length_label)
+        hBoxVectorLayout2.addWidget(self.vector_length_ledit)
+        
+        vector_widgets_layout.addLayout(hBoxVectorLayout2)
+        self.vectorParamsFrame.setLayout(vector_widgets_layout)
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxColParams2)
         vBoxColParams1.addLayout(hBoxColParams25)
@@ -4166,10 +4177,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 scene=self.scene,
                 gonio_coords=gonio_coords,
                 center=(center_x, center_y),
+                length=int(self.vector_length_ledit.text())
             )
-            self.processSampMove(self.sampx_pv.get(), "x")
-            self.processSampMove(self.sampy_pv.get(), "y")
-            self.processSampMove(self.sampz_pv.get(), "z")
         else:
             self.vector_widget.set_vector_point(
                 point_name=pointName,
@@ -4177,6 +4186,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 gonio_coords=gonio_coords,
                 center=(center_x, center_y),
             )
+        self.processSampMove(self.sampx_pv.get(), "x")
+        self.processSampMove(self.sampy_pv.get(), "y")
+        self.processSampMove(self.sampz_pv.get(), "z")
 
     def drawVector(self):
         try:

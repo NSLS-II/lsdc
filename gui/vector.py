@@ -1,6 +1,8 @@
 import typing
-from qtpy import QtWidgets, QtGui, QtCore
+
 import numpy as np
+from qtpy import QtCore, QtGui, QtWidgets
+
 import daq_utils
 
 if typing.TYPE_CHECKING:
@@ -111,17 +113,19 @@ class VectorWidget(QtWidgets.QWidget):
         center_marker: QtCore.QPointF,
         offset: "tuple[int, int]",
     ):
+        if self.vector_start is not None:
+            self.vector_start = self.update_point(
+                self.vector_start, pos_rbv, mot_id, center_marker
+            )
+        if self.vector_end is not None:
+            self.vector_end = self.update_point(
+                self.vector_end, pos_rbv, mot_id, center_marker
+            )
         if (
             self.vector_start is not None
             and self.vector_end is not None
             and self.vector_line is not None
         ):
-            self.vector_start = self.update_point(
-                self.vector_start, pos_rbv, mot_id, center_marker
-            )
-            self.vector_end = self.update_point(
-                self.vector_end, pos_rbv, mot_id, center_marker
-            )
             self.vector_line.setLine(
                 self.vector_start.x() + self.vector_start.center_marker.x() + offset[0],
                 self.vector_start.y() + self.vector_start.center_marker.y() + offset[1],
@@ -157,15 +161,16 @@ class VectorWidget(QtWidgets.QWidget):
     
     def set_vector(self, scene: QtWidgets.QGraphicsScene, 
                    gonio_coords: "dict[str, typing.Any]", 
-                   center: "tuple[float, float]"):
+                   center: "tuple[float, float]", length=40):
+        offset = int(length/2)
         gonio_coords_start = {
-            "x": gonio_coords["x"] - 20,
+            "x": gonio_coords["x"] - offset,
             "y": gonio_coords["y"],
             "z": gonio_coords["z"],
             "omega": gonio_coords["omega"],
         }
         gonio_coords_end = {
-            "x": gonio_coords["x"] + 20,
+            "x": gonio_coords["x"] + offset,
             "y": gonio_coords["y"],
             "z": gonio_coords["z"],
             "omega": gonio_coords["omega"],
@@ -358,5 +363,7 @@ class VectorWidget(QtWidgets.QWidget):
         return {
             "x": current_raw_coords["x"],
             "y": yTweakedCurrent,
+            "z": zTweakedCurrent,
+        }
             "z": zTweakedCurrent,
         }

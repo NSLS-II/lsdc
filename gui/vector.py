@@ -154,6 +154,24 @@ class VectorWidget(QtWidgets.QWidget):
         speed = vector_length / total_exposure_time
 
         return x_vec, y_vec, z_vec, vector_length, speed
+    
+    def set_vector(self, scene: QtWidgets.QGraphicsScene, 
+                   gonio_coords: "dict[str, typing.Any]", 
+                   center: "tuple[float, float]"):
+        gonio_coords_start = {
+            "x": gonio_coords["x"] - 20,
+            "y": gonio_coords["y"],
+            "z": gonio_coords["z"],
+            "omega": gonio_coords["omega"],
+        }
+        gonio_coords_end = {
+            "x": gonio_coords["x"] + 20,
+            "y": gonio_coords["y"],
+            "z": gonio_coords["z"],
+            "omega": gonio_coords["omega"],
+        }
+        self.set_vector_point("vector_start", scene, gonio_coords_start, center)
+        self.set_vector_point("vector_end", scene, gonio_coords_end, center)
 
     def set_vector_point(
         self,

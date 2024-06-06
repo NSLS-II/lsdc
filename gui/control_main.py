@@ -836,6 +836,9 @@ class ControlMain(QtWidgets.QMainWindow):
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd")
         setVectorEndButton.setStyleSheet("background-color: red")
         setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vector_end"))
+
+        setVectorButton = QtWidgets.QPushButton("Set\nVector")
+        setVectorButton.clicked.connect(lambda: self.setVectorPointCB("full_vector"))
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
@@ -846,6 +849,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.vecSpeedLabelOutput = QtWidgets.QLabel("---")
         hBoxVectorLayout1.addWidget(setVectorStartButton)
         hBoxVectorLayout1.addWidget(setVectorEndButton)
+        hBoxVectorLayout1.addWidget(setVectorButton)
         hBoxVectorLayout1.addWidget(vectorFPPLabel)
         hBoxVectorLayout1.addWidget(self.vectorFPP_ledit)
         hBoxVectorLayout1.addWidget(vecLenLabel)
@@ -4157,12 +4161,19 @@ class ControlMain(QtWidgets.QMainWindow):
         }
         center_x = self.centerMarker.x() + self.centerMarkerCharOffsetX
         center_y = self.centerMarker.y() + self.centerMarkerCharOffsetY
-        self.vector_widget.set_vector_point(
-            point_name=pointName,
-            scene=self.scene,
-            gonio_coords=gonio_coords,
-            center=(center_x, center_y),
-        )
+        if pointName == "full_vector":
+            self.vector_widget.set_vector(
+                scene=self.scene,
+                gonio_coords=gonio_coords,
+                center=(center_x, center_y),
+            )
+        else:
+            self.vector_widget.set_vector_point(
+                point_name=pointName,
+                scene=self.scene,
+                gonio_coords=gonio_coords,
+                center=(center_x, center_y),
+            )
 
     def drawVector(self):
         try:

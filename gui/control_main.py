@@ -4167,6 +4167,9 @@ class ControlMain(QtWidgets.QMainWindow):
                 gonio_coords=gonio_coords,
                 center=(center_x, center_y),
             )
+            self.processSampMove(self.sampx_pv.get(), "x")
+            self.processSampMove(self.sampy_pv.get(), "y")
+            self.processSampMove(self.sampz_pv.get(), "z")
         else:
             self.vector_widget.set_vector_point(
                 point_name=pointName,

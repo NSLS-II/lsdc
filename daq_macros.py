@@ -39,7 +39,7 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.preprocessors import finalize_wrapper, finalize_decorator
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
-from config_params import ON_MOUNT_OPTION, OnMountAvailOptions
+from config_params import ON_MOUNT_OPTION, OnMountAvailOptions, BEAMSIZE_OPTIONS
 from mxbluesky.plans import detect_loop, topview_optimized
 
 if daq_utils.beamline == 'fmx':
@@ -4077,12 +4077,9 @@ def set_beamsize(sizeV, sizeH):
     setPvDesc("CRL_H1B_IN",1)
   else:
     logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
-  if (sizeV == 'V0' and sizeH == 'H0'):
-    daq_lib.set_field("size_mode",0)
-  elif (sizeV == 'V1' and sizeH == 'H1'):
-    daq_lib.set_field("size_mode",1)
-  else:
-    pass
+  for index, key in list(BEAMSIZE_OPTIONS.keys()):
+    if BEAMSIZE_OPTIONS[key] == [sizeV, sizeH]:
+      daq_lib.set_field("size_mode", index)
   
 
   

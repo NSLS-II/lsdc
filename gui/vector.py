@@ -365,5 +365,3 @@ class VectorWidget(QtWidgets.QWidget):
             "y": yTweakedCurrent,
             "z": zTweakedCurrent,
         }
-            "z": zTweakedCurrent,
-        }

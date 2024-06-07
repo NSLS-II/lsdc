@@ -328,6 +328,8 @@ def autoRasterLoop(currentRequest):
 
       if not face_on_max_coords:
         autoRasterFlag = 0
+        if daq_utils.beamline == 'fmx':
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         return 0
 
       RE(bps.mv(gonio.gx, sample_detection["center_x"], 
@@ -343,6 +345,8 @@ def autoRasterLoop(currentRequest):
       # Now move to the hot cell of the face on raster, then start standard collection
       if not ortho_max_coords:
         autoRasterFlag = 0
+        if daq_utils.beamline == 'fmx':
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         return 0
 
       logger.info(f"AUTORASTER LOOP: {face_on_max_coords=} {ortho_max_coords=}")

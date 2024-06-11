@@ -64,7 +64,7 @@ class OnMountAvailOptions(Enum):
     AUTO_RASTER = 2 # Mounts, centers and takes 2 orthogonal rasters
 
 HUTCH_TIMER_DELAY = 500
-SAMPLE_TIMER_DELAY = 0
+SAMPLE_TIMER_DELAY = 100
 SERVER_CHECK_DELAY = 2000
 
 ROBOT_MIN_DISTANCE = 200.0
@@ -84,26 +84,27 @@ UNMOUNT_STEP_SUCCESSFUL = 2
 PINS_PER_PUCK = 16
 
 DETECTOR_OBJECT_TYPE_LSDC = "lsdc"  # using det_lib
+DETECTOR_OBJECT_TYPE_NO_INIT = "no init" # skip epics detector init
 DETECTOR_OBJECT_TYPE_OPHYD = "ophyd"  # instantiated in start_bs, using Bluesky scans
 DETECTOR_OBJECT_TYPE = "detectorObjectType"
 
 DETECTOR_SAFE_DISTANCE = {"fmx": 200.0, "amx": 180.0, "nyx": 200.0}
 GOVERNOR_TIMEOUT = 120  # seconds for a governor move
 
-DEWAR_SECTORS = {"amx": 8, "fmx": 8, "nyx": 5}
-PUCKS_PER_DEWAR_SECTOR = {"amx": 3, "fmx": 3, "nyx": 3}
+DEWAR_SECTORS = {'amx':8, 'fmx':8, 'nyx':8}
+PUCKS_PER_DEWAR_SECTOR = {'amx':3, 'fmx':3, 'nyx':3}
 
 cryostreamTempPV = {"amx": "XF:17IDB-ES:AMX{CS:1}SAMPLE_TEMP_RBV", "fmx": "FMX:cs700:gasT-I"}
 
 VALID_EXP_TIMES = {
     "amx": {"min": 0.005, "max": 1, "digits": 3},
     "fmx": {"min": 0.01, "max": 10, "digits": 3},
-    "nyx": {"min": 0.002, "max": 10, "digits": 4},
+    "nyx": {"min": 0.0015, "max": 10, "digits": 4},
 }
 VALID_DET_DIST = {
     "amx": {"min": 100, "max": 500, "digits": 3},
     "fmx": {"min": 137, "max": 2000, "digits": 2},
-    "nyx": {"min": 100, "max": 500, "digits": 3},
+    "nyx": {"min": 140, "max": 600, "digits": 3},
 }
 VALID_TOTAL_EXP_TIMES = {
     "amx": {"min": 0.005, "max": 300, "digits": 3},
@@ -131,3 +132,5 @@ EMBL_SERVER_PV_BASE = {
     "amx": "XF:17IDB-ES:AMX{EMBL}",
     "fmx": "XF:17IDC-ES:FMX{EMBL}"
 }
+
+OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": False}

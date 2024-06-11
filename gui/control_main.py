@@ -1259,7 +1259,7 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxSampleAlignLayout = QtWidgets.QHBoxLayout()
         centerLoopButton = QtWidgets.QPushButton("Center\nLoop")
         centerLoopButton.clicked.connect(self.autoCenterLoopCB)
-        self.auto_center_ongoing = False
+        self.init_autocenter()
         measureButton = QtWidgets.QPushButton("Measure")
         measureButton.clicked.connect(self.measurePolyCB)
         loopShapeButton = QtWidgets.QPushButton("Add Raster\nto Queue")
@@ -3060,6 +3060,13 @@ class ControlMain(QtWidgets.QMainWindow):
         # if p.returncode != 0:
         #     raise subprocess.CalledProcessError(p.returncode, p.args)
 
+    def init_autocenter(self):
+        self.autocenter_process = QProcess(parent=self)
+        pythondir = '/opt/conda_envs/lsdc-gui-2023-2-latest/bin/python3'
+        autocenter_call = '/nsls2/data/nyx/legacy/Rudra/lsdcSpoofer/autocenter_lucid.py'
+        self.autocenter_process.finished.connect(self.close_autocenter)
+        self.autocenter_process.start('{} {}'.format(pythondir, autocenter_call))
+        self.auto_center_ongoing = True
 
     def close_autocenter(self):
         self.auto_center_ongoing = False

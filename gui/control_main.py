@@ -25,8 +25,10 @@ import daq_utils
 import db_lib
 import lsdcOlog
 from config_params import (
+    BEAMSIZE_OPTIONS,
     CRYOSTREAM_ONLINE,
     HUTCH_TIMER_DELAY,
+    MINIMUM_RASTER_SIZE,
     RASTER_GUI_XREC_FILL_DELAY,
     SAMPLE_TIMER_DELAY,
     SERVER_CHECK_DELAY,
@@ -37,7 +39,6 @@ from config_params import (
     VALID_TRANSMISSION,
     RasterStatus,
     cryostreamTempPV,
-    MINIMUM_RASTER_SIZE
 )
 from daq_utils import getBlConfig, setBlConfig
 from element_info import element_info
@@ -544,9 +545,8 @@ class ControlMain(QtWidgets.QMainWindow):
         setTransButton = QtWidgets.QPushButton("Set Trans")
         setTransButton.clicked.connect(self.setTransCB)
         beamsizeLabel = QtWidgets.QLabel("BeamSize:")
-        beamSizeOptionList = ["V0H0", "V0H1", "V1H0", "V1H1"]
         self.beamsizeComboBox = QtWidgets.QComboBox(self)
-        self.beamsizeComboBox.addItems(beamSizeOptionList)
+        self.beamsizeComboBox.addItems(BEAMSIZE_OPTIONS.keys())
         self.beamsizeComboBox.setCurrentIndex(int(self.beamSize_pv.get()))
         self.beamsizeComboBox.activated[str].connect(self.beamsizeComboActivatedCB)
         if daq_utils.beamline == "amx" or self.energy_pv.get() < 9000:
@@ -2518,7 +2518,8 @@ class ControlMain(QtWidgets.QMainWindow):
             pass
 
     def beamsizeComboActivatedCB(self, text):
-        self.send_to_server("set_beamsize", [text[0:2], text[2:4]])
+        self.send_to_server("set_beamsize", BEAMSIZE_OPTIONS[text])
+
 
     def protoComboActivatedCB(self, text):
         self.showProtParams()

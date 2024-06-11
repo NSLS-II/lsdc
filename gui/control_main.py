@@ -596,7 +596,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.resolution_ledit.setValidator(QtGui.QDoubleValidator())
         self.resolution_ledit.textEdited[str].connect(self.resoTextChanged)
         if daq_utils.beamline == "nyx":
-            self.resolution_ledit.setEnabled(False)
+            self.resolution_ledit.setEnabled(True)
         detDistLabel = QtWidgets.QLabel("Detector Dist.")
         #detDistLabel.setAlignment(QtCore.Qt.AlignCenter)
         detDistRBLabel = QtWidgets.QLabel("Readback:")

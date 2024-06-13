@@ -596,7 +596,8 @@ class ControlMain(QtWidgets.QMainWindow):
         self.resolution_ledit.setValidator(QtGui.QDoubleValidator())
         self.resolution_ledit.textEdited[str].connect(self.resoTextChanged)
         if daq_utils.beamline == "nyx":
-            self.resolution_ledit.setEnabled(True)
+            self.resolution_ledit.setEnabled(False)
+            #self.resolution_ledit.setReadOnly(True)
         detDistLabel = QtWidgets.QLabel("Detector Dist.")
         #detDistLabel.setAlignment(QtCore.Qt.AlignCenter)
         detDistRBLabel = QtWidgets.QLabel("Readback:")
@@ -2570,7 +2571,7 @@ class ControlMain(QtWidgets.QMainWindow):
         try:
             reso_s = "%.2f" % (
                 daq_utils.calc_reso(
-                    daq_utils.det_radius,
+                    float(daq_utils.det_radius),
                     float(text),
                     daq_utils.energy2wave(float(self.energy_ledit.text())),
                     0,

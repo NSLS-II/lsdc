@@ -2576,9 +2576,11 @@ class ControlMain(QtWidgets.QMainWindow):
                     0,
                 )
             )
-        except ValueError:
+        except ValueError as e:
+            logger.warning(e)
             reso_s = "50.0"
-        except TypeError:
+        except TypeError as t:
+            logger.warning(t)
             reso_s = "50.0"
         self.setGuiValues({"resolution": reso_s})
 

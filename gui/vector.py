@@ -59,6 +59,16 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         self.setCursor(cursor)
         super().mousePressEvent(event)
 
+    def paint(self, painter, option, widget):
+        super().paint(painter, option, widget)
+        rect = self.rect()
+        painter.setPen(QtGui.QPen(QtCore.Qt.GlobalColor.black))
+        if self.point_name == "vector_start":
+            text = "S"
+        else:
+            text = "E"
+        painter.drawText(rect, QtCore.Qt.AlignmentFlag.AlignCenter, text)
+
 
 class VectorWidget(QtWidgets.QWidget):
     def __init__(

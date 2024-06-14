@@ -15,7 +15,7 @@ class VectorMarkerSignals(QtCore.QObject):
 
 
 class VectorMarker(QtWidgets.QGraphicsEllipseItem):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self.blue_color = QtCore.Qt.GlobalColor.blue
         brush = kwargs.pop("brush", QtGui.QBrush())
         pen = kwargs.pop("pen", QtGui.QPen(self.blue_color))
@@ -34,28 +34,28 @@ class VectorMarker(QtWidgets.QGraphicsEllipseItem):
         self.signals = VectorMarkerSignals()
         self.setAcceptHoverEvents(True)
 
-    def itemChange(self, change, value):
+    def itemChange(self, change, value) -> typing.Any:
         if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             self.signals.marker_pos_changed.emit(value)
         return super().itemChange(change, value)
 
     def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-        cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
+        cursor = QtGui.QCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         self.setCursor(cursor)
         self.signals.marker_dropped.emit(self)
         return super().mouseReleaseEvent(event)
 
-    def hoverEnterEvent(self, event):
-        cursor = QtGui.QCursor(QtCore.Qt.OpenHandCursor)
+    def hoverEnterEvent(self, event) -> None:
+        cursor = QtGui.QCursor(QtCore.Qt.CursorShape.OpenHandCursor)
         self.setCursor(cursor)
         super().hoverEnterEvent(event)
 
-    def hoverLeaveEvent(self, event):
-        self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+    def hoverLeaveEvent(self, event) -> None:
+        self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
         super().hoverLeaveEvent(event)
 
-    def mousePressEvent(self, event: "QGraphicsSceneMouseEvent") -> None:
-        cursor = QtGui.QCursor(QtCore.Qt.ClosedHandCursor)
+    def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        cursor = QtGui.QCursor(QtCore.Qt.CursorShape.ClosedHandCursor)
         self.setCursor(cursor)
         super().mousePressEvent(event)
 
@@ -80,7 +80,7 @@ class VectorWidget(QtWidgets.QWidget):
         pos_rbv: int,
         mot_id: str,
         center_marker: QtCore.QPointF,
-    ):
+    ) -> VectorMarker:
         """Updates a point on the screen
 
         Updates the position of a point (e.g. self.vector_start) drawn on the screen based on
@@ -112,7 +112,7 @@ class VectorWidget(QtWidgets.QWidget):
         mot_id: str,
         center_marker: QtCore.QPointF,
         offset: "tuple[int, int]",
-    ):
+    ) -> None:
         if self.vector_start is not None:
             self.vector_start = self.update_point(
                 self.vector_start, pos_rbv, mot_id, center_marker
@@ -133,7 +133,7 @@ class VectorWidget(QtWidgets.QWidget):
                 self.vector_end.y() + self.vector_start.center_marker.y() + offset[1],
             )
 
-    def get_length(self) -> "tuple[int, int, int, np.floating[typing.Any]]":
+    def get_length(self) -> "tuple[int, int, int, np.floating[typing.Any] | float]":
         trans_total = 0.0
         x_vec = y_vec = z_vec = 0
 
@@ -152,17 +152,21 @@ class VectorWidget(QtWidgets.QWidget):
 
     def get_length_and_speed(
         self, osc_end: float, osc_range: float, exposure_time: float
-    ) -> "tuple[int, int, int, np.floating[typing.Any], np.floating[typing.Any]]":
+    ) -> "tuple[int, int, int, np.floating[typing.Any] | float, np.floating[typing.Any] | float]":
         total_exposure_time: float = (osc_end / osc_range) * exposure_time
         x_vec, y_vec, z_vec, vector_length = self.get_length()
         speed = vector_length / total_exposure_time
 
         return x_vec, y_vec, z_vec, vector_length, speed
-    
-    def set_vector(self, scene: QtWidgets.QGraphicsScene, 
-                   gonio_coords: "dict[str, typing.Any]", 
-                   center: "tuple[float, float]", length=40):
-        offset = int(length/2)
+
+    def set_vector(
+        self,
+        scene: QtWidgets.QGraphicsScene,
+        gonio_coords: "dict[str, typing.Any]",
+        center: "tuple[float, float]",
+        length=40,
+    ) -> None:
+        offset = int(length / 2)
         gonio_coords_start = {
             "x": gonio_coords["x"] - offset,
             "y": gonio_coords["y"],
@@ -184,7 +188,7 @@ class VectorWidget(QtWidgets.QWidget):
         scene: QtWidgets.QGraphicsScene,
         gonio_coords: "dict[str, typing.Any]",
         center: "tuple[float, float]",
-    ):
+    ) -> None:
         point = getattr(self, point_name)
         if point:
             scene.removeItem(point)
@@ -209,7 +213,7 @@ class VectorWidget(QtWidgets.QWidget):
 
     def draw_vector(
         self, center: "tuple[float, float]", scene: QtWidgets.QGraphicsScene
-    ):
+    ) -> None:
         pen = QtGui.QPen(self.blue_color)
 
         if self.vector_start is not None and self.vector_end is not None:
@@ -282,12 +286,12 @@ class VectorWidget(QtWidgets.QWidget):
         vecMarker.signals.marker_pos_changed.connect(self.update_vector_position)
         return vecMarker
 
-    def update_vector_position(self, value):
+    def update_vector_position(self, value) -> None:
         if self.vector_line:
             self.main_window.scene.removeItem(self.vector_line)
             self.main_window.drawVector()
 
-    def update_marker_position(self, point: VectorMarker):
+    def update_marker_position(self, point: VectorMarker) -> None:
         # First convert the distance moved by the point from pixels to microns
         micron_x = self.main_window.screenXPixels2microns(point.pos().x())
         micron_y = self.main_window.screenYPixels2microns(point.pos().y())
@@ -312,7 +316,7 @@ class VectorWidget(QtWidgets.QWidget):
         point.coords = vectorCoords
         point.gonio_coords = gonio_coords
 
-    def clear_vector(self, scene: QtWidgets.QGraphicsScene):
+    def clear_vector(self, scene: QtWidgets.QGraphicsScene) -> None:
         if self.vector_start:
             scene.removeItem(self.vector_start)
             self.vector_start = None
@@ -325,7 +329,7 @@ class VectorWidget(QtWidgets.QWidget):
 
     def transform_vector_coords(
         self, prev_coords: "dict[str, float]", current_raw_coords: "dict[str, float]"
-    ):
+    ) -> dict[str, float]:
         """Updates y and z co-ordinates of vector points when they are moved
 
         This function tweaks the y and z co-ordinates such that when a vector start or

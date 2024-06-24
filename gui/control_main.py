@@ -361,6 +361,7 @@ class ControlMain(QtWidgets.QMainWindow):
         endVisitButton.clicked.connect(self.endVisitCB)
         restartServerButton = QtWidgets.QPushButton("Restart Server")
         restartServerButton.clicked.connect(self.restartServerCB)
+        restartServerButton.hide()
         self.openShutterButton = QtWidgets.QPushButton("Open Photon Shutter")
         self.openShutterButton.clicked.connect(self.openPhotonShutterCB)
         self.popUserScreen = QtWidgets.QPushButton("User Screen...")

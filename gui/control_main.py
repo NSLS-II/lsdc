@@ -3309,25 +3309,35 @@ class ControlMain(QtWidgets.QMainWindow):
             logger.error("bad value for beam width or beam height")
             self.popupServerMessage("bad value for beam width or beam height")
             return
-        rasterDef = {
-            "rasterType": "normal",
-            "beamWidth": beamWidth,
-            "beamHeight": beamHeight,
-            "status": RasterStatus.NEW.value,
-            "x": self.sampx_pv.get(),
-            "y": self.sampy_pv.get(),
-            "z": self.sampz_pv.get(),
-            "omega": self.omega_pv.get(),
-            "stepsize": stepsize,
-            "rowDefs": [],
-        }  # just storing step as microns, not using here
         if self.scannerType == "PI":
-            rasterDef["x"] += self.sampFineX_pv.get()
-            rasterDef["y"] += self.sampFineY_pv.get()
-            rasterDef["z"] += self.sampFineZ_pv.get()
-
-        # raster_w = width,goes to numsteps horizonatl
-        numsteps_h = int(raster_w / stepsizeXPix)
+            rasterDef = {
+                "rasterType": "normal",
+                "beamWidth": beamWidth,
+                "beamHeight": beamHeight,
+                "status": RasterStatus.NEW.value,
+                "x": self.sampx_pv.get() + self.sampFineX_pv.get(),
+                "y": self.sampy_pv.get() + self.sampFineY_pv.get(),
+                "z": self.sampz_pv.get() + self.sampFineZ_pv.get(),
+                "omega": self.omega_pv.get(),
+                "stepsize": stepsize,
+                "rowDefs": [],
+            }  # just storing step as microns, not using her
+        else:
+            rasterDef = {
+                "rasterType": "normal",
+                "beamWidth": beamWidth,
+                "beamHeight": beamHeight,
+                "status": RasterStatus.NEW.value,
+                "x": self.sampx_pv.get(),
+                "y": self.sampy_pv.get(),
+                "z": self.sampz_pv.get(),
+                "omega": self.omega_pv.get(),
+                "stepsize": stepsize,
+                "rowDefs": [],
+            }  # just storing step as microns, not using here
+        numsteps_h = int(
+            raster_w / stepsizeXPix
+        )  # raster_w = width,goes to numsteps horizonatl
         numsteps_v = int(raster_h / stepsizeYPix)
         if numsteps_h == 2:
             numsteps_h = 1  # fix slop in user single line attempt
@@ -3338,44 +3348,66 @@ class ControlMain(QtWidgets.QMainWindow):
         rasterDef["numCells"] = numsteps_h * numsteps_v
         point_offset_x = -(numsteps_h * stepsizeXPix) / 2
         point_offset_y = -(numsteps_v * stepsizeYPix) / 2
-
-        vertical_raster = False
-        direction = numsteps_v
         if (numsteps_h == 1) or (
             numsteps_v > numsteps_h and getBlConfig("vertRasterOn")
-        ):
-            vertical_raster = True
-            direction = numsteps_h
-
-        for i in range(direction):
-            rowCellCount = 0
-            rowStartX = point_x + point_offset_x
-            rowStartY = point_y + point_offset_y
-            if vertical_raster:
-                rowStartX += i * stepsizeXPix
-                rowCellCount = numsteps_v
-            else:
-                rowStartY += i * stepsizeYPix
-                rowCellCount = numsteps_h
-            vectorStartX = self.screenXPixels2microns(
-                rowStartX - self.centerMarker.x() - self.centerMarkerCharOffsetX
-            )
-            vectorStartY = self.screenYPixels2microns(
-                rowStartY - self.centerMarker.y() - self.centerMarkerCharOffsetY
-            )
-
-            vectorEndX = vectorStartX
-            vectorEndY = vectorStartY
-            if vertical_raster:
-                vectorEndY += self.screenYPixels2microns(rowCellCount * stepsizeYPix)
-            else:
-                vectorEndX += self.screenXPixels2microns(rowCellCount * stepsizeXPix)
-            newRowDef = {
-                "start": {"x": vectorStartX, "y": vectorStartY},
-                "end": {"x": vectorEndX, "y": vectorEndY},
-                "numsteps": rowCellCount,
-            }
-            rasterDef["rowDefs"].append(newRowDef)
+        ):  # vertical raster
+            for i in range(numsteps_h):
+                rowCellCount = 0
+                for j in range(numsteps_v):
+                    newCellX = point_x + (i * stepsizeXPix) + point_offset_x
+                    newCellY = point_y + (j * stepsizeYPix) + point_offset_y
+                    if rowCellCount == 0:  # start of a new row
+                        rowStartX = newCellX
+                        rowStartY = newCellY
+                    rowCellCount = rowCellCount + 1
+                if (
+                    rowCellCount != 0
+                ):  # test for no points in this row of the bounding rect are in the poly?
+                    vectorStartX = self.screenXPixels2microns(
+                        rowStartX - self.centerMarker.x() - self.centerMarkerCharOffsetX
+                    )
+                    vectorEndX = vectorStartX
+                    vectorStartY = self.screenYPixels2microns(
+                        rowStartY - self.centerMarker.y() - self.centerMarkerCharOffsetY
+                    )
+                    vectorEndY = vectorStartY + self.screenYPixels2microns(
+                        rowCellCount * stepsizeYPix
+                    )
+                    newRowDef = {
+                        "start": {"x": vectorStartX, "y": vectorStartY},
+                        "end": {"x": vectorEndX, "y": vectorEndY},
+                        "numsteps": rowCellCount,
+                    }
+                    rasterDef["rowDefs"].append(newRowDef)
+        else:  # horizontal raster
+            for i in range(numsteps_v):
+                rowCellCount = 0
+                for j in range(numsteps_h):
+                    newCellX = point_x + (j * stepsizeXPix) + point_offset_x
+                    newCellY = point_y + (i * stepsizeYPix) + point_offset_y
+                    if rowCellCount == 0:  # start of a new row
+                        rowStartX = newCellX
+                        rowStartY = newCellY
+                    rowCellCount = rowCellCount + 1
+                if (
+                    rowCellCount != 0
+                ):  # testing for no points in this row of the bounding rect are in the poly?
+                    vectorStartX = self.screenXPixels2microns(
+                        rowStartX - self.centerMarker.x() - self.centerMarkerCharOffsetX
+                    )
+                    vectorEndX = vectorStartX + self.screenXPixels2microns(
+                        rowCellCount * stepsizeXPix
+                    )  # this looks better
+                    vectorStartY = self.screenYPixels2microns(
+                        rowStartY - self.centerMarker.y() - self.centerMarkerCharOffsetY
+                    )
+                    vectorEndY = vectorStartY
+                    newRowDef = {
+                        "start": {"x": vectorStartX, "y": vectorStartY},
+                        "end": {"x": vectorEndX, "y": vectorEndY},
+                        "numsteps": rowCellCount,
+                    }
+                    rasterDef["rowDefs"].append(newRowDef)
         setBlConfig("rasterDefaultWidth", float(self.osc_range_ledit.text()))
         setBlConfig("rasterDefaultTime", float(self.exp_time_ledit.text()))
         setBlConfig("rasterDefaultTrans", float(self.transmission_ledit.text()))
@@ -3390,49 +3422,6 @@ class ControlMain(QtWidgets.QMainWindow):
                     return True
         return False
 
-    def draw_raster(self, raster_def: "dict[str, Any]", raster_dir: str) -> RasterGroup:
-        """
-        This method is only concerned with creating the raster graphics
-
-        Arguments:
-            raster_def : dict containing start and end points in microns for each row of the raster
-
-        Returns:
-            raster_group : Raster graphics object of type RasterGroup
-        """
-        stepsizeX = self.screenXmicrons2pixels(raster_def["stepsize"])
-        stepsizeY = self.screenYmicrons2pixels(raster_def["stepsize"])
-        pen = QtGui.QPen(QtCore.Qt.red)
-        newRasterCellList = []
-        offset = {
-            "x": self.centerMarker.x() + self.centerMarkerCharOffsetX,
-            "y": self.centerMarker.y() + self.centerMarkerCharOffsetY,
-        }
-        for i in range(len(raster_def["rowDefs"])):
-            newCellX = (
-                self.screenXmicrons2pixels(raster_def["rowDefs"][i]["start"]["x"])
-                + offset["x"]
-            )
-            newCellY = (
-                self.screenYmicrons2pixels(raster_def["rowDefs"][i]["start"]["y"])
-                + offset["y"]
-            )
-            for j in range(raster_def["rowDefs"][i]["numsteps"]):
-                if raster_dir == "horizontal":
-                    newCellX += stepsizeX
-                else:
-                    newCellY += stepsizeY
-
-                newCell = RasterCell(
-                    int(newCellX), int(newCellY), stepsizeX, stepsizeY, self
-                )
-                newRasterCellList.append(newCell)
-                newCell.setPen(pen)
-        newItemGroup = RasterGroup(self)
-        for i in range(len(newRasterCellList)):
-            newItemGroup.addToGroup(newRasterCellList[i])
-        return newItemGroup
-
     def drawPolyRaster(
         self, rasterReq, x=-1, y=-1, z=-1
     ):  # rasterDef in microns,offset from center, need to convert to pixels to draw, mainly this is for displaying autoRasters, but also called in zoom change
@@ -3440,6 +3429,11 @@ class ControlMain(QtWidgets.QMainWindow):
             rasterDef = rasterReq["request_obj"]["rasterDef"]
         except KeyError:
             return
+        beamSize = self.screenXmicrons2pixels(rasterDef["beamWidth"])
+        stepsizeX = self.screenXmicrons2pixels(rasterDef["stepsize"])
+        stepsizeY = self.screenYmicrons2pixels(rasterDef["stepsize"])
+        pen = QtGui.QPen(QtCore.Qt.red)
+        newRasterCellList = []
         try:
             if (
                 rasterDef["rowDefs"][0]["start"]["y"]
@@ -3450,9 +3444,54 @@ class ControlMain(QtWidgets.QMainWindow):
                 rasterDir = "vertical"
         except IndexError:
             return
-        newItemGroup = self.draw_raster(rasterDef, rasterDir)
+        for i in range(len(rasterDef["rowDefs"])):
+            rowCellCount = 0
+            for j in range(rasterDef["rowDefs"][i]["numsteps"]):
+                if rasterDir == "horizontal":
+                    newCellX = (
+                        self.screenXmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["x"]
+                        )
+                        + (j * stepsizeX)
+                        + self.centerMarker.x()
+                        + self.centerMarkerCharOffsetX
+                    )
+                    newCellY = (
+                        self.screenYmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["y"]
+                        )
+                        + self.centerMarker.y()
+                        + self.centerMarkerCharOffsetY
+                    )
+                else:
+                    newCellX = (
+                        self.screenXmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["x"]
+                        )
+                        + self.centerMarker.x()
+                        + self.centerMarkerCharOffsetX
+                    )
+                    newCellY = (
+                        self.screenYmicrons2pixels(
+                            rasterDef["rowDefs"][i]["start"]["y"]
+                        )
+                        + (j * stepsizeY)
+                        + self.centerMarker.y()
+                        + self.centerMarkerCharOffsetY
+                    )
+                if rowCellCount == 0:  # start of a new row
+                    rowStartX = newCellX
+                    rowStartY = newCellY
+                newCellX = int(newCellX)
+                newCellY = int(newCellY)
+                newCell = RasterCell(newCellX, newCellY, stepsizeX, stepsizeY, self)
+                newRasterCellList.append(newCell)
+                newCell.setPen(pen)
+                rowCellCount = rowCellCount + 1  # really just for test of new row
+        newItemGroup = RasterGroup(self)
         self.scene.addItem(newItemGroup)
-
+        for i in range(len(newRasterCellList)):
+            newItemGroup.addToGroup(newRasterCellList[i])
         newRasterGraphicsDesc = {
             "uid": rasterReq["uid"],
             "coords": {

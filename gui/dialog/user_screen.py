@@ -4,7 +4,7 @@ import typing
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
-
+from config_params import ON_MOUNT_OPTION
 import daq_utils
 
 if typing.TYPE_CHECKING:
@@ -71,7 +71,21 @@ class UserScreenDialog(QtWidgets.QFrame):
         hBoxColParams3.addWidget(self.testRobotButton)
         hBoxColParams3.addWidget(self.recoverRobotButton)
         hBoxColParams3.addWidget(self.dryGripperButton)
-        robotGB.setLayout(hBoxColParams3)
+
+        hBoxRobotParamsRow2 = QtWidgets.QHBoxLayout()
+        hBoxRobotParamsRow2.addWidget(QtWidgets.QLabel("After mount:"))
+        self.mountOptionDropdown = QtWidgets.QComboBox()
+        self.mountOptionDropdown.addItem("Do nothing", 0)
+        self.mountOptionDropdown.addItem("Center sample", 1)
+        self.mountOptionDropdown.addItem("Collect rasters", 2)
+        self.mountOptionDropdown.currentIndexChanged.connect(self.onMountOptionChanged)
+        self.mountOptionDropdown.setCurrentIndex(daq_utils.getBlConfig(ON_MOUNT_OPTION))
+        hBoxRobotParamsRow2.addWidget(self.mountOptionDropdown)
+
+        vBoxRobotParams = QtWidgets.QVBoxLayout()
+        vBoxRobotParams.addLayout(hBoxColParams3)
+        vBoxRobotParams.addLayout(hBoxRobotParamsRow2)
+        robotGB.setLayout(vBoxRobotParams)
 
         zebraGB = QtWidgets.QGroupBox()
         detGB = QtWidgets.QGroupBox()
@@ -200,6 +214,10 @@ class UserScreenDialog(QtWidgets.QFrame):
 
         vBoxColParams1.addWidget(self.buttons)
         self.setLayout(vBoxColParams1)
+            
+    def onMountOptionChanged(self, index):
+        value = self.mountOptionDropdown.itemData(index)
+        daq_utils.setBlConfig(ON_MOUNT_OPTION, value)
 
     def show(self):
         self.checkQueueCollect()

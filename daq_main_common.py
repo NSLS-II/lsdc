@@ -85,7 +85,8 @@ functions = [anneal,
   unlatchGov,
   backoffDetector,
   enableMount,
-  robotOn
+  robotOn,
+  set_energy
   ]
 
 whitelisted_functions: "Dict[str, Callable]" = {

@@ -207,7 +207,8 @@ class EMBLRobot:
             prefix90 = sampName + "_" + str(puckPos) + "_" + str(pinPos) + "_" + str(reqCount) + "_PA_90"
             kwargs['prefix1'] = prefix1
             kwargs['prefix90'] = prefix90
-            top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
+            if daq_utils.beamline == "fmx":
+              top_view.topViewSnap(prefix1,getBlConfig("visitDirectory")+"/pinAlign",1,acquire=0)
           except Exception as e:
             e_s = str(e)
             message = "TopView check ERROR, will continue: " + e_s
@@ -242,7 +243,8 @@ class EMBLRobot:
         if (omegaCP > 89.5 and omegaCP < 90.5):
           beamline_lib.mvrDescriptor("omega", 85.0)
         logger.info("calling thread")
-        _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
+        if daq_utils.beamline == "fmx":
+          _thread.start_new_thread(top_view.wait90TopviewThread,(gov_robot, prefix1,prefix90))
         logger.info("called thread")
 
 
@@ -296,6 +298,8 @@ class EMBLRobot:
           logger.error(e)
           e_s = str(e)
           if (e_s.find("Fatal") != -1):
+            if self.isSampleDetected(e_s):
+              return MOUNT_STEP_SUCCESSFUL
             daq_macros.robotOff()
             daq_macros.disableMount()
             daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
@@ -324,6 +328,25 @@ class EMBLRobot:
           return MOUNT_FAILURE
       return MOUNT_STEP_SUCCESSFUL
 
+    def isSampleDetected(self, error_string, max_wait_time=60):
+      """Sometimes after mount, the pin is not detected on the gonio because
+      there is a buildup of ice between the pin and gonio
+      This function checks for that error, and if it is detected will check for
+      the pin every second for max_wait_time seconds.
+      If after that time it still does not detect the sample it will throw an error
+      """
+      
+      if (error_string.find("Pin lost during mount transaction") != -1):
+        logger.info(f"Pin probably has ice, waiting for {max_wait_time + 1} seconds")
+        wait_time = 0
+        while wait_time < max_wait_time:
+          wait_time += 1
+          time.sleep(1)
+          if getPvDesc("sampleDetected") == 0:
+            # Sample is detected
+            return True
+      return False
+  
     def postMount(self, gov_robot, puck, pinPos, sampID):
       sampYadjust = float(getBlConfig('sampYAdjust'))
       if getBlConfig('robot_online'):
@@ -349,9 +372,15 @@ class EMBLRobot:
               logger.info('not changing anything as governor is active')
           if (sampYadjust == 0):
             logger.info("Cannot align pin - Mount next sample.")
-        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-        if not gov_status.success:
-          logger.error('Failure during governor change to SA')
+        if daq_utils.beamline == "amx":
+          try:
+            daq_macros.run_top_view_optimized()
+          except:
+            logger.exception("Error running top_view_optimized")
+        if gov_robot.state.get() != "SA":
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+          if not gov_status.success:
+            logger.error('Failure during governor change to SA')
       return MOUNT_SUCCESSFUL
 
  
@@ -360,12 +389,19 @@ class EMBLRobot:
       robotOnline = getBlConfig('robot_online')
       logger.info("robot online = " + str(robotOnline))
       if (robotOnline):
+        logger.info("Checking detector dist")
         detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
         if (detDist<DETECTOR_SAFE_DISTANCE[daq_utils.beamline]):
           gov_lib.set_detz_out(gov_robot, DETECTOR_SAFE_DISTANCE[daq_utils.beamline])
         if daq_utils.beamline == "fmx":
             beamline_lib.mvaDescriptor("omega", 0)
-        daq_lib.setRobotGovState("SE")
+        logger.info("Setting SE state")
+        if daq_utils.beamline == "amx":
+          wait = False
+        else:
+          wait = True
+        gov_lib.setGovRobot(gov_robot, "SE")
+        logger.info("Done setting SE")
         logger.info("unmounting " + str(puckPos) + " " + str(pinPos) + " " + str(sampID))
         logger.info("absPos = " + str(absPos))
         platePos = int(puckPos/3)

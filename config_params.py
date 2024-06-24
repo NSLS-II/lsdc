@@ -1,5 +1,6 @@
+import grp
+import os
 from enum import Enum
-import os, grp
 
 # BlConfig parameter variable names
 
@@ -36,6 +37,8 @@ CRYOSTREAM_ONLINE = (
 # GUI default configuration
 BEAM_CHECK = "beamCheck"
 UNMOUNT_COLD_CHECK = "unmountColdCheck"
+ON_MOUNT_OPTION = "onMountOption"
+SET_ENERGY_CHECK = "setEnergyCheck"
 
 
 # raster request status updates
@@ -52,6 +55,13 @@ class RasterStatus(Enum):
     READY_FOR_SNAPSHOT = 3
     READY_FOR_REPROCESS = 4
 
+class OnMountAvailOptions(Enum):
+    """
+    This enumerates the options available to the user on mounting a sample
+    """
+    DO_NOTHING = 0 # Only mounts sample
+    CENTER_SAMPLE = 1 # Mounts and centers sample
+    AUTO_RASTER = 2 # Mounts, centers and takes 2 orthogonal rasters
 
 HUTCH_TIMER_DELAY = 500
 SAMPLE_TIMER_DELAY = 0
@@ -83,7 +93,7 @@ GOVERNOR_TIMEOUT = 120  # seconds for a governor move
 DEWAR_SECTORS = {"amx": 8, "fmx": 8, "nyx": 5}
 PUCKS_PER_DEWAR_SECTOR = {"amx": 3, "fmx": 3, "nyx": 3}
 
-cryostreamTempPV = {"amx": "AMX:cs700:gasT-I", "fmx": "FMX:cs700:gasT-I"}
+cryostreamTempPV = {"amx": "XF:17IDB-ES:AMX{CS:1}SAMPLE_TEMP_RBV", "fmx": "FMX:cs700:gasT-I"}
 
 VALID_EXP_TIMES = {
     "amx": {"min": 0.005, "max": 1, "digits": 3},
@@ -108,6 +118,8 @@ VALID_TRANSMISSION = {
     "nyx": {"min": 0.001, "max": 0.999, "digits": 3},
 }
 
+MINIMUM_RASTER_SIZE = {"amx": 6, "fmx": 6, "nyx": 2}
+
 LSDC_SERVICE_USERS = ("lsdc-amx", "lsdc-fmx", "lsdc-nyx")
 IS_STAFF = (
     True
@@ -118,4 +130,9 @@ IS_STAFF = (
 EMBL_SERVER_PV_BASE = {
     "amx": "XF:17IDB-ES:AMX{EMBL}",
     "fmx": "XF:17IDC-ES:FMX{EMBL}"
+}
+
+BEAMSIZE_OPTIONS = {
+    "S": ["V0", "H0"],
+    "L": ["V1", "H1"]
 }

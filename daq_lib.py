@@ -233,12 +233,6 @@ def getRobotConfig():
   return getPvDesc("robotGovConfig",as_string=True)
 
 
-def setRobotGovState(stateString):
-  if (getRobotConfig() == "Robot"):
-    setPvDesc("robotGovGo",stateString)
-  else:
-    setPvDesc("humanGovGo",stateString)
-
 def mountSample(sampID):
   global mountCounter
 
@@ -284,6 +278,10 @@ def mountSample(sampID):
           if (detDist != saveDetDist):
             if (getBlConfig("HePath") == 0):
               beamline_lib.mvaDescriptor("detectorDist",saveDetDist)
+          if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
+            # Only run mount options when the robot is online and queue collect is off
+            daq_macros.run_on_mount_option(sampID)
+            gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         elif(mountStat == 2):
           return 2
         else:
@@ -297,6 +295,10 @@ def mountSample(sampID):
     mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
     if (mountStat == 1):
       set_field("mounted_pin",sampID)
+      if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
+        # Only run mount options when the robot is online and queue collect is off
+        daq_macros.run_on_mount_option(sampID)
+        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
     elif(mountStat == 2):
       return 2
     else:
@@ -536,6 +538,7 @@ def collectData(currentRequest):
       check_pause()
     else:
       logger.info("autoRaster")
+      daq_macros.run_loop_center_plan()
       if not (daq_macros.autoRasterLoop(currentRequest)):
         logger.info("could not center sample")
         db_lib.updatePriority(currentRequest["uid"],-1)
@@ -680,7 +683,7 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
   logger.info("data directory = " + data_directory_name)
   reqObj = currentRequest["request_obj"]
   protocol = str(reqObj["protocol"])
-  sweep_start = sweep_start%360.0
+  sweep_start = sweep_start % 360.0 if sweep_start > 0 else sweep_start % -360
   if (protocol == "vector" or protocol == "stepVector"):
     beamline_lib.mvaDescriptor("omega",sweep_start)
   if (image_width == 0):

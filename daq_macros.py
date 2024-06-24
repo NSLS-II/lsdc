@@ -7,6 +7,7 @@ import daq_lib
 import daq_utils
 import db_lib
 from daq_utils import getBlConfig, setBlConfig
+from utils.raster import get_raster_max_col, get_flattened_indices_of_max_col
 import det_lib
 import math
 import time
@@ -36,8 +37,14 @@ from scans import (zebra_daq_prep, setup_zebra_vector_scan,
                    setup_vector_program)
 import bluesky.plan_stubs as bps
 import bluesky.plans as bp
-from bluesky.preprocessors import finalize_wrapper
+from bluesky.preprocessors import finalize_wrapper, finalize_decorator
 from fmx_annealer import govStatusGet, govStateSet, fmxAnnealer, amxAnnealer # for using annealer specific to FMX and AMX
+from config_params import ON_MOUNT_OPTION, OnMountAvailOptions, BEAMSIZE_OPTIONS
+from mxbluesky.plans import detect_loop, topview_optimized
+
+if daq_utils.beamline == 'fmx':
+  from setenergy_lsdc import setELsdc
+
 
 try:
   import ispybLib
@@ -59,7 +66,9 @@ global autoVectorFlag, autoVectorCoarseCoords
 autoVectorCoarseCoords = {}
 autoVectorFlag=False
 
-
+max_col = None
+face_on_max_coords = None
+ortho_max_coords = None
 
 C3D_SEARCH_BASE = f'{os.environ["PROJDIR"]}/software/c3d/c3d_search -p=$CONFIGDIR/'
 
@@ -85,6 +94,14 @@ def abortBS():
       RE.abort()
     except super_state_machine.errors.TransitionError:
       logger.error("caught BS")
+  
+def set_energy(energy):
+  try:
+    daq_lib.set_field("program_state","Setting Energy")
+    RE(setELsdc(energy))
+  except Exception as e:
+    logger.error(f"Exception while running set_energy: {e}")
+    daq_lib.set_field("program_state","Program Ready")
 
 def move_omega(omega, relative=True):
   """Moves omega by a certain amount"""
@@ -219,9 +236,155 @@ def changeImageCenterHighMag(x,y,czoom):
   setPvDesc("highMagMinY",new_minY)    
   setPvDesc("highMagCursorX",noZoomCenterX)
   setPvDesc("highMagCursorY",noZoomCenterY)
-  
+
+sample_detection = {
+  "sample_detected": False,
+  "large_box_width": 0,
+  "large_box_height": 0,
+  "small_box_height": 0,
+  "center_x" : 0,
+  "center_y" : 0,
+  "center_z" : 0,
+  "face_on_omega" : 0
+}
+
+
+def run_top_view_optimized():
+    RE(topview_optimized())
+
+def run_on_mount_option(sample_id):
+    option = OnMountAvailOptions(daq_utils.getBlConfig(ON_MOUNT_OPTION))
+    logger.info(f"Running on mount option : {option}")
+    request = {}
+
+    if option == OnMountAvailOptions.DO_NOTHING:
+      return
+    
+    if (option == OnMountAvailOptions.CENTER_SAMPLE 
+        or option == OnMountAvailOptions.AUTO_RASTER):
+      # Center using ML model
+      run_loop_center_plan()
+    
+    if option == OnMountAvailOptions.AUTO_RASTER:
+      # Set up a fake standard collection for autoRasterLoop
+      request = {"sample": sample_id, 
+                  "uid": -1,
+                  "request_obj": {
+                    "xbeam": getPvDesc('beamCenterX'),
+                    "ybeam": getPvDesc('beamCenterY'),
+                    "wavelength": daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+                  }
+                }
+      autoRasterLoop(request)
+
+def run_loop_center_plan():
+    if daq_utils.beamline == "fmx":
+      # Run xrec for FMX, they don't have a top cam
+      retries = 3
+      while retries:
+        success = loop_center_xrec()
+        if not success:
+          retries -= 1
+        else:
+          retries = 0
+    RE(loop_center_plan())
+
+def loop_center_plan():
+    global sample_detection
+    if gov_robot.state.get() == 'M':
+      bps.sleep(15)
+    if gov_robot.state.get() == "SE":
+      gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+      if gov_status.success:
+        yield from detect_loop(sample_detection)
+      else:
+        print("could not transition to SA")
+    else:
+      yield from detect_loop(sample_detection)
 
 def autoRasterLoop(currentRequest):
+    global sample_detection, autoRasterFlag, max_col, face_on_max_coords, ortho_max_coords
+    
+    if sample_detection["sample_detected"]:
+      setTrans(getBlConfig("rasterDefaultTrans"))
+      daq_lib.set_field("xrecRasterFlag","100")
+      logger.info("auto raster " + str(currentRequest["sample"]))
+      logger.info(f"sample detection : {sample_detection}")
+      # time.sleep(1)
+      autoRasterFlag = 1
+      # Before collecting the 1st raster, reset max_col and face_on_max_coords
+      max_col = None
+      face_on_max_coords = None
+      ortho_max_coords = None
+      step_size = 10
+      if sample_detection["large_box_width"] * sample_detection["large_box_height"] > 150_000:
+        step_size = 20
+        
+
+      runRasterScan(currentRequest, rasterType="Custom", 
+                    width=sample_detection["large_box_width"], 
+                    height=sample_detection["large_box_height"], step_size=step_size)
+      logger.info(f"AUTORASTER LOOP: {max_col} {face_on_max_coords}")
+
+      if not face_on_max_coords:
+        autoRasterFlag = 0
+        if daq_utils.beamline == 'fmx':
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+        return 0
+
+      RE(bps.mv(gonio.gx, sample_detection["center_x"], 
+            gonio.py, sample_detection["center_y"],
+            gonio.pz, sample_detection["center_z"]))
+      
+      runRasterScan(currentRequest, rasterType="Custom", 
+                    width=sample_detection["large_box_width"], 
+                    height=sample_detection["small_box_height"], 
+                    step_size=step_size,
+                    omega_rel=90)
+      # Gonio should be at the hot cell for the ortho raster. 
+      # Now move to the hot cell of the face on raster, then start standard collection
+      if not ortho_max_coords:
+        autoRasterFlag = 0
+        if daq_utils.beamline == 'fmx':
+          gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+        return 0
+
+      logger.info(f"AUTORASTER LOOP: {face_on_max_coords=} {ortho_max_coords=}")
+      logger.info(f"AUTORASTER LOOP: {sample_detection=} {max_col=}")
+      _, y_f, z_f = face_on_max_coords
+      _, y_ort, z_ort = ortho_max_coords
+      y_center, z_center = sample_detection["center_y"], sample_detection["center_z"]
+
+      omega_face_on = sample_detection["face_on_omega"] 
+      omega_ortho = (sample_detection["face_on_omega"] + 90)
+
+      r_f = (y_f - y_center)*np.cos(np.deg2rad(omega_face_on)) + (z_f - z_center)*np.sin(np.deg2rad(omega_face_on))
+      r_o = (y_ort - y_center)*np.cos(np.deg2rad(omega_ortho)) + (z_ort - z_center)*np.sin(np.deg2rad(omega_ortho))
+
+      logger.info(f"AUTORASTER LOOP: {r_f=} {r_o=}")
+
+      r = np.array([[r_f],[r_o]])
+      A = np.matrix([[np.cos(np.deg2rad(omega_face_on)), np.sin(np.deg2rad(omega_face_on))],[np.cos(np.deg2rad(omega_ortho)), np.sin(np.deg2rad(omega_ortho))]])
+      logger.info(f"AUTORASTER LOOP: {A=}")
+
+      yz = np.linalg.inv(A)*r
+      delta_y, delta_z = yz[0,0], yz[1,0]
+      logger.info(f"AUTORASTER LOOP: {yz=}")
+
+      final_y = y_center + delta_y
+      final_z = z_center + delta_z
+
+      logger.info(f"AUTORASTER LOOP: {final_y=} {final_z=}")
+
+
+      RE(bps.mv(gonio.py, final_y, gonio.pz, final_z))
+
+      autoRasterFlag = 0
+      return 1
+    else:
+      return 0
+
+def autoRasterLoopOld(currentRequest):
   global autoRasterFlag
 
   
@@ -1390,7 +1553,7 @@ def snakeRasterNormal(rasterReqID,grain=""):
   if (daq_utils.beamline == "fmx"):
     setPvDesc("sampleProtect",0)
   setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-  daq_lib.setRobotGovState("DA")    
+  gov_lib.setGovRobot(gov_robot, "DA")
   rasterRequest = db_lib.getRequestByID(rasterReqID)
   reqObj = rasterRequest["request_obj"]
   parentReqID = reqObj["parentReqID"]
@@ -1834,7 +1997,6 @@ def snakeRasterBluesky(rasterReqID, grain=""):
     if (daq_utils.beamline == "fmx"):
       setPvDesc("sampleProtect",0)
     setPvDesc("vectorGo", 0) #set to 0 to allow easier camonitoring vectorGo
-
     data_directory_name, filePrefix, file_number_start, dataFilePrefix, exptimePerCell, img_width_per_cell, wave, detDist, rasterDef, stepsize, omega, rasterStartX, rasterStartY, rasterStartZ, omegaRad, rowCount, numsteps, totalImages, rows = params_from_raster_req_id(rasterReqID)
     rasterRowResultsList = [{} for i in range(0,rowCount)]    
     processedRasterRowCount = 0
@@ -1917,12 +2079,12 @@ def snakeRasterBluesky(rasterReqID, grain=""):
 
       targetGovState = 'SA'
     else:
-      govStatus = gov_lib.setGovRobot(gov_robot, 'DI')
+      govStatus = gov_lib.setGovRobot(gov_robot, 'DA')
       if govStatus.exception():
         logger.error(f"Problem during end-of-raster governor move, aborting! exception: {govStatus.exception()}")
         return
 
-      targetGovState = 'DI'
+      targetGovState = 'DA'
 
     # priorities:
     # 1. make heat map visible to users correctly aligned with sample
@@ -1957,10 +2119,10 @@ def snakeRasterBluesky(rasterReqID, grain=""):
       else:
         try:
           # go to start omega for faster heat map display
-          gotoMaxRaster(rasterResult,omega=omega)
+          gotoMaxRaster(rasterResult,omega=omega, rasterRequest=rasterRequest)
         except ValueError:
           #must go to known position to account for windup dist.
-          logger.info("moving to raster start")
+          logger.info("moving to raster start because of value error in gotoMaxRaster")
           yield from bps.mv(samplexyz.x, rasterStartX)
           yield from bps.mv(samplexyz.y, rasterStartY)
           yield from bps.mv(samplexyz.z, rasterStartZ)
@@ -2189,7 +2351,7 @@ def gridRaster(currentRequest):
       RE(snakeRaster(rasterReqID))
 
 
-def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
+def runRasterScan(currentRequest,rasterType="", width=0, height=0, step_size=10, omega_rel=0): #this actually defines and runs
   sampleID = currentRequest["sample"]
   if (rasterType=="Fine"):
     daq_lib.set_field("xrecRasterFlag","100")    
@@ -2209,25 +2371,72 @@ def runRasterScan(currentRequest,rasterType=""): #this actually defines and runs
     rasterReqID = defineRectRaster(currentRequest,10,290,10)    
     RE(snakeRaster(rasterReqID))
     daq_lib.set_field("xrecRasterFlag","100")    
+  elif (rasterType=="Custom"):
+    daq_lib.set_field("xrecRasterFlag","100")
+    beamline_lib.mvrDescriptor("omega",omega_rel)
+    rasterReqID = defineRectRaster(currentRequest, width+step_size, height+step_size, step_size)
+    RE(snakeRaster(rasterReqID))
   else:
     rasterReqID = getXrecLoopShape(currentRequest)
     logger.info("snake raster " + str(rasterReqID))
     time.sleep(1) #I think I really need this, not sure why
     RE(snakeRaster(rasterReqID))
 
-def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
-  global autoVectorCoarseCoords,autoVectorFlag
+def get_score_vals(cellResults, scoreOption):
+  """
+  Returns a numpy 1d-array that stores the selected scores as a flattened array
+  """
+  score_vals = np.zeros(len(cellResults))
+  for i, res in enumerate(cellResults):
+    try:
+      score_vals[i] = float(res[scoreOption])
+    except TypeError:
+      logger.debug(f"Option {scoreOption} not found for {res=}")
+  return score_vals
+
+def get_score_index(score_vals: "np.ndarray", scoreOption, indices=None):
+  """
+  Returns the maximum or minimum score value in the 1d array of scores and the corresponding index
+  If specific indices are provided the max/min score will be selected from those indices
+
+  """
+  if indices:
+    score_vals = score_vals[indices]
+  if scoreOption == "d_min":
+    # If value is -1 replace with inf so that it is not considered for np.min
+    score_vals = np.where(score_vals == -1, np.inf, score_vals) 
+    scoreVal = np.min(score_vals)
+    max_index = np.argmin(score_vals)
+  else:
+    scoreVal = np.max(score_vals)
+    max_index = np.argmax(score_vals)
+  
+  max_index = max_index if not indices else indices[max_index] 
+
+  return scoreVal, max_index
+
+def get_gonio_pos_from_raster_result(cell_results, raster_map, index):
+  """
+  Returns the motor positions and the cell which corresponds to the index 
+  given in the cell_results list
+  """
+  hot_file = cell_results[index]["cellMapKey"]
+  hot_coords = raster_map[hot_file]     
+  x = hot_coords["x"]
+  y = hot_coords["y"]
+  z = hot_coords["z"]
+  logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
+  return hot_file, (x, y, z)
+
+def gotoMaxRaster(rasterResult,multiColThreshold=None,**kwargs):
+  global autoVectorCoarseCoords,autoVectorFlag, max_col, face_on_max_coords, ortho_max_coords
   
   requestID = rasterResult["request"]
   if (rasterResult["result_obj"]["rasterCellResults"]['resultObj'] == None):
     logger.info("no raster result!!\n")
     raise ValueError("raster result object is None")
-    return
-  ceiling = 0.0
-  floor = 100000000.0 #for resolution where small number means high score
-  hotFile = ""
-  scoreOption = ""
   logger.info("in gotomax")
+  
   cellResults = rasterResult["result_obj"]["rasterCellResults"]['resultObj']
   rasterMap = rasterResult["result_obj"]["rasterCellMap"]  
   rasterScoreFlag = int(db_lib.beamlineInfo(daq_utils.beamline,'rasterScoreFlag')["index"])
@@ -2237,37 +2446,24 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
     scoreOption = "d_min"
   else:
     scoreOption = "total_intensity"
-  for i in range (0,len(cellResults)):
-    try:
-      scoreVal = float(cellResults[i][scoreOption])
-    except TypeError:
-      scoreVal = 0.0
-    if (multiColThreshold>-1):
-      logger.info("doing multicol")
-      if (scoreVal >= multiColThreshold):
-        hitFile = cellResults[i]["cellMapKey"]
-        hitCoords = rasterMap[hitFile]
-        parentReqID = rasterResult['result_obj']["parentReqID"]
-        if (parentReqID == -1):
-          addMultiRequestLocation(requestID,hitCoords,i)
-        else:
-          addMultiRequestLocation(parentReqID,hitCoords,i)        
-    if (scoreOption == "d_min"):
-      if (scoreVal < floor and scoreVal != -1):
-        floor = scoreVal
-        hotFile = cellResults[i]["cellMapKey"]        
-    else:
-      if (scoreVal > ceiling):
-        ceiling = scoreVal
-        hotFile = cellResults[i]["cellMapKey"]        
-  if (hotFile != ""):
-    logger.info('raster score ceiling: %s floor: %s hotfile: %s' % (ceiling, floor, hotFile))
-    hotCoords = rasterMap[hotFile]     
-    x = hotCoords["x"]
-    y = hotCoords["y"]
-    z = hotCoords["z"]
-    logger.info("goto " + str(x) + " " + str(y) + " " + str(z))
+  max_index = None
+  score_vals = get_score_vals(cellResults, scoreOption)
+  score_val, max_index = get_score_index(score_vals, scoreOption)
 
+  if multiColThreshold is not None:
+    logger.info("doing multicol")
+    for index in np.where(score_vals > multiColThreshold)[0]:
+      hitFile = cellResults[index]["cellMapKey"]
+      hitCoords = rasterMap[hitFile]
+      parent_req_id = rasterResult['result_obj']["parentReqID"]
+      if parent_req_id == -1:
+        addMultiRequestLocation(requestID, hitCoords, index)
+      else:
+        addMultiRequestLocation(parent_req_id, hitCoords, index)
+
+  
+  if max_index:
+    x, y, z = run_auto_raster(max_index, score_vals, scoreOption, cellResults, rasterMap, **kwargs)
     if 'omega' in kwargs:
       beamline_lib.mvaDescriptor("sampleX",x,
                                  "sampleY",y,
@@ -2276,74 +2472,121 @@ def gotoMaxRaster(rasterResult,multiColThreshold=-1,**kwargs):
     else: beamline_lib.mvaDescriptor("sampleX",x,"sampleY",y,"sampleZ",z)
 
     if (autoVectorFlag): #if we found a hotspot, then look again at cellResults for coarse vector start and end
-      xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
-      xmaxColumn = []
-      vectorThreshold = 0.7*ceiling
-      xmax = -1000000
-      xmin = 1000000
-      ymin = 0
-      ymax = 0
-      zmin = 0
-      zmax = 0
-      for i in range (0,len(cellResults)): #first find the xmin and xmax of threshold (left and right ends of vector)
-        try:
-          scoreVal = float(cellResults[i][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          hotFile = cellResults[i]["cellMapKey"]
-          hotCoords = rasterMap[hotFile]             
-          x = hotCoords["x"]
-          if (x<xmin):
-            xmin = x
-          if (x>xmax):
-            xmax = x
-      for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
-        fileKey = cellResults[i]["cellMapKey"]
-        coords = rasterMap[fileKey]
-        x = coords["x"]
-        if (x == xmin): #cell is in left column
-          xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
-          xminColumn.append(xEdgeCellResult)
-        if (x == xmax):
-          xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
-          xmaxColumn.append(xEdgeCellResult)
-      maxIndex = -10000
-      minIndex = 10000
-      for i in range (0,len(xminColumn)): #find the midpoint of the left column that is in the threshold range
-        try:
-          scoreVal = float(xminColumn[i]["processingResults"][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          if (minIndex<0): #you only need the first one that beats the threshold
-            minIndex = i
-          if (i>maxIndex):
-            maxIndex = i
-      middleIndex = int((minIndex+maxIndex)/2)
-      xmin = xminColumn[middleIndex]["coords"]["x"]
-      ymin = xminColumn[middleIndex]["coords"]["y"]
-      zmin = xminColumn[middleIndex]["coords"]["z"]                            
-      for i in range (0,len(xmaxColumn)): #do same as above for right column
-        try:
-          scoreVal = float(xmaxColumn[i]["processingResults"][scoreOption])
-        except TypeError:
-          scoreVal = 0.0
-        if (scoreVal > vectorThreshold):
-          if (minIndex<0):
-            minIndex = i
-          if (i>maxIndex):
-            maxIndex = i
-      middleIndex = int((minIndex+maxIndex)/2)
-      xmax = xmaxColumn[middleIndex]["coords"]["x"]
-      ymax = xmaxColumn[middleIndex]["coords"]["y"]
-      zmax = xmaxColumn[middleIndex]["coords"]["z"]                            
-          
-      autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
+      run_auto_vector(score_val, cellResults, scoreOption, rasterMap)
 
   else:
     raise ValueError("No max position found for gonio move")
+
+def run_auto_raster(max_index, score_vals, scoreOption, cellResults, rasterMap, **kwargs):
+  global max_col, face_on_max_coords, ortho_max_coords
+  hotFile, (x, y, z) = get_gonio_pos_from_raster_result(cellResults, rasterMap, max_index)
+  if "rasterRequest" in kwargs and autoRasterFlag:
+    # Update the raster request with the location of the max raster image and co-ordinates.
+    # NOTE: In the optimized autoraster, two 2D rasters are collected, face on and orthogonal.
+    # Both rasters have the same number of columns, we save the column number of the hot cell (max_col)
+    # in the face on raster then look for the hot cell in the orthogonal raster in the same 
+    # column. This is to emulate the original autoraster but leaves room for other ways of selecting
+    # points for standard collection
+    rasterDef = kwargs["rasterRequest"]["request_obj"]["rasterDef"]
+
+    col = get_raster_max_col(rasterDef, max_index)
+
     
+    # Set the column index for the face on raster
+    if max_col is None:
+      max_col = col
+      face_on_max_coords = (x, y, z)
+    else: 
+      # max_col should be available for orthogonal rasters
+      # Find maximum in col defined in max_col and then reset max_col
+      indices = get_flattened_indices_of_max_col(rasterDef, max_col)
+      score_val, max_index = get_score_index(score_vals, scoreOption, indices)
+      hotFile, (x, y, z) = get_gonio_pos_from_raster_result(cellResults, rasterMap, max_index)
+      ortho_max_coords = (x, y, z)
+      logger.info(f"ORTHO DEBUG: {max_col=}\n {indices=}\n {max_index=}\n {ortho_max_coords=}")
+      max_col = None
+
+    kwargs["rasterRequest"]["request_obj"]["max_raster"] = {
+      "file" : hotFile,
+      "coords": [x, y, z],
+      "index": int(max_index)
+    }
+    if "omega" in kwargs:
+      kwargs["rasterRequest"]["request_obj"]["max_raster"]["omega"] = kwargs["omega"]
+
+    db_lib.updateRequest(kwargs["rasterRequest"])
+
+    req = db_lib.getRequestByID(kwargs["rasterRequest"]["uid"])
+    logger.info(f'MAX RASTER INFO: {req["request_obj"]["max_raster"]["file"]} {req["request_obj"]["max_raster"]["coords"]}')
+  return x, y, z
+
+
+def run_auto_vector(ceiling, cellResults, scoreOption, rasterMap):
+  xminColumn = [] #these are the "line rasters" of the ends of threshold points determined by the first pass on the raster results
+  xmaxColumn = []
+  vectorThreshold = 0.7*ceiling
+  xmax = -1000000
+  xmin = 1000000
+  ymin = 0
+  ymax = 0
+  zmin = 0
+  zmax = 0
+  for i in range (0,len(cellResults)): #first find the xmin and xmax of threshold (left and right ends of vector)
+    try:
+      scoreVal = float(cellResults[i][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      hotFile = cellResults[i]["cellMapKey"]
+      hotCoords = rasterMap[hotFile]             
+      x = hotCoords["x"]
+      if (x<xmin):
+        xmin = x
+      if (x>xmax):
+        xmax = x
+  for i in range (0,len(cellResults)): #now grab the columns of cells on xmin and xmax, like line scan results on the ends
+    fileKey = cellResults[i]["cellMapKey"]
+    coords = rasterMap[fileKey]
+    x = coords["x"]
+    if (x == xmin): #cell is in left column
+      xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
+      xminColumn.append(xEdgeCellResult)
+    if (x == xmax):
+      xEdgeCellResult = {"coords":coords,"processingResults":cellResults[i]}
+      xmaxColumn.append(xEdgeCellResult)
+  maxIndex = -10000
+  minIndex = 10000
+  for i in range (0,len(xminColumn)): #find the midpoint of the left column that is in the threshold range
+    try:
+      scoreVal = float(xminColumn[i]["processingResults"][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      if (minIndex<0): #you only need the first one that beats the threshold
+        minIndex = i
+      if (i>maxIndex):
+        maxIndex = i
+  middleIndex = int((minIndex+maxIndex)/2)
+  xmin = xminColumn[middleIndex]["coords"]["x"]
+  ymin = xminColumn[middleIndex]["coords"]["y"]
+  zmin = xminColumn[middleIndex]["coords"]["z"]                            
+  for i in range (0,len(xmaxColumn)): #do same as above for right column
+    try:
+      scoreVal = float(xmaxColumn[i]["processingResults"][scoreOption])
+    except TypeError:
+      scoreVal = 0.0
+    if (scoreVal > vectorThreshold):
+      if (minIndex<0):
+        minIndex = i
+      if (i>maxIndex):
+        maxIndex = i
+  middleIndex = int((minIndex+maxIndex)/2)
+  xmax = xmaxColumn[middleIndex]["coords"]["x"]
+  ymax = xmaxColumn[middleIndex]["coords"]["y"]
+  zmax = xmaxColumn[middleIndex]["coords"]["z"]                            
+      
+  autoVectorCoarseCoords = {"start":{"x":xmin,"y":ymin,"z":zmin},"end":{"x":xmax,"y":ymax,"z":zmax}}
+
 def addMultiRequestLocation(parentReqID,hitCoords,locIndex): #rough proto of what to pass here for details like how to organize data
   parentRequest = db_lib.getRequestByID(parentReqID)
   sampleID = parentRequest["sample"]
@@ -2492,6 +2735,14 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
   reqObj["xbeam"] = currentRequest['request_obj']["xbeam"]
   reqObj["ybeam"] = currentRequest['request_obj']["ybeam"]
   reqObj["wavelength"] = currentRequest['request_obj']["wavelength"]
+  # request params to save the file and location of max_raster cell
+  # This data is saved as part of the raster request and not result is because analysisstore does not allow updating
+  reqObj["max_raster"] = {
+    "file": None, 
+    "coords": [None, None, None],
+    "index": None,
+    "omega": None,
+  }
   newRasterRequestUID = db_lib.addRequesttoSample(sampleID,reqObj["protocol"],daq_utils.owner,reqObj,priority=5000,proposalID=propNum)
   daq_lib.set_field("xrecRasterFlag",newRasterRequestUID)
   time.sleep(1)
@@ -3449,7 +3700,7 @@ def zebraDaq(vector_program,angle_start,scanWidth,imgWidth,exposurePeriodPerImag
 
   logger.info("in Zebra Daq #1 " + str(time.time()))      
   yield from bps.mv(eiger.fw_num_images_per_file, IMAGES_PER_FILE)
-  daq_lib.setRobotGovState("DA")  
+  gov_lib.setGovRobot(gov_robot, "DA")
   yield from bps.mv(vector_program.expose, 1)
 
   if (imgWidth == 0):
@@ -3830,16 +4081,9 @@ def set_beamsize(sizeV, sizeH):
     setPvDesc("CRL_H1B_IN",1)
   else:
     logger.error("Error: Horizontal size argument has to be \'H0\' or  \'H1\'")
-  if (sizeV == 'V0' and sizeH == 'H0'):
-    daq_lib.set_field("size_mode",0)
-  elif (sizeV == 'V0' and sizeH == 'H1'):
-    daq_lib.set_field("size_mode",1)
-  elif (sizeV == 'V1' and sizeH == 'H0'):
-    daq_lib.set_field("size_mode",2)
-  elif (sizeV == 'V1' and sizeH == 'H1'):
-    daq_lib.set_field("size_mode",3)
-  else:
-    pass
+  for index, key in enumerate(BEAMSIZE_OPTIONS.keys()):
+    if BEAMSIZE_OPTIONS[key] == [sizeV, sizeH]:
+      daq_lib.set_field("size_mode", index)
   
 
   

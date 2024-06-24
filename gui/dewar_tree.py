@@ -274,9 +274,9 @@ class DewarTree(QtWidgets.QTreeView):
     def is_proposal_member(self, proposal_id) -> bool:
         # Check if the user running LSDC is part of the sample's proposal
         if proposal_id not in self.proposal_membership:
-            r = requests.get(f"{os.environ['NSLS2_API_URL']}/proposal/{proposal_id}")
+            r = requests.get(f"{os.environ['NSLS2_API_URL']}/v1/proposal/{proposal_id}")
             r.raise_for_status()
-            response = r.json()
+            response = r.json()['proposal']
             if "users" in response and getpass.getuser() in [
                 user["username"] for user in response["users"] if "username" in user
             ]:

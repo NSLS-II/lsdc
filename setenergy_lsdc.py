@@ -16,6 +16,7 @@ import pandas as pd
 import socket
 import time
 import gov_lib
+import daq_lib
 from start_bs import db, gov_robot, govs
 import logging
 
@@ -86,16 +87,21 @@ class DCM(Device):
 #    w = Cpt(EpicsMotor, '-Ax:W}Mtr', labels=['fmx'])
 
 class XYPitchMotor(XYMotor):
-	pitch = Cpt(EpicsMotor, '-Ax:P}Mtr')
+    pitch = Cpt(EpicsMotor, '-Ax:P}Mtr')
+    config = Cpt(EpicsSignal, '-PS}:FORMAT')
+    status_monitor = Cpt(EpicsSignal, "-PS}:UNIT_STATUS_MON.A")
+
 
 class KBMirror(Device):
-	hp = Cpt(EpicsMotor, ':KBH-Ax:P}Mtr')
-	hr = Cpt(EpicsMotor, ':KBH-Ax:R}Mtr')
-	hx = Cpt(EpicsMotor, ':KBH-Ax:X}Mtr')
-	hy = Cpt(EpicsMotor, ':KBH-Ax:Y}Mtr')
-	vp = Cpt(EpicsMotor, ':KBV-Ax:P}Mtr')
-	vx = Cpt(EpicsMotor, ':KBV-Ax:X}Mtr')
-	vy = Cpt(EpicsMotor, ':KBV-Ax:Y}Mtr')
+    hp = Cpt(EpicsMotor, ':KBH-Ax:P}Mtr')
+    hr = Cpt(EpicsMotor, ':KBH-Ax:R}Mtr')
+    hx = Cpt(EpicsMotor, ':KBH-Ax:X}Mtr')
+    hy = Cpt(EpicsMotor, ':KBH-Ax:Y}Mtr')
+    vp = Cpt(EpicsMotor, ':KBV-Ax:P}Mtr')
+    vx = Cpt(EpicsMotor, ':KBV-Ax:X}Mtr')
+    vy = Cpt(EpicsMotor, ':KBV-Ax:Y}Mtr')
+    config = Cpt(EpicsSignal, ':KB-PS}:FORMAT')
+    status_monitor = Cpt(EpicsSignal, ":KB-PS}:UNIT_STATUS_MON.A")
 
 
 class Cover(Device):
@@ -115,6 +121,32 @@ class GoniometerStack(Device):
 	o  = Cpt(EpicsMotor, '-Ax:O}Mtr', labels=['fmx'])
 	py = Cpt(EpicsMotor, '-Ax:PY}Mtr', labels=['fmx'])
 	pz = Cpt(EpicsMotor, '-Ax:PZ}Mtr', labels=['fmx'])
+
+class PitchHold(Device):
+    pitch_control = Cpt(EpicsSignal, "}pitch_control")
+    mono_scan_freq = Cpt(EpicsSignal, ":mono}pitch-SCAN")
+    mono_max_tries = Cpt(EpicsSignal, ":mono}pitch-NUM")
+    mono_deadband = Cpt(EpicsSignal, ":mono}pitch-DB")
+    mono_target = Cpt(EpicsSignal, ":mono}pitch-SP") # Should be set to hdcm.p
+    bragg_control = Cpt(EpicsSignal, "}bragg_control")
+    bpm1_mon = Cpt(EpicsSignal, "}bpm1mon")
+    set_kb_config = Cpt(EpicsSignal, "}kb_bimorph")
+    set_hfm_config = Cpt(EpicsSignal, "}hfm_bimorph")
+
+    def save_settings(self):
+        self.settings = {}
+        self.settings['pitch_control'] = self.pitch_control.get()
+        self.settings['bragg_control'] = self.bragg_control.get()
+        self.settings['bpm1_mon'] = self.bpm1_mon.get()
+    
+    def restore_settings(self):
+        self.pitch_control.put(self.settings['pitch_control'])
+        self.bragg_control.put(self.settings['bragg_control'])
+        self.bpm1_mon.put(self.settings['bpm1_mon'])
+
+
+step_volts = EpicsSignal("XF:17IDA-BI:FMX{Best:1}:TwkCh1.INPA")
+pitch_hold = PitchHold("XF:17ID:FMX{Karen", name="pitch_hold")
 
 ## Horizontal Double Crystal Monochromator (FMX)
 hdcm = DCM('XF:17IDA-OP:FMX{Mono:DCM', name='hdcm')
@@ -411,9 +443,31 @@ def setE_motors_FMX(energy):
     LGP = {m: epics.caget(LGP_fmt.format(m.name))
            for m in (kbm.hp, kbm.hx, kbm.vp, kbm.vy)}
 
+    prev_hfm_config  = hfm.config.get()
+    prev_kb_config = kbm.config.get()
+
+    label = "highE"
     # Remove CRLs if going to energy < 9 keV (FMX specific)
-    if energy < 9001:
-        set_beamsize('V0','H0')
+    if energy < 10000:
+        # set_beamsize('V0','H0')
+        label = "lowE"
+    
+    if prev_hfm_config != f"HFM_{label}":
+        yield from bps.abs_set(hfm.config, f"HFM_{label}")
+        yield from bps.abs_set(pitch_hold.set_hfm_config, 1, wait=True)
+    
+    if prev_kb_config != f"KB_{label}":
+        yield from bps.abs_set(kbm.config, f"KB_{label}")
+        yield from bps.abs_set(pitch_hold.set_kb_config, 1, wait=True)
+    
+    logger.info("Waiting for 60 seconds for ramping")
+    time.sleep(60)
+
+    #while int(kbm.status_monitor.get()) & 2 ** 30 != 1 and int(hfm.status_monitor.get()) & 2 ** 30 != 1:
+    #    logger.info("Waiting for ramping to complete... ")
+    #    time.sleep(1)
+        
+
     
     # Lookup Table
     def lut(motor):
@@ -670,6 +724,8 @@ def setELsdc(energy,
         slits1XGapOrg = slits1.x_gap.user_readback.get()
         slits1YGapOrg = slits1.y_gap.user_readback.get()
     
+    yield from deactivate_pitch_hold()
+
     print('Setting FMX motor positions')
     try:
         yield from setE_motors_FMX(energy)
@@ -703,15 +759,17 @@ def setELsdc(energy,
         print('ivu_gap_scan() successful')
         time.sleep(1)
     
-    # Activate sector 17 photon local feedback
-    photon_local_feedback_c17.x_enable.put(1)
-    photon_local_feedback_c17.y_enable.put(1)
+
+    # Hold pitch
+    yield from activate_pitch_hold()
     
     # Align LSDC microscope center to beam center
     if beamCenterAlign:
         # Check for pre-conditions for beam_center_align()
         if shutter_hutch_c.status.get():
-            print('Experiment hutch shutter closed. Has to be open for this to work. Exiting')
+            message = 'Experiment hutch shutter closed. Has to be open for this to work. Stopping'
+            logging.error(message)
+            daq_lib.gui_message(message)
             return -1
         
         print('Aligning beam center')
@@ -723,6 +781,7 @@ def setELsdc(energy,
         yield from bps.mv(slits1.y_gap, slits1YGapOrg)  # Move Slit 1 Y to original position
 
     yield from fmx_reference(transSet=transSet)
+    daq_lib.gui_message(f"Set energy to {energy} complete")
     
 
 # Alignment ===========================================================================================
@@ -1071,7 +1130,7 @@ def slit1_flux_reference(flux_df,slit1Gap):
 def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 1000, transSet='All'):
     """
     Sets Slit 1 X gap and Slit 1 Y gap to a list of settings,
-    and stores flux reference values in a global pandas DataFrame.
+    and returns flux reference values in a pandas DataFrame.
     
     Parameters
     ----------
@@ -1165,6 +1224,22 @@ def fmx_flux_reference(slit1GapList = [2000, 1000, 600, 400], slit1GapDefault = 
         if transSet in ['All', 'BCU']:
             yield from trans_set(transOrgBCU, trans=trans_bcu)
 
+
+def deactivate_pitch_hold():
+    pitch_hold.save_settings()
+    yield from bps.abs_set(pitch_hold.bragg_control, 0, wait=True)
+    yield from bps.abs_set(pitch_hold.bpm1_mon, 0, wait=True)
+    yield from bps.abs_set(pitch_hold.pitch_control, 0, wait=True)
+
+def activate_pitch_hold():
+    yield from bps.abs_set(step_volts, "0.01", wait=True)
+    yield from bps.abs_set(pitch_hold.mono_scan_freq, 1, wait=True)
+    yield from bps.abs_set(pitch_hold.mono_max_tries, 100, wait=True)
+    yield from bps.abs_set(pitch_hold.mono_deadband, 0.0003, wait=True)
+    yield from bps.abs_set(pitch_hold.mono_target, hdcm.p.user_readback.get(), wait=True)
+
+    # Reactivate pitch control
+    pitch_hold.restore_settings()
 
 def fmx_reference(slit1GapDefault = 1000, transSet='All'):
     """

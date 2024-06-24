@@ -247,6 +247,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
         # self.dewarTree.refreshTreeDewarView()
 
+    def eventFilter(self, obj, event):
+        # Event filter to hide vector nodes when shift is held. This is to allow the user to see
+        # the raster hidden by large vector nodes
+        if event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key.Key_Shift:
+            self.vector_widget.hide_nodes()
+        elif event.type() == QtCore.QEvent.KeyRelease and event.key() == QtCore.Qt.Key.Key_Shift:
+            self.vector_widget.show_nodes()
+        return QtWidgets.QWidget.eventFilter(self, obj, event)
+
+
     def setGuiValues(self, values):
         for item, value in values.items():
             logger.info("resetting %s to %s" % (item, value))
@@ -4191,10 +4201,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.processSampMove(self.sampz_pv.get(), "z")
 
     def drawVector(self):
-        try:
-            self.updateVectorLengthAndSpeed()
-        except:
-            pass
         self.protoVectorRadio.setChecked(True)
         center_x = self.centerMarker.x() + self.centerMarkerCharOffsetX
         center_y = self.centerMarker.y() + self.centerMarkerCharOffsetY

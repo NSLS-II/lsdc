@@ -326,6 +326,9 @@ class VectorWidget(QtWidgets.QWidget):
         point.coords = vectorCoords
         point.gonio_coords = gonio_coords
 
+        # Update vector length and speed in the GUI after any node moves
+        self.main_window.updateVectorLengthAndSpeed()
+
     def clear_vector(self, scene: QtWidgets.QGraphicsScene) -> None:
         if self.vector_start:
             scene.removeItem(self.vector_start)
@@ -379,3 +382,15 @@ class VectorWidget(QtWidgets.QWidget):
             "y": yTweakedCurrent,
             "z": zTweakedCurrent,
         }
+
+    def hide_nodes(self):
+        if self.vector_start:
+            self.vector_start.setVisible(False)
+        if self.vector_end:
+            self.vector_end.setVisible(False)
+
+    def show_nodes(self):
+        if self.vector_start:
+            self.vector_start.setVisible(True)
+        if self.vector_end:
+            self.vector_end.setVisible(True)

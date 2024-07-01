@@ -133,3 +133,6 @@ def openGripper():
 
 def closeGripper():
     robot.closeGripper()
+
+def cooldownGripper():
+  robot.cooldownGripper()

@@ -19,6 +19,7 @@ import _thread
 import parseSheet
 import attenCalc
 import raddoseLib
+import robot_lib
 from raddoseLib import *
 import logging
 logger = logging.getLogger(__name__)
@@ -248,6 +249,15 @@ sample_detection = {
   "face_on_omega" : 0
 }
 
+def run_robot_recovery_procedure():
+  """ Generic recovery procedure to be used during automated
+  collection"""
+  # Recover robot
+  robot_lib.recoverRobot()
+  # Dry Gripper
+  robot_lib.dryGripper()
+  # Park Gripper and cool gripper
+  robot_lib.cooldownGripper()
 
 def run_top_view_optimized():
     RE(topview_optimized())

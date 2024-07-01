@@ -56,6 +56,7 @@ from gui.dialog import (
     UserScreenDialog,
 )
 from gui.raster import RasterCell, RasterGroup
+from gui.vector import VectorMarker, VectorWidget
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
 from utils import validation
@@ -160,8 +161,6 @@ class ControlMain(QtWidgets.QMainWindow):
         self.popupMessage.setModal(False)
         self.groupName = "skinner"
         self.scannerType = getBlConfig("scannerType")
-        self.vectorStart = None
-        self.vectorEnd = None
         self.centerMarkerCharSize = 20
         self.centerMarkerCharOffsetX = 12
         self.centerMarkerCharOffsetY = 18
@@ -209,6 +208,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.raddoseTimer.setInterval(1000)
         self.raddoseTimer.timeout.connect(self.spawnRaddoseThread)
 
+        self.vector_widget = VectorWidget(main_window=self)
         self.createSampleTab()
         self.userScreenDialog = UserScreenDialog(self)
         self.initCallbacks()
@@ -250,6 +250,16 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.controlMasterCheckBox.setChecked(True)
         self.XRFInfoDict = self.parseXRFTable()  # I don't like this
         # self.dewarTree.refreshTreeDewarView()
+
+    def eventFilter(self, obj, event):
+        # Event filter to hide vector nodes when shift is held. This is to allow the user to see
+        # the raster hidden by large vector nodes
+        if event.type() == QtCore.QEvent.KeyPress and event.key() == QtCore.Qt.Key.Key_Shift:
+            self.vector_widget.hide_nodes()
+        elif event.type() == QtCore.QEvent.KeyRelease and event.key() == QtCore.Qt.Key.Key_Shift:
+            self.vector_widget.show_nodes()
+        return QtWidgets.QWidget.eventFilter(self, obj, event)
+
 
     def setGuiValues(self, values):
         for item, value in values.items():
@@ -842,11 +852,12 @@ class ControlMain(QtWidgets.QMainWindow):
         setVectorStartButton = QtWidgets.QPushButton("Vector\nStart")
         setVectorStartButton.setStyleSheet("background-color: blue")
         setVectorStartButton.clicked.connect(
-            lambda: self.setVectorPointCB("vectorStart")
+            lambda: self.setVectorPointCB("vector_start")
         )
         setVectorEndButton = QtWidgets.QPushButton("Vector\nEnd")
         setVectorEndButton.setStyleSheet("background-color: red")
-        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vectorEnd"))
+        setVectorEndButton.clicked.connect(lambda: self.setVectorPointCB("vector_end"))
+
         self.vecLine = None
         vectorFPPLabel = QtWidgets.QLabel("Number of Wedges")
         self.vectorFPP_ledit = QtWidgets.QLineEdit("1")
@@ -863,7 +874,21 @@ class ControlMain(QtWidgets.QMainWindow):
         hBoxVectorLayout1.addWidget(self.vecLenLabelOutput)
         hBoxVectorLayout1.addWidget(vecSpeedLabel)
         hBoxVectorLayout1.addWidget(self.vecSpeedLabelOutput)
-        self.vectorParamsFrame.setLayout(hBoxVectorLayout1)
+        vector_widgets_layout = QtWidgets.QVBoxLayout()
+        vector_widgets_layout.addLayout(hBoxVectorLayout1)
+        hBoxVectorLayout2 = QtWidgets.QHBoxLayout()
+        setVectorButton = QtWidgets.QPushButton("Set Quick\nVector")
+        setVectorButton.clicked.connect(lambda: self.setVectorPointCB("full_vector"))
+        vector_length_label = QtWidgets.QLabel("Quick vector length (microns)")
+        self.vector_length_ledit = QtWidgets.QLineEdit("40")
+        self.vector_length_ledit.setValidator(QIntValidator(self))
+        
+        hBoxVectorLayout2.addWidget(setVectorButton)
+        hBoxVectorLayout2.addWidget(vector_length_label)
+        hBoxVectorLayout2.addWidget(self.vector_length_ledit)
+        
+        vector_widgets_layout.addLayout(hBoxVectorLayout2)
+        self.vectorParamsFrame.setLayout(vector_widgets_layout)
         vBoxColParams1.addLayout(hBoxColParams1)
         vBoxColParams1.addLayout(hBoxColParams2)
         vBoxColParams1.addLayout(hBoxColParams25)
@@ -1554,7 +1579,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.processSampMove(self.sampx_pv.get(), "x")
                     self.processSampMove(self.sampy_pv.get(), "y")
                     self.processSampMove(self.sampz_pv.get(), "z")
-        if self.vectorStart != None:
+        if self.vector_widget.vector_start != None:
             self.processSampMove(self.sampx_pv.get(), "x")
             self.processSampMove(self.sampy_pv.get(), "y")
             self.processSampMove(self.sampz_pv.get(), "z")
@@ -1976,55 +2001,8 @@ class ControlMain(QtWidgets.QMainWindow):
                     newY = self.calculateNewYCoordPos(startYX, startYY)
                     raster["graphicsItem"].setPos(raster["graphicsItem"].x(), newY)
 
-        self.vectorStart = self.updatePoint(self.vectorStart, posRBV, motID)
-        self.vectorEnd = self.updatePoint(self.vectorEnd, posRBV, motID)
-        if self.vectorStart != None and self.vectorEnd != None:
-            self.vecLine.setLine(
-                self.vectorStart["graphicsitem"].x()
-                + self.vectorStart["centerCursorX"]
-                + self.centerMarkerCharOffsetX,
-                self.vectorStart["graphicsitem"].y()
-                + self.vectorStart["centerCursorY"]
-                + self.centerMarkerCharOffsetY,
-                self.vectorEnd["graphicsitem"].x()
-                + self.vectorStart["centerCursorX"]
-                + self.centerMarkerCharOffsetX,
-                self.vectorEnd["graphicsitem"].y()
-                + self.vectorStart["centerCursorY"]
-                + self.centerMarkerCharOffsetY,
-            )
-
-    def updatePoint(self, point, posRBV, motID):
-        """Updates a point on the screen
-
-        Updates the position of a point (e.g. self.vectorStart) drawn on the screen based on
-        which motor was moved (motID) using gonio position (posRBV)
-        """
-        if point is None:
-            return point
-        centerMarkerOffsetX = point["centerCursorX"] - self.centerMarker.x()
-        centerMarkerOffsetY = point["centerCursorY"] - self.centerMarker.y()
-        startYY = point["coords"]["z"]
-        startYX = point["coords"]["y"]
-        startX = point["coords"]["x"]
-
-        if motID == "omega":
-            newY = self.calculateNewYCoordPos(startYX, startYY)
-            point["graphicsitem"].setPos(
-                point["graphicsitem"].x(), newY - centerMarkerOffsetY
-            )
-        if motID == "x":
-            delta = startX - posRBV
-            newX = float(self.screenXmicrons2pixels(delta))
-            point["graphicsitem"].setPos(
-                newX - centerMarkerOffsetX, point["graphicsitem"].y()
-            )
-        if motID == "y" or motID == "z":
-            newY = self.calculateNewYCoordPos(startYX, startYY)
-            point["graphicsitem"].setPos(
-                point["graphicsitem"].x(), newY - centerMarkerOffsetY
-            )
-        return point
+        offset = (self.centerMarkerCharOffsetX, self.centerMarkerCharOffsetY)
+        self.vector_widget.update_vector(posRBV, motID, self.centerMarker.pos(), offset)
 
     def queueEnScanCB(self):
         self.protoComboBox.setCurrentIndex(self.protoComboBox.findText(str("eScan")))
@@ -2315,27 +2293,22 @@ class ControlMain(QtWidgets.QMainWindow):
         self.beamHeight_ledit.setText(text)
 
     def updateVectorLengthAndSpeed(self):
-        x_vec_end = self.vectorEnd["coords"]["x"]
-        y_vec_end = self.vectorEnd["coords"]["y"]
-        z_vec_end = self.vectorEnd["coords"]["z"]
-        x_vec_start = self.vectorStart["coords"]["x"]
-        y_vec_start = self.vectorStart["coords"]["y"]
-        z_vec_start = self.vectorStart["coords"]["z"]
-        x_vec = x_vec_end - x_vec_start
-        y_vec = y_vec_end - y_vec_start
-        z_vec = z_vec_end - z_vec_start
-        trans_total = math.sqrt(x_vec**2 + y_vec**2 + z_vec**2)
-        if daq_utils.beamline == "nyx":
-            trans_total *= 1000
-        self.vecLenLabelOutput.setText(str(int(trans_total)))
-        totalExpTime = (
-            float(self.osc_end_ledit.text()) / float(self.osc_range_ledit.text())
-        ) * float(
-            self.exp_time_ledit.text()
-        )  # (range/inc)*exptime
-        speed = trans_total / totalExpTime
-        self.vecSpeedLabelOutput.setText(str(int(speed)))
-        return x_vec, y_vec, z_vec, trans_total
+        osc_end = float(self.osc_end_ledit.text())
+        osc_range = float(self.osc_range_ledit.text())
+        exposure_time = float(self.exp_time_ledit.text())
+
+        (
+            x_vec,
+            y_vec,
+            z_vec,
+            vector_length,
+            vector_speed,
+        ) = self.vector_widget.get_length_and_speed(
+            osc_end=osc_end, osc_range=osc_range, exposure_time=exposure_time
+        )
+        self.vecLenLabelOutput.setText(str(int(vector_length)))
+        self.vecSpeedLabelOutput.setText(str(int(vector_speed)))
+        return x_vec, y_vec, z_vec, vector_length
 
     def totalExpChanged(self, text):
         if text == "oscEnd" and daq_utils.beamline == "fmx":
@@ -4159,8 +4132,8 @@ class ControlMain(QtWidgets.QMainWindow):
                     x_vec, y_vec, z_vec, trans_total = self.updateVectorLengthAndSpeed()
                     framesPerPoint = int(self.vectorFPP_ledit.text())
                     vectorParams = {
-                        "vecStart": self.vectorStart["coords"],
-                        "vecEnd": self.vectorEnd["coords"],
+                        "vecStart": self.vector_widget.vector_start.coords,
+                        "vecEnd": self.vector_widget.vector_end.coords,
                         "x_vec": x_vec,
                         "y_vec": y_vec,
                         "z_vec": z_vec,
@@ -4169,10 +4142,10 @@ class ControlMain(QtWidgets.QMainWindow):
                     }
                     reqObj["vectorParams"] = vectorParams
                 except Exception as e:
-                    if self.vectorStart == None:
+                    if self.vector_widget.vector_start == None:
                         self.popupServerMessage("Vector start must be defined.")
                         return
-                    elif self.vectorEnd == None:
+                    elif self.vector_widget.vector_end == None:
                         self.popupServerMessage("Vector end must be defined.")
                         return
                     logger.error("Exception while getting vector parameters: %s" % e)
@@ -4266,173 +4239,54 @@ class ControlMain(QtWidgets.QMainWindow):
         dewarPos, ok = DewarDialog.getDewarPos(parent=self, action="remove")
         self.timerSample.start(SAMPLE_TIMER_DELAY)
 
-    def transform_vector_coords(self, prev_coords, current_raw_coords):
-        """Updates y and z co-ordinates of vector points when they are moved
-
-        This function tweaks the y and z co-ordinates such that when a vector start or
-        end point is adjusted in the 2-D plane of the screen, it maintains the points' location
-        in the 3rd dimension perpendicular to the screen
-
-        Args:
-          prev_coords: Dictionary with x,y and z co-ordinates of the previous location of the sample
-          current_raw_coords: Dictionary with x, y and z co-ordinates of the sample derived from the goniometer
-            PVs
-          omega: Omega of the Goniometer (usually RBV)
-
-        Returns:
-          A dictionary mapping x, y and z to tweaked coordinates
-        """
-
-        # Transform z from prev point and y from current point to lab coordinate system
-        _, _, zLabPrev, _ = daq_utils.gonio2lab(
-            prev_coords["x"],
-            prev_coords["y"],
-            prev_coords["z"],
-            current_raw_coords["omega"],
-        )
-        _, yLabCurrent, _, _ = daq_utils.gonio2lab(
-            current_raw_coords["x"],
-            current_raw_coords["y"],
-            current_raw_coords["z"],
-            current_raw_coords["omega"],
-        )
-
-        # Take y co-ordinate from current point and z-coordinate from prev point and transform back to gonio co-ordinates
-        _, yTweakedCurrent, zTweakedCurrent, _ = daq_utils.lab2gonio(
-            prev_coords["x"], yLabCurrent, zLabPrev, current_raw_coords["omega"]
-        )
-        return {
-            "x": current_raw_coords["x"],
-            "y": yTweakedCurrent,
-            "z": zTweakedCurrent,
-        }
-
-    def getVectorObject(
-        self, prevVectorPoint=None, gonioCoords=None, pen=None, brush=None
-    ):
-        """Creates and returns a vector start or end point
-
-        Places a start or end vector marker wherever the crosshair is located in
-        the sample camera view and returns a dictionary of metadata related to that point
-
-        Args:
-          prevVectorPoint: Dictionary of metadata related to a point being adjusted. For example,
-              a previously placed vectorStart point is moved, its old position is used to determine
-              its new co-ordinates in 3D space
-          gonioCoords: Dictionary of gonio coordinates. If not provided will retrieve current PV values
-          pen: QPen object that defines the color of the point's outline
-          brush: QBrush object that defines the color of the point's fill color
-        Returns:
-          A dict mapping the following keys
-              "coords": A dictionary of tweaked x, y and z positions of the Goniometer
-              "raw_coords": A dictionary of x, y, z co-ordinates obtained from the Goniometer PVs
-              "graphicsitem": Qt object referring to the marker on the sample camera
-              "centerCursorX" and "centerCursorY": Location of the center marker when this marker was placed
-        """
-        if not pen:
-            pen = QtGui.QPen(QtCore.Qt.blue)
-        if not brush:
-            brush = QtGui.QBrush(QtCore.Qt.blue)
-        markWidth = 10
-        # TODO: Place vecMarker in such a way that it matches any arbitrary gonioCoords given to this function
-        # currently vecMarker will be placed at the center of the sample cam
-        vecMarker = self.scene.addEllipse(
-            self.centerMarker.x()
-            - (markWidth / 2.0)
-            - 1
-            + self.centerMarkerCharOffsetX,
-            self.centerMarker.y()
-            - (markWidth / 2.0)
-            - 1
-            + self.centerMarkerCharOffsetY,
-            markWidth,
-            markWidth,
-            pen,
-            brush,
-        )
-        if not gonioCoords:
-            gonioCoords = {
-                "x": self.sampx_pv.get(),
-                "y": self.sampy_pv.get(),
-                "z": self.sampz_pv.get(),
-                "omega": self.omegaRBV_pv.get(),
-            }
-        if prevVectorPoint:
-            vectorCoords = self.transform_vector_coords(
-                prevVectorPoint["coords"], gonioCoords
-            )
-        else:
-            vectorCoords = {
-                k: v for k, v in gonioCoords.items() if k in ["x", "y", "z"]
-            }
-        return {
-            "coords": vectorCoords,
-            "gonioCoords": gonioCoords,
-            "graphicsitem": vecMarker,
-            "centerCursorX": self.centerMarker.x(),
-            "centerCursorY": self.centerMarker.y(),
-        }
-
     def setVectorPointCB(self, pointName):
         """Callback function to update a vector point
 
         Callback to remove or add the appropriate vector start or end point on the sample camera.
-        Calls getVectorObject to generate metadata related to this point. Draws a vector line if
+        Calls getObject to generate metadata related to this point. Draws a vector line if
         both start and end is defined
 
         Args:
-            point: Point to be placed (Either vectorStart or vectorEnd)
+            pointName: Name of the point to be placed (Either "vectorStart" or "vectorEnd")
         """
-        point = getattr(self, pointName)
-        if point:
-            self.scene.removeItem(point["graphicsitem"])
-            if self.vecLine:
-                self.scene.removeItem(self.vecLine)
-        if pointName == "vectorEnd":
-            brush = QtGui.QBrush(QtCore.Qt.red)
+        gonio_coords = {
+            "x": self.sampx_pv.get(),
+            "y": self.sampy_pv.get(),
+            "z": self.sampz_pv.get(),
+            "omega": self.omegaRBV_pv.get(),
+        }
+        center_x = self.centerMarker.x() + self.centerMarkerCharOffsetX
+        center_y = self.centerMarker.y() + self.centerMarkerCharOffsetY
+        if pointName == "full_vector":
+            self.vector_widget.set_vector(
+                scene=self.scene,
+                gonio_coords=gonio_coords,
+                center=(center_x, center_y),
+                length=int(self.vector_length_ledit.text())
+            )
         else:
-            brush = QtGui.QBrush(QtCore.Qt.blue)
-        point = self.getVectorObject(prevVectorPoint=point, brush=brush)
-        setattr(self, pointName, point)
-        if self.vectorStart and self.vectorEnd:
-            self.drawVector()
+            self.vector_widget.set_vector_point(
+                point_name=pointName,
+                scene=self.scene,
+                gonio_coords=gonio_coords,
+                center=(center_x, center_y),
+            )
+        self.processSampMove(self.sampx_pv.get(), "x")
+        self.processSampMove(self.sampy_pv.get(), "y")
+        self.processSampMove(self.sampz_pv.get(), "z")
 
     def drawVector(self):
-        pen = QtGui.QPen(QtCore.Qt.blue)
-        try:
-            self.updateVectorLengthAndSpeed()
-        except:
-            pass
         self.protoVectorRadio.setChecked(True)
-        self.vecLine = self.scene.addLine(
-            self.centerMarker.x()
-            + self.vectorStart["graphicsitem"].x()
-            + self.centerMarkerCharOffsetX,
-            self.centerMarker.y()
-            + self.vectorStart["graphicsitem"].y()
-            + self.centerMarkerCharOffsetY,
-            self.centerMarker.x()
-            + self.vectorEnd["graphicsitem"].x()
-            + self.centerMarkerCharOffsetX,
-            self.centerMarker.y()
-            + self.vectorEnd["graphicsitem"].y()
-            + self.centerMarkerCharOffsetY,
-            pen,
-        )
-        self.vecLine.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable, True)
+        center_x = self.centerMarker.x() + self.centerMarkerCharOffsetX
+        center_y = self.centerMarker.y() + self.centerMarkerCharOffsetY
+        center = (center_x, center_y)
+
+        self.vector_widget.draw_vector(center, self.scene)
 
     def clearVectorCB(self):
-        if self.vectorStart:
-            self.scene.removeItem(self.vectorStart["graphicsitem"])
-            self.vectorStart = None
-        if self.vectorEnd:
-            self.scene.removeItem(self.vectorEnd["graphicsitem"])
-            self.vectorEnd = None
-            self.vecLenLabelOutput.setText("---")
-            self.vecSpeedLabelOutput.setText("---")
-        if self.vecLine:
-            self.scene.removeItem(self.vecLine)
-            self.vecLine = None
+        self.vector_widget.clear_vector(self.scene)
+        self.vecLenLabelOutput.setText("---")
+        self.vecSpeedLabelOutput.setText("---")
 
     def puckToDewarCB(self):
         while 1:

@@ -459,6 +459,7 @@ class EMBLRobot:
                 RobotControlLib.unmount2(absPos)
               except Exception as e:
                 # If there is an exception again, return UNMOUNT_FAILURE
+                daq_macros.run_robot_recovery_procedure()
                 e_s = str(e)
                 message = "ROBOT unmount2 ERROR: " + e_s
                 daq_lib.gui_message(message)

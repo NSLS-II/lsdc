@@ -378,7 +378,7 @@ def runDCQueue(): #maybe don't run rasters from here???
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
     gov_lib.set_detz_in(gov_robot, reqObj["detDist"])
-    if (reqObj["detDist"] >= ROBOT_MIN_DISTANCE and getBlConfig("HePath") == 0):
+    if (reqObj["detDist"] >= DETECTOR_SAFE_DISTANCE[daq_utils.beamline] and getBlConfig("HePath") == 0):
       gov_lib.set_detz_out(gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')

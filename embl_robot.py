@@ -451,7 +451,7 @@ class EMBLRobot:
               daq_macros.disableMount()
               daq_lib.gui_message(e_s + ". FATAL ROBOT ERROR - CALL STAFF! robotOff() executed.")
               return UNMOUNT_FAILURE
-            elif (e_s.find("SE") != -1):
+            elif "SE" in e_s:
               # In case there is an SE Timeout error, run the recovery procedure
               daq_macros.run_robot_recovery_procedure()
               try:
@@ -460,8 +460,7 @@ class EMBLRobot:
               except Exception as e:
                 # If there is an exception again, return UNMOUNT_FAILURE
                 daq_macros.run_robot_recovery_procedure()
-                e_s = str(e)
-                message = "ROBOT unmount2 ERROR: " + e_s
+                message = f"ROBOT unmount2 ERROR: {e}"
                 daq_lib.gui_message(message)
                 logger.error(message)
                 return UNMOUNT_FAILURE

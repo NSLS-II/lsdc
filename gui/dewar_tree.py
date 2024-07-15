@@ -14,6 +14,7 @@ from config_params import (
     IS_STAFF,
     PUCKS_PER_DEWAR_SECTOR,
     SAMPLE_TIMER_DELAY,
+    MountState
 )
 
 if typing.TYPE_CHECKING:
@@ -136,7 +137,7 @@ class DewarTree(QtWidgets.QTreeView):
     def refreshTree(self):
         self.parent.dewarViewToggleCheckCB()
 
-    def set_mounted_sample(self, item):
+    def set_mounted_sample(self, item, sample_name=None):
         # Formats the text of the item that is passed in as the mounted sample
         item.setForeground(QtGui.QColor("red"))
         font = QtGui.QFont()
@@ -144,6 +145,12 @@ class DewarTree(QtWidgets.QTreeView):
         font.setItalic(True)
         font.setOverline(True)
         item.setFont(font)
+        if len(self.parent.mountedPin_pv.get().split(",")) == 2:
+            pin, state = self.parent.mountedPin_pv.get().split(",")
+            mount_state = MountState(state)
+            if sample_name is None:
+                sample_name = item.text()
+            item.setText(sample_name + MountState.get_text(mount_state))
 
     def refreshTreeDewarView(self, get_latest_pucks=False):
         puck = ""
@@ -229,10 +236,11 @@ class DewarTree(QtWidgets.QTreeView):
             # just stuck sampleID there, but negate it to diff from reqID
             item.setData(sample_id, 32)
             item.setData("sample", 33)
-            if sample_id == self.parent.mountedPin_pv.get():
-                self.set_mounted_sample(item)
+            if sample_id == self.parent.mountedPin_pv.get().split(",")[0]:
+                self.set_mounted_sample(item, position_s)
             parentItem.appendRow(item)
-            if sample_id == self.parent.mountedPin_pv.get():
+
+            if sample_id == self.parent.mountedPin_pv.get().split(",")[0]:
                 mountedIndex = self.model.indexFromItem(item)
             # looking for the selected item
             if sample_id == self.parent.selectedSampleID:
@@ -261,7 +269,6 @@ class DewarTree(QtWidgets.QTreeView):
             elif mountedIndex:
                 current_index = mountedIndex
                 item = self.model.itemFromIndex(mountedIndex)
-                self.set_mounted_sample(item)
             elif selectedIndex:
                 current_index = selectedIndex
         elif collectionRunning and mountedIndex:

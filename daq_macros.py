@@ -2714,7 +2714,7 @@ def defineRectRaster(currentRequest,raster_w_s,raster_h_s,stepsizeMicrons_s,xoff
       newRowDef = {"start":{"x": vectorStartX,"y":vectorStartY},"end":{"x":vectorEndX,"y":vectorEndY},"numsteps":numsteps_h}
       rasterDef["rowDefs"].append(newRowDef)
 
-  tempnewRasterRequest = daq_utils.createDefaultRequest(sampleID)
+  tempnewRasterRequest = daq_utils.createDefaultRequest(sampleID, basePath=currentRequest["request_obj"]["basePath"])
   reqObj = tempnewRasterRequest["request_obj"]
   reqObj["protocol"] = "raster"
   reqObj["exposure_time"] = getBlConfig("rasterDefaultTime")

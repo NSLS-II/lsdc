@@ -8,6 +8,7 @@ from io import BytesIO
 import logging
 from config_params import SERVER_CHECK_DELAY
 import raddoseLib
+from pathlib import Path
 
 logger = logging.getLogger()
 
@@ -105,7 +106,7 @@ class ServerCheckThread(QThread):
         import db_lib
         beamline = os.environ["BEAMLINE_ID"]
         while True:
-            if db_lib.getBeamlineConfigParam(beamline, "visitDirectory") != os.getcwd():
+            if Path(db_lib.getBeamlineConfigParam(beamline, "visitDirectory")).resolve() != Path.cwd():
                 message = "The server visit directory has changed, stopping!"
                 logger.error(message)
                 print(message)

@@ -6,8 +6,9 @@ import bluesky.plan_stubs as bps
 import bluesky.plans as bp
 from bluesky.utils import FailedStatus
 from bluesky.preprocessors import finalize_decorator
+from ophyd.utils.errors import WaitTimeoutError
 import daq_utils
-from start_bs import db, two_click_low, loop_detector, gonio
+from start_bs import db, two_click_low, loop_detector, gonio, low_mag_cam_reset_signal
 from mxbluesky.plans.utils import mvr_with_retry, mv_with_retry
 
 logger = getLogger()
@@ -18,16 +19,35 @@ def cleanup_two_click_low():
         yield from bps.abs_set(two_click_low.jpeg.file_write_mode, 2, wait=True)
         yield from bps.abs_set(two_click_low.jpeg.file_template, "%s%s_%d.jpg", wait=True)
 
+def reset_low_mag_cam():
+    yield from bps.abs_set(two_click_low.cam.acquire, 0, wait=True)
+    yield from bps.sleep(3)
+    yield from bps.abs_set(low_mag_cam_reset_signal, 1, wait=True)
+    yield from bps.sleep(5)
+    yield from bps.abs_set(two_click_low.cam.acquire, 1, wait=True)
+
+def trigger_two_click():
+    tries = 0
+    max_tries = 3
+    
+    while tries < max_tries:
+        try:
+            yield from bp.count([two_click_low], 1)
+            break  # If trigger succeeds, exit the loop
+        except (FailedStatus, WaitTimeoutError) as e:
+            tries += 1
+            logger.exception(f"Exception while triggering two click, retry #{tries} : {e}")
+            if tries == 3:
+                logger.exception("Resetting low mag camera")
+                yield from reset_low_mag_cam()
+                yield from bp.count([two_click_low], 1)
+                
 @finalize_decorator(cleanup_two_click_low)
 def detect_loop(sample_detection: "Dict[str, float|int]"):
     # face on attempt, most features, should work
     yield from bps.abs_set(two_click_low.cam_mode, "two_click", wait=True)
     logger.info("Starting loop centering")
-    #two_click_low.cam_mode.set("two_click")
-    try:
-        yield from bp.count([two_click_low], 1)
-    except FailedStatus:
-        yield from bp.count([two_click_low], 1)
+    yield from trigger_two_click()
         
     loop_detector.filename.set(two_click_low.jpeg.full_file_name.get())
     
@@ -69,6 +89,7 @@ def detect_loop(sample_detection: "Dict[str, float|int]"):
     # orthogonal face, use loop model only if predicted width matches face on
     # otherwise, threshold
     yield from bps.mv(gonio.o, sample_detection["face_on_omega"]+90)
+    yield from trigger_two_click()
 
     try:
         yield from bp.count([two_click_low], 1)

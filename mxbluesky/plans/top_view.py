@@ -24,8 +24,14 @@ from start_bs import (
 logger = getLogger()
 
 def cleanup_topcam():
-    yield from bps.abs_set(top_aligner_slow.topcam.cam.acquire, 1, wait=True)
-    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True)
+    try:
+        yield from bps.abs_set(top_aligner_slow.topcam.cam.acquire, 1, wait=True, timeout=4)
+        yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True, timeout=4)
+    except WaitTimeoutError as error:
+        logger.exception(f"Exception in cleanup_topcam, trying again: {error}")
+        yield from bps.abs_set(top_aligner_slow.topcam.cam.acquire, 1, wait=True, timeout=4)
+        yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True, timeout=4)
+    
 
 def inner_pseudo_fly_scan(*args, **kwargs):
     scan_uid = yield from bp.count(*args, **kwargs)
@@ -74,6 +80,12 @@ def inner_pseudo_fly_scan(*args, **kwargs):
 
     return delta_y, delta_z, omega_min
 
+def setup_transition_signals(target_state, zebra_dir, cam_mode):
+    yield from bps.abs_set(top_aligner_fast.target_gov_state, target_state, wait=True)
+    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, zebra_dir, wait=True, timeout=4)
+    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, cam_mode, wait=True, timeout=4)
+    yield from bps.sleep(0.1)
+
 
 @finalize_decorator(cleanup_topcam)
 def topview_optimized():
@@ -94,10 +106,12 @@ def topview_optimized():
     logger.info("Updated TA work pos, starting transition to TA")
 
     # SE -> TA
-    yield from bps.abs_set(top_aligner_fast.target_gov_state, "TA", wait=True)
-    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 0, wait=True)
-    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.COARSE_ALIGN.value)
-    yield from bps.sleep(0.1)
+    try:
+        yield from setup_transition_signals("TA", 0, CamMode.COARSE_ALIGN.value)
+    except WaitTimeoutError as error:
+        logger.exception(f"Exception while setting SE to TA signals, trying again: {error}")
+        yield from setup_transition_signals("TA", 0, CamMode.COARSE_ALIGN.value)
+
     logger.info("Starting 1st inner fly scan")
 
     try:
@@ -124,10 +138,11 @@ def topview_optimized():
     yield from set_SA_work_pos(delta_y, delta_z)
     logger.info("Starting transition to SA")
     # TA -> SA
-    yield from bps.abs_set(top_aligner_fast.target_gov_state, "SA", wait=True)
-    yield from bps.abs_set(top_aligner_fast.zebra.pos_capt.direction, 1, wait=True)
-    yield from bps.abs_set(top_aligner_fast.topcam.cam_mode, CamMode.FINE_FACE.value)
-    yield from bps.sleep(0.1)
+    try:
+        yield from setup_transition_signals("SA", 1, CamMode.FINE_FACE.value)
+    except WaitTimeoutError as error:
+        logger.exception(f"Exception while setting TA to SA signals, trying again: {error}")
+        yield from setup_transition_signals("SA", 1, CamMode.FINE_FACE.value)
     logger.info("Starting 2nd inner fly scan")
     try:
         delta_y, delta_z, omega_min = yield from inner_pseudo_fly_scan(

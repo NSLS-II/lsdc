@@ -3755,7 +3755,9 @@ class ControlMain(QtWidgets.QMainWindow):
 
                 # If API does not have info about the proposal or current visitDirectory is not the same
                 # Do not add request
-                if prop_dir == None or (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).parents):
+                if (str(sample_data["proposalID"]) not in ["999999"] and 
+                    (prop_dir is None or 
+                     (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).resolve().parents))):
                     invalid_samples.add(sample_data["name"])
                     continue
 
@@ -3793,7 +3795,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 response = self.confirm_add_request_dialog(sample_data["proposalID"]).exec_()
                 if response != QtWidgets.QMessageBox.Ok:
                     add_request = False
-            elif (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).parents):
+            elif (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).resolve().parents):
                 invalid_samples.add(sample_data["name"])
                 add_request = False
 

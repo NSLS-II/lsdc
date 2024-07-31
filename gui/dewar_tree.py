@@ -145,8 +145,8 @@ class DewarTree(QtWidgets.QTreeView):
         font.setItalic(True)
         font.setOverline(True)
         item.setFont(font)
-        if len(self.parent.mountedPin_pv.get().split(",")) == 2:
-            pin, state = self.parent.mountedPin_pv.get().split(",")
+        if self.parent.mountedPin_pv.get_pin_state() is not None:
+            state = self.parent.mountedPin_pv.get_pin_state()
             mount_state = MountState(state)
             if sample_name is None:
                 sample_name = item.text()
@@ -236,11 +236,11 @@ class DewarTree(QtWidgets.QTreeView):
             # just stuck sampleID there, but negate it to diff from reqID
             item.setData(sample_id, 32)
             item.setData("sample", 33)
-            if sample_id == self.parent.mountedPin_pv.get().split(",")[0]:
+            if sample_id == self.parent.mountedPin_pv.get():
                 self.set_mounted_sample(item, position_s)
             parentItem.appendRow(item)
 
-            if sample_id == self.parent.mountedPin_pv.get().split(",")[0]:
+            if sample_id == self.parent.mountedPin_pv.get():
                 mountedIndex = self.model.indexFromItem(item)
             # looking for the selected item
             if sample_id == self.parent.selectedSampleID:

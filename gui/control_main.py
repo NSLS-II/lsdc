@@ -58,7 +58,7 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
-from utils import validation
+from utils import validation, custom_pv
 
 logger = logging.getLogger()
 
@@ -1744,7 +1744,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 beamline=daq_utils.beamline,
             )
         else:  # the user pushed the snapshot button on the gui
-            mountedSampleID = self.mountedPin_pv.get().split(",")[0]
+            mountedSampleID = self.mountedPin_pv.get()
             if mountedSampleID != "":
                 db_lib.addResulttoSample(
                     "snapshotResult",
@@ -3783,7 +3783,7 @@ class ControlMain(QtWidgets.QMainWindow):
                     self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
                     samplesConsidered.add(self.selectedSampleID)
         else:  # If queue collect is off does not matter how many requests you select only one will be added to current pin
-            self.selectedSampleID = self.mountedPin_pv.get().split(",")[0]
+            self.selectedSampleID = self.mountedPin_pv.get()
             self.selectedSampleRequest = daq_utils.createDefaultRequest(
                 self.selectedSampleID
             )
@@ -3818,8 +3818,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 daq_utils.setProposalID(propNum, createVisit=True)
 
         if getBlConfig("queueCollect") == 0:
-            if self.mountedPin_pv.get().split(",")[0] != self.selectedSampleID:
-                self.selectedSampleID = self.mountedPin_pv.get().split(",")[0]
+            if self.mountedPin_pv.get() != self.selectedSampleID:
+                self.selectedSampleID = self.mountedPin_pv.get()
 
         if not self.validateAllFields():
             return
@@ -3909,7 +3909,7 @@ class ControlMain(QtWidgets.QMainWindow):
             return
 
         # I don't like the code duplication, but one case is the mounted sample and selected centerings - so it's in a loop for multiple reqs, the other requires autocenter.
-        if (self.mountedPin_pv.get().split(",")[0] == self.selectedSampleID) and (
+        if (self.mountedPin_pv.get() == self.selectedSampleID) and (
             len(self.centeringMarksList) != 0
         ):
             selectedCenteringFound = 0
@@ -4049,7 +4049,7 @@ class ControlMain(QtWidgets.QMainWindow):
             reqObj["centeringOption"] = centeringOption
             if (
                 centeringOption == "Interactive"
-                and self.mountedPin_pv.get().split(",")[0] == self.selectedSampleID
+                and self.mountedPin_pv.get() == self.selectedSampleID
             ) or centeringOption == "Testing":  # user centered manually
                 reqObj["pos_x"] = float(self.sampx_pv.get())
                 reqObj["pos_y"] = float(self.sampy_pv.get())
@@ -4596,7 +4596,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 str(self.govStateMessagePV.get(as_string=True)) == "state SA"
                 and self.controlEnabled()  # Move only in SA (Any other way for GUI to detect governor state?)
                 and self.selectedSampleRequest["sample"]  # with control enabled
-                == self.mountedPin_pv.get().split(",")[0]
+                == self.mountedPin_pv.get()
             ):  # And the sample of the selected request is mounted
                 self.processSampMove(self.sampx_pv.get(), "x")
                 self.processSampMove(self.sampy_pv.get(), "y")
@@ -4683,7 +4683,7 @@ class ControlMain(QtWidgets.QMainWindow):
             sample_name = db_lib.getSampleNamebyID(self.selectedSampleID)
             logger.info("sample in pos " + str(itemData))
             if (
-                sample["uid"] != self.mountedPin_pv.get().split(",")[0]
+                sample["uid"] != self.mountedPin_pv.get()
                 and getBlConfig("queueCollect") == 0
             ):  # Don't fill data paths if an unmounted sample is clicked and queue collect is off
                 return
@@ -4730,7 +4730,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.selectedSampleID = self.selectedSampleRequest["sample"]
             sample = db_lib.getSampleByID(self.selectedSampleID)
             if (
-                sample["uid"] != self.mountedPin_pv.get().split(",")[0]
+                sample["uid"] != self.mountedPin_pv.get()
                 and getBlConfig("queueCollect") == 0
             ):  # Don't fill request data if unmounted sample and queuecollect is off
                 return
@@ -5021,7 +5021,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.treeChanged_pv = PV(daq_utils.beamlineComm + "live_q_change_flag")
         self.refreshTreeSignal.connect(self.dewarTree.refreshTree)
         self.treeChanged_pv.add_callback(self.treeChangedCB)
-        self.mountedPin_pv = PV(daq_utils.beamlineComm + "mounted_pin")
+        self.mountedPin_pv = custom_pv.MountedPinPV(daq_utils.beamlineComm + "mounted_pin")
         self.mountedPinSignal.connect(self.processMountedPin)
         self.mountedPin_pv.add_callback(self.mountedPinChangedCB)
         det_stop_pv = daq_utils.pvLookupDict["stopEiger"]

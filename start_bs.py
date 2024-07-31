@@ -143,6 +143,7 @@ if (beamline=="amx"):
     loop_detector = LoopDetector(name="loop_detector")
     top_aligner_fast = TopAlignerFast(name="top_aligner_fast", gov_robot=gov_robot)
     top_aligner_slow = TopAlignerSlow(name="top_aligner_slow")
+    gov_mon_signal = EpicsSignal("XF:17ID:AMX{Karen}govmon")
     
 
 elif beamline == "fmx":  
@@ -176,7 +177,7 @@ elif beamline == "fmx":
     loop_detector = LoopDetector(name="loop_detector")
     top_aligner_fast = TopAlignerFast(name="top_aligner_fast", gov_robot=gov_robot)
     top_aligner_slow = TopAlignerSlow(name="top_aligner_slow")
-
+    gov_mon_signal = EpicsSignal("XF:17ID:AMX{Karen}govmon")
     import setenergy_lsdc
 
 elif beamline=="nyx":

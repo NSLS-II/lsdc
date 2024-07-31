@@ -259,6 +259,24 @@ def run_robot_recovery_procedure():
   # Park Gripper and cool gripper
   robot_lib.cooldownGripper()
 
+def recoverCS8():
+  logger.info("Starting CS8 recovery")
+  logger.info("Recovering robot")
+  robot_lib.recoverRobot()
+  logger.info("Drying gripper")
+  robot_lib.dryGripper()
+  rotCP = beamline_lib.motorPosFromDescriptor("dewarRot")
+  logger.info(f"Rotate dewar +1 degree, from {rotCP} to {rotCP+1}")
+  beamline_lib.mvaDescriptor("dewarRot",rotCP + 1)
+  logger.info(f"Rotate dewar -1 degree, from {rotCP+1} to {rotCP}")
+  beamline_lib.mvaDescriptor("dewarRot",rotCP)
+  logger.info("Setting robot state to SE")
+  gov_lib.setGovRobot(gov_robot, 'SE')
+  logger.info("Setting robot state to M")
+  gov_lib.setGovRobot(gov_robot, 'M')
+  logger.info("Setting robot state to SE")
+  gov_lib.setGovRobot(gov_robot, 'SE')
+
 def run_top_view_optimized():
     RE(topview_optimized())
 

@@ -272,7 +272,8 @@ def run_on_mount_option(sample_id):
                   "request_obj": {
                     "xbeam": getPvDesc('beamCenterX'),
                     "ybeam": getPvDesc('beamCenterY'),
-                    "wavelength": daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6)
+                    "wavelength": daq_utils.energy2wave(beamline_lib.motorPosFromDescriptor("energy"), digits=6),
+                    "basePath": getBlConfig("visitDirectory")
                   }
                 }
       autoRasterLoop(request)

@@ -3702,9 +3702,12 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def get_proposal_directory(self, proposal_num):
         if proposal_num not in self.proposal_directories:
-            r = requests.get(f"{os.environ['NSLS2_API_URL']}/v1/proposal/{proposal_num}/directories")
-            r.raise_for_status()
-            response = r.json().get("directories")
+            try:
+                r = requests.get(f"{os.environ['NSLS2_API_URL']}/v1/proposal/{proposal_num}/directories")
+                r.raise_for_status()
+                response = r.json().get("directories")
+            except requests.exceptions.HTTPError:
+                return None
             if response is None:
                 # Proposal does not exist
                 return None

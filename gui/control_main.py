@@ -3557,12 +3557,16 @@ class ControlMain(QtWidgets.QMainWindow):
             raster_w / stepsizeXPix
         )  # raster_w = width,goes to numsteps horizonatl
         numsteps_v = int(raster_h / stepsizeYPix)
-        if numsteps_h == 2:
-            numsteps_h = 1  # fix slop in user single line attempt
-        if numsteps_h % 2 == 0:  # make odd numbers of rows and columns
-            numsteps_h = numsteps_h + 1
-        if numsteps_v % 2 == 0:
-            numsteps_v = numsteps_v + 1
+        if (daq_utils.beamline != "nyx"):
+            if numsteps_h == 2:
+                numsteps_h = 1  # fix slop in user single line attempt
+            if numsteps_h % 2 == 0:  # make odd numbers of rows and columns
+                numsteps_h = numsteps_h + 1
+            if numsteps_v % 2 == 0:
+                numsteps_v = numsteps_v + 1
+        else:
+            if numsteps_h < 2:
+                numsteps_h = 2
         rasterDef["numCells"] = numsteps_h * numsteps_v
         point_offset_x = -(numsteps_h * stepsizeXPix) / 2
         point_offset_y = -(numsteps_v * stepsizeYPix) / 2

@@ -620,50 +620,55 @@ def collectData(currentRequest):
   if reqObj["protocol"] in ("standard", "vector", "raster"):
     send_kafka_message(topic=f'{daq_utils.beamline}.lsdc.documents', event='stop', uuid=currentRequest['uid'], protocol=reqObj["protocol"])
   if (prot == "vector" or prot == "standard" or prot == "stepVector"):
-    if daq_utils.beamline != "nyx":
-      seqNum = flyer.detector.cam.sequence_id.get()
-      comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
-      logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
-      #os.system(comm_s)    
-      filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
-      logger.info(f"Checking integrity of {filename}")
-      timeout_index = 0
-      while not albulaUtils.validate_master_HDF5_file(filename):
-        timeout_index += 1
-        time.sleep(3)
-        if timeout_index > 15:
-          logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
-          return 
-      if img_width > 0: #no dataset processing in stills mode
-        if (reqObj["fastDP"]):
-          if (reqObj["fastEP"]):
-            fastEPFlag = 1
-          else:
-            fastEPFlag = 0
-          if (reqObj["dimple"]):
-            dimpleFlag = 1
-          else:
-            dimpleFlag = 0        
+    seqNum = flyer.detector.cam.sequence_id.get()
+    comm_s = os.environ["LSDCHOME"] + "/runSpotFinder4syncW.py " + data_directory_name + " " + file_prefix + " " + str(currentRequest["uid"]) + " " + str(seqNum) + " " + str(currentIspybDCID)+ "&"
+    logger.info(f"NOT running spotfinding for per-image analysis in Synchweb: {comm_s}")
+    #os.system(comm_s)    
+    filename = f"{data_directory_name}/{file_prefix}_{seqNum}_master.h5"
+    logger.info(f"Checking integrity of {filename}")
+    timeout_index = 0
+    while not albulaUtils.validate_master_HDF5_file(filename):
+      timeout_index += 1
+      time.sleep(3)
+      if timeout_index > 15:
+        logger.error(f"Unable to verify master file after {timeout_index} tries, not proceeding with processing")
+        return 
+    if img_width > 0: #no dataset processing in stills mode
+      if (reqObj["fastDP"]):
+        if (reqObj["fastEP"]):
+          fastEPFlag = 1
+        else:
+          fastEPFlag = 0
+        if (reqObj["dimple"]):
+          dimpleFlag = 1
+        else:
+          dimpleFlag = 0        
+        if daq_utils.beamline == "nyx":
+          nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+2)
+        else:
           nodeName = "fastDPNode" + str((fastDPNodeCounter%fastDPNodeCount)+1)
-          fastDPNodeCounter+=1
-          node = getBlConfig(nodeName)      
-          dimpleNode = getBlConfig("dimpleNode")      
-          if (daq_utils.detector_id == "EIGER-16"):
-            seqNum = flyer.detector.cam.sequence_id.get()
-            comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
-          else:
-            comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
-          logger.info(f'Running fastdp command: {comm_s}')
-          if daq_utils.beamline in ("amx", "fmx"):
-            visitName = daq_utils.getVisitName()
-            if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
-              os.system("killall -KILL loop-fdp-dple-populate")
-              logger.info('starting fast dp result gathering script')
-              os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
-          os.system(comm_s)
-        if (reqObj["xia2"]):
-          comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
-          os.system(comm_s)
+        fastDPNodeCounter+=1
+        node = getBlConfig(nodeName)
+        if daq_utils.beamline == "nyx":
+          dimpleNode = node
+        else:
+          dimpleNode = getBlConfig("dimpleNode")
+        if (daq_utils.detector_id == "EIGER-16"):
+          seqNum = flyer.detector.cam.sequence_id.get()
+          comm_s = os.environ["LSDCHOME"] + "/runFastDPH5.py " + data_directory_name + " " + str(seqNum) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + " " + str(currentIspybDCID)+ "&"
+        else:
+          comm_s = os.environ["LSDCHOME"] + "/runFastDP.py " + data_directory_name + " " + file_prefix + " " + str(file_number_start) + " " + str(int(round(range_degrees/img_width))) + " " + str(currentRequest["uid"]) + " " + str(fastEPFlag) + " " + node + " " + str(dimpleFlag) + " " + dimpleNode + "&"
+        logger.info(f'Running fastdp command: {comm_s}')
+        if daq_utils.beamline in ("amx", "fmx", "nyx"):
+          visitName = daq_utils.getVisitName()
+          if (not os.path.exists(visitName + "/fast_dp_dir")) or subprocess.run(['pgrep', '-f', 'loop-fdp-dple-populate'], stdout=subprocess.PIPE).returncode == 1:  # for pgrep, return of 1 means string not found
+            os.system("killall -KILL loop-fdp-dple-populate")
+            logger.info('starting fast dp result gathering script')
+            os.system("cd " + visitName + ";${LSDCHOME}/bin/loop-fdp-dple-populate.sh&")
+        os.system(comm_s)
+      if (reqObj["xia2"]):
+        comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
+        os.system(comm_s)
   
   logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)

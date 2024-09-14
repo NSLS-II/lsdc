@@ -19,7 +19,7 @@ from PyMca5.PyMcaPhysics.xrf import Elements
 from qt_epics.QtEpicsPVEntry import QtEpicsPVEntry
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtGui, QtWidgets
-from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer
+from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, QMutex, QMutexLocker
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
 
@@ -252,6 +252,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.detDistRBVLabel.getEntry().text()
         )  # this is to fix the current val being overwritten by reso
         self.proposalID = -999999
+        self.sampleCameraMutex = QMutex()
         if len(sys.argv) > 1:
             if sys.argv[1] == "master":
                 self.changeControlMasterCB(1)
@@ -302,19 +303,20 @@ class ControlMain(QtWidgets.QMainWindow):
 
 
     def closeEvent(self, evnt):
+        self.sampleCameraThread.stop()
         evnt.accept()
         sys.exit()  # doing this to close any windows left open
 
     def initVideo2(self, frequency):
-        #self.captureHighMag = cv2.VideoCapture(daq_utils.highMagCamURL)
+        self.captureHighMag = daq_utils.highMagCamURL
         logger.debug('highMagCamURL: "' + daq_utils.highMagCamURL + '"')
 
     def initVideo4(self, frequency):
-        #self.captureHighMagZoom = cv2.VideoCapture(daq_utils.highMagZoomCamURL)
+        self.captureHighMagZoom = daq_utils.highMagZoomCamURL
         logger.debug('highMagZoomCamURL: "' + daq_utils.highMagZoomCamURL + '"')
 
     def initVideo3(self, frequency):
-        #self.captureLowMagZoom = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
+        self.captureLowMagZoom = daq_utils.lowMagZoomCamURL
         logger.debug('lowMagZoomCamURL: "' + daq_utils.lowMagZoomCamURL + '"')
 
     def createSampleTab(self):
@@ -402,8 +404,8 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
-        vBoxTreeButtsLayoutRight.addWidget(self.parkRobotButton)
         vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)
+        vBoxTreeButtsLayoutRight.addWidget(self.parkRobotButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
         vBoxTreeButtsLayoutRight.addWidget(endVisitButton)
@@ -1003,6 +1005,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 )  # this sets up lowMagDigiZoom
             if self.zoom1FrameRatePV.get() != 0:
                 #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
+                self.captureLowMag = daq_utils.lowMagCamURL
                 logger.debug('lowMagCamURL: "' + daq_utils.lowMagCamURL + '"')
 
         #self.captureLowMag = cv2.VideoCapture(daq_utils.lowMagCamURL)
@@ -1525,12 +1528,16 @@ class ControlMain(QtWidgets.QMainWindow):
         self.captureLowMag = daq_utils.lowMagCamURL
         self.capture = self.captureLowMag
         
-        #self.sampleCameraThread = VideoThread(
-        #    parent=self, delay=SAMPLE_TIMER_DELAY, camera_object=self.capture
-        #)
-        self.sampleCameraThread = VideoThread(
-            parent=self, delay=HUTCH_TIMER_DELAY, url=daq_utils.highMagCamURL
-        )
+        if daq_utils.beamline == "nyx":
+            self.sampleCameraThread = VideoThread(
+                parent=self, delay=HUTCH_TIMER_DELAY, url=daq_utils.highMagCamURL
+            )
+        else:
+            self.sampleCameraThread = VideoThread(
+                parent=self, delay=SAMPLE_TIMER_DELAY, mjpg_url=self.capture
+            )
+            self.sampleZoomChangeSignal.connect(self.sampleCameraThread.updateCam)
+            
         self.sampleCameraThread.frame_ready.connect(
             lambda frame: self.updateCam(self.pixmap_item, frame)
         )
@@ -1558,7 +1565,11 @@ class ControlMain(QtWidgets.QMainWindow):
         serverCheckThread.start()
 
     def updateCam(self, pixmapItem: "QGraphicsPixmapItem", frame):
-        pixmapItem.setPixmap(frame)
+        if pixmapItem == self.pixmap_item:
+            with QMutexLocker(self.sampleCameraMutex):
+                pixmapItem.setPixmap(frame)
+        else:
+            pixmapItem.setPixmap(frame)
 
     def annealButtonCB(self):
         try:
@@ -1709,7 +1720,6 @@ class ControlMain(QtWidgets.QMainWindow):
         zoomedCursorX = self.getBeamCenterX() - self.centerMarkerCharOffsetX
         zoomedCursorY = self.getBeamCenterY() - self.centerMarkerCharOffsetY
         if self.zoom2Radio.isChecked():
-            self.flushBuffer(self.captureLowMagZoom)
             self.capture = self.captureLowMagZoom
             fov["x"] = daq_utils.lowMagFOVx / 2.0
             fov["y"] = daq_utils.lowMagFOVy / 2.0
@@ -1743,7 +1753,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.beamSizeYPixels,
             )
         elif self.zoom1Radio.isChecked():
-            self.flushBuffer(self.captureLowMag)
             self.capture = self.captureLowMag
             fov["x"] = daq_utils.lowMagFOVx
             fov["y"] = daq_utils.lowMagFOVy
@@ -1764,7 +1773,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.beamSizeYPixels,
             )
         elif self.zoom4Radio.isChecked():
-            self.flushBuffer(self.captureHighMagZoom)
             self.capture = self.captureHighMagZoom
             fov["x"] = daq_utils.highMagFOVx / 2.0
             fov["y"] = daq_utils.highMagFOVy / 2.0
@@ -1802,7 +1810,6 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.beamSizeYPixels,
             )
         elif self.zoom3Radio.isChecked():
-            self.flushBuffer(self.captureHighMag)
             self.capture = self.captureHighMag
             fov["x"] = daq_utils.highMagFOVx
             fov["y"] = daq_utils.highMagFOVy
@@ -1828,7 +1835,8 @@ class ControlMain(QtWidgets.QMainWindow):
     def saveVidSnapshotButtonCB(self):
         comment, useOlog, ok = SnapCommentDialog.getComment()
         if ok:
-            self.saveVidSnapshotCB(comment, useOlog)
+            with QMutexLocker(self.sampleCameraMutex):
+                self.saveVidSnapshotCB(comment, useOlog)
 
     def saveVidSnapshotCB(
         self, comment="", useOlog=False, reqID=None, rasterHeatJpeg=None
@@ -4525,7 +4533,10 @@ class ControlMain(QtWidgets.QMainWindow):
             self.popupServerMessage("You don't have control")
 
     def parkRobotCB(self):
-        self.send_to_server("parkRobot()")
+        if daq_utils.beamline == "nyx":
+            self.send_to_server("parkRobot()")
+        else:
+            self.send_to_server("parkGripper")
 
     def closePhotonShutterCB(self):
         self.photonShutterClose_pv.put(1)

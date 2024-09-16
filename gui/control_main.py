@@ -500,7 +500,7 @@ class ControlMain(QtWidgets.QMainWindow):
                 daq_utils.pvLookupDict["sampleLifetime"], self, 70, 2
             )
             self.sampleLifetimeReadback_ledit = self.sampleLifetimeReadback.getEntry()
-        else:
+        elif daq_utils.beamline == "fmx":
             calcLifetimeButton = QtWidgets.QPushButton("Calc. Lifetime")
             calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
             self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
@@ -891,6 +891,8 @@ class ControlMain(QtWidgets.QMainWindow):
         paramSubspace.addWidget(colExptimeLabel,3,0, alignment=QtCore.Qt.AlignLeft)
         totalExptimeLabel.setAlignment(QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(totalExptimeLabel,4,0, alignment=QtCore.Qt.AlignLeft)
+        if daq_utils.beamline in ['amx', 'fmx']:
+            paramSubspace.addWidget(sampleLifetimeLabel, 5, 0, alignment=QtCore.Qt.AlignLeft)
         # Parameter Collection Column 2, Input Boxes  
         paramSubspace.addWidget(self.osc_start_ledit,1,1, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.osc_end_ledit,2,1, alignment=QtCore.Qt.AlignLeft)
@@ -905,6 +907,8 @@ class ControlMain(QtWidgets.QMainWindow):
         paramSubspace.addWidget(colTransmissionLabel,3,2, alignment=QtCore.Qt.AlignLeft)
         transmisionSPLabel.setAlignment(QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(beamsizeLabel,4,2, alignment=QtCore.Qt.AlignLeft)
+        if daq_utils.beamline in ['amx', 'fmx']:
+            paramSubspace.addWidget(self.sampleLifetimeReadback_ledit, 5, 1, alignment=QtCore.Qt.AlignLeft)
         
         # Parameter Collection Column 4, Input Boxes
         paramSubspace.addWidget(self.detDistMotorEntry.getEntry(),0,3, alignment=QtCore.Qt.AlignLeft)

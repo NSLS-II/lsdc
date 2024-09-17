@@ -134,4 +134,4 @@ BEAMSIZE_OPTIONS = {
     "S": ["V0", "H0"],
     "L": ["V1", "H1"]
 }
-OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": False}
+OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": True}

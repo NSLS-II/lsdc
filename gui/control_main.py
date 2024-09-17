@@ -175,8 +175,9 @@ class ControlMain(QtWidgets.QMainWindow):
         self.redPen = QtGui.QPen(QtCore.Qt.red)
         self.bluePen = QtGui.QPen(QtCore.Qt.blue)
         self.yellowPen = QtGui.QPen(QtCore.Qt.yellow)
-        self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
-                                               gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
+        if daq_utils.beamline != "nyx":
+          self.albulaInterface = AlbulaInterface(ip=os.environ["EIGER_DCU_IP"], 
+                                                 gov_message_pv_name=daq_utils.pvLookupDict["governorMessage"],)
         self.initUI()
         self.initOphyd()
         self.govStateMessagePV = PV(daq_utils.pvLookupDict["governorMessage"])
@@ -4737,7 +4738,8 @@ class ControlMain(QtWidgets.QMainWindow):
                     firstFilename = daq_utils.create_filename(prefix_long, fnumstart)
                     if validate_hdf5:
                         if validation.validate_master_HDF5_file(firstFilename):
-                            self.albulaInterface.open_file(firstFilename)
+                            if daq_utils.beamline != "nyx":
+                                self.albulaInterface.open_file(firstFilename)
                         else:
                             QtWidgets.QMessageBox.information(
                                 self,

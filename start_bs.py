@@ -9,8 +9,6 @@ import os
 from mxtools.governor import _make_governors
 from ophyd.signal import EpicsSignalBase
 EpicsSignalBase.set_defaults(timeout=10, connection_timeout=10)  # new style
-from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
-                                 TopAlignerFast, TopAlignerSlow, GoniometerStack)
 
 #12/19 - author unknown. DAMA can help
 """
@@ -114,6 +112,8 @@ class SampleXYZ(Device):
     omega = Cpt(EpicsMotor, ':O}Mtr')
 
 if (beamline=="amx"):
+    from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
+                                   TopAlignerFast, TopAlignerSlow, GoniometerStack)
     mercury = ABBIXMercury('XF:17IDB-ES:AMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
@@ -146,6 +146,8 @@ if (beamline=="amx"):
     
 
 elif beamline == "fmx":  
+    from mxbluesky.devices import (WorkPositions, TwoClickLowMag, LoopDetector, MountPositions, 
+                                   TopAlignerFast, TopAlignerSlow, GoniometerStack)
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
@@ -180,11 +182,13 @@ elif beamline == "fmx":
 
 elif beamline=="nyx":
     from mxbluesky.devices.md2 import LightDevice, BeamstopDevice, MD2SimpleHVDevice, MD2Device, ShutterDevice
+    two_click_low = mount_pos = loop_detector = top_aligner_fast = top_aligner_slow = work_pos = None
     mercury = ABBIXMercury('XF:17IDC-ES:FMX{Det:Mer}', name='mercury')
     mercury.read_attrs = ['mca.spectrum', 'mca.preset_live_time', 'mca.rois.roi0.count',
                                             'mca.rois.roi1.count', 'mca.rois.roi2.count', 'mca.rois.roi3.count']
     vdcm = VerticalDCM('XF:17IDA-OP:FMX{Mono:DCM', name='vdcm')
     md2 = MD2Device("XF:19IDC-ES{MD2}:", name="md2")
+    gonio = md2
     shutter = ShutterDevice('XF:19IDC-ES{MD2}:', name='shutter')
     beamstop = BeamstopDevice('XF:19IDC-ES{MD2}:', name='beamstop')
     front_light = LightDevice('XF:19IDC-ES{MD2}:Front', name='front_light')

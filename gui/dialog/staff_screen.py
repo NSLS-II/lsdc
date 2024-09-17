@@ -234,10 +234,7 @@ class StaffScreenDialog(QtWidgets.QFrame):
     def getSpotNodeList(self):
         nodeList = []
         for i in range(0, self.spotNodeCount):
-            if daq_utils.beamline == 'nyx':
-                nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('epu')[1]))
-            else:
-                nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('cpu')[1]))
+            nodeList.append(int(getBlConfig("spotNode"+str(i+1)).split('cpu')[1]))
         return nodeList
 
     def getFastDPNodeList(self):

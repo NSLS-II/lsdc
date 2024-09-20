@@ -2217,12 +2217,20 @@ class ControlMain(QtWidgets.QMainWindow):
     function is processThreClickCentering
     '''
     def processThreeClickCentering(self, beamAvailVal):
-        if beamAvailVal == '0':
-            self.beamAvailLabel.setText("Beam Available")
-            self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
+        if daq_utils.beamline == 'nyx':
+            if beamAvailVal == '0':
+                self.beamAvailLabel.setText("Beam Available")
+                self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
+            else:
+                self.beamAvailLabel.setText(beamAvailVal)
+                self.beamAvailLabel.setStyleSheet("background-color: yellow")
         else:
-            self.beamAvailLabel.setText(beamAvailVal)
-            self.beamAvailLabel.setStyleSheet("background-color: yellow")
+            if beamAvailVal == "1":
+                self.beamAvailLabel.setText("Beam Available")
+                self.beamAvailLabel.setStyleSheet("background-color: #99FF66;")
+            elif beamAvailVal == "0":
+                self.beamAvailLabel.setText("No Beam")
+                self.beamAvailLabel.setStyleSheet("background-color: red")
 
     def processSampleExposed(self, sampleExposedVal):
         if int(sampleExposedVal) == 1:

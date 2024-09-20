@@ -202,7 +202,7 @@ elif beamline=="nyx":
     from mxtools.eiger import EigerSingleTriggerV26
     detector = EigerSingleTriggerV26("XF:19ID-ES:NYX{Det:Eig9M}", name="detector", beamline=beamline)
     #from nyxtools.flyer_eiger2 import NYXEiger2Flyer
-    from md2_flyers import MD2StandardFlyer, MD2VectorFlyer, MD2RasterFlyer
+    from mxbluesky.md2_flyers import MD2StandardFlyer, MD2VectorFlyer, MD2RasterFlyer
     flyer = MD2StandardFlyer(md2, detector)
     vector_flyer = MD2VectorFlyer(md2, detector)
     raster_flyer = MD2RasterFlyer(md2, detector)

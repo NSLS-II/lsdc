@@ -4,7 +4,7 @@ try:
     from .auto_center import *
     from .top_align import *
     from .zebra import *
-except:
+except Exception as e:
     pass
 
 

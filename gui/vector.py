@@ -342,7 +342,7 @@ class VectorWidget(QtWidgets.QWidget):
 
     def transform_vector_coords(
         self, prev_coords: "dict[str, float]", current_raw_coords: "dict[str, float]"
-    ) -> dict[str, float]:
+    ) -> "dict[str, float]":
         """Updates y and z co-ordinates of vector points when they are moved
 
         This function tweaks the y and z co-ordinates such that when a vector start or

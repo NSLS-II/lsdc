@@ -22,6 +22,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 from qtpy.QtCore import QModelIndex, QRectF, Qt, QTimer, QMutex, QMutexLocker
 from qtpy.QtGui import QIntValidator
 from qtpy.QtWidgets import QCheckBox, QFrame, QGraphicsPixmapItem, QApplication
+from devices import GonioDevice, CameraDevice, MD2Device, LightDevice, MD2ApertureDevice
 
 import daq_utils
 if daq_utils.beamline == 'nyx':
@@ -208,7 +209,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
         self.beamSize_pv = PV(daq_utils.beamlineComm + "size_mode")
         self.energy_pv = PV(daq_utils.motor_dict["energy"] + ".RBV")
-        self.rasterStepDefs = {"Coarse": 20.0, "Fine": 10.0, "VFine": 5.0}
+        self.rasterStepDefs = {"Coarse": 30.0, "Fine": 20.0, "VFine": 10.0}
 
         # Timer that waits for a second before calling raddose 3d
         # This is to prevent multiple calls when transmission textbox is changing
@@ -405,12 +406,13 @@ class ControlMain(QtWidgets.QMainWindow):
         vBoxTreeButtsLayoutLeft.addWidget(self.popUserScreen)
         vBoxTreeButtsLayoutLeft.addWidget(warmupButton)
         vBoxTreeButtsLayoutRight.addWidget(self.closeShutterButton)
+        vBoxTreeButtsLayoutRight.addWidget(self.parkRobotButton)
         vBoxTreeButtsLayoutRight.addWidget(unmountSampleButton)
         vBoxTreeButtsLayoutRight.addWidget(self.parkRobotButton)
         vBoxTreeButtsLayoutRight.addWidget(deQueueSelectedButton)
         vBoxTreeButtsLayoutRight.addWidget(emptyQueueButton)
         vBoxTreeButtsLayoutRight.addWidget(endVisitButton)
-        vBoxTreeButtsLayoutRight.addWidget(restartServerButton)
+        #vBoxTreeButtsLayoutRight.addWidget(restartServerButton)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutLeft)
         hBoxTreeButtsLayout.addLayout(vBoxTreeButtsLayoutRight)
         vBoxDFlayout.addLayout(hBoxTreeButtsLayout)
@@ -506,6 +508,13 @@ class ControlMain(QtWidgets.QMainWindow):
             calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
             self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
             self.calcLifetimeCB()
+        hBoxColParams25.addWidget(totalExptimeLabel)
+        hBoxColParams25.addWidget(self.totalExptime_ledit)
+        # if (daq_utils.beamline == "fmx"):
+        #  hBoxColParams25.addWidget(calcLifetimeButton)
+        hBoxColParams25.addWidget(sampleLifetimeLabel)
+        hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
+        hBoxColParams22 = QtWidgets.QHBoxLayout()
         if daq_utils.beamline in ("fmx", "nyx"):
             if getBlConfig("attenType") == "RI":
                 self.transmissionReadback = QtEpicsPVLabel(
@@ -587,6 +596,7 @@ class ControlMain(QtWidgets.QMainWindow):
         colBeamWLabel.setAlignment(QtCore.Qt.AlignCenter)
         self.beamWidth_ledit = QtWidgets.QLineEdit()
         self.beamWidth_ledit.setFixedWidth(60)
+        self.beamWidth_ledit.setText(getBlConfig("screen_default_beamWidth"))
         colBeamHLabel = QtWidgets.QLabel("Beam Height:")
         colBeamHLabel.setFixedWidth(140)
         colBeamHLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -1095,6 +1105,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.zoomLevelComboBox = QtWidgets.QComboBox(self)
             self.zoomLevelComboBox.addItems(["1","2","3","4","5","6","7"])
             self.zoomLevelComboBox.activated[str].connect(self.zoomLevelComboActivatedCB)
+            self.zoomLevelComboBox.setCurrentIndex(int(self.camera.zoom.get()) -1)
             self.zoom1Radio.hide()
             self.zoom2Radio.hide()
             self.zoom3Radio.hide()
@@ -1467,6 +1478,8 @@ class ControlMain(QtWidgets.QMainWindow):
         gripperLabel = QtWidgets.QLabel("Gripper Temp (K):")
         if daq_utils.beamline == "nyx":
             self.gripperTempLabel = QtWidgets.QLabel("N/A")
+            gripperLabel.hide()
+            self.gripperTempLabel.hide()
         else:
             self.gripperTempLabel = QtWidgets.QLabel("%.1f" % self.gripTemp_pv.get())
         cryostreamLabel = QtWidgets.QLabel("Cryostream Temp (K):")
@@ -1690,13 +1703,13 @@ class ControlMain(QtWidgets.QMainWindow):
                         self.fillPolyRaster(
                             db_lib.getRequestByID(saveRasterList[i]["uid"])
                         )
-                    self.processSampMove(self.sampx_pv.get(), "x")
-                    self.processSampMove(self.sampy_pv.get(), "y")
-                    self.processSampMove(self.sampz_pv.get(), "z")
-        if self.vector_widget.vector_start != None:
-            self.processSampMove(self.sampx_pv.get(), "x")
-            self.processSampMove(self.sampy_pv.get(), "y")
-            self.processSampMove(self.sampz_pv.get(), "z")
+                    self.processSampMove(self.gon.x.val(), "x")
+                    self.processSampMove(self.gon.y.val(), "y")
+                    self.processSampMove(self.gon.z.val(), "z")
+        if self.vectorStart != None:
+            self.processSampMove(self.gon.x.val(), "x")
+            self.processSampMove(self.gon.y.val(), "y")
+            self.processSampMove(self.gon.z.val(), "z")
         if self.centeringMarksList != []:
             self.processSampMove(self.gon.x.val(), "x")
             self.processSampMove(self.gon.y.val(), "y")
@@ -1715,12 +1728,14 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
-        self.centerMarker.setPos(self.getBeamCenterX()-self.centerMarkerCharOffsetX, self.getBeamCenterY()-self.centerMarkerCharOffsetY)
+        self.centerMarker.setPos(self.getMD2BeamCenterX() - 0.5*self.centerMarkerCharOffsetX, self.getMD2BeamCenterY() - self.centerMarkerCharOffsetY)
         #self.flushBuffer(self.capture)
         #self.capture.release()
         #self.capture = cv2.VideoCapture(daq_utils.lowMagZoomCamURL)
 
     def zoomLevelToggledCB(self, identifier):
+        if daq_utils.beamline == "nyx": # stops forced camera zoom changes
+            return
         fov = {}
         zoomedCursorX = self.getBeamCenterX() - self.centerMarkerCharOffsetX
         zoomedCursorY = self.getBeamCenterY() - self.centerMarkerCharOffsetY
@@ -2939,14 +2954,14 @@ class ControlMain(QtWidgets.QMainWindow):
     def omegaTweakNegCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
         if self.controlEnabled():
-            self.send_to_server("move_omega", [-tv])
+            mv_status = self.gon.omega.move(self.gon.omega.val() + tweakVal)
         else:
             self.popupServerMessage("You don't have control")
 
     def omegaTweakPosCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
         if self.controlEnabled():
-            self.send_to_server("move_omega", [tv])
+            mv_status = self.gon.omega.move(self.gon.omega.val() + tv)
         else:
             self.popupServerMessage("You don't have control")
 
@@ -2982,8 +2997,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def omegaTweakCB(self, tv):
         if self.controlEnabled():
-            self.send_to_server("move_omega", [float(tv)])
-            time.sleep(0.05)
+            status = self.gon.omega.move(self.gon.omega.val() + float(tv))
+            status.wait()
         else:
             self.popupServerMessage("You don't have control")
 
@@ -3547,12 +3562,16 @@ class ControlMain(QtWidgets.QMainWindow):
             raster_w / stepsizeXPix
         )  # raster_w = width,goes to numsteps horizonatl
         numsteps_v = int(raster_h / stepsizeYPix)
-        if numsteps_h == 2:
-            numsteps_h = 1  # fix slop in user single line attempt
-        if numsteps_h % 2 == 0:  # make odd numbers of rows and columns
-            numsteps_h = numsteps_h + 1
-        if numsteps_v % 2 == 0:
-            numsteps_v = numsteps_v + 1
+        if (daq_utils.beamline != "nyx"):
+            if numsteps_h == 2:
+                numsteps_h = 1  # fix slop in user single line attempt
+            if numsteps_h % 2 == 0:  # make odd numbers of rows and columns
+                numsteps_h = numsteps_h + 1
+            if numsteps_v % 2 == 0:
+                numsteps_v = numsteps_v + 1
+        else:
+            if numsteps_h < 2:
+                numsteps_h = 2
         rasterDef["numCells"] = numsteps_h * numsteps_v
         point_offset_x = -(numsteps_h * stepsizeXPix) / 2
         point_offset_y = -(numsteps_v * stepsizeYPix) / 2
@@ -3863,8 +3882,8 @@ class ControlMain(QtWidgets.QMainWindow):
 
             
             if daq_utils.exporter_enabled: 
-                correctedC2C_x = x_click + 5 + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
-                correctedC2C_y = y_click - 35 + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
+                correctedC2C_x = x_click + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
+                correctedC2C_y = y_click + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
                 lsdc_x = daq_utils.screenPixX
                 lsdc_y = daq_utils.screenPixY
                 md2_x = self.md2.center_pixel_x.get() * 2
@@ -4569,12 +4588,14 @@ class ControlMain(QtWidgets.QMainWindow):
         Args:
             pointName: Name of the point to be placed (Either "vectorStart" or "vectorEnd")
         """
-        gonio_coords = {
-            "x": self.sampx_pv.get(),
-            "y": self.sampy_pv.get(),
-            "z": self.sampz_pv.get(),
-            "omega": self.omegaRBV_pv.get(),
-        }
+        gonioCoords = {
+                "x": self.gon.x.val(),
+                "y": self.gon.y.val(),
+                "z": self.gon.z.val(),
+                "finex": self.gon.cx.val(),
+                "finey": self.gon.cy.val(),
+                "omega": self.gon.omega.val(),
+            }
         center_x = self.centerMarker.x() + self.centerMarkerCharOffsetX
         center_y = self.centerMarker.y() + self.centerMarkerCharOffsetY
         if pointName == "full_vector":
@@ -4648,7 +4669,6 @@ class ControlMain(QtWidgets.QMainWindow):
         if getBlConfig("mountEnabled") == 0:
             self.popupServerMessage("Mounting disabled!! Call staff!")
             return
-        
         logger.info("mount selected sample")
         self.eraseCB()
         if (
@@ -4658,6 +4678,29 @@ class ControlMain(QtWidgets.QMainWindow):
         else:  # No sample ID found, do nothing
             logger.info("No sample selected, cannot mount")
             return
+        
+        '''
+        The check before to fix
+        '''
+
+        logger.info('selectedSampleID: {}'.format(self.selectedSampleID))
+        logger.info('mountedPin_pv: {}'.format(self.mountedPin_pv.get()))
+        
+        '''
+        checking if sample is already mounted
+
+        '''
+        
+        
+        if (
+            self.mountedPin_pv.get() == self.selectedSampleID
+        ):
+            logger.info("sample already mounted")
+            self.popupServerMessage("sample already mounted")
+            return
+
+            
+        
         self.send_to_server("mountSample", [self.selectedSampleID])
         
         self.zoom2Radio.setChecked(True)
@@ -4675,6 +4718,7 @@ class ControlMain(QtWidgets.QMainWindow):
         
 
     def fillRequestParameters(self, reqObj):
+        logger.info("refreshing collection parameters, redrawing raster?")
         """Fills UI elements based on reqObj dictionary passed to it"""
         self.protoComboBox.setCurrentIndex(
             self.protoComboBox.findText(str(reqObj["protocol"]))
@@ -5022,7 +5066,7 @@ class ControlMain(QtWidgets.QMainWindow):
 
     def cryostreamTempChangedCB(self, value=None, char_value=None, **kw):
         cryostreamTemp = value
-        self.cryostreamTempSignal.emit(cryostreamTemp)
+        self.cryostreamTempSignal.emit(str(int(cryostreamTemp)))
 
     def ringCurrentChangedCB(self, value=None, char_value=None, **kw):
         ringCurrentVal = value

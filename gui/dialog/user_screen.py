@@ -4,7 +4,9 @@ import typing
 from qt_epics.QtEpicsPVLabel import QtEpicsPVLabel
 from qtpy import QtCore, QtWidgets
 from qtpy.QtWidgets import QCheckBox
+
 from config_params import ON_MOUNT_OPTION
+from devices import MD2Device
 import daq_utils
 
 if typing.TYPE_CHECKING:
@@ -222,6 +224,30 @@ class UserScreenDialog(QtWidgets.QFrame):
     def show(self):
         self.checkQueueCollect()
         super().show()
+
+    def centringPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.CENTRING)
+
+    def beamLocationPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.BEAM_LOCATION)
+
+    def dataCollectionPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.DATA_COLLECTION)
+
+    def transferPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.TRANSFER)
+
+    def centringPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.CENTRING)
+
+    def beamLocationPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.BEAM_LOCATION)
+
+    def dataCollectionPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.DATA_COLLECTION)
+
+    def transferPhaseTransitionCB(self):
+        self.parent.md2.phase_transition(MD2Device.Phase.TRANSFER)
 
     def setSlit1XCB(self):
         self.parent.send_to_server("setSlit1X", [self.slit1XMotor_ledit.text()])

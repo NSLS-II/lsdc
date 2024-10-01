@@ -508,12 +508,12 @@ class ControlMain(QtWidgets.QMainWindow):
             calcLifetimeButton.clicked.connect(self.calcLifetimeCB)
             self.sampleLifetimeReadback_ledit = QtWidgets.QLabel()
             self.calcLifetimeCB()
-        hBoxColParams25.addWidget(totalExptimeLabel)
-        hBoxColParams25.addWidget(self.totalExptime_ledit)
+        #hBoxColParams25.addWidget(totalExptimeLabel)
+        #hBoxColParams25.addWidget(self.totalExptime_ledit)
         # if (daq_utils.beamline == "fmx"):
         #  hBoxColParams25.addWidget(calcLifetimeButton)
-        hBoxColParams25.addWidget(sampleLifetimeLabel)
-        hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
+        #hBoxColParams25.addWidget(sampleLifetimeLabel)
+        #hBoxColParams25.addWidget(self.sampleLifetimeReadback_ledit)
         hBoxColParams22 = QtWidgets.QHBoxLayout()
         if daq_utils.beamline in ("fmx", "nyx"):
             if getBlConfig("attenType") == "RI":
@@ -2212,6 +2212,7 @@ class ControlMain(QtWidgets.QMainWindow):
             self.gripperTempLabel.setStyleSheet("background-color: #99FF66;")
 
     def processCryostreamTemp(self, cryostreamVal):
+        cryostreamVal = float(cryostreamVal)
         self.cryostreamTempLabel.setText(f"{cryostreamVal:.2f}")
         if cryostreamVal is not None:
             if 99 < cryostreamVal < 102:

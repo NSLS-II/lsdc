@@ -28,7 +28,11 @@ try:
   import ispybLib
 except Exception as e:
   logger.error("daq_lib: ISPYB import error, %s" % e)
-  
+
+if daq_utils.beamline in ["amx", "fmx"]:
+  from start_bs import gov_mon_signal
+
+
 #all keys below are created as beamlineComm PVs. if adding items here, be sure to add them to the simulator
 var_list = {'beam_check_flag':0,'overwrite_check_flag':1,'omega':0.00,'kappa':0.00,'phi':0.00,'theta':0.00,'distance':10.00,'rot_dist0':300.0,'inc0':1.00,'exptime0':5.00,'file_prefix0':'lowercase','numstart0':0,'col_start0':0.00,'col_end0':1.00,'scan_axis':'omega','wavelength0':1.1,'datum_omega':0.00,'datum_kappa':0.00,'datum_phi':0.00,'size_mode':0,'spcgrp':1,'state':"Idle",'state_percent':0,'datafilename':'none','active_sweep':-1,'html_logging':1,'take_xtal_pics':0,'px_id':'none','xtal_id':'none','current_pinpos':0,'sweep_count':0,'group_name':'none','mono_energy_target':1.1,'mono_wave_target':1.1,'energy_inflection':12398.5,'energy_peak':12398.5,'wave_inflection':1.0,'wave_peak':1.0,'energy_fall':12398.5,'wave_fall':1.0,'beamline_merit':0,'fprime_peak':0.0,'f2prime_peak':0.0,'fprime_infl':0.0,'f2prime_infl':0.0,'program_state':"Program Ready",'filter':0,'edna_aimed_completeness':0.99,'edna_aimed_ISig':2.0,'edna_aimed_multiplicity':'auto','edna_aimed_resolution':'auto','mono_energy_current':1.1,'mono_energy_scan_step':1,'mono_wave_current':1.1,'mono_scan_points':21,'mounted_pin':(db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')["sampleID"]),'pause_button_state':'Pause','vector_on':0,'vector_fpp':1,'vector_step':0.0,'vector_translation':0.0,'xia2_on':0,'grid_exptime':0.2,'grid_imwidth':0.2,'choochResultFlag':"0",'xrecRasterFlag':"0"}
 
@@ -218,6 +222,20 @@ def unlockGUI():
 def lockGUI():
   logger.info('locking GUI')
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"zinger_flag","VAL",-1)  
+
+def govMonOn():
+  gov_mon_signal.set(1)
+
+def govMonOff():
+  gov_mon_signal.set(0)
+
+def flocoLock():
+  lockGUI()
+  govMonOff()
+
+def flocoUnlock():
+  unlockGUI()
+  govMonOn()
   
 def refreshGuiTree():
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"live_q_change_flag","VAL",1)

@@ -3834,11 +3834,19 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.drawInteractiveRasterCB()
             return
         fov = self.getCurrentFOV()
-        correctedC2C_x = self.getBeamCenterX() + (
-            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX) - 20
-        )
-        correctedC2C_y = self.getBeamCenterY() + (
-            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY) - 40
+        if daq_utils.beamline == "nyx":
+            correctedC2C_x = self.getBeamCenterX() + (
+                x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX) - 20
+            )
+            correctedC2C_y = self.getBeamCenterY() + (
+                y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY) - 40
+            )
+        else:
+            correctedC2C_x = self.getBeamCenterX() + (
+                x_click - (self.centerMarker.x() + self.centerMarkerCharOffsetX)
+            )
+            correctedC2C_y = self.getBeamCenterY() + (
+            y_click - (self.centerMarker.y() + self.centerMarkerCharOffsetY)
         )
 
         current_viewangle = daq_utils.mag1ViewAngle
@@ -5029,7 +5037,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.ringCurrentSignal.emit(ringCurrentVal)
 
     def beamAvailableChangedCB(self, value=None, char_value=None, **kw):
-        threeClickVal = value
+        threeClickVal = char_value
         self.threeClickSignal.emit(threeClickVal)
 
     def sampleExposedChangedCB(self, value=None, char_value=None, **kw):

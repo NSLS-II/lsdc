@@ -332,6 +332,12 @@ def autoRasterLoop(currentRequest):
         if daq_utils.beamline == 'fmx':
           gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
         return 0
+      
+      if "osc_range" in currentRequest["request_obj"] and currentRequest["request_obj"]["osc_range"] == 0:
+        autoRasterFlag = 0
+        gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
+        # Oscillation range is zero which means its a raster screen request
+        return 0
 
       RE(bps.mv(gonio.gx, sample_detection["center_x"], 
             gonio.py, sample_detection["center_y"],
@@ -3963,11 +3969,12 @@ def lastOnSample():
   if (ednaActiveFlag == 1):
     return False
   current_sample = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']
-  logger.debug(f'number of requests for current sample: {len(db_lib.getRequestsBySampleID(current_sample))}')
+  logger.info(f'number of requests for current sample: {len(db_lib.getRequestsBySampleID(current_sample))}')
   if len(db_lib.getRequestsBySampleID(current_sample)) > 1:  # quickly check if there are other requests for this sample
     r = db_lib.popNextRequest(daq_utils.beamline)  # do comparison above to avoid this time-expensive call
-    if (r != {}):
-      logger.debug(f'next sample: {r["sample"]} current_sample:{current_sample}')
+    if r:
+      logger.info(f'next sample: {r["sample"]} current_sample:{current_sample}')
+      logger.info(f"Priority: {r['priority']}, Request type: {r['request_type']}, UID: {r['uid']}")
       if (r["sample"] == db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')['sampleID']):
         return False
   return True

@@ -672,7 +672,9 @@ def collectData(currentRequest):
       if (reqObj["xia2"]):
         comm_s = f"ssh -q xf17id2-srv1 \"{os.environ['MXPROCESSINGSCRIPTSDIR']}xia2.sh {currentRequest['uid']} \"&"
         os.system(comm_s)
-  
+  if prot == "raster":
+    set_field("xrecRasterFlag",currentRequest["uid"])
+
   logger.info('processing should be triggered')
   db_lib.updatePriority(currentRequest["uid"],-1)
   refreshGuiTree()

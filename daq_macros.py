@@ -3976,7 +3976,6 @@ def rasterDaq(rasterReqID):
         time.sleep(getBlConfig(RASTER_LONG_SNAPSHOT_DELAY))
     else:
         time.sleep(getBlConfig(RASTER_SHORT_SNAPSHOT_DELAY))
-    daq_lib.set_field("xrecRasterFlag",rasterRequest["uid"])
 
 
 

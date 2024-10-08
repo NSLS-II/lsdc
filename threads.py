@@ -85,48 +85,13 @@ class VideoThread(QThread):
         
     def run(self):
         while self.is_running:
-            try:
-                self.camera_refresh()
-            except Exception as e:
-                logger.info("redis video error")
+            self.camera_refresh()
             self.msleep(self.delay)
 
     
     def stop(self):
         self.is_running = False
         self.wait()
-
-class RedisVideoThread(VideoThread):
-    def __init__(self, *args, host='localhost', port=6379, redis_channel='bzoom:RAW', **kwargs):
-        super().__init__(*args, **kwargs)
-        self.host = host
-        self.port = port
-        self.redis_channel = redis_channel
-        self.redis_client = redis.StrictRedis(host=self.host, port=self.port, decode_responses=True)
-        self.pubsub = self.redis_client.pubsub()
-        args ={}
-        args[redis_channel]=self.redis_onMessage
-        self.pubsub.subscribe(**args)
-
-    def camera_refresh(self):
-        pixmap_orig = QtGui.QPixmap(320, 180)
-        logger.info('getting pubsub message')
-        message = self.pubsub.get_message()
-        logger.info(f'pubsub message {message}')
-    
-    def redis_onMessage(self,rimg):
-        logger.info('onMessage')
-        if 'subscribe' in rimg['type']:
-            return
-        img_data = message['data'][24:] # BytesIO(message['data'].encode('latin1'))
-        img = Image.open(img_data)
-        qimage = ImageQt.ImageQt(img)
-        pixmap_orig = QtGui.QPixmap.fromImage(qimage)
-        # TODO: resize frame here 
-        self.frame_ready.emit(pixmap_orig)
-
-    def updateCam(self, url):
-        self.redis_client.publish(self.redis_channel, url)
 
 class RaddoseThread(QThread):
     lifetime = Signal(float)

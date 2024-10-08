@@ -6,6 +6,7 @@ import os
 import sys
 import urllib
 from io import BytesIO
+import redis
 import logging
 from config_params import SERVER_CHECK_DELAY
 import raddoseLib
@@ -92,6 +93,41 @@ class VideoThread(QThread):
         self.is_running = False
         self.wait()
 
+class RedisVideoThread(VideoThread):
+    def __init__(self, *args, host='localhost', port=6379, redis_channel='RAW', **kwargs):
+        super().__init__(*args, **kwargs)
+        self.host = host
+        self.port = port
+        self.redis_channel = redis_channel
+        self.redis_client = redis.StrictRedis(host=self.host, port=self.port, decode_responses=True)
+        self.pubsub = self.redis_client.pubsub()
+        self.pubsub.subscribe(self.redis_channel)
+
+    def camera_refresh(self):
+        pixmap_orig = QtGui.QPixmap(320, 180)
+        message = self.pubsub.get_message()
+        if message and message['type'] == 'message':
+            try:
+                img_data = BytesIO(message['data'].encode('latin1'))
+                img = Image.open(img_data)
+                qimage = ImageQt.ImageQt(img)
+                pixmap_orig = QtGui.QPixmap.fromImage(qimage)
+                # TODO: resize frame here 
+                self.showing_error = False
+            except Exception as e:
+                if not self.showing_error:
+                    painter = QtGui.QPainter(pixmap_orig)
+                    painter.setPen(QtGui.QPen(Qt.white))
+                    painter.drawText(QPoint(10, 10), "No image obtained from Redis stream")
+                    painter.end()
+                    self.frame_ready.emit(pixmap_orig)
+                    self.showing_error = True
+
+        if not self.showing_error:
+            self.frame_ready.emit(pixmap_orig)
+        
+    def updateCam(self, url):
+        self.redis_client.publish(self.redis_channel, url)
 
 class RaddoseThread(QThread):
     lifetime = Signal(float)

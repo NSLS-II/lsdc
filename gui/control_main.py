@@ -1547,8 +1547,11 @@ class ControlMain(QtWidgets.QMainWindow):
         self.capture = self.captureLowMag
         
         if daq_utils.beamline == "nyx":
-            self.sampleCameraThread = RedisVideoThread(
-                parent=self, delay=HUTCH_TIMER_DELAY, host=daq_utils.redis_raw_url
+            #self.sampleCameraThread = RedisVideoThread(
+            #    parent=self, delay=HUTCH_TIMER_DELAY, host=daq_utils.redis_raw_url
+            #)
+            self.sampleCameraThread = VideoThread(
+                parent=self, delay=HUTCH_TIMER_DELAY, url=daq_utils.highMagCamURL
             )
         else:
             self.sampleCameraThread = VideoThread(

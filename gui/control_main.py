@@ -66,7 +66,7 @@ from gui.dialog import (
 from gui.raster import RasterCell, RasterGroup
 from gui.vector import VectorMarker, VectorWidget
 from QPeriodicTable import QPeriodicTable
-from threads import RaddoseThread, ServerCheckThread, VideoThread, RedisVideoThread
+from threads import RaddoseThread, ServerCheckThread, VideoThread
 from utils import validation
 
 logger = logging.getLogger()

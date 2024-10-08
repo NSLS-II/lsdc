@@ -1725,6 +1725,22 @@ class ControlMain(QtWidgets.QMainWindow):
             commTime = etime - stime
             if commTime > 0.01:
                 return
+            
+    def getMD2ImageXRatio(self):
+        md2_img_width = daq_utils.highMagPixX
+        lsdc_img_width = daq_utils.screenPixX
+        return float(md2_img_width) / float(lsdc_img_width)
+    
+    def getMD2ImageYRatio(self):
+        md2_img_height = daq_utils.highMagPixY
+        lsdc_img_height = daq_utils.screenPixY
+        return float(md2_img_height) / float(lsdc_img_height)
+    
+    def getMD2BeamCenterX(self):
+        return self.md2.center_pixel_x.get() / self.getMD2ImageXRatio()
+    
+    def getMD2BeamCenterY(self):
+        return self.md2.center_pixel_y.get() / self.getMD2ImageYRatio()
 
     def zoomLevelComboActivatedCB(self, identifier):
         self.camera.zoom.put(identifier)
@@ -2955,7 +2971,7 @@ class ControlMain(QtWidgets.QMainWindow):
     def omegaTweakNegCB(self):
         tv = float(self.omegaTweakVal_ledit.text())
         if self.controlEnabled():
-            mv_status = self.gon.omega.move(self.gon.omega.val() + tweakVal)
+            mv_status = self.gon.omega.move(self.gon.omega.val() + tv)
         else:
             self.popupServerMessage("You don't have control")
 
@@ -3279,7 +3295,8 @@ class ControlMain(QtWidgets.QMainWindow):
             reqID=rasterReq["uid"],
             rasterHeatJpeg=jpegImageFilename,
         )
-        self.send_to_server("insertRasterResult", [str(rasterReq["uid"]), str(visitName)])
+        if daq_utils.beamline != "nyx":
+            self.send_to_server("insertRasterResult", [str(rasterReq["uid"]), str(visitName)])
 
     def reFillPolyRaster(self):
         rasterEvalOption = str(self.rasterEvalComboBox.currentText())
@@ -3854,13 +3871,17 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.drawInteractiveRasterCB()
             return
         fov = self.getCurrentFOV()
-        correctedC2C_x = self.getBeamCenterX() + (
-            x_click - (self.centerMarker.x() - self.centerMarkerCharOffsetX) - 20
-        )
-        correctedC2C_y = self.getBeamCenterY() + (
-            y_click - (self.centerMarker.y() - self.centerMarkerCharOffsetY) - 40
-        )
-
+        correctedC2C_x = x_click + ((daq_utils.screenPixX/2) - (self.centerMarker.x() + self.centerMarkerCharOffsetX))
+        correctedC2C_y = y_click + ((daq_utils.screenPixY/2) - (self.centerMarker.y() + self.centerMarkerCharOffsetY))
+        if (daq_utils.beamline == "nyx"):
+            lsdc_x = daq_utils.screenPixX
+            lsdc_y = daq_utils.screenPixY
+            md2_x = self.md2.center_pixel_x.get() * 2
+            md2_y = self.md2.center_pixel_y.get() * 2
+            scale_x = md2_x / lsdc_x
+            scale_y = md2_y / lsdc_y
+            correctedC2C_x = correctedC2C_x * scale_x
+            correctedC2C_y = correctedC2C_y * scale_y 
         current_viewangle = daq_utils.mag1ViewAngle
         if self.zoom2Radio.isChecked():
             current_viewangle = daq_utils.mag2ViewAngle
@@ -4816,6 +4837,7 @@ class ControlMain(QtWidgets.QMainWindow):
         ):
             #if not self.rasterIsDrawn(selectedSampleRequest):
             # always erase and then draw
+            logger.info("redrawing raster")
             self.eraseRastersCB()
             self.drawPolyRaster(selectedSampleRequest)
             self.fillPolyRaster(selectedSampleRequest)
@@ -4915,6 +4937,12 @@ class ControlMain(QtWidgets.QMainWindow):
                 sample["uid"] != self.mountedPin_pv.get()
                 and getBlConfig("queueCollect") == 0
             ):  # Don't fill data paths if an unmounted sample is clicked and queue collect is off
+                #if not self.hideRastersCheckBox.isChecked() and (
+                #       reqObj["protocol"] in ("raster", "stepRaster", "multiCol")
+                #):
+                #    self.eraseRastersCB()
+                #    self.drawPolyRaster(self.selectedSampleRequest)
+                #    self.fillPolyRaster(self.selectedSampleRequest)
                 return
             if self.osc_start_ledit.text() == "":
                 self.selectedSampleRequest = daq_utils.createDefaultRequest(

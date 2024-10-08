@@ -3572,6 +3572,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 "x": self.gon.x.val(),
                 "y": self.gon.y.val(),
                 "z": self.gon.z.val(),
+                "cx": self.gon.cx.val(),
+                "cy": self.gon.cy.val(),
                 "omega": self.gon.omega.val(),
                 "stepsize": stepsize,
                 "rowDefs": [],
@@ -4852,6 +4854,8 @@ class ControlMain(QtWidgets.QMainWindow):
                 self.processSampMove(self.gon.x.val(), "x")
                 self.processSampMove(self.gon.y.val(), "y")
                 self.processSampMove(self.gon.z.val(), "z")
+                self.processSampMove(self.gon.cx.val(), "fineX")
+                self.processSampMove(self.gon.cy.val(), "fineY")
                 if (
                     abs(
                         selectedSampleRequest["request_obj"]["rasterDef"]["omega"]

@@ -1610,8 +1610,6 @@ class ControlMain(QtWidgets.QMainWindow):
         paramSubspace.addWidget(self.colExptimeLabel,3,0, alignment=QtCore.Qt.AlignLeft)
         self.totalExptimeLabel.setAlignment(QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.totalExptimeLabel,4,0, alignment=QtCore.Qt.AlignLeft)
-        if daq_utils.beamline in ['amx', 'fmx']:
-            paramSubspace.addWidget(self.sampleLifetimeLabel, 5, 0, alignment=QtCore.Qt.AlignLeft)
         # Parameter Collection Column 2, Input Boxes  
         paramSubspace.addWidget(self.osc_start_ledit,1,1, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.osc_end_ledit,2,1, alignment=QtCore.Qt.AlignLeft)
@@ -1626,19 +1624,11 @@ class ControlMain(QtWidgets.QMainWindow):
         paramSubspace.addWidget(self.colTransmissionLabel,3,2, alignment=QtCore.Qt.AlignLeft)
         self.transmisionSPLabel.setAlignment(QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.beamsizeLabel,4,2, alignment=QtCore.Qt.AlignLeft)
-        if daq_utils.beamline in ['amx', 'fmx']:
-            paramSubspace.addWidget(self.sampleLifetimeReadback_ledit, 5, 1, alignment=QtCore.Qt.AlignLeft)
         
         # Parameter Collection Column 4, Input Boxes
         paramSubspace.addWidget(self.detDistMotorEntry.getEntry(),0,3, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.resolution_ledit,1,3, alignment=QtCore.Qt.AlignLeft)
-        if daq_utils.beamline == "fmx":
-            if getBlConfig(SET_ENERGY_CHECK):
-                paramSubspace.addWidget(self.moveEnergyButton,2,3, alignment=QtCore.Qt.AlignLeft)
-            else:
-                paramSubspace.addWidget(self.energy_ledit,2,3, alignment=QtCore.Qt.AlignLeft)
-        else:
-            paramSubspace.addWidget(self.energy_ledit,2,3, alignment=QtCore.Qt.AlignLeft)
+        paramSubspace.addWidget(self.energy_ledit,2,3, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.transmission_ledit,3,3, alignment=QtCore.Qt.AlignLeft)
         paramSubspace.addWidget(self.beamsizeComboBox,4,3, alignment=QtCore.Qt.AlignLeft)
         

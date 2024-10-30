@@ -257,8 +257,8 @@ def mountSample(sampID):
     setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
     setPvDesc("robotOmegaWorkPos",90.0)    
     logger.info("done setting work pos")  
-  if (currentMountedSampleID != ""): #then unmount what's there
-    if (sampID!=currentMountedSampleID and not robot_lib.multiSampleGripper()):
+  if (currentMountedSampleID != "" and not robot_lib.multiSampleGripper()): #then unmount what's there
+    if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
       # Set status as currently unmounting
@@ -401,7 +401,7 @@ def runDCQueue(): #maybe don't run rasters from here???
     logger.info("processing request " + str(time.time()))
     reqObj = currentRequest["request_obj"]
     gov_lib.set_detz_in(gov_robot, reqObj["detDist"])
-    if (reqObj["detDist"] >= ROBOT_MIN_DISTANCE and getBlConfig("HePath") == 0):
+    if (reqObj["detDist"] >= DETECTOR_SAFE_DISTANCE[daq_utils.beamline] and getBlConfig("HePath") == 0):
       gov_lib.set_detz_out(gov_robot, reqObj["detDist"])
     sampleID = currentRequest["sample"]
     mountedSampleDict = db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample')
@@ -724,22 +724,30 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     file_prefix_minus_directory = file_prefix_minus_directory[file_prefix_minus_directory.rindex("/")+1:len(file_prefix_minus_directory)]
   except ValueError: 
     pass
-  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
-    logger.info("vectorSync " + str(time.time()))    
-    daq_macros.vectorSync()
-    logger.info("zebraDaq " + str(time.time()))
-   
-    vector_params = daq_macros.gatherStandardVectorParams()
-    logger.debug(f"vector_params: {vector_params}") 
-    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
-  elif (protocol == "vector"):
-    RE(daq_macros.vectorZebraScan(currentRequest))
-  elif (protocol == "stepVector"):
-    daq_macros.vectorZebraStepScan(currentRequest)
-  else:
-    pass
+  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
+  
+  if OPHYD_COLLECTIONS[daq_utils.beamline]:
+      logger.info("ophyd collections enabled")
+      if (protocol == "standard"):
+        RE(daq_macros.standard_plan_wrapped(currentRequest))
+      elif (protocol == "vector"):
+        RE(daq_macros.vector_plan_wrapped(currentRequest))
+  else:  
+    if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
+      logger.info("vectorSync " + str(time.time()))    
+      daq_macros.vectorSync()
+      logger.info("zebraDaq " + str(time.time()))
+    
+      vector_params = daq_macros.gatherStandardVectorParams()
+      logger.debug(f"vector_params: {vector_params}") 
+      RE(daq_macros.standard_zebra_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
+    elif (protocol == "vector"):
+      RE(daq_macros.vectorZebraScan(currentRequest))
+    elif (protocol == "stepVector"):
+      daq_macros.vectorZebraStepScan(currentRequest)
+    else:
+      pass
   return 
 
 
@@ -791,6 +799,22 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
 def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAMERA_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
+
+  if daq_utils.beamline == "nyx":
+    logger.info("center_on_click: %s" % str((x,y)))
+    lsdc_x = daq_utils.screenPixX
+    lsdc_y = daq_utils.screenPixY
+    md2_x = getPvDesc("md2CenterPixelX") * 2
+    md2_y = getPvDesc("md2CenterPixelY") * 2
+    scale_x = md2_x / lsdc_x
+    scale_y = md2_y / lsdc_y
+    x = x * scale_x
+    y = y * scale_y
+    str_coords = f'{x} {y}'
+    logger.info(f'center_on_click: {str_coords}')
+    setPvDesc("MD2C2C", str_coords)
+    return
+
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):

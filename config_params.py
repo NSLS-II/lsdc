@@ -64,11 +64,8 @@ class OnMountAvailOptions(Enum):
     AUTO_RASTER = 2 # Mounts, centers and takes 2 orthogonal rasters
 
 HUTCH_TIMER_DELAY = 500
-SAMPLE_TIMER_DELAY = 0
+SAMPLE_TIMER_DELAY = 40
 SERVER_CHECK_DELAY = 2000
-
-ROBOT_MIN_DISTANCE = 200.0
-ROBOT_DISTANCE_TOLERANCE = 0.050
 
 FAST_DP_MIN_NODES = 4
 SPOT_MIN_NODES = 8
@@ -84,16 +81,17 @@ UNMOUNT_STEP_SUCCESSFUL = 2
 PINS_PER_PUCK = 16
 
 DETECTOR_OBJECT_TYPE_LSDC = "lsdc"  # using det_lib
+DETECTOR_OBJECT_TYPE_NO_INIT = "no init" # skip epics detector init
 DETECTOR_OBJECT_TYPE_OPHYD = "ophyd"  # instantiated in start_bs, using Bluesky scans
 DETECTOR_OBJECT_TYPE = "detectorObjectType"
 
 DETECTOR_SAFE_DISTANCE = {"fmx": 200.0, "amx": 180.0, "nyx": 200.0}
 GOVERNOR_TIMEOUT = 120  # seconds for a governor move
 
-DEWAR_SECTORS = {"amx": 8, "fmx": 8, "nyx": 5}
-PUCKS_PER_DEWAR_SECTOR = {"amx": 3, "fmx": 3, "nyx": 3}
+DEWAR_SECTORS = {'amx':8, 'fmx':8, 'nyx':8}
+PUCKS_PER_DEWAR_SECTOR = {'amx':3, 'fmx':3, 'nyx':3}
 
-cryostreamTempPV = {"amx": "XF:17IDB-ES:AMX{CS:1}SAMPLE_TEMP_RBV", "fmx": "FMX:cs700:gasT-I"}
+cryostreamTempPV = {"amx": "XF:17IDB-ES:AMX{CS:1}SAMPLE_TEMP_RBV", "fmx": "FMX:cs700:gasT-I", "nyx":"XF:19ID2:CS700:TEMP"}
 
 VALID_EXP_TIMES = {
     "amx": {"min": 0.005, "max": 1, "digits": 3},
@@ -137,6 +135,7 @@ BEAMSIZE_OPTIONS = {
     "L": ["V1", "H1"]
 }
 
+
 class MountState(Enum):
     CURRENTLY_MOUNTING = "cm"
     FAILED_MOUNTING = "fm"
@@ -154,3 +153,6 @@ class MountState(Enum):
             cls.FAILED_UNMOUNTING: "\n(Failed Unmounting)"
         }
         return text_values.get(enum_value, "\n(Unknown State)")
+
+OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": True}
+

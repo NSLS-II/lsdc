@@ -261,19 +261,21 @@ def mountSample(sampID):
     if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
+      # Set status as currently unmounting
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
       if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
         db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)
-        set_field("mounted_pin","")        
-        db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})        
         (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
         if (warmUpNeeded):
           gui_message("Warming gripper. Please stand by.")
           mountCounter = 0
+        # About to mount next sample
+        set_mounted_pin_data(sampID, mount_state=MountState.CURRENTLY_MOUNTING.value, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
         mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
         if (warmUpNeeded):
           destroy_gui_message()
-        if (mountStat == 1):
-          set_field("mounted_pin",sampID)
+        if (mountStat == MOUNT_SUCCESSFUL):
+          set_mounted_pin_data(sampID, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
           detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
           if (detDist != saveDetDist):
             if (getBlConfig("HePath") == 0):
@@ -282,35 +284,51 @@ def mountSample(sampID):
             # Only run mount options when the robot is online and queue collect is off
             daq_macros.run_on_mount_option(sampID)
             gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-        elif(mountStat == 2):
-          return 2
+        elif(mountStat == MOUNT_UNRECOVERABLE_ERROR):
+          clearMountedSample()
+          return MOUNT_UNRECOVERABLE_ERROR
         else:
-          return 0
+          clearMountedSample()
+          return MOUNT_FAILURE
       else:
-        return 0
+        set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
+        return UNMOUNT_FAILURE
     else: #desired sample is mounted, nothing to do
-      return 1
+      return MOUNT_SUCCESSFUL
   else: #nothing mounted
     (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
+    set_mounted_pin_data(sampID, mount_state=MountState.CURRENTLY_MOUNTING.value, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
     mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
-    if (mountStat == 1):
-      set_field("mounted_pin",sampID)
+    if (mountStat == MOUNT_SUCCESSFUL):
+      set_mounted_pin_data(sampID, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
       if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
         # Only run mount options when the robot is online and queue collect is off
         daq_macros.run_on_mount_option(sampID)
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-    elif(mountStat == 2):
-      return 2
+    elif(mountStat == MOUNT_UNRECOVERABLE_ERROR):
+      clearMountedSample()
+      return MOUNT_UNRECOVERABLE_ERROR
     else:
-      return 0
-  db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':puckPos,'pinPos':pinPos,'sampleID':sampID})
-  return 1
+      clearMountedSample()
+      return MOUNT_FAILURE
+  return MOUNT_SUCCESSFUL
 
 
 def clearMountedSample():
   set_field("mounted_pin","")
   db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
   
+
+def set_mounted_pin_data(sample_id, mount_state=MountState.MOUNTED.value, sample_pos=None):
+  current_pin_data = f"{sample_id},{mount_state}"
+  logger.info(f"current pin data = {current_pin_data}")
+  set_field("mounted_pin", current_pin_data)
+
+  if sample_pos:
+    info_dict = { 'puckPos' : sample_pos["puckPos"], 
+                  'pinPos' : sample_pos["pinPos"],
+                  'sampleID': sample_id }
+    db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict=info_dict)
 
 def unmountSample():
   global mountCounter
@@ -322,13 +340,15 @@ def unmountSample():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
+    # Set status as currently unmounting
+    set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
     if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.finish()
-      set_field("mounted_pin","")
-      db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
+      clearMountedSample()
       return 1
     else:
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
       return 0
 
 def unmountCold():
@@ -337,14 +357,17 @@ def unmountCold():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
+    # Set status as currently unmounting
+    set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
     if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
-      robot_lib.parkGripper()
-      set_field("mounted_pin","")
-      db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
+      if getBlConfig("robot_online"):
+        robot_lib.parkGripper()
+      clearMountedSample()
       setPvDesc("robotGovActive",1)
       return 1
     else:
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
       return 0
 
 def waitBeam():

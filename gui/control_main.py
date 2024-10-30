@@ -66,7 +66,7 @@ from gui.raster import RasterCell, RasterGroup
 from gui.vector import VectorMarker, VectorWidget
 from QPeriodicTable import QPeriodicTable
 from threads import RaddoseThread, ServerCheckThread, VideoThread
-from utils import validation
+from utils import validation, custom_pv
 
 logger = logging.getLogger()
 
@@ -5243,7 +5243,7 @@ class ControlMain(QtWidgets.QMainWindow):
         self.treeChanged_pv = PV(daq_utils.beamlineComm + "live_q_change_flag")
         self.refreshTreeSignal.connect(self.dewarTree.refreshTree)
         self.treeChanged_pv.add_callback(self.treeChangedCB)
-        self.mountedPin_pv = PV(daq_utils.beamlineComm + "mounted_pin")
+        self.mountedPin_pv = custom_pv.MountedPinPV(daq_utils.beamlineComm + "mounted_pin")
         self.mountedPinSignal.connect(self.processMountedPin)
         self.mountedPin_pv.add_callback(self.mountedPinChangedCB)
         det_stop_pv = daq_utils.pvLookupDict["stopEiger"]

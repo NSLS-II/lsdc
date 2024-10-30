@@ -134,4 +134,25 @@ BEAMSIZE_OPTIONS = {
     "S": ["V0", "H0"],
     "L": ["V1", "H1"]
 }
+
+
+class MountState(Enum):
+    CURRENTLY_MOUNTING = "cm"
+    FAILED_MOUNTING = "fm"
+    MOUNTED = "m"
+    CURRENTLY_UNMOUNTING = "cu"
+    FAILED_UNMOUNTING = "fu"
+
+    @classmethod
+    def get_text(cls, enum_value):
+        text_values = {
+            cls.CURRENTLY_MOUNTING: "\n(Currently Mounting)",
+            cls.FAILED_MOUNTING: "\n(Failed Mounting)",
+            cls.MOUNTED: "\n(Mounted)",
+            cls.CURRENTLY_UNMOUNTING: "\n(Currently Unmounting)",
+            cls.FAILED_UNMOUNTING: "\n(Failed Unmounting)"
+        }
+        return text_values.get(enum_value, "\n(Unknown State)")
+
 OPHYD_COLLECTIONS = {"amx": False, "fmx": False, "nyx": True}
+

@@ -16,7 +16,7 @@ import db_lib
 from daq_utils import getBlConfig
 from config_params import *
 from kafka_producer import send_kafka_message
-from start_bs import govs, gov_robot, flyer, RE
+from start_bs import govs, gov_robot, flyer, RE, gonio, robot_arm
 import gov_lib
 from bluesky.preprocessors import finalize_wrapper
 import bluesky.plan_stubs as bps
@@ -236,6 +236,22 @@ def flocoLock():
 def flocoUnlock():
   unlockGUI()
   govMonOn()
+
+def flocoStopOperations():
+  daq_macros.run_recovery_procedure(stop=True)
+  lockGUI()
+
+def flocoContinueOperations():
+  daq_macros.run_recovery_procedure(stop=False)
+  flocoUnlock()
+  beamline_support.set_any_epics_pv(daq_utils.beamlineComm + "command_s", "VAL", 
+    json.dumps(
+            {
+                "function": "runDCQueue",
+                "args": [],
+                "kwargs": {},
+            }
+        ))
   
 def refreshGuiTree():
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"live_q_change_flag","VAL",1)
@@ -379,14 +395,25 @@ def waitBeam():
         gui_message("Waiting for beam. Type beamCheckOff() in lsdcServer window to continue.")
       time.sleep(1.0)
 
+def waitRobotArm():
+  waiting = True
+  while waiting:
+    gui_message("Robot arm speed not at 100%. Set speed to 100")
+    time.sleep(1.0)
+    if robot_arm.is_full_speed():
+      waiting = False
+
 def runDCQueue(): #maybe don't run rasters from here???
   global abort_flag
 
   autoMounted = 0 #this means the mount was performed from a runQueue, as opposed to a manual mount button push
   logger.info("running queue in daq server")
   while (1):
-    if (getBlConfig("queueCollect") == 1 and getBlConfig(BEAM_CHECK) == 1):
-      waitBeam()
+    if (getBlConfig("queueCollect") == 1): 
+      if (getBlConfig(BEAM_CHECK) == 1):
+        waitBeam()
+      if not start_bs.robot_arm.is_full_speed():
+        waitRobotArm()
     if (abort_flag):
       abort_flag =  0 #careful about when to reset this
       return

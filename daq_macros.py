@@ -253,11 +253,22 @@ def run_robot_recovery_procedure():
   """ Generic recovery procedure to be used during automated
   collection"""
   # Recover robot
+  logging.info("Running robot recovery procedure (nuclear option)")
+  logger.info("Recovering robot")
   robot_lib.recoverRobot()
   # Dry Gripper
+  logger.info("Drying gripper")
   robot_lib.dryGripper()
   # Park Gripper and cool gripper
+  logger.info("Cooling gripper")
   robot_lib.cooldownGripper()
+  logger.info("Homing pins")
+  from start_bs import home_pins
+  RE(home_pins())
+  logger.info("Setting robot state to SE")
+  gov_lib.setGovRobot(gov_robot, 'SE')
+  logger.info("Turning govmon ON")
+  daq_lib.govMonOn()
 
 def recoverCS8():
   logger.info("Starting CS8 recovery")
@@ -276,6 +287,35 @@ def recoverCS8():
   gov_lib.setGovRobot(gov_robot, 'M')
   logger.info("Setting robot state to SE")
   gov_lib.setGovRobot(gov_robot, 'SE')
+
+def run_recovery_procedure(stop=True):
+  """
+  Manual recovery procedure used in daq_lib.flocoStopOperations and daq_lib.flocoContinueOperations
+  """
+  logger.info(f"Running recovery procedure: {'stop operations' if stop else 'continue operations'}")
+  logger.info("Recovering robot")
+  robot_lib.recoverRobot()
+  if not getBlConfig("robot_online") or not getBlConfig("mountEnabled"):
+    logger.info("Robot is offline or mount is disabled, sample found in gripper. Stopping recovery...")
+    return
+  logger.info("Drying gripper")
+  robot_lib.dryGripper()
+  logger.info("Homing pins")
+  from start_bs import home_pins
+  RE(home_pins())
+  if stop:
+    logger.info("Disabling mount")
+    disableMount()
+    logger.info("Turning robot off")
+    robotOff()
+  else:
+    logger.info("Enabling mount")
+    enableMount()
+    logger.info("Turning robot on")
+    robotOn()
+  logger.info("Setting robot state to SE")
+  gov_lib.setGovRobot(gov_robot, 'SE')
+  
 
 def run_top_view_optimized():
     RE(topview_optimized())

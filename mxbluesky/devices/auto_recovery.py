@@ -9,7 +9,7 @@ class PYZHomer(Device):
 
     kill_home = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Sentinel}Homing_Kill")
     kill_py = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Gon:1-Ax:PY}Cmd:Kill-Cmd")
-    kill_pz = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Gon:1-Ax:PY}Cmd:Kill-Cmd")
+    kill_pz = Cpt(EpicsSignal, "XF:17IDB-ES:AMX{Gon:1-Ax:PZ}Cmd:Kill-Cmd")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

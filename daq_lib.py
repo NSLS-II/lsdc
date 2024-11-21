@@ -297,23 +297,25 @@ def mountSample(sampID):
     setPvDesc("robotZWorkPos",getPvDesc("robotZMountPos"))
     setPvDesc("robotOmegaWorkPos",90.0)    
     logger.info("done setting work pos")  
-  if (currentMountedSampleID != ""): #then unmount what's there
-    if (sampID!=currentMountedSampleID and not robot_lib.multiSampleGripper()):
+  if (currentMountedSampleID != "" and not robot_lib.multiSampleGripper()): #then unmount what's there
+    if (sampID!=currentMountedSampleID):
       puckPos = mountedSampleDict["puckPos"]
       pinPos = mountedSampleDict["pinPos"]
+      # Set status as currently unmounting
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
       if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
         db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)
-        set_field("mounted_pin","")        
-        db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})        
         (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
         if (warmUpNeeded):
           gui_message("Warming gripper. Please stand by.")
           mountCounter = 0
+        # About to mount next sample
+        set_mounted_pin_data(sampID, mount_state=MountState.CURRENTLY_MOUNTING.value, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
         mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=0,warmup=warmUpNeeded)
         if (warmUpNeeded):
           destroy_gui_message()
-        if (mountStat == 1):
-          set_field("mounted_pin",sampID)
+        if (mountStat == MOUNT_SUCCESSFUL):
+          set_mounted_pin_data(sampID, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
           detDist = beamline_lib.motorPosFromDescriptor("detectorDist")
           if (detDist != saveDetDist):
             if (getBlConfig("HePath") == 0):
@@ -322,35 +324,51 @@ def mountSample(sampID):
             # Only run mount options when the robot is online and queue collect is off
             daq_macros.run_on_mount_option(sampID)
             gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-        elif(mountStat == 2):
-          return 2
+        elif(mountStat == MOUNT_UNRECOVERABLE_ERROR):
+          clearMountedSample()
+          return MOUNT_UNRECOVERABLE_ERROR
         else:
-          return 0
+          clearMountedSample()
+          return MOUNT_FAILURE
       else:
-        return 0
+        set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
+        return UNMOUNT_FAILURE
     else: #desired sample is mounted, nothing to do
-      return 1
+      return MOUNT_SUCCESSFUL
   else: #nothing mounted
     (puckPos,pinPos,puckID) = db_lib.getCoordsfromSampleID(daq_utils.beamline,sampID)
+    set_mounted_pin_data(sampID, mount_state=MountState.CURRENTLY_MOUNTING.value, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
     mountStat = robot_lib.mountRobotSample(gov_robot, puckPos,pinPos,sampID,init=1)
-    if (mountStat == 1):
-      set_field("mounted_pin",sampID)
+    if (mountStat == MOUNT_SUCCESSFUL):
+      set_mounted_pin_data(sampID, sample_pos={'puckPos':puckPos,'pinPos':pinPos})
       if getBlConfig('robot_online') and getBlConfig("queueCollect") == 0:
         # Only run mount options when the robot is online and queue collect is off
         daq_macros.run_on_mount_option(sampID)
         gov_status = gov_lib.setGovRobot(gov_robot, 'SA')
-    elif(mountStat == 2):
-      return 2
+    elif(mountStat == MOUNT_UNRECOVERABLE_ERROR):
+      clearMountedSample()
+      return MOUNT_UNRECOVERABLE_ERROR
     else:
-      return 0
-  db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':puckPos,'pinPos':pinPos,'sampleID':sampID})
-  return 1
+      clearMountedSample()
+      return MOUNT_FAILURE
+  return MOUNT_SUCCESSFUL
 
 
 def clearMountedSample():
   set_field("mounted_pin","")
   db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
   
+
+def set_mounted_pin_data(sample_id, mount_state=MountState.MOUNTED.value, sample_pos=None):
+  current_pin_data = f"{sample_id},{mount_state}"
+  logger.info(f"current pin data = {current_pin_data}")
+  set_field("mounted_pin", current_pin_data)
+
+  if sample_pos:
+    info_dict = { 'puckPos' : sample_pos["puckPos"], 
+                  'pinPos' : sample_pos["pinPos"],
+                  'sampleID': sample_id }
+    db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict=info_dict)
 
 def unmountSample():
   global mountCounter
@@ -362,13 +380,15 @@ def unmountSample():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
+    # Set status as currently unmounting
+    set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
     if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
       robot_lib.finish()
-      set_field("mounted_pin","")
-      db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
+      clearMountedSample()
       return 1
     else:
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
       return 0
 
 def unmountCold():
@@ -377,14 +397,17 @@ def unmountCold():
   if (currentMountedSampleID != ""):
     puckPos = mountedSampleDict["puckPos"]
     pinPos = mountedSampleDict["pinPos"]
+    # Set status as currently unmounting
+    set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.CURRENTLY_UNMOUNTING.value)
     if robot_lib.unmountRobotSample(gov_robot, puckPos,pinPos,currentMountedSampleID):
       db_lib.deleteCompletedRequestsforSample(currentMountedSampleID)      
-      robot_lib.parkGripper()
-      set_field("mounted_pin","")
-      db_lib.beamlineInfo(daq_utils.beamline, 'mountedSample', info_dict={'puckPos':0,'pinPos':0,'sampleID':""})
+      if getBlConfig("robot_online"):
+        robot_lib.parkGripper()
+      clearMountedSample()
       setPvDesc("robotGovActive",1)
       return 1
     else:
+      set_mounted_pin_data(currentMountedSampleID, mount_state=MountState.FAILED_UNMOUNTING.value)
       return 0
 
 def waitBeam():
@@ -752,22 +775,30 @@ def collect_detector_seq_hw(sweep_start,range_degrees,image_width,exposure_perio
     file_prefix_minus_directory = file_prefix_minus_directory[file_prefix_minus_directory.rindex("/")+1:len(file_prefix_minus_directory)]
   except ValueError: 
     pass
-  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
-  if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
-    logger.info("vectorSync " + str(time.time()))    
-    daq_macros.vectorSync()
-    logger.info("zebraDaq " + str(time.time()))
-   
-    vector_params = daq_macros.gatherStandardVectorParams()
-    logger.debug(f"vector_params: {vector_params}") 
-    RE(daq_macros.standard_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
 
-  elif (protocol == "vector"):
-    RE(daq_macros.vectorZebraScan(currentRequest))
-  elif (protocol == "stepVector"):
-    daq_macros.vectorZebraStepScan(currentRequest)
-  else:
-    pass
+  logger.info("collect %f degrees for %f seconds %d images exposure_period = %f exposure_time = %f" % (range_degrees,range_seconds,number_of_images,exposure_period,exposure_time))
+  
+  if OPHYD_COLLECTIONS[daq_utils.beamline]:
+      logger.info("ophyd collections enabled")
+      if (protocol == "standard"):
+        RE(daq_macros.standard_plan_wrapped(currentRequest))
+      elif (protocol == "vector"):
+        RE(daq_macros.vector_plan_wrapped(currentRequest))
+  else:  
+    if (protocol == "standard" or protocol == "characterize" or protocol == "ednaCol" or protocol == "burn"):
+      logger.info("vectorSync " + str(time.time()))    
+      daq_macros.vectorSync()
+      logger.info("zebraDaq " + str(time.time()))
+    
+      vector_params = daq_macros.gatherStandardVectorParams()
+      logger.debug(f"vector_params: {vector_params}") 
+      RE(daq_macros.standard_zebra_plan(flyer,angleStart,number_of_images,range_degrees,image_width,exposure_period,file_prefix_minus_directory,data_directory_name,file_number, vector_params, file_prefix_minus_directory))
+    elif (protocol == "vector"):
+      RE(daq_macros.vectorZebraScan(currentRequest))
+    elif (protocol == "stepVector"):
+      daq_macros.vectorZebraStepScan(currentRequest)
+    else:
+      pass
   return 
 
 
@@ -819,6 +850,22 @@ def checkC2C_X(x,fovx): # this is to make sure the user doesn't make too much of
 def center_on_click(x,y,fovx,fovy,source="screen",maglevel=0,jog=0,viewangle=daq_utils.CAMERA_ANGLE_BEAM): #maglevel=0 means lowmag, high fov, #1 = himag with digizoom option, 
   #source=screen = from screen click, otherwise from macro with full pixel dimensions
   #viewangle=daq_utils.CAMERA_ANGLE_BEAM, default camera angle is in-line with the beam
+
+  if daq_utils.beamline == "nyx":
+    logger.info("center_on_click: %s" % str((x,y)))
+    lsdc_x = daq_utils.screenPixX
+    lsdc_y = daq_utils.screenPixY
+    md2_x = getPvDesc("md2CenterPixelX") * 2
+    md2_y = getPvDesc("md2CenterPixelY") * 2
+    scale_x = md2_x / lsdc_x
+    scale_y = md2_y / lsdc_y
+    x = x * scale_x
+    y = y * scale_y
+    str_coords = f'{x} {y}'
+    logger.info(f'center_on_click: {str_coords}')
+    setPvDesc("MD2C2C", str_coords)
+    return
+
   if (getBlConfig('robot_online')): #so that we don't move things when robot moving?
     robotGovState = (getPvDesc("robotSaActive") or getPvDesc("humanSaActive"))
     if (not robotGovState):

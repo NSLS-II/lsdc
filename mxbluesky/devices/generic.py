@@ -1,6 +1,6 @@
 from ophyd import Component as Cpt
 from ophyd import Device, EpicsMotor, EpicsSignal
-
+from mxbluesky.devices import standardize_readback
 
 class WorkPositions(Device):
     gx = Cpt(EpicsSignal, "{Gov:Robot-Dev:gx}Pos:Work-Pos")
@@ -15,7 +15,7 @@ class MountPositions(Device):
     pz = Cpt(EpicsSignal, "{Gov:Robot-Dev:gpz}Pos:Mount-Pos")
     o = Cpt(EpicsSignal, "{Gov:Robot-Dev:go}Pos:Mount-Pos")
 
-
+@standardize_readback
 class GoniometerStack(Device):
     gx = Cpt(EpicsMotor, "-Ax:GX}Mtr")
     gy = Cpt(EpicsMotor, "-Ax:GY}Mtr")
@@ -23,7 +23,6 @@ class GoniometerStack(Device):
     o = Cpt(EpicsMotor, "-Ax:O}Mtr")
     py = Cpt(EpicsMotor, "-Ax:PY}Mtr")
     pz = Cpt(EpicsMotor, "-Ax:PZ}Mtr")
-
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -75,3 +74,4 @@ class RobotArm(Device):
         if self.speed.get() < 100:
             return False
         return True
+

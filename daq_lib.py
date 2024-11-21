@@ -238,20 +238,26 @@ def flocoUnlock():
   govMonOn()
 
 def flocoStopOperations():
-  daq_macros.run_recovery_procedure(stop=True)
-  lockGUI()
+  try:
+    daq_macros.run_recovery_procedure(stop=True)
+    lockGUI()
+  except Exception as e:
+    logger.exception("Error encountered while running flocoStopOperations. Stopping...")
 
 def flocoContinueOperations():
-  daq_macros.run_recovery_procedure(stop=False)
-  flocoUnlock()
-  beamline_support.set_any_epics_pv(daq_utils.beamlineComm + "command_s", "VAL", 
-    json.dumps(
-            {
-                "function": "runDCQueue",
-                "args": [],
-                "kwargs": {},
-            }
-        ))
+  try:
+    daq_macros.run_recovery_procedure(stop=False)
+    flocoUnlock()
+    beamline_support.set_any_epics_pv(daq_utils.beamlineComm + "command_s", "VAL", 
+      json.dumps(
+              {
+                  "function": "runDCQueue",
+                  "args": [],
+                  "kwargs": {},
+              }
+          ))
+  except Exception as e:
+    logger.exception("Error encountered while running flocoContinueOperations. Stopping...")
   
 def refreshGuiTree():
   beamline_support.set_any_epics_pv(daq_utils.beamlineComm+"live_q_change_flag","VAL",1)

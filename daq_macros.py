@@ -259,6 +259,9 @@ def run_robot_recovery_procedure():
   # Dry Gripper
   logger.info("Drying gripper")
   robot_lib.dryGripper()
+  # Dry Gripper
+  logger.info("Drying gripper, again")
+  robot_lib.dryGripper()
   # Park Gripper and cool gripper
   logger.info("Cooling gripper")
   robot_lib.cooldownGripper()
@@ -293,28 +296,42 @@ def run_recovery_procedure(stop=True):
   Manual recovery procedure used in daq_lib.flocoStopOperations and daq_lib.flocoContinueOperations
   """
   logger.info(f"Running recovery procedure: {'stop operations' if stop else 'continue operations'}")
-  logger.info("Recovering robot")
-  robot_lib.recoverRobot()
-  if not getBlConfig("robot_online") or not getBlConfig("mountEnabled"):
-    logger.info("Robot is offline or mount is disabled, sample found in gripper. Stopping recovery...")
-    return
-  logger.info("Drying gripper")
-  robot_lib.dryGripper()
-  logger.info("Homing pins")
-  from start_bs import home_pins
-  RE(home_pins())
+  def check_robot():
+    if not getBlConfig("robot_online") or not getBlConfig("mountEnabled"):
+      raise ValueError("Robot is offline or mount is disabled, sample found in gripper. Stopping recovery...")
+
+  def run_home_pin():
+    from start_bs import home_pins
+    RE(home_pins())
+  
+  def gov_state_to_se():
+    gov_lib.setGovRobot(gov_robot, 'SE')
+  
+  def check_robot_speed():
+    if not robot_arm.is_full_speed():
+      logger.error("Robot arm speed is NOT 100%")
+
+  def check_beam():
+    if not (getPvDesc("beamAvailable") or getBlConfig(BEAM_CHECK) == 0):
+      logger.error("Beam not available, please open shutter")
+
+  steps_to_run = {"Recover robot": robot_lib.recoverRobot, 
+                  "Check robot status": check_robot, 
+                  "Dry gripper": robot_lib.dryGripper, 
+                  "Home pin": run_home_pin, }
   if stop:
-    logger.info("Disabling mount")
-    disableMount()
-    logger.info("Turning robot off")
-    robotOff()
+    steps_to_run.update({"Disable mount": disableMount, "Robot off": robotOff})
   else:
-    logger.info("Enabling mount")
-    enableMount()
-    logger.info("Turning robot on")
-    robotOn()
-  logger.info("Setting robot state to SE")
-  gov_lib.setGovRobot(gov_robot, 'SE')
+    steps_to_run.update({"Enable mount": enableMount, "Robot on": robotOn})
+  
+  steps_to_run.update({"Move Governor to SE": gov_state_to_se, 
+                       "Checking robot arm speed": check_robot_speed,
+                       "Checking beam": check_beam})
+
+  for i, (step_message, func) in enumerate(steps_to_run.items()):
+    logger.info(f"Step {i+1} of {len(steps_to_run)}: {step_message}")
+    func()
+    logger.info(f"Completed step: {step_message}")
   
 
 def run_top_view_optimized():

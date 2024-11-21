@@ -275,9 +275,20 @@ class EMBLRobot:
               except Exception as e:
                 e_s = str(e)
                 message = "ROBOT mount ERROR: " + e_s
-                daq_lib.gui_message(message)
-                logger.error(message)
-                return MOUNT_FAILURE
+                if "Load ABORT with exception Timeout" in e_s:
+                  daq_macros.run_robot_recovery_procedure()
+                  try:
+                    RobotControlLib.mount(absPos)
+                  except Exception as e:
+                    e_s = str(e)
+                    message = "ROBOT mount ERROR: " + e_s                    
+                    daq_lib.gui_message(message)
+                    logger.error(message)
+                    return MOUNT_FAILURE
+                else:
+                  daq_lib.gui_message(message)
+                  logger.error(message)
+                  return MOUNT_FAILURE
             else:
               time.sleep(0.5)
               if (getPvDesc("sampleDetected") == 0):

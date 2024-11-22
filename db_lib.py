@@ -674,11 +674,11 @@ def popNextRequest(beamlineName):
     if request_proposal_ids:
         if len(request_proposal_ids) > 1 and "commissioning" not in visit_dir_path.parts:
             # Multiple proposal requests being run and not in commissioning
-            logger.info(f"Visit dir parents: {visit_dir_path.parts}")
+            logger.error(f"Queue contains requests with multiple proposals, and server not running in comissioning dir")
             return None
         elif Path(list(request_paths)[0]).resolve() != visit_dir_path and "commissioning" not in visit_dir_path.parts:
             # Single proposal being run, does not match visit dir and not commissioning
-            logger.info(f"Visit dir parents: {list(visit_dir_path.parts)}, {Path(list(request_paths)[0]).resolve()}")
+            logger.error(f"Proposal directory mismatch, and server not running in comissioning dir")
             return None
 
 

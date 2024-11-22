@@ -122,6 +122,9 @@ def closePorts():
 def rebootEMBL():
     robot.rebootEMBL()
 
+def parkRobot():
+    robot.parkRobot()
+
 def parkGripper():
     robot.parkGripper()
 
@@ -133,3 +136,6 @@ def openGripper():
 
 def closeGripper():
     robot.closeGripper()
+
+def cooldownGripper():
+  robot.cooldownGripper()

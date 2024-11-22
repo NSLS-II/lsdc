@@ -76,6 +76,7 @@ def check_working_directory():
         return False
     if Path(daq_utils.getBlConfig("visitDirectory")).resolve() != working_dir:
         check_working_directory.remediation = ("Working directory mismatch. Please start LSDC GUI in the same folder as the server is running.")
+
         return False
     return True
 

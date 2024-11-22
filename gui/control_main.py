@@ -4072,22 +4072,24 @@ class ControlMain(QtWidgets.QMainWindow):
                     samplesConsidered.add(self.selectedSampleID)
         else:  # If queue collect is off does not matter how many requests you select only one will be added to current pin
             self.selectedSampleID = self.mountedPin_pv.get()
-            self.selectedSampleRequest = daq_utils.createDefaultRequest(
-                self.selectedSampleID
-            )
-            self.dataPathGB.setFilePrefix_ledit(
-                str(self.selectedSampleRequest["request_obj"]["file_prefix"])
-            )
-            self.dataPathGB.setDataPath_ledit(
-                str(self.selectedSampleRequest["request_obj"]["directory"])
-            )
-            self.EScanDataPathGB.setFilePrefix_ledit(
-                str(self.selectedSampleRequest["request_obj"]["file_prefix"])
-            )
-            self.EScanDataPathGB.setDataPath_ledit(
-                str(self.selectedSampleRequest["request_obj"]["directory"])
-            )
-            self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
+            # Only add a request if a sample is actually mounted
+            if self.selectedSampleID:
+                self.selectedSampleRequest = daq_utils.createDefaultRequest(
+                    self.selectedSampleID
+                )
+                self.dataPathGB.setFilePrefix_ledit(
+                    str(self.selectedSampleRequest["request_obj"]["file_prefix"])
+                )
+                self.dataPathGB.setDataPath_ledit(
+                    str(self.selectedSampleRequest["request_obj"]["directory"])
+                )
+                self.EScanDataPathGB.setFilePrefix_ledit(
+                    str(self.selectedSampleRequest["request_obj"]["file_prefix"])
+                )
+                self.EScanDataPathGB.setDataPath_ledit(
+                    str(self.selectedSampleRequest["request_obj"]["directory"])
+                )
+                self.addSampleRequestCB(selectedSampleID=self.selectedSampleID)
 
         self.progressDialog.close()
         self.treeChanged_pv.put(1)

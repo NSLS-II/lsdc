@@ -4106,17 +4106,8 @@ class ControlMain(QtWidgets.QMainWindow):
             self.selectedSampleID = self.mountedPin_pv.get()
             sample_data = db_lib.getSampleByID(self.selectedSampleID)
             prop_dir = self.get_proposal_directory(sample_data["proposalID"])
-            add_request = True
 
-            if prop_dir is None:
-                response = self.confirm_add_request_dialog(sample_data["proposalID"]).exec_()
-                if response != QtWidgets.QMessageBox.Ok:
-                    add_request = False
-            elif (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).resolve().parents):
-                invalid_samples.add(sample_data["name"])
-                add_request = False
-
-            if add_request:
+            if self.is_valid_request(prop_dir, sample_data, invalid_samples):
                 self.selectedSampleRequest = daq_utils.createDefaultRequest(
                     self.selectedSampleID
                 )
@@ -4138,6 +4129,17 @@ class ControlMain(QtWidgets.QMainWindow):
         self.treeChanged_pv.put(1)
         if invalid_samples:
             self.popupServerMessage(f"Requests not added to {', '.join(invalid_samples)}")
+
+    def is_valid_request(self, prop_dir, sample_data, invalid_samples):
+        add_request = True
+        if prop_dir is None:
+            response = self.confirm_add_request_dialog(sample_data["proposalID"]).exec_()
+            if response != QtWidgets.QMessageBox.Ok:
+                add_request = False
+        elif (Path(prop_dir).resolve() not in Path(getBlConfig("visitDirectory")).resolve().parents):
+            invalid_samples.add(sample_data["name"])
+            add_request = False
+        return add_request
 
     def confirm_add_request_dialog(self, proposal_num):
         msg_box = QtWidgets.QMessageBox()

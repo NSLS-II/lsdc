@@ -1,7 +1,6 @@
 from ophyd import Component as Cpt
-from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO
+from ophyd import Device, EpicsMotor, EpicsSignal, EpicsSignalRO, PVPositionerIsClose
 from mxbluesky.devices import standardize_readback
-from mxbluesky.devices.base_devices import PVPositionerIsClose
 from enum import IntEnum, unique
 
 class WorkPositions(Device):

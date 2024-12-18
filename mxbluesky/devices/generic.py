@@ -34,6 +34,7 @@ class GoniometerStack(Device):
         self.cy = self.py
         self.z = self.pz
         self.cz = self.pz
+        self.omega = self.o
 
 @unique
 class CryoStreamCmd(IntEnum):

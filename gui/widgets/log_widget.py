@@ -25,7 +25,7 @@ def get_summary_widget(path: Path):
     path = path.with_suffix(".txt")
     if path.suffix == ".txt":
         return LogViewerWidget(path)
-
+    raise Exception(f"Unknown type for summary: {path.suffix}")  
 
 class LogViewerWidget(QWidget):
     def __init__(self, log_file, max_height=500, parent=None):
